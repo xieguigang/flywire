@@ -353,6 +353,7 @@ Partial Public Class FormMain
         Dim featureWindow As Integer = environmentInteger("FLYWIRE_SNAKE_FEATURE_WINDOW", -1)
         Dim decisionMargin As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_MARGIN", -1)
         Dim decisionSmoothing As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_SMOOTHING", -1)
+        Dim decisionHold As Integer = environmentInteger("FLYWIRE_SNAKE_DECISION_HOLD", -1)
         Dim daggerRounds As Integer = environmentInteger("FLYWIRE_SNAKE_DAGGER_ROUNDS", -1)
         Dim rlEpisodes As Integer = environmentInteger("FLYWIRE_SNAKE_RL_EPISODES", -1)
         Dim rlRate As Double = environmentDouble("FLYWIRE_SNAKE_RL_RATE", -1)
@@ -383,6 +384,7 @@ Partial Public Class FormMain
                 If featureWindow > 0 Then playground.FeatureWindow = featureWindow
                 If decisionMargin >= 0 Then playground.DecisionMargin = decisionMargin
                 If decisionSmoothing >= 0 Then playground.DecisionSmoothing = decisionSmoothing
+                If decisionHold >= 0 Then playground.DecisionHoldTicks = decisionHold
                 If daggerRounds >= 0 Then playground.DaggerRounds = daggerRounds
                 If rlEpisodes >= 0 Then playground.RlEpisodes = rlEpisodes
                 If rlRate >= 0 Then playground.RlLearningRate = rlRate
@@ -391,6 +393,7 @@ Partial Public Class FormMain
                 Call report.AppendLine($"tuning    : 每通道感觉神经元 {playground.SensorsPerChannel} 个、" &
                                        $"注入电流 {playground.SensorCurrent}、读出窗宽 {playground.FeatureWindow} tick、" &
                                        $"迟滞余量 {playground.DecisionMargin}、平滑 {playground.DecisionSmoothing}、" &
+                                       $"决策保持 {playground.DecisionHoldTicks} tick、" &
                                        $"DAgger {playground.DaggerRounds} 轮、" &
                                        $"REINFORCE {playground.RlEpisodes} 局 @ lr={playground.RlLearningRate}")
                 Call report.AppendLine()

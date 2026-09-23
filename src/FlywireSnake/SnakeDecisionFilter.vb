@@ -42,9 +42,24 @@
             End Get
         End Property
 
+        ''' <summary>
+        ''' 决策保持的 tick 数：&gt;1 表示一次决策至少生效这么多 tick（转向冷却）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 读出层逐 tick 的一致率只有 74% 上下，而贪吃蛇里一次错误的转向就可能是致命的：
+        ''' 让每个决策"至少稳住几 tick"，误差累积的速度就按同样的倍数降下来，
+        ''' 蛇的走向也会明显更果断（配合迟滞一起用）。
+        ''' </remarks>
+        Public Property HoldTicks As Integer = 1
+
+        Private m_lastAction As Integer = -1
+        Private m_holdRemaining As Integer
+
         ''' <summary>开新一局时清空历史：上一局的走向不该带进这一局。</summary>
         Public Sub Reset()
             m_smoothed = Nothing
+            m_lastAction = -1
+            m_holdRemaining = 0
         End Sub
 
         ''' <summary>
@@ -57,6 +72,14 @@
             If scores Is Nothing OrElse scores.Length = 0 Then Return Math.Max(incumbent, 0)
 
             Call smooth(scores)
+
+            ' 转向冷却：上一次的决策还没"生效完"，就先别改主意
+            ' （打分仍然在平滑，所以冷却结束时的决策用的是最新的历史）
+            If m_holdRemaining > 0 AndAlso Not mustTurn AndAlso m_lastAction >= 0 Then
+                m_holdRemaining -= 1
+
+                Return m_lastAction
+            End If
 
             Dim best As Integer = -1
             Dim bestScore As Double = Double.NegativeInfinity
@@ -77,20 +100,30 @@
             Next
 
             ' 全部被禁（理论上只有"四个方向都不可行"才会出现）：保持原方向
-            If best < 0 Then Return Math.Max(incumbent, 0)
-            If mustTurn Then Return best
+            If best < 0 Then Return commit(Math.Max(incumbent, 0))
+            If mustTurn Then Return commit(best)
 
-            If Margin <= 0 OrElse incumbent < 0 OrElse incumbent >= m_smoothed.Length Then Return best
+            If Margin > 0 AndAlso incumbent >= 0 AndAlso incumbent < m_smoothed.Length Then
+                Dim held As Double = m_smoothed(incumbent)
 
-            Dim held As Double = m_smoothed(incumbent)
+                If worstScore > bestScore Then worstScore = bestScore
 
-            If Double.IsNegativeInfinity(held) Then Return best
-            If worstScore > bestScore Then worstScore = bestScore
+                ' 原方向没被"明显超过"（超过当前打分跨度的 Margin 倍）就继续走：这就是迟滞
+                If Not Double.IsNegativeInfinity(held) AndAlso
+                   held >= bestScore - Margin * (bestScore - worstScore) Then
+                    Return commit(incumbent)
+                End If
+            End If
 
-            ' 原方向没被"明显超过"（超过当前打分跨度的 Margin 倍）就继续走：这就是迟滞
-            If held >= bestScore - Margin * (bestScore - worstScore) Then Return incumbent
+            Return commit(best)
+        End Function
 
-            Return best
+        ''' <summary>记下这次决策，并开始它的"保持期"。</summary>
+        Private Function commit(action As Integer) As Integer
+            m_lastAction = action
+            m_holdRemaining = Math.Max(0, HoldTicks - 1)
+
+            Return action
         End Function
 
         ''' <remarks>

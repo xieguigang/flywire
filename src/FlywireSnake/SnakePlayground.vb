@@ -106,6 +106,9 @@ Imports Snake2
         ''' <summary>决策打分的滑动平均系数。</summary>
         Public Property DecisionSmoothing As Double = 0.45
 
+        ''' <summary>决策保持的 tick 数（转向冷却；1 = 每个 tick 都可以改主意）。</summary>
+        Public Property DecisionHoldTicks As Integer = 1
+
         ''' <summary>
         ''' DAgger 聚合轮数（0 = 只做一次教师示范就训练，不做误差累积修正）。
         ''' </summary>
@@ -304,6 +307,7 @@ Imports Snake2
             ' 决策侧的标定与装配同源：训练、评估、观战窗口用的是同一套迟滞 / 平滑参数
             session.DecisionFilter.Margin = DecisionMargin
             session.DecisionFilter.Smoothing = DecisionSmoothing
+            session.DecisionFilter.HoldTicks = Math.Max(1, DecisionHoldTicks)
 
             Return session
         End Function
