@@ -238,6 +238,11 @@ Namespace Connectome
             Call sb.AppendLine(csv("stimulated_neurons", stimulation.Count))
 
             For Each kv As KeyValuePair(Of String, String) In config.ToKeyValues()
+                ' 运行模式已经在上面写入 (含标定之后的实际取值)，这里跳过配置之中的同名项
+                If kv.Key = "stimulation_mode" Then
+                    Continue For
+                End If
+
                 Call sb.AppendLine(csv(kv.Key, kv.Value))
             Next
 
