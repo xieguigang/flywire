@@ -13,13 +13,13 @@ Namespace FAFBv783
     ''' </summary>
     Public Class CommunityLabels
 
-        <Column("root_id")>
+        <Column("root_id", GetType(Int64Parser))>
         Public Property RootId As Long
 
         <Column("label")>
         Public Property Label As String
 
-        <Column("user_id")>
+        <Column("user_id", GetType(Int64Parser))>
         Public Property UserId As Long
 
         ''' <summary>
@@ -28,10 +28,10 @@ Namespace FAFBv783
         <Column("position")>
         Public Property Position As String
 
-        <Column("supervoxel_id")>
+        <Column("supervoxel_id", GetType(Int64Parser))>
         Public Property SupervoxelId As Long
 
-        <Column("label_id")>
+        <Column("label_id", GetType(Int64Parser))>
         Public Property LabelId As Long
 
         ''' <summary>

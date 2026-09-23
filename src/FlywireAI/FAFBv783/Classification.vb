@@ -20,7 +20,7 @@ Namespace FAFBv783
     ''' </remarks>
     Public Class Classification
 
-        <Column("root_id")>
+        <Column("root_id", GetType(Int64Parser))>
         Public Property RootId As Long
 
         <Column("flow")>

@@ -14,10 +14,10 @@ Namespace FAFBv783
     ''' </remarks>
     Public Class ConnectionsNoThreshold
 
-        <Column("pre_root_id")>
+        <Column("pre_root_id", GetType(Int64Parser))>
         Public Property PreRootId As Long
 
-        <Column("post_root_id")>
+        <Column("post_root_id", GetType(Int64Parser))>
         Public Property PostRootId As Long
 
         <Column("neuropil")>

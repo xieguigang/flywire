@@ -56,13 +56,13 @@ Namespace FAFBv783
         ''' <summary>
         ''' Last digits of the pre-synaptic cell Root ID.
         ''' </summary>
-        <Column("pre_root_id_720575940")>
+        <Column("pre_root_id_720575940", GetType(Int64Parser))>
         Public Property PreRootId720575940 As Long
 
         ''' <summary>
         ''' Last digits of the post-synaptic cell Root ID.
         ''' </summary>
-        <Column("post_root_id_720575940")>
+        <Column("post_root_id_720575940", GetType(Int64Parser))>
         Public Property PostRootId720575940 As Long
 
         ''' <summary>

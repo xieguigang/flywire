@@ -24,7 +24,7 @@ Namespace FAFBv783
         ''' <summary>
         ''' FlyWire Root ID of the cell.
         ''' </summary>
-        <Column("root_id")>
+        <Column("root_id", GetType(Int64Parser))>
         Public Property RootId As Long
 
         <Column("input synapses")>

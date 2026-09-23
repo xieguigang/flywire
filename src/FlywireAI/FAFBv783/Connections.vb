@@ -17,13 +17,13 @@ Namespace FAFBv783
         ''' <summary>
         ''' FlyWire Root ID of the pre-synaptic (from) cell.
         ''' </summary>
-        <Column("pre_root_id")>
+        <Column("pre_root_id", GetType(Int64Parser))>
         Public Property PreRootId As Long
 
         ''' <summary>
         ''' FlyWire Root ID of the post-synaptic (to) cell.
         ''' </summary>
-        <Column("post_root_id")>
+        <Column("post_root_id", GetType(Int64Parser))>
         Public Property PostRootId As Long
 
         ''' <summary>

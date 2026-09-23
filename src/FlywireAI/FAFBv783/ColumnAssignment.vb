@@ -10,7 +10,7 @@ Namespace FAFBv783
     ''' </summary>
     Public Class ColumnAssignment
 
-        <Column("root_id")>
+        <Column("root_id", GetType(Int64Parser))>
         Public Property RootId As Long
 
         <Column("hemisphere")>

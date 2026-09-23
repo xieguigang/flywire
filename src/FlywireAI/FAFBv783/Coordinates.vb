@@ -11,7 +11,7 @@ Namespace FAFBv783
     ''' </summary>
     Public Class Coordinates
 
-        <Column("root_id")>
+        <Column("root_id", GetType(Int64Parser))>
         Public Property RootId As Long
 
         ''' <summary>
@@ -20,7 +20,7 @@ Namespace FAFBv783
         <Column("position")>
         Public Property Position As String
 
-        <Column("supervoxel_id")>
+        <Column("supervoxel_id", GetType(Int64Parser))>
         Public Property SupervoxelId As Long
 
     End Class

@@ -41,6 +41,7 @@ Module Program
         Call run("3. huge table via DataStream.OpenHandle + AsLinq", AddressOf testHugeTableStream)
         Call run("4. Int64 root_id precision", AddressOf testRootIdPrecision)
         Call run("5. raw rows for undocumented csv", AddressOf testRawRows)
+        Call run("6. stream rows vs full load rows", AddressOf testRowCountConsistency)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -203,21 +204,33 @@ Module Program
 
     ''' <summary>
     ''' FlyWire 的 Root ID 大约为 7.2e17，超过了 ``Double`` 可以精确表示的整数上限 2^53，
-    ''' 因此模型的 ID 字段使用 ``Long`` (Int64) 进行定义。
+    ''' 因此模型的 ID 字段使用 ``Long`` (Int64) 定义，并且通过 <see cref="Int64Parser"/> 从
+    ''' 文本直接解析，从而避免框架默认的 Double 中转所导致的精度丢失。
     ''' </summary>
     Private Sub testRootIdPrecision()
         Console.WriteLine()
         Console.WriteLine("=== 4. Int64 root_id precision ===")
 
-        Dim rows = csv("cell_stats.csv").StreamCellStats().Take(1).ToArray
-        Dim id As Long = rows(0).RootId
+        Dim file As String = csv("cell_stats.csv")
+        Dim expectedId As Long = Long.Parse(System.IO.File.ReadLines(file).Skip(1).First.Split(","c)(0))
 
-        Call check("first root_id of cell_stats", id, 720575940596125868L)
-        Call check("root_id > 2^53", id > 9007199254740992L, True)
+        ' 流式读取
+        Dim rows = file.StreamCellStats().Take(2).ToArray
+        Call check("streamed root_id equals the raw csv text", rows(0).RootId, expectedId)
 
-        Dim asDouble As Long = CLng(CDbl(id))
-        Console.WriteLine($"    Long  value: {id}")
-        Console.WriteLine($"    Double value: {asDouble} (difference: {asDouble - id})")
+        ' 全量加载
+        Dim loaded As List(Of CellStats) = file.LoadCellStats()
+        Call check("loaded root_id equals the raw csv text", loaded(0).RootId, expectedId)
+
+        Call check("root_id > 2^53", expectedId > 9007199254740992L, True)
+
+        ' 演示使用 Double 中转解析时所产生的精度丢失
+        Dim lossByDouble As Long = CLng(CDbl(expectedId))
+
+        Console.WriteLine($"    raw csv text      : {expectedId}")
+        Console.WriteLine($"    streamed via model: {rows(0).RootId}")
+        Console.WriteLine($"    loaded via model  : {loaded(0).RootId}")
+        Console.WriteLine($"    if parsed as Double: {lossByDouble} (difference: {lossByDouble - expectedId})")
     End Sub
 
     ''' <summary>
@@ -241,6 +254,26 @@ Module Program
         Next
     End Sub
 
+    ''' <summary>
+    ''' 流式读取与全量加载的行数一致性检查，用于确认两条数据加载路径的结果一致。
+    ''' </summary>
+    Private Sub testRowCountConsistency()
+        Console.WriteLine()
+        Console.WriteLine("=== 6. stream rows vs full load rows ===")
+
+        Dim names As List(Of CellNames) = csv("names.csv").LoadCellNames()
+        Dim namesStreamed As Integer = csv("names.csv").StreamCellNames().Count()
+        Call check("CellNames stream rows == load rows", namesStreamed, names.Count)
+
+        Dim tags As List(Of ConnectivityTags) = csv("connectivity_tags.csv").LoadConnectivityTags()
+        Dim tagsStreamed As Integer = csv("connectivity_tags.csv").StreamConnectivityTags().Count()
+        Call check("ConnectivityTags stream rows == load rows", tagsStreamed, tags.Count)
+
+        Dim rates As List(Of SynapseAttachmentRates) = csv("synapse_attachement_rates.csv").LoadSynapseAttachmentRates()
+        Dim ratesStreamed As Integer = csv("synapse_attachement_rates.csv").StreamSynapseAttachmentRates().Count()
+        Call check("SynapseAttachmentRates stream rows == load rows", ratesStreamed, rates.Count)
+    End Sub
+
 #End Region
 
 #Region "test helpers"
@@ -253,7 +286,7 @@ Module Program
     ''' 数据文件的行数 (不包含标题行)。
     ''' </summary>
     Private Function csvLineCount(name As String) As Long
-        Dim lines As String() = File.ReadAllLines(csv(name))
+        Dim lines As String() = System.IO.File.ReadAllLines(csv(name))
         Dim n As Long = lines.Length
 
         ' 跳过末尾的空行
@@ -293,7 +326,8 @@ Module Program
     Private Sub check(label As String, actual As Object, expected As Object)
         totalCount += 1
 
-        Dim ok As Boolean = Equals(actual, expected)
+        ' 数值类型之间按照文本形式进行比较，避免 Object.Equals 因为装箱类型的不同而判定为不相等
+        Dim ok As Boolean = String.Equals(Convert.ToString(actual), Convert.ToString(expected))
 
         If Not ok Then
             failCount += 1
