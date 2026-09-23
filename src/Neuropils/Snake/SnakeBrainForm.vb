@@ -75,6 +75,10 @@ Public Class SnakeBrainForm
         Me.ForeColor = Color.FromArgb(226, 232, 240)
         Me.Font = New Font("Segoe UI", 9)
 
+        ' 必须先接上 Tick：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
+        ' 而且 --snake-window 自检永远等不到帧）。Tick 只在这里挂一次。
+        AddHandler m_timer.Tick, AddressOf onTimerTick
+
         Dim width As Integer = Snake2.Game.ViewCols * Snake2.Game.CellSize
         Dim height As Integer = Snake2.Game.ViewRows * Snake2.Game.CellSize
 
