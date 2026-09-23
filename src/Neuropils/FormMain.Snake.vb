@@ -79,11 +79,15 @@ Partial Public Class FormMain
                 Dim alive As Integer = 0
                 Dim activeTotal As Double = 0
                 Dim sensorChannels As Integer = 0
+                Dim motorSpikes As Double = 0
+                Dim motorActiveTotal As Double = 0
 
                 For i As Integer = 1 To 40
                     Dim frame As SnakeStep = session.Tick()
 
                     activeTotal += frame.ActiveNeurons.Length
+                    motorSpikes += frame.MotorSpikes.Sum()
+                    motorActiveTotal += brain.MotorActiveCount
 
                     For c As Integer = 0 To frame.Sensors.Length - 1
                         If frame.Sensors(c) > 0 Then sensorChannels += 1
@@ -95,7 +99,9 @@ Partial Public Class FormMain
 
                 Call check(report, failures, "大脑每个 tick 都有神经元发放", activeTotal > 0, True)
                 Call check(report, failures, "感觉通道确实被激活", sensorChannels > 0, True)
+                Call check(report, failures, "运动读出通路是活的（运动神经元有放电）", motorSpikes > 0, True)
                 Call report.AppendLine($"      40 tick 健全性检查：平均发放 {activeTotal / 40:N0} 个神经元 / tick，" &
+                                       $"其中运动神经元 {motorActiveTotal / 40:F1} 个（{motorSpikes / 40:F1} 个脉冲），" &
                                        $"感觉通道累计激活 {sensorChannels} 次，存活 {alive} tick")
                 Call report.AppendLine()
 

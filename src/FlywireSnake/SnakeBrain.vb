@@ -92,6 +92,31 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
             End Get
         End Property
 
+        ''' <summary>最近一个 tick 发放的运动神经元数（读出通路是否"活着"的指标）。</summary>
+        Public Property MotorActiveCount As Integer
+            Get
+                Return m_motorActive
+            End Get
+            Private Set(value As Integer)
+                m_motorActive = value
+            End Set
+        End Property
+
+        Private m_motorActive As Integer
+
+        ''' <summary>最近一个 tick 里运动神经元的总脉冲数。</summary>
+        Public ReadOnly Property MotorActiveSpikes As Double
+            Get
+                Dim total As Double = 0
+
+                For Each spikes As Double In m_groupSpikes
+                    total += spikes
+                Next
+
+                Return total
+            End Get
+        End Property
+
         ''' <summary>
         ''' 在已装配好的网络之上构造"游戏模式"的大脑。
         ''' </summary>
@@ -108,9 +133,19 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
         ''' 后者会遮蔽 <see cref="MotorGroups"/> 属性，于是下面所有
         ''' <c>MotorGroups.Length</c> 都会变成对整数取 Length。
         ''' </remarks>
+        ''' <param name="sensorsPerChannel">
+        ''' 每个感觉通道使用多少个感觉神经元。
+        ''' </param>
+        ''' <remarks>
+        ''' <b>为什么默认是 256 而不是几十个</b>：这份连接组做过结构归一化，
+        ''' 少量神经元的输入只会激起局部响应 —— 实测 16 通道 × 32 个（512 个注入）
+        ''' 时，运动神经元的放电几乎为零，解码器学不到任何东西。
+        ''' 256 个/通道（全脑 4,096 个注入）才能让响应扩散到全脑，
+        ''' 运动神经元才有可读出的信号（对应刺激实验里"电极足够大"的情形）。
+        ''' </remarks>
         Public Sub New(index As ConnectomeIndex,
                        network As BrainNetwork,
-                       Optional sensorsPerChannel As Integer = 32,
+                       Optional sensorsPerChannel As Integer = 256,
                        Optional groupCount As Integer = SnakeSensorEncoder.ActionCount,
                        Optional seed As Integer = 42)
 
@@ -229,15 +264,22 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
             m_active = active.ToArray()
 
             ' 运动组脉冲数
+            Dim motorActive As Integer = 0
+
             For g As Integer = 0 To MotorGroups.Length - 1
                 Dim count As Double = 0
 
                 For Each neuron As Integer In MotorGroups(g)
-                    If spikes(neuron) <> 0 Then count += 1
+                    If spikes(neuron) <> 0 Then
+                        count += 1
+                        motorActive += 1
+                    End If
                 Next
 
                 m_groupSpikes(g) = count
             Next
+
+            MotorActiveCount = motorActive
 
             ' 逐运动神经元的滑动窗放电率（解码器特征）
             Dim history As List(Of tf.Tensor) = m_layer.SHistory

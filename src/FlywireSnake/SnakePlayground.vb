@@ -180,7 +180,7 @@ Imports Snake2
         ''' 网络装配本身很轻（<c>AddSparseLayer</c> 只持有 CSR 引用），
         ''' 因此"每局一份大脑"的代价可以忽略；真正的重活是连接组装配（见 <see cref="Create"/>）。
         ''' </remarks>
-        Public Function CreateBrain(Optional sensorsPerChannel As Integer = 32,
+        Public Function CreateBrain(Optional sensorsPerChannel As Integer = 256,
                                     Optional seed As Integer = 42) As SnakeBrain
 
             ' 这一份 Stimulation 只是给"输入特征"占个位：
