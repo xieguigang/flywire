@@ -5,6 +5,8 @@ Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Neuropils.Data
+Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
+Imports tfCompute = Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute
 
 Namespace Simulation
 
@@ -194,6 +196,14 @@ Namespace Simulation
 
                 Dim replay As StimulationReplay = build(network, result, stimulation, neuron, recruited.Length, radiusNm, strength, holdMilliseconds, wall.ElapsedMilliseconds)
 
+                ' 分析回放：把同一次刺激沿逐算子路径再跑一遍，取回膜电位轨迹。
+                ' 失败只是"曲线回退到放电率"，不应该让整次刺激失败。
+                Try
+                    Call analyzePotential(stimulation, replay, reporter)
+                Catch ex As Exception
+                    Call report(reporter, $"[warn] 膜电位分析回放失败（曲线回退到放电率）: {ex.Message}")
+                End Try
+
                 Call report(reporter, $"stimulation finished: {replay.Describe()}")
 
                 Return replay
@@ -289,6 +299,157 @@ Namespace Simulation
         ''' 25,000 时约 120 ms，仍然是"点一下就能看到结果"的量级。
         ''' </remarks>
         Public Const DefaultMaxRecruit As Integer = 25000
+
+#Region "response potential analysis"
+
+        ''' <summary>
+        ''' 分析回放：把同一次刺激沿<b>逐算子路径</b>再跑一遍，取回每个神经元的触发前膜电位。
+        ''' </summary>
+        ''' <param name="stimulation">刺激方案（与快速仿真完全相同的方案）</param>
+        ''' <param name="replay">快速仿真的结果（响应神经元集合由它决定，膜电位写回它）</param>
+        ''' <param name="reporter">进度回调</param>
+        ''' <remarks>
+        ''' <b>为什么要再跑一遍</b>：融合单步内核在设备内完成"泄漏积分 + 阈值触发 + 复位"，
+        ''' 中间不落膜电位（<c>SparseLIFLayer.UHistory</c> 只在逐算子路径下产生，这是 SNN 库的
+        ''' 既有约定）。而膜电位是唯一能反映"响应强度"的连续量：脉冲是 0/1，
+        ''' 画出来只是一堆方波。
+        ''' 
+        ''' <b>为什么可信</b>：
+        ''' <list type="bullet">
+        '''   <item>两条路径在双精度档下数值等价（SNN 库有逐位一致实测），因此回放给出的就是
+        '''         快速仿真内部的那条轨迹；</item>
+        '''   <item>回放结束后会把它的脉冲序列与快速仿真<b>逐步逐神经元对齐</b>，
+        '''         不一致的个数记进 <c>AnalysisMismatches</c> —— 曲线图上会明确标注，
+        '''         不一致时不要采信膜电位。</item>
+        ''' </list>
+        ''' 
+        ''' <b>为什么把后端切到 SIMD</b>：逐算子路径会为每个算子产生一次显存往返，
+        ''' 在 GPU 上反而更慢；这条路径本来就是主机标量实现（与 GPU 逐位等价），
+        ''' 所以分析阶段用 CPU 跑，跑完再把后端切回去。
+        ''' </remarks>
+        Private Sub analyzePotential(stimulation As Stimulation,
+                                     replay As StimulationReplay,
+                                     reporter As Action(Of String))
+
+            Dim responders As Integer() = collectResponders(replay)
+
+            If responders.Length = 0 Then
+                Call report(reporter, "没有任何神经元响应，跳过膜电位分析回放")
+
+                Return
+            End If
+
+            Dim timer As Stopwatch = Stopwatch.StartNew()
+            Dim fused As Boolean = m_config.UseFusedStep
+            Dim backend As tfCompute.ITensorCompute = tf.Tensor.computeKernel
+
+            Try
+                m_config.UseFusedStep = False
+                tfCompute.SIMDTensor.Register()
+
+                ' 用一份独立装配的网络做回放：不复用快速仿真的那份状态，
+                ' 免得两次运行的计数/状态互相踩到
+                Dim probe As BrainNetwork = BrainNetworkBuilder.Assemble(m_config, m_matrix, stimulation, Nothing)
+                Dim result As BrainSimulationResult = BrainSimulation.Run(probe, m_config, stimulation, m_gain, Nothing)
+                Dim layer As SparseLIFLayer = probe.Network.SparseLayer
+                Dim potentials As List(Of tf.Tensor) = If(layer Is Nothing, Nothing, layer.UHistory)
+                Dim spikes As List(Of tf.Tensor) = If(layer Is Nothing, Nothing, layer.SHistory)
+
+                If potentials Is Nothing OrElse potentials.Count < replay.Steps Then
+                    Call report(reporter, $"[warn] 分析回放只拿到 {If(potentials Is Nothing, 0, potentials.Count)}/{replay.Steps} 步膜电位，跳过")
+
+                    Return
+                End If
+
+                Dim mismatches As Integer = countSpikeMismatches(replay, spikes)
+
+                If mismatches > 0 Then
+                    Call report(reporter, $"[warn] 分析回放的脉冲序列与快速仿真有 {mismatches} 处不一致，膜电位仅供参考")
+                End If
+
+                ' 只保留"有响应"神经元的轨迹：静止神经元占绝大多数，存下来只会白白撑大报告
+                Dim matrix As Double()() = New Double(responders.Length - 1)() {}
+
+                For k As Integer = 0 To responders.Length - 1
+                    Dim row As Double() = New Double(replay.Steps - 1) {}
+
+                    For t As Integer = 0 To replay.Steps - 1
+                        row(t) = potentials(t).Data(responders(k))
+                    Next
+
+                    matrix(k) = row
+                Next
+
+                replay.ResponseNeurons = responders
+                replay.ResponsePotential = matrix
+                replay.ResponseSignal = "触发前膜电位 U (阈值 " & m_config.Threshold.ToString("G4") & ")"
+                replay.AnalysisMs = timer.ElapsedMilliseconds
+                replay.AnalysisMismatches = mismatches
+                replay.AnalysisMatches = mismatches = 0
+
+                Call report(reporter, $"membrane potential captured: {responders.Length:N0} neurons x {replay.Steps} steps, " &
+                                      $"{timer.ElapsedMilliseconds} ms, spike mismatches={mismatches}")
+            Finally
+                m_config.UseFusedStep = fused
+                tf.Tensor.computeKernel = backend
+            End Try
+        End Sub
+
+        ''' <summary>快速仿真里至少发放过一次的神经元（也就是响应矩阵的行）。</summary>
+        Private Shared Function collectResponders(replay As StimulationReplay) As Integer()
+            Dim members As New List(Of Integer)(4096)
+
+            If replay.Counts IsNot Nothing Then
+                For i As Integer = 0 To replay.Counts.Length - 1
+                    If replay.Counts(i) > 0 Then
+                        Call members.Add(i)
+                    End If
+                Next
+            End If
+
+            Return members.ToArray()
+        End Function
+
+        ''' <summary>逐步比对两条路径的脉冲序列，返回不一致的神经元-步对数。</summary>
+        Private Shared Function countSpikeMismatches(replay As StimulationReplay, spikes As List(Of tf.Tensor)) As Integer
+            If spikes Is Nothing OrElse spikes.Count < replay.Steps Then
+                Return replay.ActiveUnionCount
+            End If
+
+            Dim mismatches As Integer = 0
+            Dim flag As Boolean() = New Boolean(replay.Units - 1) {}
+
+            For t As Integer = 0 To replay.Steps - 1
+                ' 变量不能叫 step：那是 VB 的保留字（For ... Step）
+                Dim spikeStep As Double() = spikes(t).Data
+                Dim active As Integer() = replay.StepActive(t)
+
+                ' 快速仿真发放、分析回放没发放
+                For i As Integer = 0 To active.Length - 1
+                    If spikeStep(active(i)) = 0 Then mismatches += 1
+                Next
+
+                ' 分析回放发放、快速仿真没发放
+                For i As Integer = 0 To spikeStep.Length - 1
+                    If spikeStep(i) <> 0 Then flag(i) = True
+                Next
+
+                For i As Integer = 0 To active.Length - 1
+                    flag(active(i)) = False
+                Next
+
+                For i As Integer = 0 To flag.Length - 1
+                    If flag(i) Then
+                        mismatches += 1
+                        flag(i) = False
+                    End If
+                Next
+            Next
+
+            Return mismatches
+        End Function
+
+#End Region
 
 #Region "replay assembly"
 

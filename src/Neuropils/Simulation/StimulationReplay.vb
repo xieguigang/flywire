@@ -57,6 +57,69 @@ Namespace Simulation
         ''' <summary>整段仿真的脉冲总数。</summary>
         Public Property TotalSpikes As Double
 
+        ''' <summary>
+        ''' 有响应（至少发放过一次）的神经元索引，与 <see cref="ResponsePotential"/> 行一一对应。
+        ''' </summary>
+        ''' <remarks>
+        ''' 只保存"有响应"的神经元：全脑 139,255 个神经元里绝大多数全程静止，
+        ''' 把它们也存下来会让响应矩阵从几 MB 涨到几十 MB，而绘图时又只会画有响应的那些。
+        ''' </remarks>
+        Public Property ResponseNeurons As Integer() = New Integer() {}
+
+        ''' <summary>
+        ''' 逐神经元的<b>响应电信号强度</b>轨迹：<c>ResponsePotential(k)(t)</c> 是
+        ''' 第 <c>ResponseNeurons(k)</c> 个神经元在第 t 步的触发前膜电位。
+        ''' </summary>
+        ''' <remarks>
+        ''' <b>为什么是膜电位而不是脉冲</b>：脉冲是 0/1，画成曲线就是一堆方波，
+        ''' "响应强度"根本看不出来；膜电位是连续量，既有亚阈值的积分爬升，
+        ''' 也有越阈后的复位跌落，是这一层神经元真实传递的电信号。
+        ''' 
+        ''' 数据来源是<b>分析回放</b>（同一刺激、逐算子路径重跑一遍）：融合单步内核内部
+        ''' 不落膜电位（<c>SparseLIFLayer.UHistory</c> 只在逐算子路径下产生），
+        ''' 而两条路径在双精度档下数值等价，因此这次回放给出的就是快速仿真内部的那条轨迹。
+        ''' 详见 <c>BrainStimulator.analyzePotential</c>。
+        ''' </remarks>
+        Public Property ResponsePotential As Double()() = New Double()() {}
+
+        ''' <summary>响应信号的名字（用于图表标题与报告）。</summary>
+        Public Property ResponseSignal As String = ""
+
+        ''' <summary>分析回放耗时 (毫秒)。</summary>
+        Public Property AnalysisMs As Long
+
+        ''' <summary>
+        ''' 分析回放的脉冲序列是否与快速仿真逐位一致（``Nothing`` 表示没做分析回放）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 这是膜电位可信度的<b>自校验</b>：两条路径的脉冲序列一致，才说明分析回放
+        ''' 复现的确实是这次刺激实验的动力学；不一致时界面会明确提示不要采信膜电位曲线。
+        ''' </remarks>
+        Public Property AnalysisMatches As Boolean? = Nothing
+
+        ''' <summary>分析回放中与快速仿真不一致的脉冲数（0 = 完全一致）。</summary>
+        Public Property AnalysisMismatches As Integer = 0
+
+        ''' <summary>按神经元索引取响应曲线；没有响应时返回空数组。</summary>
+        Public Function ResponseCurve(neuron As Integer) As Double()
+            For i As Integer = 0 To ResponseNeurons.Length - 1
+                If ResponseNeurons(i) = neuron Then
+                    Return ResponsePotential(i)
+                End If
+            Next
+
+            Return New Double() {}
+        End Function
+
+        ''' <summary>神经元索引 → 响应矩阵行号（无响应时为 -1）。</summary>
+        Public Function ResponseRow(neuron As Integer) As Integer
+            For i As Integer = 0 To ResponseNeurons.Length - 1
+                If ResponseNeurons(i) = neuron Then Return i
+            Next
+
+            Return -1
+        End Function
+
         ''' <summary>生效的全局权重增益。</summary>
         Public Property Gain As Double
 
@@ -179,6 +242,14 @@ Namespace Simulation
             End If
 
             Call sb.Append($", backend={Backend}")
+
+            If AnalysisMatches.HasValue Then
+                Call sb.Append($", potential={ResponseNeurons.Length:N0} neurons in {AnalysisMs} ms")
+
+                If Not AnalysisMatches.Value Then
+                    Call sb.Append($" (spike mismatches={AnalysisMismatches}, 仅供参考)")
+                End If
+            End If
 
             Return sb.ToString
         End Function

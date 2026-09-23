@@ -393,6 +393,9 @@ Partial Public Class FormMain
         If Not String.IsNullOrEmpty(replay.ReportDir) Then
             m_sceneText.Text = $"结果已记录: {replay.ReportDir}"
         End If
+
+        ' 刺激完成 → 右下角的"响应曲线"链接可用
+        m_chartLink.Enabled = True
     End Sub
 
     ''' <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
@@ -872,6 +875,31 @@ Partial Public Class FormMain
             Call report.AppendLine()
             Call check(report, failures, "at least one strength activates neurons",
                        best IsNot Nothing AndAlso best.TotalSpikes > 0, True)
+
+            ' ---- 响应曲线数据（膜电位分析回放）----
+            If first IsNot Nothing Then
+                Call report.AppendLine()
+                Call report.AppendLine("---- response potential (analysis replay) ----")
+                Call report.AppendLine($"      signal: {first.ResponseSignal}")
+
+                Call check(report, failures, "membrane potential covers every responding neuron",
+                           first.ResponseNeurons.Length, first.ActiveUnionCount)
+                Call check(report, failures, "every potential row has one value per time step",
+                           If(first.ResponsePotential.Length = first.ResponseNeurons.Length AndAlso
+                              first.ResponsePotential.All(Function(row) row IsNot Nothing AndAlso row.Length = first.Steps),
+                              "ok", "bad"), "ok")
+                Call check(report, failures, "analysis replay reproduces the spike train",
+                           If(first.AnalysisMatches.HasValue, If(first.AnalysisMismatches = 0, "identical", $"mismatch={first.AnalysisMismatches}"), "not run"),
+                           "identical")
+
+                If first.ResponseNeurons.Length > 0 Then
+                    Dim sample As Integer = first.ResponseNeurons(0)
+                    Dim curve As Double() = first.ResponsePotential(0)
+
+                    Call report.AppendLine($"      sample neuron #{sample}: " &
+                                           String.Join(", ", curve.Select(Function(v) v.ToString("F3"))))
+                End If
+            End If
 
             ' ---- 换个线程再刺激一次（这是"第一次正常、第二次报 CUDA_ERROR_INVALID_CONTEXT"的复现场景）----
             ' CUDA 的当前上下文是线程局部状态：线程池把第二次任务调度到另一条线程时，

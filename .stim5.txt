@@ -1,0 +1,141 @@
+Neuropils electrical stimulation probe
+data dir : F:\flywire\FAFB-v783
+time     : 2026-09-23 20:59:23
+steps    : 30
+
+      loading neuron index from names.csv ...
+        139255 neurons, attaching annotations ...
+        [neuron index + annotations] 4320 ms (total 4320 ms)
+      loading coordinates from coordinates.csv ...
+        50000 coordinate rows ...
+        100000 coordinate rows ...
+        150000 coordinate rows ...
+        200000 coordinate rows ...
+        238909 coordinate rows -> 139255/139255 neurons have a position
+        [coordinates] 1210 ms (total 5530 ms)
+      loading neuropil assignments from neuropil_synapse_table.csv ...
+        20000 neuropil rows ...
+        40000 neuropil rows ...
+        60000 neuropil rows ...
+        80000 neuropil rows ...
+        100000 neuropil rows ...
+        120000 neuropil rows ...
+        134181 rows -> 134181/139255 neurons assigned to 79 neuropils
+        [neuropil assignment] 808 ms (total 6338 ms)
+      loading connections from connections_princeton.csv ...
+        200000 connection rows, 199999 accepted ... (connections_princeton.csv)
+        400000 connection rows, 399999 accepted ... (connections_princeton.csv)
+        600000 connection rows, 599999 accepted ... (connections_princeton.csv)
+        800000 connection rows, 799999 accepted ... (connections_princeton.csv)
+        1000000 connection rows, 999999 accepted ... (connections_princeton.csv)
+        1200000 connection rows, 1199999 accepted ... (connections_princeton.csv)
+        1400000 connection rows, 1399999 accepted ... (connections_princeton.csv)
+        1600000 connection rows, 1599999 accepted ... (connections_princeton.csv)
+        1800000 connection rows, 1799999 accepted ... (connections_princeton.csv)
+        2000000 connection rows, 1999999 accepted ... (connections_princeton.csv)
+        2200000 connection rows, 2199999 accepted ... (connections_princeton.csv)
+        2400000 connection rows, 2399999 accepted ... (connections_princeton.csv)
+        2600000 connection rows, 2599999 accepted ... (connections_princeton.csv)
+        2800000 connection rows, 2799999 accepted ... (connections_princeton.csv)
+        3000000 connection rows, 2999999 accepted ... (connections_princeton.csv)
+        3200000 connection rows, 3199999 accepted ... (connections_princeton.csv)
+        3400000 connection rows, 3399999 accepted ... (connections_princeton.csv)
+        3600000 connection rows, 3599999 accepted ... (connections_princeton.csv)
+        3800000 connection rows, 3799999 accepted ... (connections_princeton.csv)
+        4000000 connection rows, 3999999 accepted ... (connections_princeton.csv)
+        4200000 connection rows, 4199999 accepted ... (connections_princeton.csv)
+        4400000 connection rows, 4399999 accepted ... (connections_princeton.csv)
+        4600000 connection rows, 4599999 accepted ... (connections_princeton.csv)
+        4800000 connection rows, 4799999 accepted ... (connections_princeton.csv)
+        5000000 connection rows, 4999999 accepted ... (connections_princeton.csv)
+        5200000 connection rows, 5199999 accepted ... (connections_princeton.csv)
+        5342446 rows -> 5342446 connections (0 skipped, 79 neuropils, 6 neurotransmitters)
+        [connections] 1584 ms (total 7922 ms)
+        activity loaded from neuron_activity_stimulation.csv (139255 rows)
+        [activity (optional)] 22 ms (total 7944 ms)
+      dataset ready: 139255 neurons (139255 positioned), 5342446 connections, neuropils=79
+      probe neuron: #0 (root_id 720575940596125868, neuropil LOP_R, nt ACH)
+
+      正在注册 CUDA 后端（device=0，nvrtc=<auto>）...
+      CUDA 后端已就绪：NVIDIA RTX A4000 (CC 8.6, 48 SM)  显存 16,376 MB 总量 / 15,259 MB 可用 / 已用 1,116 MB (6.8%)
+      内核可用性：gemmKernel=OK  tensorTransposeFp32Kernel=OK  tensorMaskedCrossEntropyFp32Kernel=OK  tensorAdamWFp32Kernel=OK  tensorAccumulateFp32Kernel=OK  tensorSpmmCsrKernel=OK  tensorLifUpdateDoubleKernel=OK  tensorLifUpdateFp32Kernel=OK  tcCellLtcRk4DoubleKernel=OK  tcCellGraphLayerDoubleKernel=OK  tcCellGraphFeatureDoubleKernel=OK
+      融合 LIF 单步内核可用：True
+      building the connectome from connections_princeton.csv ...
+      building CSR sparse matrix from 5342446 connection rows...
+      merging duplicated (pre, post) pairs -> nnz = 3732460
+      connectome ready: 139255 neurons, nnz=3732460 (csv rows=5342446) (27383 ms)
+      assembling spiking network: neurons=139255, input features=5000
+      calibrating the global gain with 10 step probes...
+        gain=1: active=5888 (4.23%), spikes=26209, 68 ms
+        gain=2: active=10264 (7.37%), spikes=33874, 57 ms
+        gain=4: active=44685 (32.09%), spikes=100905, 75 ms
+        gain=8: active=85041 (61.07%), spikes=323885, 94 ms
+      selected global gain = 1 (active fraction ~ 5.00%)
+      stimulator ready: gain=1, backend=CUDA, elapsed=27727 ms
+      [OK]   stimulator is prepared: actual=True, expected=True
+      [OK]   gain is positive: actual=True, expected=True
+
+---- recruitment radius sweep (current = 1.50) ----
+      radius_um   recruited   total    active   peak   fallback   wall_ms
+
+             25         302    9,625      530    346          0       124
+             60       4,542  145,345    7,297  5,172          0       154
+
+      [OK]   at least one strength activates neurons: actual=True, expected=True
+
+---- response potential (analysis replay) ----
+      signal: 触发前膜电位 U (阈值 1)
+      [OK]   membrane potential covers every responding neuron: actual=530, expected=530
+      [OK]   every potential row has one value per time step: actual=ok, expected=ok
+      [OK]   analysis replay reproduces the spike train: actual=identical, expected=identical
+      sample neuron #0: 1.500, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601, 1.601
+
+---- cross thread re-run (regression: CUDA_ERROR_INVALID_CONTEXT) ----
+      [OK]   a second stimulation on another thread succeeds: actual=ok, expected=ok
+             25         302    9,625      530    346          0       108
+      [OK]   cross thread re-run is bit identical to the first run: actual=9625, expected=9625
+
+---- per step detail (best = strength 1.50) ----
+      step   active    spikes   cumulative
+         1    4,542     4,542        4,542
+         2    4,540     4,540        9,082
+         3    4,565     4,565       13,647
+         4    4,646     4,646       18,293
+         5    4,770     4,770       23,063
+         6    4,795     4,795       27,858
+         7    4,910     4,910       32,768
+         8    4,770     4,770       37,538
+         9    4,929     4,929       42,467
+        10    4,875     4,875       47,342
+        11    4,933     4,933       52,275
+        12    4,763     4,763       57,038
+        13    5,108     5,108       62,146
+        14    4,785     4,785       66,931
+        15    4,824     4,824       71,755
+        16    4,966     4,966       76,721
+        17    5,003     5,003       81,724
+        18    4,758     4,758       86,482
+        19    5,012     5,012       91,494
+        20    4,780     4,780       96,274
+        21    5,075     5,075      101,349
+        22    4,954     4,954      106,303
+        23    4,787     4,787      111,090
+        24    4,694     4,694      115,784
+        25    5,172     5,172      120,956
+        26    4,943     4,943      125,899
+        27    4,785     4,785      130,684
+        28    4,878     4,878      135,562
+        29    5,013     5,013      140,575
+        30    4,770     4,770      145,345
+
+      [OK]   per step active lists agree with the counters: actual=0, expected=0
+      report dir: F:\flywire\FAFB-v783\snn-output\20260923_205959_stimulation
+        stimulation_summary.csv (26 lines)
+        stimulation_steps.csv (31 lines)
+        stimulation_active_neurons.csv (145346 lines)
+        neuron_activity_stimulation.csv (139256 lines)
+        stimulation_response_potential.csv (7298 lines)
+      [OK]   replay csv written: actual=True, expected=True
+      [OK]   active neuron rows == sum of per step active: actual=145345, expected=145345
+
+result: PASS

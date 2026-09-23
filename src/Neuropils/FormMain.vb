@@ -52,6 +52,10 @@ Public Partial Class FormMain
     Private m_progress As ToolStripProgressBar
     Private m_statusText As ToolStripStatusLabel
     Private m_sceneText As ToolStripStatusLabel
+    ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
+    Private m_chartLink As LinkLabel
+    ''' <summary>响应曲线窗口（单实例复用）。</summary>
+    Private m_chartForm As ResponseChartForm
 
     ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
     Private m_stimulateMode As ToolStripButton
@@ -468,8 +472,71 @@ Public Partial Class FormMain
         Call bar.Items.Add(m_sceneText)
         Call bar.Items.Add(m_progress)
 
+        ' ---- 右下角：电刺激响应曲线入口 ----
+        ' 用真正的 LinkLabel（WinForms 的 ToolStripStatusLabel 虽然也能做成链接样式，
+        ' 但这里要的是"一个可点击的链接控件"，因此用 ToolStripControlHost 把它托进状态栏）
+        m_chartLink = New LinkLabel With {
+            .Text = "响应曲线",
+            .AutoSize = True,
+            .LinkBehavior = LinkBehavior.HoverUnderline,
+            .LinkColor = Color.FromArgb(34, 211, 238),
+            .ActiveLinkColor = Color.White,
+            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
+            .DisabledLinkColor = Color.FromArgb(100, 116, 139),
+            .Margin = New Padding(6, 4, 6, 0),
+            .Enabled = False,
+            .ToolTipText = "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）"
+        }
+        AddHandler m_chartLink.LinkClicked, AddressOf onOpenResponseChart
+
+        Call bar.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
+
         Return bar
     End Function
+
+    ''' <summary>
+    ''' 打开响应曲线窗口。
+    ''' </summary>
+    ''' <remarks>
+    ''' 数据优先级：<b>本次会话刚跑完的刺激结果</b>（含膜电位分析回放）→
+    ''' 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
+    ''' "记录下来的响应结果"也还能画出来。
+    ''' </remarks>
+    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs)
+        If m_dataset Is Nothing Then Return
+
+        Try
+            Dim data As Analysis.ResponseDataset
+
+            If m_replay IsNot Nothing Then
+                data = Analysis.ResponseDataset.FromReplay(m_replay, m_dataset, m_config.Threshold)
+            Else
+                Dim dir As String = Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir())
+
+                If dir Is Nothing Then
+                    Call MessageBox.Show(Me,
+                                         "还没有任何电刺激实验记录。请先勾选「电刺激模式」，" &
+                                         "在神经元上按住左键做一次刺激，松开后即可查看响应曲线。",
+                                         "没有实验记录", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                    Return
+                End If
+
+                data = Analysis.ResponseDataset.FromReport(dir, m_dataset)
+            End If
+
+            If m_chartForm IsNot Nothing AndAlso Not m_chartForm.IsDisposed Then
+                Call m_chartForm.Close()
+            End If
+
+            m_chartForm = New ResponseChartForm(data, m_dataset)
+            Call m_chartForm.Show(Me)
+            Call m_chartForm.BringToFront()
+        Catch ex As Exception
+            Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",
+                                 MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
 
 #End Region
 
@@ -504,6 +571,13 @@ Public Partial Class FormMain
         ' 电刺激探针：扫强度跑仿真并落盘回放数据（用于标定"按住时长 → 强度"的映射）
         If args.Length > 2 AndAlso String.Equals(args(1), "--stimulate", StringComparison.OrdinalIgnoreCase) Then
             Call runStimulationProbe(args)
+
+            Return
+        End If
+
+        ' 响应曲线出图：把实验记录画成曲线图（与界面共用同一套装配与绘图代码）
+        If args.Length > 2 AndAlso String.Equals(args(1), "--chart", StringComparison.OrdinalIgnoreCase) Then
+            Call runChartExport(args)
 
             Return
         End If
@@ -673,6 +747,11 @@ Public Partial Class FormMain
         ' 写死会让"着色维度"这个命令行参数完全失效（出图出来的还是默认维度）。
         Call rebuildColorizer(dimensionFromUi(), resetUi:=False)
         Call rebuildScene(resetView:=True)
+
+        ' 有历史实验记录时就可以直接看响应曲线（不必先做一次刺激）
+        If Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir()) IsNot Nothing Then
+            m_chartLink.Enabled = True
+        End If
     End Sub
 
     ''' <summary>

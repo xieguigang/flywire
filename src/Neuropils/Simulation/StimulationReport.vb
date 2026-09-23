@@ -42,6 +42,12 @@ Namespace Simulation
             Call files.Add(writeText(Path.Combine(dir, "stimulation_active_neurons.csv"), activeNeurons(replay, index)))
             Call files.Add(writeText(Path.Combine(dir, "neuron_activity_stimulation.csv"), neuronActivity(replay, index)))
 
+            ' 响应曲线数据：只有真的拿到了膜电位才写（没有分析回放时曲线图会用脉冲率代替）
+            If replay.ResponsePotential.Length > 0 Then
+                Call files.Add(writeText(Path.Combine(dir, "stimulation_response_potential.csv"),
+                                         responsePotential(replay, index)))
+            End If
+
             replay.ReportDir = dir
             replay.ReportFiles = files.ToArray()
 
@@ -82,6 +88,52 @@ Namespace Simulation
             Call sb.AppendLine(csv("active_fraction", num(replay.ActiveFraction)))
             Call sb.AppendLine(csv("peak_step", replay.PeakStep + 1))
             Call sb.AppendLine(csv("peak_active", replay.PeakActive))
+            Call sb.AppendLine(csv("response_signal", replay.ResponseSignal))
+            Call sb.AppendLine(csv("response_neurons", replay.ResponseNeurons.Length))
+            Call sb.AppendLine(csv("analysis_ms", replay.AnalysisMs))
+
+            If replay.AnalysisMatches.HasValue Then
+                Call sb.AppendLine(csv("analysis_matches", replay.AnalysisMatches.Value))
+                Call sb.AppendLine(csv("analysis_mismatches", replay.AnalysisMismatches))
+            End If
+
+            Return sb.ToString
+        End Function
+
+        ''' <summary>
+        ''' 逐神经元逐步的响应电信号矩阵（曲线图的数据源）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 一行一个"有响应"的神经元，一列一个时间步（<c>t1..tT</c>）。
+        ''' 之所以把时间步铺成列而不是"每个神经元-步一行"：前者是一张标准的
+        ''' 神经元 × 时间矩阵，行数只有几千、列数只有几十，读回来可以直接画曲线；
+        ''' 后者会膨胀成几十万行，纯粹是解析开销。
+        ''' </remarks>
+        Private Shared Function responsePotential(replay As StimulationReplay,
+                                                 index As FlywireAI.Connectome.ConnectomeIndex) As String
+            Dim sb As New StringBuilder()
+            Dim header As New List(Of String) From {"neuron_index", "root_id"}
+
+            For t As Integer = 1 To replay.Steps
+                Call header.Add($"t{t}")
+            Next
+
+            Call sb.AppendLine(String.Join(",", header))
+
+            For k As Integer = 0 To replay.ResponseNeurons.Length - 1
+                Dim neuron As Integer = replay.ResponseNeurons(k)
+                Dim row As Double() = replay.ResponsePotential(k)
+                Dim cells As New List(Of String) From {
+                    neuron.ToString,
+                    If(index Is Nothing, "", index.GetRootId(neuron).ToString)
+                }
+
+                For t As Integer = 0 To replay.Steps - 1
+                    Call cells.Add(num(If(row IsNot Nothing AndAlso t < row.Length, row(t), 0)))
+                Next
+
+                Call sb.AppendLine(String.Join(",", cells))
+            Next
 
             Return sb.ToString
         End Function
