@@ -348,7 +348,7 @@ Namespace Rendering
 
             Dim total As Integer = dataset.ConnectionCount
             Dim limited As Boolean = options.HasLineLimit
-            Dim capacity As Integer = System.Math.Min(total, LineListPresetCapacity)
+            Dim capacity As Integer = System.Math.Min(total, SceneBuildOptions.LineListPresetCapacity)
 
             If limited Then
                 capacity = System.Math.Min(capacity, System.Math.Max(1024, options.MaxLines))
