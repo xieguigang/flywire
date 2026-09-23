@@ -7,6 +7,8 @@ Imports FlywireAI.FAFBv783
 Imports FlywireAI.Connectome
 Imports Microsoft.VisualBasic.Data.Framework.IO.Linq
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
+Imports Microsoft.VisualBasic.MachineLearning.TensorFlow
+Imports Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute
 
 ''' <summary>
 ''' FAFB v783 数据模型以及加载模块的演示测试程序。
@@ -750,6 +752,12 @@ Module Program
         Dim gain As Double = BrainSimulation.CalibrateGain(network, config, stimulation, reporter)
 
         Console.WriteLine($"    calibrated gain: {gain}")
+
+        ' 标定用的网络同样会在 GPU 后端下钉住常驻缓冲；它不再使用，立即归还显存
+        ' （常驻缓冲不参与 LRU 淘汰，不释放就会一直占到后端被回收）
+        If gpuReady Then
+            Call network.Network.SparseLayer.ReleaseDeviceBuffers()
+        End If
 
         ' ---------------------------------------------------------------- 4) 对拍 + 加速比
         Dim benchmark As GpuBenchmarkReport = GpuBenchmark.Run(config, _connectomeMatrix, stimulation, gain, Nothing, reporter)
