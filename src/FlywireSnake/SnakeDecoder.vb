@@ -2,7 +2,6 @@ Imports System.Globalization
 Imports System.IO
 Imports System.Text
 
-Namespace FlywireSnake
 
     ''' <summary>一条训练样本：运动神经元特征 + 示范动作。</summary>
     Public Structure SnakeSample
@@ -294,4 +293,3 @@ Namespace FlywireSnake
 
     End Class
 
-End Namespace

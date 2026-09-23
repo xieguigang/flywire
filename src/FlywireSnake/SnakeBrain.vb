@@ -4,7 +4,6 @@ Imports FlywireAI.Connectome
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
 
-Namespace FlywireSnake
 
     ''' <summary>
     ''' 果蝇大脑的"游戏模式"：把感觉通道的电流注入<b>感觉神经元</b>，逐 tick 推进一步，
@@ -341,4 +340,3 @@ Namespace FlywireSnake
 
     End Class
 
-End Namespace

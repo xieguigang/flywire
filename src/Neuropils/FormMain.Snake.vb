@@ -49,11 +49,6 @@ Partial Public Class FormMain
 
         Dim timer As Stopwatch = Stopwatch.StartNew()
 
-        ' 诊断：确认跨程序集的全限定类型名能否解析
-        Dim probe As FlywireSnake.SnakePlayground = Nothing
-
-        Call Trace.WriteLine(If(probe Is Nothing, "snake probe: type resolved", "unexpected"))
-
         Try
             Call report.AppendLine("FlywireSnake: 果蝇大脑驾驶贪吃蛇")
             Call report.AppendLine($"data dir : {m_config.DataDir}")

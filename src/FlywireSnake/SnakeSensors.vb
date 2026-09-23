@@ -45,7 +45,7 @@ Imports System.Drawing
         }
 
         ''' <summary>某个通道的名字（用于可视化与报告）。</summary>
-    Public Shared Function ChannelName(channel As Integer) As String
+        Public Shared Function ChannelName(channel As Integer) As String
             If channel < FoodSectors Then
                 Return $"食物方位 {channel}"
             ElseIf channel < FoodSectors + DangerChannels Then
@@ -96,4 +96,3 @@ Imports System.Drawing
         Public FoodDistance As Integer
     End Structure
 
-End Namespace

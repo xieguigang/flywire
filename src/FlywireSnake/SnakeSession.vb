@@ -1,7 +1,6 @@
 Imports System.Drawing
 Imports Snake2
 
-Namespace FlywireSnake
 
     ''' <summary>一个 tick 的完整结果（供界面实时显示）。</summary>
     Public Class SnakeStep
@@ -295,4 +294,3 @@ Namespace FlywireSnake
 
     End Class
 
-End Namespace

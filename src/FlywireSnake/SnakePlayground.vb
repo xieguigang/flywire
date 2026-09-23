@@ -1,10 +1,9 @@
-﻿Imports System.Diagnostics
+Imports System.Diagnostics
 Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Snake2
 
-Namespace FlywireSnake
 
     ''' <summary>训练 / 评估报告。</summary>
     Public Class SnakeTrainingReport
@@ -316,4 +315,3 @@ Namespace FlywireSnake
 
     End Class
 
-End Namespace

@@ -2,7 +2,6 @@ Imports System.Drawing
 Imports System.Linq
 Imports Snake2
 
-Namespace FlywireSnake
 
     ''' <summary>
     ''' 从游戏的真实状态编码感觉通道，并给出一个"示范动作"（用于训练读出层）。
@@ -195,4 +194,3 @@ Namespace FlywireSnake
 
     End Class
 
-End Namespace
