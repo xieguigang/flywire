@@ -57,6 +57,8 @@ Namespace Data
             Dim dataset As New BrainDataset With {
                 .Source = m_config.DataDir
             }
+            Dim clock As Diagnostics.Stopwatch = Diagnostics.Stopwatch.StartNew()
+            Dim stage As Long = 0
 
             ' 1) 神经元主索引 + 注释
             Call report(progress, $"loading neuron index from {m_config.NamesCsv} ...")
@@ -78,40 +80,53 @@ Namespace Data
                                          m_config.ResolvePath(m_config.NeuronsCsv).LoadNeurons())
 
             dataset.Index = index
-            Call report(progress, $"  {index}")
 
             ' 2) 递质类型 (ConnectomeIndex 只保留了"是否抑制性"，着色需要类型本身)
             Call throwIfCancelled(cancel)
-            Call report(progress, "loading neurotransmitter types ...")
 
             dataset.Neurotransmitters = loadNeurotransmitters(index, cancel)
+            Call reportStage(progress, "neuron index + annotations", clock, stage)
 
             ' 3) 三维坐标
             Call throwIfCancelled(cancel)
             Call report(progress, $"loading coordinates from {m_config.CoordinatesCsv} ...")
 
             Call loadPositions(dataset, progress, cancel)
+            Call reportStage(progress, "coordinates", clock, stage)
 
             ' 4) 主导脑区
             Call throwIfCancelled(cancel)
             Call report(progress, $"loading neuropil assignments from {m_config.NeuropilTableCsv} ...")
 
             Call loadNeuropils(dataset, progress, cancel)
+            Call reportStage(progress, "neuropil assignment", clock, stage)
 
             ' 5) 连接表
             Call throwIfCancelled(cancel)
             Call report(progress, $"loading connections from {m_config.ConnectionsCsv} ...")
 
             Call loadConnections(dataset, progress, cancel)
+            Call reportStage(progress, "connections", clock, stage)
 
             ' 6) 仿真活跃度 (可选)
             Call throwIfCancelled(cancel)
             Call loadActivity(dataset, progress)
+            Call reportStage(progress, "activity (optional)", clock, stage)
 
             Call report(progress, $"dataset ready: {dataset}")
 
             Return dataset
         End Function
+
+        ''' <summary>报告一个阶段的耗时 (同时也把逐阶段耗时写进自检报告)。</summary>
+        Private Shared Sub reportStage(progress As Action(Of String), name As String, clock As Diagnostics.Stopwatch, ByRef stage As Long)
+            Dim elapsed As Long = clock.ElapsedMilliseconds
+            Dim used As Long = elapsed - stage
+
+            stage = elapsed
+
+            Call report(progress, $"  [{name}] {used} ms (total {elapsed} ms)")
+        End Sub
 
 #Region "loading steps"
 
@@ -214,36 +229,86 @@ Namespace Data
         ''' ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
         ''' </remarks>
         Private Sub loadNeuropils(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)
-            Dim schema As NeuropilSchema = NeuropilSchema.Create()
+            Dim path As String = m_config.ResolvePath(m_config.NeuropilTableCsv)
             Dim units As Integer = dataset.Units
             Dim assignment As Integer() = New Integer(units - 1) {}
             Dim strength As Double() = New Double(units - 1) {}
-            Dim totals As Double() = New Double(schema.Regions.Length - 1) {}
-            Dim i As Integer
             Dim rows As Long = 0
             Dim assigned As Integer = 0
+            Dim canceled As Boolean = False
 
             For k As Integer = 0 To assignment.Length - 1
                 assignment(k) = -1
             Next
 
-            For Each row As NeuropilSynapseTable In m_config.ResolvePath(m_config.NeuropilTableCsv).StreamNeuropilSynapseTable()
-                Call throwIfCancelled(cancel)
+            ' 表头 -> 需要的列位置 (321 列里只取 input/output synapses in <region> 这 160 列)
+            Dim header As String() = Nothing
+            Dim regionSlots As Integer() = Nothing
+            Dim regionNames As String() = Nothing
+            Dim rootColumn As Integer = 0
+
+            For Each line As String In IO.File.ReadLines(path)
+                If header Is Nothing Then
+                    header = line.Split(","c)
+
+                    Dim parsed = parseNeuropilHeader(header)
+
+                    regionSlots = parsed.Regions
+                    regionNames = parsed.Names
+                    rootColumn = parsed.RootColumn
+
+                    Exit For
+                End If
+            Next
+
+            If regionNames Is Nothing OrElse regionNames.Length = 0 Then
+                Throw New InvalidDataException($"脑区表缺少 ``... synapses in <region>`` 列: {path}")
+            End If
+
+            Dim totals As Double() = New Double(regionNames.Length - 1) {}
+            Dim firstLine As Boolean = True
+
+            For Each line As String In IO.File.ReadLines(path)
+                If canceled Then Exit For
+
+                If firstLine Then
+                    firstLine = False
+                    Continue For
+                End If
 
                 rows += 1
 
                 If (rows Mod 20000) = 0 Then
+                    If cancel.IsCancellationRequested Then
+                        canceled = True
+                        Exit For
+                    End If
+
                     Call report(progress, $"  {rows} neuropil rows ...")
                 End If
 
-                If row Is Nothing OrElse Not dataset.Index.IndexOf(row.RootId, i) Then
-                    Continue For
-                End If
+                If line.Length = 0 Then Continue For
+
+                Dim parts As String() = line.Split(","c)
+
+                If parts.Length <= rootColumn Then Continue For
+
+                Dim rootId As Long
+
+                If Not Long.TryParse(parts(rootColumn), rootId) Then Continue For
+
+                Dim i As Integer
+
+                If Not dataset.Index.IndexOf(rootId, i) Then Continue For
 
                 Array.Clear(totals, 0, totals.Length)
 
-                For Each column As NeuropilColumn In schema.Columns
-                    totals(column.Region) += column.Getter(row)
+                For c As Integer = 0 To regionIndex.Length - 1
+                    Dim value As Double
+
+                    If Double.TryParse(parts(regionIndex(c)), NumberStyles.Float, CultureInfo.InvariantCulture, value) Then
+                        totals(regionSlots(c)) += value
+                    End If
                 Next
 
                 Dim best As Integer = -1
@@ -263,12 +328,63 @@ Namespace Data
                 End If
             Next
 
+            If canceled Then Throw New OperationCanceledException(cancel)
+
             dataset.Neuropil = assignment
-            dataset.NeuropilNames = schema.Regions
+            dataset.NeuropilNames = regionNames
             dataset.NeuropilSynapses = strength
 
-            Call report(progress, $"  {rows} rows -> {assigned}/{units} neurons assigned to {schema.Regions.Length} neuropils")
+            Call report(progress, $"  {rows} rows -> {assigned}/{units} neurons assigned to {regionNames.Length} neuropils")
         End Sub
+
+        ''' <summary>
+        ''' 从脑区表的表头里挑出 ``input/output synapses in &lt;region&gt;`` 列的位置。
+        ''' </summary>
+        ''' <remarks>
+        ''' 只解析需要的 160 列：整张表有 321 列，逐列走反射映射实测要 32 s，
+        ''' 按位置取值并只解析这 160 列约 1.5 s。
+        ''' </remarks>
+        Private Shared Function parseNeuropilHeader(header As String()) As (Regions As Integer(), Names As String(), RootColumn As Integer)
+            Const InputPrefix As String = "input synapses in "
+            Const OutputPrefix As String = "output synapses in "
+
+            Dim columns As New List(Of Integer)()
+            Dim names As New List(Of String)()
+            Dim ids As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
+            Dim rootColumn As Integer = 0
+
+            For c As Integer = 0 To header.Length - 1
+                Dim column As String = header(c).Trim()
+
+                If String.Equals(column, "root_id", StringComparison.OrdinalIgnoreCase) Then
+                    rootColumn = c
+                    Continue For
+                End If
+
+                Dim region As String
+
+                If column.StartsWith(InputPrefix, StringComparison.OrdinalIgnoreCase) Then
+                    region = column.Substring(InputPrefix.Length).Trim()
+                ElseIf column.StartsWith(OutputPrefix, StringComparison.OrdinalIgnoreCase) Then
+                    region = column.Substring(OutputPrefix.Length).Trim()
+                Else
+                    Continue For
+                End If
+
+                ' 同一个脑区有"输入突触"与"输出突触"两列，累加到同一个脑区槽位
+                Dim regionIndex As Integer
+
+                If Not ids.TryGetValue(region, regionIndex) Then
+                    regionIndex = names.Count
+                    Call names.Add(region)
+                    Call ids.Add(region, regionIndex)
+                End If
+
+                Call columns.Add(regionIndex)
+            Next
+
+            Return (columns.ToArray(), names.ToArray(), rootColumn)
+        End Function
 
         ''' <summary>
         ''' 连接表：``pre_root_id, post_root_id, neuropil, syn_count, nt_type``。
