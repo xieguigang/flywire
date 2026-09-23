@@ -105,13 +105,18 @@ Partial Public Class FormMain
             m_snakeMask = New Double(m_dataset.Units - 1) {}
         End If
 
-        m_snakeForm = New SnakeBrainForm(playground, brain, decoder)
-        AddHandler m_snakeForm.BrainActivityChanged, AddressOf onSnakeBrainActivity
-        AddHandler m_snakeForm.FormClosed,
-            Sub()
-                m_snakeForm = Nothing
+        ' 用局部变量持有窗体：FormClosed 里 m_snakeForm 会被清空，只有它能用来解绑事件
+        Dim brainForm As New SnakeBrainForm(playground, brain, decoder)
 
-                ' 关窗后把点云恢复成原来的着色
+        AddHandler brainForm.BrainActivityChanged, AddressOf onSnakeBrainActivity
+        AddHandler brainForm.FormClosed,
+            Sub()
+                ' 窗体自己已经停机（停定时器 + 释放显存），这里把主窗口这一侧也收干净
+                RemoveHandler brainForm.BrainActivityChanged, AddressOf onSnakeBrainActivity
+
+                If m_snakeForm Is brainForm Then m_snakeForm = Nothing
+
+                ' 关窗后把点云恢复成原来的着色：否则最后点亮的那批神经元会一直亮着
                 If m_snakeHighlighter IsNot Nothing Then
                     Call m_snakeHighlighter.Reset()
                     Call m_canvas.UpdatePointCloud(m_snakeHighlighter.Points)
@@ -120,13 +125,15 @@ Partial Public Class FormMain
                 End If
             End Sub
 
-        Call m_snakeForm.Show(Me)
+        m_snakeForm = brainForm
+
+        Call brainForm.Show(Me)
 
         m_statusText.Text = $"观战窗口已打开：{brain.FlowSummary}"
 
         ' 命令行自检：跑够指定帧数后抓屏退出
         If m_snakeProbeTicks > 0 Then
-            Call startSnakeProbeCapture(m_snakeForm)
+            Call startSnakeProbeCapture(brainForm)
         End If
     End Sub
 

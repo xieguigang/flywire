@@ -242,6 +242,60 @@ Public Class SnakeBrainForm
         m_playButton.Text = "开始"
     End Sub
 
+    ''' <summary>停过机之后不再重复停机。</summary>
+    Private m_stopped As Boolean
+
+    ''' <summary>
+    ''' 关窗即停机：定时器是"游戏引擎 + 大脑逐步仿真"的唯一驱动，停掉它两者就都停了。
+    ''' </summary>
+    ''' <remarks>
+    ''' 不停表的话后果很具体：<see cref="Timer"/> 的 WM_TIMER 发到的是它自己的隐藏窗口，
+    ''' <b>不随窗体销毁而结束</b> —— 关窗之后会话继续 tick，主窗口的三维点云
+    ''' 也就继续被脑活动点亮（看起来"关不掉地一直闪"）。
+    ''' </remarks>
+    Protected Overrides Sub OnFormClosed(e As FormClosedEventArgs)
+        Call shutdown()
+        Call MyBase.OnFormClosed(e)
+    End Sub
+
+    ''' <remarks>
+    ''' 兜底再停一次：即使窗体是被 Dispose 掉的（没走 Close），也不该留下一个
+    ''' 还在后台推进游戏与仿真的定时器。重复调用由 <see cref="m_stopped"/> 挡住。
+    ''' </remarks>
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        Call shutdown()
+
+        If disposing Then
+            m_timer.Dispose()
+        End If
+
+        Call MyBase.Dispose(disposing)
+    End Sub
+
+    Private Sub shutdown()
+        If m_stopped Then Return
+
+        m_stopped = True
+
+        m_timer.Stop()
+
+        If m_session IsNot Nothing Then
+            RemoveHandler m_session.Stepped, AddressOf onStepped
+            m_session = Nothing
+        End If
+
+        ' 大脑的显存要还回去：重开窗口会重新装配一份
+        If m_brain IsNot Nothing Then
+            Try
+                Call m_brain.Dispose()
+            Catch ex As Exception
+                System.Diagnostics.Debug.WriteLine($"unable to release the game brain: {ex.Message}")
+            End Try
+
+            m_brain = Nothing
+        End If
+    End Sub
+
     Private Sub togglePlay()
         If m_timer.Enabled Then
             m_timer.Stop()

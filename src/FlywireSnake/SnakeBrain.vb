@@ -26,6 +26,7 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
     ''' 状态在整局游戏里持续累积，只在开局时 <see cref="ResetEpisode"/> 一次。
     ''' </remarks>
     Public Class SnakeBrain
+        Implements IDisposable
 
         Private ReadOnly m_index As ConnectomeIndex
         Private ReadOnly m_layer As SparseLIFLayer
@@ -38,6 +39,7 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
 
         Private m_active As Integer() = New Integer() {}
         Private m_ticks As Integer
+        Private m_disposed As Boolean
 
         ''' <summary>每个感觉通道对应的神经元索引。</summary>
         Public ReadOnly Property SensorNeurons As Integer()()
@@ -315,6 +317,36 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
 
             Return m_groupSpikes(group)
         End Function
+
+#End Region
+
+#Region "停机"
+
+        ''' <summary>
+        ''' 释放这份大脑占用的显存：常驻的膜电位 / 脉冲缓冲 + 外部电流张量。
+        ''' </summary>
+        ''' <remarks>
+        ''' 每开一次观战窗口都会装配一份<b>新</b>的大脑（<see cref="SnakePlayground.CreateBrain"/>），
+        ''' 而常驻缓冲不参与后端 LRU 淘汰 —— 不释放的话反复开关窗口会一点点吃掉显存。
+        ''' 关窗即停机、重开即重新装配，因此这里释放是安全的。
+        ''' </remarks>
+        Public Sub Dispose() Implements IDisposable.Dispose
+            If m_disposed Then Return
+
+            m_disposed = True
+
+            If m_layer IsNot Nothing Then
+                Try
+                    Call m_layer.ReleaseDeviceBuffers()
+                Catch ex As Exception
+                    System.Diagnostics.Debug.WriteLine($"unable to release the resident buffers: {ex.Message}")
+                End Try
+            End If
+
+            If m_external IsNot Nothing Then
+                Call m_external.Dispose()
+            End If
+        End Sub
 
 #End Region
 
