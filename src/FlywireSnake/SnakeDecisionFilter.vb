@@ -24,8 +24,14 @@
         ''' <summary>滑动平均系数：越大越相信当前这一 tick 的打分。</summary>
         Public Property Smoothing As Double = 0.45
 
-        ''' <summary>转向迟滞余量：新方向的平滑打分要高出这么多才会换向。</summary>
-        Public Property Margin As Double = 0.05
+        ''' <summary>
+        ''' 转向迟滞的<b>相对</b>余量：占"当前各动作打分跨度"的比例（0 = 不迟滞，永远取最高分方向）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 必须相对而不能绝对：打分的绝对量级取决于读出层权重与放电率，
+        ''' 一个固定的绝对余量要么小到形同虚设，要么大到把蛇钉死在直线上（实测过后者）。
+        ''' </remarks>
+        Public Property Margin As Double = 0.15
 
         Private m_smoothed As Double()
 
@@ -54,26 +60,35 @@
 
             Dim best As Integer = -1
             Dim bestScore As Double = Double.NegativeInfinity
+            Dim worstScore As Double = Double.PositiveInfinity
 
             For a As Integer = 0 To m_smoothed.Length - 1
-                If m_smoothed(a) > bestScore Then
-                    bestScore = m_smoothed(a)
+                Dim value As Double = m_smoothed(a)
+
+                ' 被禁的方向不参与"谁最好"的比较
+                If Double.IsNegativeInfinity(value) Then Continue For
+
+                If value > bestScore Then
+                    bestScore = value
                     best = a
                 End If
+
+                If value < worstScore Then worstScore = value
             Next
 
             ' 全部被禁（理论上只有"四个方向都不可行"才会出现）：保持原方向
             If best < 0 Then Return Math.Max(incumbent, 0)
             If mustTurn Then Return best
 
-            If incumbent >= 0 AndAlso incumbent < m_smoothed.Length Then
-                Dim held As Double = m_smoothed(incumbent)
+            If Margin <= 0 OrElse incumbent < 0 OrElse incumbent >= m_smoothed.Length Then Return best
 
-                ' 原方向没被"明显超过"就继续走：这就是迟滞
-                If held > Double.NegativeInfinity AndAlso held >= bestScore - Margin Then
-                    Return incumbent
-                End If
-            End If
+            Dim held As Double = m_smoothed(incumbent)
+
+            If Double.IsNegativeInfinity(held) Then Return best
+            If worstScore > bestScore Then worstScore = bestScore
+
+            ' 原方向没被"明显超过"（超过当前打分跨度的 Margin 倍）就继续走：这就是迟滞
+            If held >= bestScore - Margin * (bestScore - worstScore) Then Return incumbent
 
             Return best
         End Function

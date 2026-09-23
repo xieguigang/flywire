@@ -197,20 +197,26 @@ Partial Public Class FormMain
         End Using
     End Sub
 
-    ''' <summary>从环境变量读一个整数（没设 / 解析不了时返回 0，表示"沿用默认档位"）。</summary>
-    Private Shared Function environmentInteger(name As String) As Integer
+    ''' <summary>
+    ''' 从环境变量读一个整数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+    ''' 约定 -1 表示"沿用默认档位"）。
+    ''' </summary>
+    Private Shared Function environmentInteger(name As String, Optional fallback As Integer = 0) As Integer
         Dim value As Integer
 
-        Call Integer.TryParse(Environment.GetEnvironmentVariable(name), value)
+        If Not Integer.TryParse(Environment.GetEnvironmentVariable(name), value) Then Return fallback
 
         Return value
     End Function
 
-    ''' <summary>从环境变量读一个浮点数（没设 / 解析不了时返回 0，表示"沿用默认档位"）。</summary>
-    Private Shared Function environmentDouble(name As String) As Double
+    ''' <summary>
+    ''' 从环境变量读一个浮点数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+    ''' 约定负数表示"沿用默认档位"）。
+    ''' </summary>
+    Private Shared Function environmentDouble(name As String, Optional fallback As Double = 0) As Double
         Dim value As Double
 
-        Call Double.TryParse(Environment.GetEnvironmentVariable(name), value)
+        If Not Double.TryParse(Environment.GetEnvironmentVariable(name), value) Then Return fallback
 
         Return value
     End Function
@@ -314,10 +320,13 @@ Partial Public Class FormMain
         If ticks <= 0 Then ticks = 300
         If evaluateRounds <= 0 Then evaluateRounds = 8
 
-        ' 0 = 没给，沿用 SnakePlayground 的默认档位
-        Dim sensorsPerChannel As Integer = environmentInteger("FLYWIRE_SNAKE_SENSORS_PER_CHANNEL")
-        Dim sensorCurrent As Double = environmentDouble("FLYWIRE_SNAKE_SENSOR_CURRENT")
-        Dim featureWindow As Integer = environmentInteger("FLYWIRE_SNAKE_FEATURE_WINDOW")
+        ' -1 = 没给，沿用 SnakePlayground 的默认档位
+        Dim sensorsPerChannel As Integer = environmentInteger("FLYWIRE_SNAKE_SENSORS_PER_CHANNEL", -1)
+        Dim sensorCurrent As Double = environmentDouble("FLYWIRE_SNAKE_SENSOR_CURRENT", -1)
+        Dim featureWindow As Integer = environmentInteger("FLYWIRE_SNAKE_FEATURE_WINDOW", -1)
+        Dim decisionMargin As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_MARGIN", -1)
+        Dim decisionSmoothing As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_SMOOTHING", -1)
+        Dim daggerRounds As Integer = environmentInteger("FLYWIRE_SNAKE_DAGGER_ROUNDS", -1)
 
         ' 游戏要跑很多 tick，逐 tick 回读对 CPU 后端来说太贵，因此默认尝试 GPU
         m_config.UseGpu = True
@@ -343,10 +352,15 @@ Partial Public Class FormMain
                 If sensorsPerChannel > 0 Then playground.SensorsPerChannel = sensorsPerChannel
                 If sensorCurrent > 0 Then playground.SensorCurrent = sensorCurrent
                 If featureWindow > 0 Then playground.FeatureWindow = featureWindow
+                If decisionMargin >= 0 Then playground.DecisionMargin = decisionMargin
+                If decisionSmoothing >= 0 Then playground.DecisionSmoothing = decisionSmoothing
+                If daggerRounds >= 0 Then playground.DaggerRounds = daggerRounds
 
                 Call report.AppendLine()
                 Call report.AppendLine($"tuning    : 每通道感觉神经元 {playground.SensorsPerChannel} 个、" &
-                                       $"注入电流 {playground.SensorCurrent}、读出窗宽 {playground.FeatureWindow} tick")
+                                       $"注入电流 {playground.SensorCurrent}、读出窗宽 {playground.FeatureWindow} tick、" &
+                                       $"迟滞余量 {playground.DecisionMargin}、平滑 {playground.DecisionSmoothing}、" &
+                                       $"DAgger {playground.DaggerRounds} 轮")
                 Call report.AppendLine()
 
                 ' 感觉 / 运动神经元的选取：先跑一局看通路是否活着

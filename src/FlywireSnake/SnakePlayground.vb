@@ -82,15 +82,39 @@ Imports Snake2
         ''' 这份连接组做过结构归一化，注入的神经元太少时响应扩散不到运动神经元 ——
         ''' 实测每个通道 256 个（共 4,096 个注入）时，运动神经元平均每个 tick 只有 1.1 个脉冲，
         ''' 读出层拿到的特征几乎是空的（与示范动作的一致率只有 45.7%），
-        ''' 蛇看起来就是"没有目标地乱走"。这个值就是用来把感觉输入铺开到整个 afferent 群体的。
+        ''' 蛇看起来就是"没有目标地乱走"。
+        ''' 
+        ''' 实测对照（8 局 × 300 tick）：
+        ''' <code>
+        ''' 每通道神经元   运动神经元脉冲/tick   与教师一致率
+        '''    256              1.1                45.7%
+        '''   1024              8.9                73.3%
+        ''' </code>
+        ''' 因此默认取 1024（afferent 池 19,300 个，每通道 1,024 个时共铺开 16,384 个）。
         ''' </remarks>
-        Public Property SensorsPerChannel As Integer = 256
+        Public Property SensorsPerChannel As Integer = 1024
 
         ''' <summary>感觉通道强度为 1.0 时，每个感觉神经元注入的电流。</summary>
         Public Property SensorCurrent As Double = 2.4
 
         ''' <summary>运动读出特征（滑动窗放电率）的窗宽（tick）。</summary>
         Public Property FeatureWindow As Integer = 4
+
+        ''' <summary>决策迟滞的相对余量（占打分跨度的比例；0 = 不迟滞）。</summary>
+        Public Property DecisionMargin As Double = 0.15
+
+        ''' <summary>决策打分的滑动平均系数。</summary>
+        Public Property DecisionSmoothing As Double = 0.45
+
+        ''' <summary>
+        ''' DAgger 聚合轮数（0 = 只做一次教师示范就训练，不做误差累积修正）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 只用教师示范的样本训练，读出层上场后会偏离到教师没走过的状态上（covariate shift）：
+        ''' 实测与教师的一致率 73%，但真正上场只有 5.6 分。DAgger 让读出层自己走、
+        ''' 教师在路上继续标注，把这些"自己走出来的状态"聚合进训练集重新训练。
+        ''' </remarks>
+        Public Property DaggerRounds As Integer = 2
 
 #End Region
 
@@ -249,7 +273,13 @@ Imports Snake2
 
             Call world.InitGame(render)
 
-            Return New SnakeSession(world, render, brain, decoder)
+            Dim session As New SnakeSession(world, render, brain, decoder)
+
+            ' 决策侧的标定与装配同源：训练、评估、观战窗口用的是同一套迟滞 / 平滑参数
+            session.DecisionFilter.Margin = DecisionMargin
+            session.DecisionFilter.Smoothing = DecisionSmoothing
+
+            Return session
         End Function
 
 #End Region
@@ -284,20 +314,35 @@ Imports Snake2
 
             Call report(reporter, $"teacher (greedy) score = {teacherScore:F2}")
 
-            ' ---- 采集演示样本：教师策略推进，但每 tick 记录大脑的运动神经元活动 ----
-            Dim samples As New List(Of SnakeSample)(episodes * maxTicks)
+            ' ---- 采集演示样本（DAgger：先示范、再聚合）----
+            ' 只采集教师示范的话，训练集里全是"教师走出来的状态"；读出层上场后会偏离到教师
+            ' 没走过的状态上（模仿学习的误差累积，covariate shift），
+            ' 实测一致率 73% 而真正上场只有 5.6 分。DAgger 的做法是：
+            ' 让读出层自己走、教师沿路继续标注，把这些状态聚合进训练集反复重训。
+            Dim samples As New List(Of SnakeSample)(episodes * maxTicks * (1 + Math.Max(0, DaggerRounds)))
             Dim session As SnakeSession = CreateSession(brain, decoder)
 
             For e As Integer = 1 To episodes
                 Call session.RunEpisode(maxTicks, samples, markTeacher:=True)
-
-                Call report(reporter, $"episode {e}/{episodes}: samples={samples.Count:N0}")
             Next
 
-            ' ---- 训练 ----
+            Call report(reporter, $"teacher demonstration: samples={samples.Count:N0}")
+
             Dim accuracy As Double = decoder.Train(samples, epochs:=24, rate:=0.25)
 
-            Call report(reporter, $"decoder trained: {samples.Count:N0} samples, accuracy={accuracy:P1}")
+            Call report(reporter, $"decoder trained (round 0): accuracy={accuracy:P1}")
+
+            For round As Integer = 1 To Math.Max(0, DaggerRounds)
+                For e As Integer = 1 To episodes
+                    ' markTeacher:=False → 由读出层自己决定走向，但样本标签仍然是教师动作
+                    Call session.RunEpisode(maxTicks, samples, markTeacher:=False)
+                Next
+
+                accuracy = decoder.Train(samples, epochs:=24, rate:=0.25)
+
+                Call report(reporter,
+                            $"decoder trained (dagger {round}): samples={samples.Count:N0}, accuracy={accuracy:P1}")
+            Next
 
             ' ---- 对照 3：训练后由果蝇大脑驱动 ----
             Dim trained As Double = averageScore(decoder, brain, episodes, maxTicks, teacher:=False)
