@@ -51,9 +51,9 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/Neuropils/Neuropils.vbproj" Id="1fa55757-7557-4e31-8af0-8d255a9a36e7">
-    <Platform Solution="Debug|x64" Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/test/test.vbproj" Id="93e22e24-8bc5-4eff-9fa0-5545817bb042">
-    <Platform Solution="Debug|x64" Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
 </Solution>
