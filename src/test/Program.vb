@@ -7,8 +7,10 @@ Imports FlywireAI.FAFBv783
 Imports FlywireAI.Connectome
 Imports Microsoft.VisualBasic.Data.Framework.IO.Linq
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
-Imports Microsoft.VisualBasic.MachineLearning.TensorFlow
-Imports Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute
+' 注意：TensorFlow 命名空间里也有一个 Math 模块，直接 Imports 会让 System.Math 产生二义性，
+' 因此这里统一使用别名（与 SNN / ILCudaTensor 测试工程的写法保持一致）
+Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
+Imports tfCompute = Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute
 
 ''' <summary>
 ''' FAFB v783 数据模型以及加载模块的演示测试程序。
@@ -831,7 +833,7 @@ Module Program
         Console.WriteLine("    ---- per-step cost breakdown (10 iterations each) ----")
 
         Dim units As Integer = matrix.Units
-        Dim csr As Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr = matrix.Synapses.Csr
+        Dim csr As tfCompute.SparseCsr = matrix.Synapses.Csr
 
         ' 与正式仿真同量级的发放率：约 2% 的神经元处于发放态（取自 demo 的逐步统计）
         Dim rng As New Random(config.Seed)
