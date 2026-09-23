@@ -122,26 +122,24 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
         ''' </summary>
         ''' <param name="index">连接组索引（提供 flow 注释）</param>
         ''' <param name="network">已装配的稀疏递归网络（<c>BrainNetworkBuilder.Assemble</c>）</param>
-        ''' <param name="sensorsPerChannel">每个感觉通道使用多少个感觉神经元</param>
+        ''' <param name="sensorsPerChannel">
+        ''' 每个感觉通道使用多少个感觉神经元。
+        ''' </param>
         ''' <param name="groupCount">运动读出分组数（= 动作数）</param>
         ''' <param name="seed">挑选神经元的随机种子（保证可复现）</param>
         ''' <remarks>
         ''' 装配与增益标定（读连接表、建 CSR）是一次性的工作，由 <see cref="SnakePlayground"/> 完成；
         ''' 本类只负责"选神经元 + 逐步推进"。
         ''' 
-        ''' 形参名是 <c>groupCount</c> 而不是"motorGroups"：VB 不区分大小写，
-        ''' 后者会遮蔽 <see cref="MotorGroups"/> 属性，于是下面所有
+        ''' <b>为什么默认 256 个感觉神经元/通道，而不是几十个</b>：这份连接组做过结构归一化，
+        ''' 少量神经元的输入只会激起局部响应 —— 实测 16 通道 × 32 个（512 个注入）时，
+        ''' 运动神经元的放电几乎为零，解码器学不到任何东西。256 个/通道（全脑 4,096 个注入）
+        ''' 才能让响应扩散到全脑，运动神经元才有可读出的信号
+        ''' （对应刺激实验里"电极足够大"的情形）。
+        ''' 
+        ''' 另外：形参名是 <c>groupCount</c> 而不是"motorGroups" —— VB 不区分大小写，
+        ''' 后者会遮蔽 <see cref="MotorGroups"/> 属性，于是所有
         ''' <c>MotorGroups.Length</c> 都会变成对整数取 Length。
-        ''' </remarks>
-        ''' <param name="sensorsPerChannel">
-        ''' 每个感觉通道使用多少个感觉神经元。
-        ''' </param>
-        ''' <remarks>
-        ''' <b>为什么默认是 256 而不是几十个</b>：这份连接组做过结构归一化，
-        ''' 少量神经元的输入只会激起局部响应 —— 实测 16 通道 × 32 个（512 个注入）
-        ''' 时，运动神经元的放电几乎为零，解码器学不到任何东西。
-        ''' 256 个/通道（全脑 4,096 个注入）才能让响应扩散到全脑，
-        ''' 运动神经元才有可读出的信号（对应刺激实验里"电极足够大"的情形）。
         ''' </remarks>
         Public Sub New(index As ConnectomeIndex,
                        network As BrainNetwork,

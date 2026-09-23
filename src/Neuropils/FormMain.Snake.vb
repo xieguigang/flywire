@@ -1,5 +1,6 @@
 Imports System.Diagnostics
 Imports System.IO
+Imports System.Linq
 Imports System.Text
 Imports FlywireSnake
 Imports Snake2
@@ -106,7 +107,9 @@ Partial Public Class FormMain
                 Call report.AppendLine()
 
                 ' ---- 训练 + 三组对照 ----
-                Dim training As SnakeTrainingReport = playground.Train(episodes, ticks, Nothing)
+                Dim training As SnakeTrainingReport = playground.Train(
+                    episodes, ticks,
+                    Sub(message) Call report.AppendLine($"      [{timer.ElapsedMilliseconds,7:N0} ms] {message}"))
 
                 Call report.AppendLine()
                 Call report.AppendLine($"      {training.Describe()}")

@@ -32,6 +32,11 @@ Imports Snake2
         ''' <summary>本阶段耗时 (毫秒)。</summary>
         Public Property ElapsedMs As Long
 
+        ''' <summary>
+        ''' 训练好的解码器（界面可以拿它替换正在游玩的解码器，让"训练后的大脑"立刻上场）。
+        ''' </summary>
+        Public Property TrainedDecoder As SnakeDecoder
+
         Public Function Describe() As String
             Return $"样本 {Samples:N0}（与教师一致率 {Accuracy:P1}）· 均分：未训练 {UntrainedScore:F1} → " &
                    $"训练后 {TrainedScore:F1}（教师上限 {TeacherScore:F1}）· " &
@@ -281,7 +286,8 @@ Imports Snake2
                 .TrainedScore = trained,
                 .Episodes = episodes,
                 .MaxTicks = maxTicks,
-                .ElapsedMs = timer.ElapsedMilliseconds
+                .ElapsedMs = timer.ElapsedMilliseconds,
+                .TrainedDecoder = decoder
             }
         End Function
 

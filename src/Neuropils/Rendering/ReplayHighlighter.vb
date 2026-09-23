@@ -154,6 +154,48 @@ Namespace Rendering
             Return peak
         End Function
 
+        ''' <summary>
+        ''' 按"逐神经元权重"直接高亮（用于非回放的实时场景，例如果蝇大脑玩游戏时的活动）。
+        ''' </summary>
+        ''' <param name="mask">长度 = 神经元数 的权重数组：0 = 不亮，1 = 最亮</param>
+        ''' <param name="actual">本帧真正被点亮的神经元（用于下一帧还原）</param>
+        ''' <remarks>
+        ''' 与 <see cref="Apply"/> 共用同一套"先还原上一帧、再点亮当前帧"的机制，
+        ''' 因此单帧开销只与变化的那部分神经元数量有关。
+        ''' </remarks>
+        Public Sub ApplyMask(mask As Double(), actual As Integer())
+            If mask Is Nothing Then Return
+
+            Call restore()
+
+            If actual IsNot Nothing Then
+                For i As Integer = 0 To actual.Length - 1
+                    Dim neuron As Integer = actual(i)
+                    Dim index As Integer = neuronPoint(neuron)
+
+                    If index < 0 Then Continue For
+
+                    Dim weight As Double = If(neuron >= 0 AndAlso neuron < mask.Length, mask(neuron), 0.6)
+
+                    m_points(index) = highlight(m_base(index), If(weight <= 0, 0.6, weight))
+                    Call m_touched.Add(neuron)
+                Next
+            Else
+                For neuron As Integer = 0 To mask.Length - 1
+                    Dim weight As Double = mask(neuron)
+
+                    If weight <= 0 Then Continue For
+
+                    Dim index As Integer = neuronPoint(neuron)
+
+                    If index < 0 Then Continue For
+
+                    m_points(index) = highlight(m_base(index), weight)
+                    Call m_touched.Add(neuron)
+                Next
+            End If
+        End Sub
+
         ''' <summary>还原全部高亮（结束回放 / 关闭刺激模式）。</summary>
         Public Sub Reset()
             Call restore()

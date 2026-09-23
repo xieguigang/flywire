@@ -63,7 +63,7 @@ Imports Snake2
         Private ReadOnly m_game As Game
         Private ReadOnly m_render As Render
         Private ReadOnly m_brain As SnakeBrain
-        Private ReadOnly m_decoder As SnakeDecoder
+        Private m_decoder As SnakeDecoder
 
         Private m_lastScore As Integer
 
@@ -88,11 +88,22 @@ Imports Snake2
             End Get
         End Property
 
-        ''' <summary>运动解码器。</summary>
-        Public ReadOnly Property Decoder As SnakeDecoder
+        ''' <summary>
+        ''' 运动解码器。
+        ''' </summary>
+        ''' <remarks>
+        ''' 可写：训练完成后把新解码器换上，大脑立刻用学到的读出继续玩
+        ''' （训练本身在别的线程 / 别的脑实例上跑，不打断当前这一局）。
+        ''' </remarks>
+        Public Property Decoder As SnakeDecoder
             Get
                 Return m_decoder
             End Get
+            Set(value As SnakeDecoder)
+                If value Is Nothing Then Return
+
+                m_decoder = value
+            End Set
         End Property
 
         ''' <summary>本局的 tick 数。</summary>
