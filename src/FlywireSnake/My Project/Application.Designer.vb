@@ -26,9 +26,10 @@ Namespace My
             Me.ShutDownStyle = Global.Microsoft.VisualBasic.ApplicationServices.ShutdownMode.AfterMainFormCloses
         End Sub
 
+        ' 本工程是库（无启动窗体），因此不创建主窗体：
+        ' 这里同步了 Application.myapp 的改动（模板原本会引用不存在的 Form1）
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Form1
         End Sub
     End Class
 End Namespace

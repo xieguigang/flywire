@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <MyApplicationData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <MySubMain>true</MySubMain>
-  <MainForm>Form1</MainForm>
+  <!--
+    FlywireSnake 是一个库（供 Neuropils 承载观战窗口），本身没有启动窗体：
+    模板里残留的 Form1 引用会让整个工程编译失败，这里改成"没有主窗体"。
+  -->
+  <MySubMain>false</MySubMain>
   <SingleInstance>false</SingleInstance>
   <ShutdownMode>0</ShutdownMode>
   <EnableVisualStyles>true</EnableVisualStyles>

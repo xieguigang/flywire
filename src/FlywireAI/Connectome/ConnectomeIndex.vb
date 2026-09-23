@@ -31,6 +31,7 @@ Namespace Connectome
         Dim _classes As String()
         Dim _superClasses As String()
         Dim _primaryTypes As String()
+        Dim _flows As String()
         Dim _excitatory As Boolean()
         Dim _annotated As Boolean()
 
@@ -133,6 +134,7 @@ Namespace Connectome
             _classes = New String(Size - 1) {}
             _superClasses = New String(Size - 1) {}
             _primaryTypes = New String(Size - 1) {}
+            _flows = New String(Size - 1) {}
             _excitatory = New Boolean(Size - 1) {}
             _annotated = New Boolean(Size - 1) {}
 
@@ -182,6 +184,7 @@ Namespace Connectome
 
                     _classes(index) = If(cell.Class, "")
                     _superClasses(index) = If(cell.SuperClass, "")
+                    _flows(index) = If(cell.Flow, "")
                     _annotated(index) = True
                 Next
             End If
@@ -244,6 +247,62 @@ Namespace Connectome
         Public Function GetPrimaryType(index As Integer) As String
             If _primaryTypes Is Nothing Then Return ""
             Return If(_primaryTypes(index), "")
+        End Function
+
+        ''' <summary>
+        ''' 神经元在信息流上的位置（<c>classification.csv</c> 的 ``flow`` 列）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 这是这份数据集里唯一能直接区分"输入 / 输出"的注释：
+        ''' ``afferent`` = 感觉输入神经元（把外界信号送进脑），
+        ''' ``efferent`` = 运动 / 下行输出神经元（把脑的命令送出去），
+        ''' ``intrinsic`` = 局部中间神经元。
+        ''' 
+        ''' 对于一个"让大脑接管外部设备"的用途来说，这三类正好对应
+        ''' "刺激哪里" 与 "从哪里读出" —— 见 <see cref="GetFlowKind"/>。
+        ''' </remarks>
+        Public Enum NeuronFlow
+            ''' <summary>没有 flow 注释</summary>
+            Unknown
+            ''' <summary>感觉输入（afferent）</summary>
+            Afferent
+            ''' <summary>运动输出（efferent）</summary>
+            Efferent
+            ''' <summary>局部中间神经元（intrinsic）</summary>
+            Intrinsic
+        End Enum
+
+        ''' <summary>取神经元的 flow 注解文本（无注解时为空串）。</summary>
+        Public Function GetFlow(index As Integer) As String
+            If _flows Is Nothing OrElse index < 0 OrElse index >= _flows.Length Then Return ""
+            Return If(_flows(index), "")
+        End Function
+
+        ''' <summary>把 flow 注解文本解析成枚举。</summary>
+        Public Function GetFlowKind(index As Integer) As NeuronFlow
+            Select Case GetFlow(index).Trim.ToLowerInvariant
+                Case "afferent"
+                    Return NeuronFlow.Afferent
+                Case "efferent"
+                    Return NeuronFlow.Efferent
+                Case "intrinsic"
+                    Return NeuronFlow.Intrinsic
+                Case Else
+                    Return NeuronFlow.Unknown
+            End Select
+        End Function
+
+        ''' <summary>列出某一种 flow 的全部神经元索引（升序），可用于挑选感觉 / 运动神经元群。</summary>
+        Public Function NeuronsOfFlow(flow As NeuronFlow) As Integer()
+            Dim members As New List(Of Integer)(8192)
+
+            For i As Integer = 0 To Size - 1
+                If GetFlowKind(i) = flow Then
+                    Call members.Add(i)
+                End If
+            Next
+
+            Return members.ToArray()
         End Function
 
         ''' <summary>该神经元是否为兴奋性？(依据 neurons.csv 的 nt_type 判定，缺注释时默认兴奋性)</summary>
