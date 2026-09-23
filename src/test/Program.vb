@@ -4,7 +4,9 @@ Imports System.Diagnostics
 Imports System.IO
 Imports System.Linq
 Imports FlywireAI.FAFBv783
+Imports FlywireAI.Connectome
 Imports Microsoft.VisualBasic.Data.Framework.IO.Linq
+Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 
 ''' <summary>
 ''' FAFB v783 数据模型以及加载模块的演示测试程序。
@@ -46,6 +48,7 @@ Module Program
         Call run("6. stream rows vs full load rows", AddressOf testRowCountConsistency)
         Call run("7. streaming api regression (framework fixes)", AddressOf testDataStreamHandleBehavior)
         Call run("8. SWC skeleton parser + zip archive", AddressOf testSwcSkeleton)
+        Call run("9. Drosophila brain SNN simulation", AddressOf testBrainSnn)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -507,12 +510,195 @@ Module Program
         End Using
     End Sub
 
+    ''' <summary>
+    ''' 果蝇全脑 SNN 脉冲神经网络 demo：
+    ''' 
+    ''' 1. 用 ``names.csv`` 建立全脑 13.9 万个神经元的索引，流式扫描 ``connections_princeton.csv``
+    '''    (534 万条突触) 构建带极性 (±syn_count) 的突触三元组；
+    ''' 2. 按突触后 ``Σ|w|`` 做结构归一化，装配 SNN 库的稀疏递归 LIF 网络 (AddSparseLayer)；
+    ''' 3. 通过短探针做活动标定，选出合适的全局权重增益；
+    ''' 4. 「随机神经元」与「按细胞类型」两种驱动模式各运行一次 T=30 的全脑仿真，
+    '''    并与库的 ``ForwardSpikes`` 路径交叉校验脉冲计数；
+    ''' 5. 输出控制台活动报告并落盘 csv (top 神经元 / group / cell type / 逐步活动 / 刺激清单)。
+    ''' </summary>
+    Private Sub testBrainSnn()
+        Console.WriteLine()
+        Console.WriteLine("=== 9. Drosophila brain SNN simulation ===")
+
+        Dim config As New SnnConfig With {
+            .DataDir = DATA_DIR,
+            .TimeSteps = 30,
+            .StimulationNeurons = 5000,
+            .Seed = 42,
+            .TopNeurons = 50
+        }
+
+        Call check("config is valid", config.Validate().Length, 0)
+
+        Dim reporter As Action(Of String) = Sub(message) Console.WriteLine($"    {message}")
+        Dim timer As Stopwatch = Stopwatch.StartNew()
+
+        ' ---------------------------------------------------------------- 神经元索引
+        Dim index As New ConnectomeIndex()
+        Dim names As List(Of CellNames) = config.ResolvePath(config.NamesCsv).LoadCellNames()
+
+        For Each cell As CellNames In names
+            Call index.Add(cell.RootId)
+        Next
+
+        Console.WriteLine($"    cell list      : {index.Size} neurons (from {config.NamesCsv})")
+
+        ' ---------------------------------------------------------------- 突触三元组
+        Dim triplets As SynapseTriplets = SynapseTriplets.Build(
+            index,
+            config.ResolvePath(config.ConnectionsCsv),
+            config.ExcitatoryGain,
+            config.InhibitoryGain,
+            Sub(rows As Long) Console.WriteLine($"      ... {rows} connection rows processed"))
+
+        Call index.Freeze()
+        timer.Stop()
+
+        Console.WriteLine($"    connectome     : {triplets}")
+        Console.WriteLine($"    load time      : {timer.ElapsedMilliseconds} ms")
+
+        Call check("neurons > 130000", index.Size > 130000, True)
+        Call check("connection rows > 5000000", triplets.CsvRows > 5000000L, True)
+        Call check("excitatory rows > 0", triplets.ExcitatoryCount > 0L, True)
+        Call check("inhibitory (GABA) rows > 0", triplets.InhibitoryCount > 0L, True)
+
+        ' root_id <-> index 双向映射往返一致 (抽样)
+        Dim roundTrip As Boolean = True
+        Dim probes As Long() = {index.GetRootId(triplets.Pre(0)),
+                                index.GetRootId(triplets.Post(0)),
+                                index.GetRootId(index.Size - 1)}
+
+        For Each probe As Long In probes
+            Dim i As Integer
+
+            If Not index.IndexOf(probe, i) OrElse index.GetRootId(i) <> probe Then
+                roundTrip = False
+            End If
+        Next
+
+        Call check("root_id <-> index round trip", roundTrip, True)
+
+        ' ---------------------------------------------------------------- 细胞注释
+        Call index.AttachAnnotations(names,
+                                     config.ResolvePath(config.ClassificationCsv).LoadClassification(),
+                                     config.ResolvePath(config.CellTypesCsv).LoadCellTypes(),
+                                     config.ResolvePath(config.NeuronsCsv).LoadNeurons())
+
+        Console.WriteLine($"    annotations    : {index}")
+        Call check("annotated neurons > 130000", index.AnnotatedCount > 130000, True)
+
+        ' ---------------------------------------------------------------- CSR 权重矩阵 (两种模式复用)
+        timer.Restart()
+
+        Dim matrix As ConnectomeMatrix = BrainNetworkBuilder.BuildMatrix(triplets, reporter)
+
+        timer.Stop()
+
+        Console.WriteLine($"    csr matrix     : {matrix} ({timer.ElapsedMilliseconds} ms)")
+
+        Call check("nnz > 1000000", matrix.Nnz > 1000000, True)
+        Call check("nnz <= csv rows", CDbl(matrix.Nnz) <= CDbl(triplets.CsvRows), True)
+
+        ' ---------------------------------------------------------------- 两种驱动模式
+        Dim modeSummary As New List(Of String)()
+
+        For Each mode As StimulationMode In {StimulationMode.RandomNeurons, StimulationMode.CellType}
+            config.Mode = mode
+
+            Console.WriteLine()
+            Console.WriteLine($"    ==== stimulation mode: {mode} ====")
+
+            Dim stimulation As Stimulation = Stimulation.Create(config, index)
+
+            Console.WriteLine($"    stimulation    : {stimulation}")
+
+            timer.Restart()
+
+            Dim network As BrainNetwork = BrainNetworkBuilder.Assemble(config, matrix, stimulation, reporter)
+
+            timer.Stop()
+
+            Console.WriteLine($"    network        : {network} ({timer.ElapsedMilliseconds} ms)")
+
+            Call check($"[{mode}] sparse layer neurons", network.Network.SparseLayer.Units, index.Size)
+
+            ' 活动标定 + 正式仿真
+            Dim gain As Double = BrainSimulation.CalibrateGain(network, config, stimulation, reporter)
+            Dim result As BrainSimulationResult = BrainSimulation.Run(network, config, stimulation, gain, reporter)
+
+            ' 与库的 ForwardSpikes 路径交叉校验 (DirectCurrent 编码下两次运行完全一致)
+            Dim crossCounts = network.Network.ForwardSpikes(stimulation.CreateInputTensor())
+
+            Call check($"[{mode}] ForwardSpikes counts == manual loop counts", crossCounts.Data.Sum, result.TotalSpikes)
+            Call check($"[{mode}] SpikeDecoders total == manual loop total",
+                       SpikeDecoders.TotalSpikeCount(network.Network.SparseLayer.SHistory), result.TotalSpikes)
+            Call check($"[{mode}] SHistory length == T", network.Network.SparseLayer.SHistory.Count, config.TimeSteps)
+            Call check($"[{mode}] weight statistics are valid", network.Statistics().IsValid, True)
+            Call check($"[{mode}] total spikes > 0", result.TotalSpikes > 0, True)
+            Call check($"[{mode}] some neurons are active", result.ActiveNeurons.Length > 0, True)
+            Call check($"[{mode}] active fraction within [1%, 30%]",
+                       result.ActiveFraction >= config.MinActiveFraction AndAlso result.ActiveFraction <= config.MaxActiveFraction,
+                       True)
+
+            Call modeSummary.Add($"{mode}: active={result.ActiveNeurons.Length}/{result.Units} ({result.ActiveFraction:P2}), spikes={result.TotalSpikes}, gain={result.Gain}")
+
+            ' 报告与落盘
+            Dim report As New SimulationReport(config.GetOutputDir())
+
+            Call report.PrintConsole(result, config, network, index, stimulation)
+
+            Dim files As String() = report.Write(result, config, network, index, stimulation)
+
+            Console.WriteLine($"    ---- csv outputs ({files.Length} files) ----")
+
+            For Each f As String In files
+                Console.WriteLine($"      {fileLineCount(f),8} lines  {f}")
+            Next
+
+            Dim perStepFile As String = files.First(Function(f As String) f.Contains("per_step_activity"))
+            Dim topFile As String = files.First(Function(f As String) f.Contains("top_neurons"))
+            Dim stimFile As String = files.First(Function(f As String) f.Contains("stimulated_neurons"))
+            Dim groupFile As String = files.First(Function(f As String) f.Contains("group_activity"))
+            Dim cellTypeFile As String = files.First(Function(f As String) f.Contains("celltype_activity"))
+
+            Call check($"[{mode}] report file count", files.Length, 6)
+            Call check($"[{mode}] per-step csv rows == T + header", fileLineCount(perStepFile), config.TimeSteps + 1)
+            Call check($"[{mode}] stimulated neurons csv rows == M + header", fileLineCount(stimFile), stimulation.Count + 1)
+            Call check($"[{mode}] top neurons csv has data rows", fileLineCount(topFile) > 1, True)
+            Call check($"[{mode}] group activity csv has data rows", fileLineCount(groupFile) > 1, True)
+            Call check($"[{mode}] celltype activity csv has data rows", fileLineCount(cellTypeFile) > 1, True)
+        Next
+
+        Console.WriteLine()
+        Console.WriteLine("    ==== mode comparison ====")
+
+        For Each line As String In modeSummary
+            Console.WriteLine($"      {line}")
+        Next
+    End Sub
+
 #End Region
 
 #Region "test helpers"
 
     Private Function csv(name As String) As String
         Return Path.Combine(DATA_DIR, name)
+    End Function
+
+    ''' <summary>
+    ''' 目标文件的文本行数 (仿真报告文件很小，直接全量读取)。
+    ''' </summary>
+    Private Function fileLineCount(fullPath As String) As Long
+        If Not System.IO.File.Exists(fullPath) Then
+            Return -1
+        End If
+
+        Return System.IO.File.ReadAllLines(fullPath).Length
     End Function
 
     ''' <summary>

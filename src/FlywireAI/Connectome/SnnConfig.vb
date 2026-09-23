@@ -1,0 +1,236 @@
+Imports System.Text
+Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
+
+Namespace Connectome
+
+    ''' <summary>
+    ''' 外部驱动模式。
+    ''' </summary>
+    Public Enum StimulationMode
+
+        ''' <summary>随机挑选一批神经元进行刺激。</summary>
+        RandomNeurons = 0
+
+        ''' <summary>按照 group / class / primary_type 筛选神经元进行刺激。</summary>
+        CellType = 1
+
+    End Enum
+
+    ''' <summary>
+    ''' 果蝇全脑 SNN 仿真的配置对象：数据文件、网络参数、刺激方式与输出目录。
+    ''' </summary>
+    Public Class SnnConfig
+
+#Region "数据文件"
+
+        ''' <summary>FAFB v783 数据文件所在的文件夹。</summary>
+        Public Property DataDir As String = "F:\flywire\FAFB-v783"
+
+        ''' <summary>突触连接表 (5,342,446 行，已过滤 &lt;5 突触)。</summary>
+        Public Property ConnectionsCsv As String = "connections_princeton.csv"
+
+        Public Property NamesCsv As String = "names.csv"
+        Public Property ClassificationCsv As String = "classification.csv"
+        Public Property CellTypesCsv As String = "consolidated_cell_types.csv"
+        Public Property NeuronsCsv As String = "neurons.csv"
+
+#End Region
+
+#Region "网络与仿真参数"
+
+        ''' <summary>仿真时间步数 T。</summary>
+        Public Property TimeSteps As Integer = 30
+
+        ''' <summary>LIF 膜电位的泄漏系数 β (取值于 0~1 之间)。</summary>
+        Public Property Beta As Double = 0.9
+
+        ''' <summary>LIF 发放阈值 θ。</summary>
+        Public Property Threshold As Double = 1.0
+
+        Public Property ResetMode As LIFResetMode = LIFResetMode.ZeroOnSpike
+
+        ''' <summary>
+        ''' 输入编码方式。默认使用 <see cref="SpikeEncoding.DirectCurrent"/>：
+        ''' 每步注入同一份恒流，仿真结果确定可复现 (RateCoding 为伯努利采样，含编码噪声)。
+        ''' </summary>
+        Public Property Encoding As SpikeEncoding = SpikeEncoding.DirectCurrent
+
+        ''' <summary>兴奋性突触的极性增益 (用于调整 E/I 比例)。</summary>
+        Public Property ExcitatoryGain As Double = 1.0
+
+        ''' <summary>抑制性突触的极性增益 (用于调整 E/I 比例)。</summary>
+        Public Property InhibitoryGain As Double = 1.0
+
+        ''' <summary>全局权重增益；``&lt;= 0`` 表示由活动标定自动决定。</summary>
+        Public Property GlobalGain As Double = 0
+
+        ''' <summary>随机种子 (网络编码与刺激神经元抽样共用)。</summary>
+        Public Property Seed As Integer = 42
+
+        ''' <summary>仿真过程中每多少个时间步打印一次进度。</summary>
+        Public Property ProgressEverySteps As Integer = 5
+
+#End Region
+
+#Region "活动标定"
+
+        ''' <summary>标定探针的仿真步数 (短于正式仿真)。</summary>
+        Public Property CalibrationProbeSteps As Integer = 10
+
+        ''' <summary>标定候选的全局增益列表。</summary>
+        Public Property CalibrationCandidates As Double() = {1.0, 2.0, 4.0, 8.0}
+
+        ''' <summary>标定所期望的活跃神经元比例。</summary>
+        Public Property TargetActiveFraction As Double = 0.05
+
+        ''' <summary>活跃比例的下限 (用于判定标定是否落在合理区间)。</summary>
+        Public Property MinActiveFraction As Double = 0.01
+
+        ''' <summary>活跃比例的上限 (用于判定标定是否落在合理区间)。</summary>
+        Public Property MaxActiveFraction As Double = 0.3
+
+#End Region
+
+#Region "刺激"
+
+        ''' <summary>外部驱动模式。</summary>
+        Public Property Mode As StimulationMode = StimulationMode.RandomNeurons
+
+        ''' <summary>刺激神经元数量 (inputSize)。</summary>
+        Public Property StimulationNeurons As Integer = 5000
+
+        ''' <summary>刺激强度 (输入张量取值，约定 [0,1])。</summary>
+        Public Property StimulationValue As Double = 0.9
+
+        ''' <summary>CellType 模式下的 group 筛选条件 (空串表示不筛选)。</summary>
+        Public Property TargetGroup As String = ""
+
+        ''' <summary>CellType 模式下的 class 筛选条件 (空串表示不筛选)。</summary>
+        Public Property TargetClass As String = ""
+
+        ''' <summary>CellType 模式下的 primary_type 筛选条件 (空串表示不筛选)。</summary>
+        Public Property TargetPrimaryType As String = ""
+
+#End Region
+
+#Region "输出"
+
+        ''' <summary>结果输出目录；为空的时候默认为 ``&lt;DataDir&gt;\snn-output\&lt;时间戳&gt;``。</summary>
+        Public Property OutputDir As String = ""
+
+        ''' <summary>报告之中 top 放电神经元的数量。</summary>
+        Public Property TopNeurons As Integer = 50
+
+#End Region
+
+        ''' <summary>
+        ''' 解析数据文件的完整路径。
+        ''' </summary>
+        Public Function ResolvePath(fileName As String) As String
+            Return System.IO.Path.Combine(DataDir, fileName)
+        End Function
+
+        ''' <summary>
+        ''' 取得结果输出目录 (自动创建时间戳子目录)。
+        ''' </summary>
+        Public Function GetOutputDir() As String
+            If String.IsNullOrWhiteSpace(OutputDir) Then
+                Return System.IO.Path.Combine(DataDir, "snn-output", DateTime.Now.ToString("yyyyMMdd_HHmmss"))
+            Else
+                Return OutputDir
+            End If
+        End Function
+
+        ''' <summary>
+        ''' 配置的合法性检查。
+        ''' </summary>
+        Public Function Validate() As String()
+            Dim issues As New List(Of String)
+
+            If TimeSteps <= 0 Then
+                issues.Add("TimeSteps must be a positive integer")
+            End If
+            If Beta <= 0 OrElse Beta >= 1 Then
+                issues.Add($"Beta({Beta}) must be inside the open interval (0, 1)")
+            End If
+            If Threshold <= 0 Then
+                issues.Add("Threshold must be positive")
+            End If
+            If ExcitatoryGain < 0 OrElse InhibitoryGain < 0 Then
+                issues.Add("E/I polarity gains must not be negative")
+            End If
+            If StimulationNeurons <= 0 Then
+                issues.Add("StimulationNeurons must be a positive integer")
+            End If
+            If StimulationValue < 0 OrElse StimulationValue > 1 Then
+                issues.Add($"StimulationValue({StimulationValue}) must be inside [0, 1]")
+            End If
+            If CalibrationProbeSteps <= 0 Then
+                issues.Add("CalibrationProbeSteps must be a positive integer")
+            End If
+
+            Return issues.ToArray
+        End Function
+
+        ''' <summary>
+        ''' 配置摘要 (控制台报告与 simulation_summary.csv 使用)。
+        ''' </summary>
+        Public Function Describe() As String
+            Dim sb As New StringBuilder()
+
+            Call sb.AppendLine($"data dir           : {DataDir}")
+            Call sb.AppendLine($"connections table  : {ConnectionsCsv}")
+            Call sb.AppendLine($"time steps (T)     : {TimeSteps}")
+            Call sb.AppendLine($"beta / threshold   : {Beta} / {Threshold}")
+            Call sb.AppendLine($"input encoding     : {Encoding}")
+            Call sb.AppendLine($"E/I polarity gain  : {ExcitatoryGain} / {InhibitoryGain}")
+            Call sb.AppendLine($"global gain        : {If(GlobalGain > 0, GlobalGain.ToString, "<auto calibration>")}")
+            Call sb.AppendLine($"seed               : {Seed}")
+            Call sb.AppendLine($"stimulation mode   : {Mode}")
+            Call sb.AppendLine($"stimulated neurons : {StimulationNeurons} (value={StimulationValue})")
+            Call sb.AppendLine($"target group       : {TargetGroup}")
+            Call sb.AppendLine($"target class       : {TargetClass}")
+            Call sb.AppendLine($"target primary type: {TargetPrimaryType}")
+            Call sb.AppendLine($"output dir         : {GetOutputDir()}")
+
+            Return sb.ToString
+        End Function
+
+        ''' <summary>
+        ''' 配置摘要 (单行形式，用于 csv 的 kv 行输出)。
+        ''' </summary>
+        Public Function ToKeyValues() As NamedValues
+            Return New NamedValues() _
+                .Add("data_dir", DataDir) _
+                .Add("connections_csv", ConnectionsCsv) _
+                .Add("time_steps", TimeSteps) _
+                .Add("beta", Beta) _
+                .Add("threshold", Threshold) _
+                .Add("encoding", Encoding.ToString) _
+                .Add("excitatory_gain", ExcitatoryGain) _
+                .Add("inhibitory_gain", InhibitoryGain) _
+                .Add("global_gain", GlobalGain) _
+                .Add("seed", Seed) _
+                .Add("stimulation_mode", Mode.ToString) _
+                .Add("stimulation_neurons", StimulationNeurons) _
+                .Add("stimulation_value", StimulationValue) _
+                .Add("target_group", TargetGroup) _
+                .Add("target_class", TargetClass) _
+                .Add("target_primary_type", TargetPrimaryType)
+        End Function
+
+    End Class
+
+    ''' <summary>
+    ''' 简单的有序 key/value 集合 (保持写入 csv 时的字段顺序)。
+    ''' </summary>
+    Public Class NamedValues : Inherits List(Of KeyValuePair(Of String, String))
+
+        Public Overloads Function Add(key As String, value As Object) As NamedValues
+            Call MyBase.Add(New KeyValuePair(Of String, String)(key, If(value Is Nothing, "", value.ToString)))
+
+            Return Me
+        End Function
+    End Class
+
+End Namespace
