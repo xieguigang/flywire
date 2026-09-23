@@ -113,6 +113,69 @@ Namespace Connectome
 
 #End Region
 
+#Region "GPU 与精度档位"
+
+        ''' <summary>
+        ''' 是否启用 CUDA GPU 张量后端。
+        ''' </summary>
+        ''' <remarks>
+        ''' 默认关闭：CPU 路径是确定性的基准，便于与 GPU 结果对拍。
+        ''' 注册失败（无 NVIDIA 显卡 / NVRTC 不可用 / 驱动不匹配）时<b>自动回退 CPU</b>，
+        ''' 失败原因可通过 <see cref="GpuRuntime.LastError"/> 与 <see cref="GpuRuntime.Describe"/> 查看。
+        ''' </remarks>
+        Public Property UseGpu As Boolean = False
+
+        ''' <summary>GPU 设备序号。</summary>
+        Public Property GpuDeviceOrdinal As Integer = 0
+
+        ''' <summary>
+        ''' 显式指定 ``nvrtc64_*.dll`` 的路径；``Nothing`` 表示自动搜索
+        ''' （``CUDA_PATH`` → ``%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\*\bin\x64`` → PATH → 程序目录）。
+        ''' </summary>
+        Public Property GpuNvrtcPath As String = Nothing
+
+        ''' <summary>设备驻留缓存上限 (字节)；``0`` 表示按可用显存自适应。</summary>
+        Public Property GpuCacheBytes As Long = 0
+
+        ''' <summary>
+        ''' 稀疏 SpMM 走 GPU 的最小非零数；``0`` 表示使用后端默认值（65,536）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 全脑规模（nnz ≈ 373 万）远超默认阈值。调小它只对"小规模对拍"有意义：
+        ''' 阈值未通过时后端会静默回退 CPU，从而出现"以为在测 GPU、其实跑的是 CPU"。
+        ''' </remarks>
+        Public Property GpuMinSparseNnz As Integer = 0
+
+        ''' <summary>
+        ''' 设备常驻状态的精度档位。
+        ''' </summary>
+        ''' <remarks>
+        ''' <see cref="LifResidentPrecision.Double64"/>（默认）下 GPU 与 CPU <b>逐位一致</b>，
+        ''' 是"对拍验收"必须的档位；<see cref="LifResidentPrecision.Single32"/> 是最快档，
+        ''' 膜电位降为单精度，可能在阈值边界上少发/多发个别脉冲（脉冲计数会出现整数差异）。
+        ''' </remarks>
+        Public Property ResidentPrecision As LifResidentPrecision = LifResidentPrecision.Double64
+
+        ''' <summary>
+        ''' 是否记录逐步脉冲轨迹。
+        ''' </summary>
+        ''' <remarks>
+        ''' ``True``（默认）：每步回读一次脉冲张量，报告里可以给出逐步活跃曲线（与既有报告一致）。
+        ''' ``False``：只维护设备端计数累加器，整段仿真<b>零逐步回读</b>、逐步统计留空 —— 最快档。
+        ''' </remarks>
+        Public Property KeepHistory As Boolean = True
+
+        ''' <summary>
+        ''' 是否优先使用融合单步算子（``LifStep``）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 置为 ``False`` 会退回逐算子路径，唯一好处是能拿到膜电位轨迹（<c>UHistory</c>），
+        ''' 代价是每步多分配 5 个中间张量、GPU 下每步多若干次显存往返。
+        ''' </remarks>
+        Public Property UseFusedStep As Boolean = True
+
+#End Region
+
 #Region "输出"
 
         ''' <summary>结果输出目录；为空的时候默认为 ``&lt;DataDir&gt;\snn-output\&lt;时间戳&gt;``。</summary>
@@ -186,6 +249,9 @@ Namespace Connectome
             Call sb.AppendLine($"E/I polarity gain  : {ExcitatoryGain} / {InhibitoryGain}")
             Call sb.AppendLine($"global gain        : {If(GlobalGain > 0, GlobalGain.ToString, "<auto calibration>")}")
             Call sb.AppendLine($"seed               : {Seed}")
+            Call sb.AppendLine($"compute backend    : {If(UseGpu, GpuRuntime.BackendName, "SIMD (CPU)")}")
+            Call sb.AppendLine($"gpu device ordinal : {GpuDeviceOrdinal}")
+            Call sb.AppendLine($"fused lif step     : {UseFusedStep} (precision={ResidentPrecision}, keepHistory={KeepHistory})")
             Call sb.AppendLine($"stimulation mode   : {Mode}")
             Call sb.AppendLine($"stimulated neurons : {StimulationNeurons} (value={StimulationValue})")
             Call sb.AppendLine($"target group       : {TargetGroup}")
@@ -216,7 +282,12 @@ Namespace Connectome
                 .Add("stimulation_value", StimulationValue) _
                 .Add("target_group", TargetGroup) _
                 .Add("target_class", TargetClass) _
-                .Add("target_primary_type", TargetPrimaryType)
+                .Add("target_primary_type", TargetPrimaryType) _
+                .Add("use_gpu", UseGpu) _
+                .Add("compute_backend", If(UseGpu, GpuRuntime.BackendName, "SIMD")) _
+                .Add("use_fused_lif_step", UseFusedStep) _
+                .Add("resident_precision", ResidentPrecision.ToString) _
+                .Add("keep_history", KeepHistory)
         End Function
 
     End Class

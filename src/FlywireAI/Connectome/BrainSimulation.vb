@@ -37,6 +37,23 @@ Namespace Connectome
         ''' <summary>神经元的数量。</summary>
         Public Property Units As Integer
 
+        ''' <summary>实际使用的张量计算后端名称 (CUDA / SIMD)。</summary>
+        Public Property Backend As String
+
+        ''' <summary>
+        ''' 最近一步实际使用的 LIF 前向路径 (``Fused`` = 融合单步算子，``OpByOp`` = 逐算子)。
+        ''' </summary>
+        Public Property StepPath As String
+
+        ''' <summary>回退到逐算子路径的时间步数 (0 表示整段仿真都走在融合路径上)。</summary>
+        Public Property FallbackSteps As Integer
+
+        ''' <summary>是否收集到了逐步统计 (KeepHistory=False 时不收集)。</summary>
+        Public Property PerStepStatsAvailable As Boolean
+
+        ''' <summary>设备常驻缓冲占用的字节数 (仅 GPU 有意义)。</summary>
+        Public Property PinnedDeviceBytes As Long
+
         ''' <summary>全局平均发放率 (每个神经元每步的脉冲数)。</summary>
         Public ReadOnly Property MeanFiringRate As Double
             Get
@@ -167,33 +184,44 @@ Namespace Connectome
                 Throw New InvalidOperationException("网络尚未装配稀疏递归层")
             End If
 
+            ' 把配置里的 GPU / 精度档位下发到层：融合单步、设备常驻精度、逐步轨迹开关。
+            ' 必须在下一次 ResetState 之前设置 —— 常驻缓冲是在 ResetState 里分配与钉住的。
+            layer.UseFusedStep = config.UseFusedStep
+            layer.KeepHistory = config.KeepHistory
+            layer.ResidentPrecision = config.ResidentPrecision
 
             Call layer.ResetState(1)
 
-            Dim counts As Double() = New Double(units - 1) {}
             Dim perStepSpikes As Double() = New Double(steps - 1) {}
             Dim perStepActive As Integer() = New Integer(steps - 1) {}
             Dim timer As Stopwatch = Stopwatch.StartNew()
 
+            ' KeepHistory=True 时每步回读脉冲张量并统计（报告与既有行为一致）；
+            ' 关闭后逐步统计留空 —— 计数由层内的设备端累加器负责，整段仿真零逐步回读。
+            Dim collectPerStep As Boolean = config.KeepHistory
+
             For t As Integer = 0 To steps - 1
                 Dim ext As Tensor = scatter(sequence(t), stimulation.InputMap, units)
                 Dim spikes As Tensor = layer.ForwardStep(ext)
-                Dim sd As Double() = spikes.Data
                 Dim stepSpikes As Double = 0
                 Dim stepActive As Integer = 0
 
-                For i As Integer = 0 To sd.Length - 1
-                    Dim v As Double = sd(i)
+                If collectPerStep Then
+                    ' 层内已把该步脉冲同步回主机（见 SparseLIFLayer.RecordStep），这里读到的是新值
+                    Dim sd As Double() = spikes.Data
 
-                    If v > 0 Then
-                        counts(i) += v
-                        stepSpikes += v
-                        stepActive += 1
-                    End If
-                Next
+                    For i As Integer = 0 To sd.Length - 1
+                        Dim v As Double = sd(i)
 
-                perStepSpikes(t) = stepSpikes
-                perStepActive(t) = stepActive
+                        If v > 0 Then
+                            stepSpikes += v
+                            stepActive += 1
+                        End If
+                    Next
+
+                    perStepSpikes(t) = stepSpikes
+                    perStepActive(t) = stepActive
+                End If
 
                 If Not reporter Is Nothing AndAlso
                     ((t + 1) Mod config.ProgressEverySteps = 0 OrElse t = steps - 1) Then
@@ -202,7 +230,20 @@ Namespace Connectome
                 End If
             Next
 
+            ' 计数累加器：融合路径由设备内核逐步累加，逐算子路径由层内主机循环累加，
+            ' 因此这里只需同步一次即可拿到 Σ_t S[t]（不再需要 O(T·N) 的主机求和）
+            Call layer.SyncFromDevice()
+
+            Dim counts As Double() = CType(layer.Counts.Data.Clone(), Double())
+
             timer.Stop()
+
+            ' 把"实际走的路径"报出来：与"以为走了 GPU"之间的差别正是最难发现的性能问题
+            Call BrainNetworkBuilder.report(
+                reporter,
+                $"  backend={GpuRuntime.BackendName}, path={layer.LastStepPath}, " &
+                $"fallbackSteps={layer.FallbackSteps}, pinned={GpuRuntime.PinnedBytesDescription}, " &
+                $"elapsed={timer.ElapsedMilliseconds} ms")
 
             Dim active As Integer() = Enumerable _
                 .Range(0, units) _
@@ -220,7 +261,12 @@ Namespace Connectome
                 .TotalSpikes = counts.Sum,
                 .PerStepSpikes = perStepSpikes,
                 .PerStepActive = perStepActive,
-                .ElapsedMs = timer.ElapsedMilliseconds
+                .ElapsedMs = timer.ElapsedMilliseconds,
+                .Backend = GpuRuntime.BackendName,
+                .StepPath = layer.LastStepPath.ToString,
+                .FallbackSteps = layer.FallbackSteps,
+                .PerStepStatsAvailable = collectPerStep,
+                .PinnedDeviceBytes = If(GpuRuntime.Backend Is Nothing, 0L, GpuRuntime.Backend.PinnedDeviceBytes)
             }
         End Function
 

@@ -31,6 +31,12 @@ Module Program
     Dim totalCount As Integer = 0
     Dim failCount As Integer = 0
 
+    ''' <summary>
+    ''' 章节 9 已经解析过的连接组；章节 10 直接复用，避免把 530 万行连接表再读一遍。
+    ''' </summary>
+    Dim _connectomeIndex As ConnectomeIndex
+    Dim _connectomeMatrix As ConnectomeMatrix
+
     Sub Main(args As String())
         Console.WriteLine("FAFB v783 data model and loader demo")
         Console.WriteLine($"data directory: {DATA_DIR}")
@@ -49,6 +55,7 @@ Module Program
         Call run("7. streaming api regression (framework fixes)", AddressOf testDataStreamHandleBehavior)
         Call run("8. SWC skeleton parser + zip archive", AddressOf testSwcSkeleton)
         Call run("9. Drosophila brain SNN simulation", AddressOf testBrainSnn)
+        Call run("10. full brain SNN: CPU vs GPU acceleration", AddressOf testGpuAcceleration)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -601,6 +608,10 @@ Module Program
 
         Console.WriteLine($"    csr matrix     : {matrix} ({timer.ElapsedMilliseconds} ms)")
 
+        ' 供章节 10 复用（连接表解析是整段 demo 里最贵的一步）
+        _connectomeIndex = index
+        _connectomeMatrix = matrix
+
         Call check("nnz > 1000000", matrix.Nnz > 1000000, True)
         Call check("nnz <= csv rows", CDbl(matrix.Nnz) <= CDbl(triplets.CsvRows), True)
 
@@ -681,6 +692,264 @@ Module Program
             Console.WriteLine($"      {line}")
         Next
     End Sub
+
+    ''' <summary>
+    ''' 全脑仿真的 CPU / GPU 对拍与加速比基准。
+    ''' 
+    ''' 验收口径（与 docs 中的方案一致）：
+    ''' 
+    ''' 1. 双精度常驻档的逐神经元脉冲计数必须与 CPU 基准<b>逐位一致</b>（max|Δ| = 0）；
+    ''' 2. 稳态仿真（T=30，139,255 神经元 / 373 万合并突触）下 GPU 必须显著快于 CPU
+    '''    （加速比门槛 3x，实测数值写入 gpu_benchmark.csv）；
+    ''' 3. 所有时间步都必须走在融合单步路径上（fallbackSteps = 0），否则"加速"就无从谈起。
+    ''' </summary>
+    Private Sub testGpuAcceleration()
+        Console.WriteLine()
+        Console.WriteLine("=== 10. full brain SNN: CPU vs GPU (fused lif step + device residency) ===")
+
+        Dim config As New SnnConfig With {
+            .DataDir = DATA_DIR,
+            .TimeSteps = 30,
+            .StimulationNeurons = 5000,
+            .Seed = 42,
+            .TopNeurons = 20,
+            .UseGpu = True,
+            .UseFusedStep = True,
+            .KeepHistory = True,
+            .ResidentPrecision = LifResidentPrecision.Double64
+        }
+
+        Dim reporter As Action(Of String) = Sub(message) Console.WriteLine($"    {message}")
+
+        ' ---------------------------------------------------------------- 1) 注册 GPU
+        ' 注册失败是预期内的分支：没有 NVIDIA 显卡 / NVRTC 缺失 / 驱动不匹配都会走到这里，
+        ' 此时仿真继续在 CPU 上运行，基准报告仍然完整（GPU 档位标记为 skipped）。
+        Dim gpuReady As Boolean = GpuRuntime.TryRegister(config, reporter)
+
+        Console.WriteLine($"    gpu ready      : {gpuReady} (backend={GpuRuntime.BackendName})")
+
+        Call check("backend is either CUDA or a safe CPU fallback",
+                   gpuReady = (GpuRuntime.BackendName = "CUDA"), True)
+
+        ' ---------------------------------------------------------------- 2) 连接组与刺激
+        Dim index As ConnectomeIndex = ensureConnectome(config, reporter)
+
+        If index Is Nothing OrElse _connectomeMatrix Is Nothing Then
+            Call check("connectome is available for the benchmark", False, True)
+
+            Return
+        End If
+
+        Dim stimulation As Stimulation = Stimulation.Create(config, index)
+
+        Call check("stimulation input map size == stimulated neurons", stimulation.Count, config.StimulationNeurons)
+
+        ' ---------------------------------------------------------------- 3) 增益标定
+        ' 所有档位共用同一个 gain：这样对拍比较的才是"同一条轨迹在不同后端上的结果"
+        Dim network As BrainNetwork = BrainNetworkBuilder.Assemble(config, _connectomeMatrix, stimulation, Nothing)
+        Dim gain As Double = BrainSimulation.CalibrateGain(network, config, stimulation, reporter)
+
+        Console.WriteLine($"    calibrated gain: {gain}")
+
+        ' ---------------------------------------------------------------- 4) 对拍 + 加速比
+        Dim benchmark As GpuBenchmarkReport = GpuBenchmark.Run(config, _connectomeMatrix, stimulation, gain, Nothing, reporter)
+
+        Console.WriteLine()
+        Console.WriteLine(benchmark.Describe())
+
+        Call check("gpu benchmark csv written", File.Exists(benchmark.CsvFile), True)
+        Call check("cpu baseline captured", benchmark.Baseline IsNot Nothing AndAlso Not benchmark.Baseline.Skipped, True)
+
+        If benchmark.Baseline IsNot Nothing AndAlso Not benchmark.Baseline.Skipped Then
+            ' CPU 基准也必须走融合单步（逐算子路径是每步 6 个中间张量的旧实现）
+            Call check("[CPU baseline] all steps used the fused lif step", benchmark.Baseline.FallbackSteps, 0)
+            Call check("[CPU baseline] spike statistics are valid", benchmark.Baseline.TotalSpikes > 0, True)
+        End If
+
+        If Not gpuReady Then
+            Console.WriteLine($"    [SKIP] CUDA 后端不可用，跳过 GPU 断言：{GpuRuntime.LastError}")
+
+            Return
+        End If
+
+        Dim gated As GpuBenchmarkEntry() = benchmark.GatedEntries
+
+        Call check("gpu modes under test", gated.Length >= 2, True)
+
+        For Each entry As GpuBenchmarkEntry In gated
+            ' 逐位一致性：双精度常驻档的膜电位是 Double，脉冲计数必须是整数级一致
+            Call check($"[{entry.Mode.Name}] spike counts identical to CPU", entry.DifferingNeurons, 0)
+            Call check($"[{entry.Mode.Name}] max|delta| <= 1e-9", entry.MaxAbsDelta <= 1.0E-9, True)
+
+            ' 路径：必须真的走在融合单步上，否则 GPU 的固定往返开销会把收益吃掉
+            Call check($"[{entry.Mode.Name}] all steps used the fused lif step", entry.FallbackSteps, 0)
+            Call check($"[{entry.Mode.Name}] last step path is Fused", entry.StepPath, "Fused")
+
+            ' 加速比门槛
+            Call check($"[{entry.Mode.Name}] speedup >= {GpuBenchmark.DefaultSpeedupGate:F1}x",
+                       entry.Speedup >= GpuBenchmark.DefaultSpeedupGate, True)
+        Next
+
+        ' 设备常驻缓冲：所有档位结束后应当已经归还
+        Call check("pinned device buffers released", GpuRuntime.Backend.PinnedDeviceBytes, 0L)
+        Call check("benchmark passed the acceptance gate", benchmark.Passed, True)
+
+        ' ---------------------------------------------------------------- 5) 单精度档如实报告
+        Dim fp32 As GpuBenchmarkEntry = benchmark.Entries.FirstOrDefault(Function(e) e.Mode.Precision = LifResidentPrecision.Single32)
+
+        If fp32 IsNot Nothing AndAlso Not fp32.Skipped Then
+            Console.WriteLine($"    fp32 resident mode (report only): maxΔ={fp32.MaxAbsDelta:F0}, " &
+                              $"differing neurons={fp32.DifferingNeurons}/{fp32.Units}, speedup={fp32.Speedup:F2}x")
+        End If
+
+        ' ---------------------------------------------------------------- 6) 单步成本分解
+        measureStepCost(config, _connectomeMatrix, reporter)
+
+        Call check("pinned device buffers released after breakdown", GpuRuntime.Backend.PinnedDeviceBytes, 0L)
+    End Sub
+
+    ''' <summary>
+    ''' 单步成本分解：把"每一步到底花在哪里"量化出来。
+    ''' 
+    ''' 动机：GPU 化的收益很容易被**主机侧**的固定开销掩盖（脉冲张量的分配、同步回读、
+    ''' 外部电流上传、逐元素统计循环）。全脑规模下每步只有约 1 万个突触后事件，
+    ''' 稀疏乘法的计算量本就不大，因此判断"该不该上 GPU"必须看这份分解，
+    ''' 而不是只看端到端的一个总数。
+    ''' </summary>
+    Private Sub measureStepCost(config As SnnConfig, matrix As ConnectomeMatrix, reporter As Action(Of String))
+        Const iters As Integer = 10
+
+        Console.WriteLine()
+        Console.WriteLine("    ---- per-step cost breakdown (10 iterations each) ----")
+
+        Dim units As Integer = matrix.Units
+        Dim csr As Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr = matrix.Synapses.Csr
+
+        ' 与正式仿真同量级的发放率：约 2% 的神经元处于发放态（取自 demo 的逐步统计）
+        Dim rng As New Random(config.Seed)
+        Dim spikes As Double() = New Double(units - 1) {}
+
+        For i As Integer = 1 To CInt(units * 0.02)
+            spikes(rng.Next(units)) = 1.0
+        Next
+
+        Dim sPrev As Tensor = Tensor.Wrap(spikes, New Integer() {1, units})
+
+        ' 外部电流：刺激神经元恒流注入（与 scatter 之后的形状一致）
+        Dim extData As Double() = New Double(units - 1) {}
+
+        For i As Integer = 0 To config.StimulationNeurons - 1
+            extData(i) = config.StimulationValue
+        Next
+
+        Dim ext As Tensor = Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
+
+        For Each useGpu As Boolean In {False, True}
+            If useGpu AndAlso GpuRuntime.Backend Is Nothing Then
+                Continue For
+            End If
+
+            If useGpu Then
+                Tensor.computeKernel = GpuRuntime.Backend
+            Else
+                SIMDTensor.Register()
+            End If
+
+            Dim backend = Tensor.computeKernel
+            Dim h As New Tensor(1, units)
+            Dim s As New Tensor(1, units)
+            Dim counts As New Tensor(1, units)
+            Dim pinned As Boolean = False
+
+            If useGpu Then
+                ' 融合 + 常驻路径的前提：状态必须钉在显存里
+                pinned = GpuRuntime.Backend.PinDevice64(h, "bench.H", zeroFill:=False) AndAlso
+                         GpuRuntime.Backend.PinDevice64(s, "bench.S", zeroFill:=False) AndAlso
+                         GpuRuntime.Backend.PinDevice64(counts, "bench.counts", zeroFill:=True) AndAlso
+                         GpuRuntime.Backend.PinDevice64(sPrev, "bench.Sprev", zeroFill:=False)
+            End If
+
+            Dim tSpmm As Double = timePerCall(iters, Sub() Call backend.SpMM(csr, sPrev))
+            Dim tStep As Double = timePerCall(iters, Sub() Call backend.LifStep(csr, sPrev, ext, h, s, counts, config.Beta, config.Threshold, False))
+            Dim tSync As Double = timePerCall(iters, Sub()
+                                                         Call backend.LifStep(csr, sPrev, ext, h, s, counts, config.Beta, config.Threshold, False)
+                                                         Call backend.SyncFromDevice(s)
+                                                     End Sub)
+            Dim tFull As Double = timePerCall(iters, Sub()
+                                                         ' 真实循环里每步都会产生一个新的外部电流张量（scatter 的结果）
+                                                         Dim stepExt = Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
+
+                                                         Call backend.LifStep(csr, sPrev, stepExt, h, s, counts, config.Beta, config.Threshold, False)
+                                                         Call backend.SyncFromDevice(s)
+                                                     End Sub)
+
+            Console.WriteLine($"      {If(useGpu, "GPU (CUDA)", "CPU (SIMD)"),-10} spmm={tSpmm,7:F3}  " &
+                              $"lifStep={tStep,7:F3}  lif+sync={tSync,7:F3}  lif+sync+ext={tFull,7:F3}  ms/step")
+
+            If pinned Then
+                Call GpuRuntime.Backend.UnpinDevice(h)
+                Call GpuRuntime.Backend.UnpinDevice(s)
+                Call GpuRuntime.Backend.UnpinDevice(counts)
+                Call GpuRuntime.Backend.UnpinDevice(sPrev)
+            End If
+        Next
+
+        SIMDTensor.Register()
+    End Sub
+
+    ''' <summary>把一段动作重复执行若干次并返回单次平均耗时 (毫秒)。</summary>
+    Private Function timePerCall(iters As Integer, body As Action) As Double
+        Dim timer As Stopwatch = Stopwatch.StartNew()
+
+        For i As Integer = 1 To iters
+            Call body()
+        Next
+
+        timer.Stop()
+
+        Return timer.Elapsed.TotalMilliseconds / iters
+    End Function
+
+    ''' <summary>
+    ''' 取得连接组索引（CSR 矩阵放入 <see cref="_connectomeMatrix"/>）。
+    ''' 
+    ''' 章节 9 已经解析过就直接复用；否则自行完成「神经元索引 → 突触三元组 → CSR 矩阵」
+    ''' 三步构建，保证章节 10 可以独立运行。
+    ''' </summary>
+    Private Function ensureConnectome(config As SnnConfig, reporter As Action(Of String)) As ConnectomeIndex
+        If _connectomeIndex IsNot Nothing AndAlso _connectomeMatrix IsNot Nothing Then
+            Console.WriteLine($"    connectome     : reuse from section 9 ({_connectomeMatrix})")
+
+            Return _connectomeIndex
+        End If
+
+        Dim index As New ConnectomeIndex()
+        Dim names As List(Of CellNames) = config.ResolvePath(config.NamesCsv).LoadCellNames()
+
+        For Each cell As CellNames In names
+            Call index.Add(cell.RootId)
+        Next
+
+        Dim triplets As SynapseTriplets = SynapseTriplets.Build(
+            index,
+            config.ResolvePath(config.ConnectionsCsv),
+            config.ExcitatoryGain,
+            config.InhibitoryGain)
+
+        Call index.Freeze()
+
+        Call index.AttachAnnotations(names,
+                                     config.ResolvePath(config.ClassificationCsv).LoadClassification(),
+                                     config.ResolvePath(config.CellTypesCsv).LoadCellTypes(),
+                                     config.ResolvePath(config.NeuronsCsv).LoadNeurons())
+
+        _connectomeIndex = index
+        _connectomeMatrix = BrainNetworkBuilder.BuildMatrix(triplets, reporter)
+
+        Console.WriteLine($"    connectome     : {_connectomeMatrix}")
+
+        Return index
+    End Function
 
 #End Region
 

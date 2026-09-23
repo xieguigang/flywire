@@ -147,6 +147,11 @@ Namespace Connectome
             For k As Integer = 0 To values.Length - 1
                 values(k) = baseValues(k) * gain
             Next
+
+            ' 权重是就地改写的：必须让设备端（GPU）缓存的 CSR 副本失效。
+            ' 漏掉这一步的后果不是"精度差一点"，而是 GPU 会继续用旧增益算整段仿真 ——
+            ' 表现为「CPU 与 GPU 结果不同，且差异无法从任何参数上解释」，极难定位。
+            Call matrix.MarkModified()
         End Sub
 
         ''' <summary>
