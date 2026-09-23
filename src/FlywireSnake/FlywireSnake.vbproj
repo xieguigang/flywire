@@ -19,6 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\cuda\ILCudaTensor\ILCudaTensor.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\cuda\ILCuda\ILCuda.vbproj" />
+    <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data_science\DataMining\DataMining\DataMining.NET5.vbproj" />
+    <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data_science\MachineLearning\MachineLearning\machine_learning-netcore5.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data_science\MachineLearning\SNN\SNN.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data_science\MachineLearning\TensorFlow\TensorFlow.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data_science\Mathematica\Math\Math\Math.NET5.vbproj" />
