@@ -4,16 +4,16 @@
 
 > Source: <https://codex.flywire.ai/api/download?dataset=fafb>
 
-If you plan to use this data in your publications, please adhere to the FlyWire [citation guidelines](https://codex.flywire.ai/about_flywire) and [principles](https://flywire.ai/principles.html).
+If you plan to use this data in your publications, please adhere to the FlyWire [citation guidelines](https://codex.flywire.ai/about_flywire) and [principles](https://flywire.ai/principles.html).  
 For additional questions or clarification please email **flywire@princeton.edu**
 
-## [Cell Types (902 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseconsolidated_cell_types)
+## Cell Types (902 KB)
 
-**Description**
-Consolidated from multiple annotation sources. Primary cell type picked by prioritizing most recent and most specific annotations.
+**Description**  
+Consolidated from multiple annotation sources. Primary cell type picked by prioritizing most recent and most specific annotations.  
 
-**File info**
-901,707 bytes, compressed CSV file (.csv.gz)
+**File info**  
+901,707 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -25,19 +25,19 @@ Consolidated from multiple annotation sources. Primary cell type picked by prior
 | col 2 - primary_type | 8,772 unique values |
 | col 3 - additional_type(s) | 1,508 unique values in 13,956 rows, empty in 124,371 rows |
 
-[consolidated_cell_types.csv.gz](https://codex.flywire.ai/api/download?data_product=consolidated_cell_types&dataset=fafb)
+- Download: [consolidated_cell_types.csv.gz](https://codex.flywire.ai/api/download?data_product=consolidated_cell_types&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=consolidated_cell_types&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=consolidated_cell_types&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip consolidated_cell_types.csv.gz`
 
-## [Classification / Hierarchical Annotations (934 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseclassification)
+## Classification / Hierarchical Annotations (934 KB)
 
-**Description**
-Hierarchical Classification, Soma Side, Hemilineage and Nerve Type for each cell in the dataset. See details [here](https://codex.flywire.ai/api/download?dataset=fafb) and [here](https://codex.flywire.ai/api/download?dataset=fafb). Note: The data this file has been updated since the publication of the FlyWire flagship annotations paper. See links to original versions on the bottom of the page .
+**Description**  
+Hierarchical Classification, Soma Side, Hemilineage and Nerve Type for each cell in the dataset. See details [here](#hierarchical-classification) and [here](#cell-types). Note: The data this file has been updated since the publication of the FlyWire flagship annotations paper. See links to original versions on the bottom of the page .  
 
-**File info**
-934,402 bytes, compressed CSV file (.csv.gz)
+**File info**  
+934,402 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -54,19 +54,19 @@ Hierarchical Classification, Soma Side, Hemilineage and Nerve Type for each cell
 | col 7 - side | 3 unique values in 139,225 rows, empty in 30 rows |
 | col 8 - nerve | 8 unique values in 9,647 rows, empty in 129,608 rows |
 
-[classification.csv.gz](https://codex.flywire.ai/api/download?data_product=classification&dataset=fafb)
+- Download: [classification.csv.gz](https://codex.flywire.ai/api/download?data_product=classification&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=classification&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=classification&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip classification.csv.gz`
 
-## [Cell Size Measurements (2,527 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsecell_stats)
+## Cell Size Measurements (2,527 KB)
 
-**Description**
-Specifies the surface area, cable length and size/volume for each cell in the dataset. Nanometer units.
+**Description**  
+Specifies the surface area, cable length and size/volume for each cell in the dataset. Nanometer units.  
 
-**File info**
-2,526,548 bytes, compressed CSV file (.csv.gz)
+**File info**  
+2,526,548 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -79,19 +79,19 @@ Specifies the surface area, cable length and size/volume for each cell in the da
 | col 3 - area_nm | 138,763 unique values of type INT in range [15,141,888 .. 258,113,806,848] |
 | col 4 - size_nm | 138,632 unique values of type INT in range [427,591,680 .. 16,416,917,166,080] |
 
-[cell_stats.csv.gz](https://codex.flywire.ai/api/download?data_product=cell_stats&dataset=fafb)
+- Download: [cell_stats.csv.gz](https://codex.flywire.ai/api/download?data_product=cell_stats&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=cell_stats&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=cell_stats&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip cell_stats.csv.gz`
 
-## [Proofread Cell Names And Groups (1,182 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsenames)
+## Proofread Cell Names And Groups (1,182 KB)
 
-**Description**
-Groups are assigned based on the brain regions with most in/out synapses of the cell. Names are autogenerated from group + running id, while trying to preserve consistency across data snapshot versions as much as possible (so that same cells get the same name assigned).
+**Description**  
+Groups are assigned based on the brain regions with most in/out synapses of the cell. Names are autogenerated from group + running id, while trying to preserve consistency across data snapshot versions as much as possible (so that same cells get the same name assigned).  
 
-**File info**
-1,181,576 bytes, compressed CSV file (.csv.gz)
+**File info**  
+1,181,576 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -103,19 +103,19 @@ Groups are assigned based on the brain regions with most in/out synapses of the 
 | col 2 - name | all rows contain unique values |
 | col 3 - group | 629 unique values |
 
-[names.csv.gz](https://codex.flywire.ai/api/download?data_product=names&dataset=fafb)
+- Download: [names.csv.gz](https://codex.flywire.ai/api/download?data_product=names&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=names&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=names&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip names.csv.gz`
 
-## [Neurotransmitter Type Predictions (1,680 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseneurons)
+## Neurotransmitter Type Predictions (1,680 KB)
 
-**Description**
-For every cell in the dataset, specifies auto-generated group (based on primary input and output neuropils) as well as the predicted NT type of the cell along with the prediction scores for individual NT types.
+**Description**  
+For every cell in the dataset, specifies auto-generated group (based on primary input and output neuropils) as well as the predicted NT type of the cell along with the prediction scores for individual NT types.  
 
-**File info**
-1,679,884 bytes, compressed CSV file (.csv.gz)
+**File info**  
+1,679,884 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -134,19 +134,19 @@ For every cell in the dataset, specifies auto-generated group (based on primary 
 | col 9 - ach_avg | 101 unique values of type FLOAT in range [0 .. 1] |
 | col 10 - oct_avg | 75 unique values of type FLOAT in range [0 .. 0.91] |
 
-[neurons.csv.gz](https://codex.flywire.ai/api/download?data_product=neurons&dataset=fafb)
+- Download: [neurons.csv.gz](https://codex.flywire.ai/api/download?data_product=neurons&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=neurons&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=neurons&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip neurons.csv.gz`
 
-## [Visual Neuron Annotations (632 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsevisual_neuron_types)
+## Visual Neuron Annotations (632 KB)
 
-**Description**
-Visual neuron types and type families in the right optic lobe. See the [Optic Lobe Catalog](https://codex.flywire.ai/app/optic_lobe_catalog) for details.
+**Description**  
+Visual neuron types and type families in the right optic lobe. See the [Optic Lobe Catalog](https://codex.flywire.ai/app/optic_lobe_catalog) for details.  
 
-**File info**
-631,701 bytes, compressed CSV file (.csv.gz)
+**File info**  
+631,701 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -161,19 +161,19 @@ Visual neuron types and type families in the right optic lobe. See the [Optic Lo
 | col 5 - category | 2 unique values |
 | col 6 - side | 3 unique values |
 
-[visual_neuron_types.csv.gz](https://codex.flywire.ai/api/download?data_product=visual_neuron_types&dataset=fafb)
+- Download: [visual_neuron_types.csv.gz](https://codex.flywire.ai/api/download?data_product=visual_neuron_types&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=visual_neuron_types&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=visual_neuron_types&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip visual_neuron_types.csv.gz`
 
-## [Visual Neuron Columns (463 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsecolumn_assignment)
+## Visual Neuron Columns (463 KB)
 
-**Description**
-Visual column and retinotopic coordinate assignments for columnar cell types. Available for both optic lobes (left and right).
+**Description**  
+Visual column and retinotopic coordinate assignments for columnar cell types. Available for both optic lobes (left and right).  
 
-**File info**
-462,838 bytes, compressed CSV file (.csv.gz)
+**File info**  
+462,838 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -190,19 +190,19 @@ Visual column and retinotopic coordinate assignments for columnar cell types. Av
 | col 7 - p | 38 unique values of type INT in range [-19 .. 18] |
 | col 8 - q | 35 unique values of type INT in range [-17 .. 17] |
 
-[column_assignment.csv.gz](https://codex.flywire.ai/api/download?data_product=column_assignment&dataset=fafb)
+- Download: [column_assignment.csv.gz](https://codex.flywire.ai/api/download?data_product=column_assignment&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=column_assignment&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=column_assignment&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip column_assignment.csv.gz`
 
-## [Community Labels (Raw) (4,771 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapselabels)
+## Community Labels (Raw) (4,771 KB)
 
-**Description**
-Community identification labels / tags, updated daily. Includes information about contributors and their affiliation. Each cell (root_id) might have zero or more labels assigned to it - hence the 'root_id' column is not unique. Additionally, this table contains raw labels, as they were submitted by the FlyWire community. The labels displayed in Codex are processed / refined (de-duplicated, with corrected and redundant parts stripped when applicable).
+**Description**  
+Community identification labels / tags, updated daily. Includes information about contributors and their affiliation. Each cell (root_id) might have zero or more labels assigned to it - hence the 'root_id' column is not unique. Additionally, this table contains raw labels, as they were submitted by the FlyWire community. The labels displayed in Codex are processed / refined (de-duplicated, with corrected and redundant parts stripped when applicable).  
 
-**File info**
-4,771,292 bytes, compressed CSV file (.csv.gz)
+**File info**  
+4,771,292 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -220,19 +220,19 @@ Community identification labels / tags, updated daily. Includes information abou
 | col 8 - user_name | 151 unique values in 159,395 rows, empty in 650 rows |
 | col 9 - user_affiliation | 58 unique values in 159,332 rows, empty in 713 rows |
 
-[labels.csv.gz](https://codex.flywire.ai/api/download?data_product=labels&dataset=fafb)
+- Download: [labels.csv.gz](https://codex.flywire.ai/api/download?data_product=labels&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=labels&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=labels&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip labels.csv.gz`
 
-## [Community Labels (Refined) (1,018 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseprocessed_labels)
+## Community Labels (Refined) (1,018 KB)
 
-**Description**
-Processed community identification labels: cleaned, deduplicated, removed un-informative or incorrect parts. This is the set of labels used in Codex search app.
+**Description**  
+Processed community identification labels: cleaned, deduplicated, removed un-informative or incorrect parts. This is the set of labels used in Codex search app.  
 
-**File info**
-1,017,658 bytes, compressed CSV file (.csv.gz)
+**File info**  
+1,017,658 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -243,20 +243,20 @@ Processed community identification labels: cleaned, deduplicated, removed un-inf
 | col 1 - root_id | all rows contain unique values |
 | col 2 - processed_labels | 7,652 unique values |
 
-[processed_labels.csv.gz](https://codex.flywire.ai/api/download?data_product=processed_labels&dataset=fafb)
+- Download: [processed_labels.csv.gz](https://codex.flywire.ai/api/download?data_product=processed_labels&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=processed_labels&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=processed_labels&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip processed_labels.csv.gz`
 
-## [Connections (Filtered) (68 MB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseconnections_princeton)
+## Connections (Filtered) (68 MB)
 
-**Description**
-Filtered synaptic connectivity table (5+ synapse threshold). One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: Connections with fewer than 5 total synapses (across all neuropils) are excluded, along with autapses. More than one row can be present for the same pair of cells if they synapse in multiple neuropils (regions).
-Unprocessed connectivity data for certain FlyWire snapshots is available on [Zenodo](https://zenodo.org/records/10676866) as well.
+**Description**  
+Filtered synaptic connectivity table (5+ synapse threshold). One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: Connections with fewer than 5 total synapses (across all neuropils) are excluded, along with autapses. More than one row can be present for the same pair of cells if they synapse in multiple neuropils (regions).  
+Unprocessed connectivity data for certain FlyWire snapshots is available on [Zenodo](https://zenodo.org/records/10676866) as well.  
 
-**File info**
-68,456,801 bytes, compressed CSV file (.csv.gz)
+**File info**  
+68,456,801 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -270,19 +270,19 @@ Unprocessed connectivity data for certain FlyWire snapshots is available on [Zen
 | col 4 - syn_count | 628 unique values of type INT in range [1 .. 2,633] |
 | col 5 - nt_type | 6 unique values |
 
-[connections_princeton.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_princeton&dataset=fafb)
+- Download: [connections_princeton.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_princeton&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=connections_princeton&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=connections_princeton&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip connections_princeton.csv.gz`
 
-## [Connections (Unfiltered) (277 MB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseconnections_princeton_no_threshold)
+## Connections (Unfiltered) (277 MB)
 
-**Description**
-Raw (no-threshold) synaptic connectivity table. One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: This synapse table is a superset of the default connections table and is provided here as a resource only (while all apps in Codex rely on the filtered table). Autapses are filtered out. More than one row can be present for the same pair of cells if they synapse in multiple neuropils (regions).
+**Description**  
+Raw (no-threshold) synaptic connectivity table. One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: This synapse table is a superset of the default connections table and is provided here as a resource only (while all apps in Codex rely on the filtered table). Autapses are filtered out. More than one row can be present for the same pair of cells if they synapse in multiple neuropils (regions).  
 
-**File info**
-276,508,032 bytes, compressed CSV file (.csv.gz)
+**File info**  
+276,508,032 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -296,19 +296,19 @@ Raw (no-threshold) synaptic connectivity table. One row for every connected pair
 | col 4 - syn_count | 628 unique values of type INT |
 | col 5 - nt_type | 6 unique values |
 
-[connections_princeton_no_threshold.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_princeton_no_threshold&dataset=fafb)
+- Download: [connections_princeton_no_threshold.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_princeton_no_threshold&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=connections_princeton_no_threshold&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=connections_princeton_no_threshold&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip connections_princeton_no_threshold.csv.gz`
 
-## [Connectivity Tags (638 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseconnectivity_tags)
+## Connectivity Tags (638 KB)
 
-**Description**
-Descriptors for neurons connectivity characteristics, derived from network analysis. Each neuron can have 0 or more tags, separated by commas in the second column. See [details](https://codex.flywire.ai/api/download?dataset=fafb).
+**Description**  
+Descriptors for neurons connectivity characteristics, derived from network analysis. Each neuron can have 0 or more tags, separated by commas in the second column. See [details](#connectivity-tags).  
 
-**File info**
-637,719 bytes, compressed CSV file (.csv.gz)
+**File info**  
+637,719 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -319,19 +319,19 @@ Descriptors for neurons connectivity characteristics, derived from network analy
 | col 1 - root_id | all rows contain unique values |
 | col 2 - connectivity_tag | 28 unique values |
 
-[connectivity_tags.csv.gz](https://codex.flywire.ai/api/download?data_product=connectivity_tags&dataset=fafb)
+- Download: [connectivity_tags.csv.gz](https://codex.flywire.ai/api/download?data_product=connectivity_tags&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=connectivity_tags&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=connectivity_tags&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip connectivity_tags.csv.gz`
 
-## [Marked Neuron Coordinates (5,315 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsecoordinates)
+## Marked Neuron Coordinates (5,315 KB)
 
-**Description**
-FlyWire Supervoxel IDs and position coordinates (in nanometers) for cells in the dataset. One cell might have zero or more coordinates and supervoxel IDs, depending on marked positions during human proofreading / cell identification. The coordinates usually point to spots that were most useful for human review, and not necessarily to the cell body / soma.
+**Description**  
+FlyWire Supervoxel IDs and position coordinates (in nanometers) for cells in the dataset. One cell might have zero or more coordinates and supervoxel IDs, depending on marked positions during human proofreading / cell identification. The coordinates usually point to spots that were most useful for human review, and not necessarily to the cell body / soma.  
 
-**File info**
-5,314,546 bytes, compressed CSV file (.csv.gz)
+**File info**  
+5,314,546 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -343,19 +343,19 @@ FlyWire Supervoxel IDs and position coordinates (in nanometers) for cells in the
 | col 2 - position | 225,588 unique values |
 | col 3 - supervoxel_id | 221,912 unique values |
 
-[coordinates.csv.gz](https://codex.flywire.ai/api/download?data_product=coordinates&dataset=fafb)
+- Download: [coordinates.csv.gz](https://codex.flywire.ai/api/download?data_product=coordinates&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=coordinates&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=coordinates&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip coordinates.csv.gz`
 
-## [Synapse Table (2,695 MB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsesynapse_table)
+## Synapse Table (2,695 MB)
 
-**Description**
-Individual synapse sizes and coordinates (x, y, z for pre/center/post sites in nanometers) for synaptic connections between proofread neurons (including autapse predictions). For compactness, the common prefix in the pre/post cell Root IDs is omitted - it is specified in the column headers.
+**Description**  
+Individual synapse sizes and coordinates (x, y, z for pre/center/post sites in nanometers) for synaptic connections between proofread neurons (including autapse predictions). For compactness, the common prefix in the pre/post cell Root IDs is omitted - it is specified in the column headers.  
 
-**File info**
-2,695,106,039 bytes, compressed CSV file (.csv.gz)
+**File info**  
+2,695,106,039 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -377,33 +377,33 @@ Individual synapse sizes and coordinates (x, y, z for pre/center/post sites in n
 | col 12 - post_root_id_720575940 | last X digits of post-synaptic cell Root ID (for full Root ID add the specified prefix in column header), type INT |
 | col 13 - neuropil | brain region containing the synapse, type STRING |
 
-[fafb_v783_princeton_synapse_table.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_table&dataset=fafb)
+- Download: [fafb_v783_princeton_synapse_table.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_table&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=synapse_table&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=synapse_table&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip fafb_v783_princeton_synapse_table.csv.gz`
 
-## [Neuron Skeletons (13 GB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseskeleton_swc_files)
+## Neuron Skeletons (13 GB)
 
-**Description**
-Zipped archive of detailed skeletons (in SWC format). Skeletons units are in microns.
+**Description**  
+Zipped archive of detailed skeletons (in SWC format). Skeletons units are in microns.  
 
-**File info**
+**File info**  
 12,900,000,000 bytes, compressed file (.zip)
 
-[sk_lod1_783_healed.zip](https://codex.flywire.ai/api/download?data_product=skeleton_swc_files&dataset=fafb)
+- Download: [sk_lod1_783_healed.zip](https://codex.flywire.ai/api/download?data_product=skeleton_swc_files&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=skeleton_swc_files&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=skeleton_swc_files&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `unzip sk_lod1_783_healed.zip`
 
-## [Connections Predicted With Buhmann Et. Al. [Original Version Used Prior To July 2025] (212 MB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseconnections_buhmann_no_threshold)
+## Connections Predicted With Buhmann Et. Al. [Original Version Used Prior To July 2025] (212 MB)
 
-**Description**
-One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: This synapse table is no longer in use in Codex apps. It was replaced with updated version in July 2025, using improved prediction method (see details [here](https://docs.google.com/document/d/1yscGtvAH4J4GazkYhXY54TqEiQO7ddnWVHbl-Q_QEZE/edit?tab=t.0)).
+**Description**  
+One row for every connected pair of cells and neuropil (region). First and second columns contain the FlyWire Root IDs of the connected pair ('pre/from' and 'post/to' respectively), the third column contains the neuropil abbreviation, the fourth contains the number of synapses (aggregated across all connection sites of the respective pair and neuropil), and the fifth column contains the predicted NT type for the synapses. Notes: This synapse table is no longer in use in Codex apps. It was replaced with updated version in July 2025, using improved prediction method (see details [here](https://docs.google.com/document/d/1yscGtvAH4J4GazkYhXY54TqEiQO7ddnWVHbl-Q_QEZE/edit?tab=t.0)).  
 
-**File info**
-212,093,967 bytes, compressed CSV file (.csv.gz)
+**File info**  
+212,093,967 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -417,20 +417,20 @@ One row for every connected pair of cells and neuropil (region). First and secon
 | col 4 - syn_count | 548 unique values of type INT in range [1 .. 2,405] |
 | col 5 - nt_type | 6 unique values |
 
-[connections_buhmann_no_threshold.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_buhmann_no_threshold&dataset=fafb)
+- Download: [connections_buhmann_no_threshold.csv.gz](https://codex.flywire.ai/api/download?data_product=connections_buhmann_no_threshold&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=connections_buhmann_no_threshold&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=connections_buhmann_no_threshold&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip connections_buhmann_no_threshold.csv.gz`
 
-## [Synapse Coordinates [Original Version Used Prior To July 2025] (317 MB)](https://codex.flywire.ai/api/download?dataset=fafb#collapsesynapse_coordinates)
+## Synapse Coordinates [Original Version Used Prior To July 2025] (317 MB)
 
-**Description**
-Individual synapse coordinates (x, y, z in nanometers) for connections with 5+ synapses. Typically synapse locations are bounded within a 3D bounding box, for compactness this table only provides coordinates of a single point in the detected bounding box. Also for compactness, empty pre/post id columns should be inferred by looking up in the table at the last non-empty value respectively. See example script [here](https://gist.github.com/arie-matsliah/0fcb8e0e795459a68ac66257483ca5c8).
-For certain FlyWire data snapshots, comprehensive synapse table is also available on [Zenodo](https://zenodo.org/records/10676866).
+**Description**  
+Individual synapse coordinates (x, y, z in nanometers) for connections with 5+ synapses. Typically synapse locations are bounded within a 3D bounding box, for compactness this table only provides coordinates of a single point in the detected bounding box. Also for compactness, empty pre/post id columns should be inferred by looking up in the table at the last non-empty value respectively. See example script [here](https://gist.github.com/arie-matsliah/0fcb8e0e795459a68ac66257483ca5c8).  
+For certain FlyWire data snapshots, comprehensive synapse table is also available on [Zenodo](https://zenodo.org/records/10676866).  
 
-**File info**
-316,819,225 bytes, compressed CSV file (.csv.gz)
+**File info**  
+316,819,225 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -444,33 +444,33 @@ For certain FlyWire data snapshots, comprehensive synapse table is also availabl
 | col 4 - y | 172,529 unique values of type INT in range [65,158 .. 547,024] |
 | col 5 - z | 13,393 unique values of type INT in range [3,200 .. 277,540] |
 
-[synapse_coordinates.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_coordinates&dataset=fafb)
+- Download: [synapse_coordinates.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_coordinates&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=synapse_coordinates&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=synapse_coordinates&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip synapse_coordinates.csv.gz`
 
-## [Synapse Attachment Rates [Original Version Used Prior To July 2025] (3,257 B)](https://codex.flywire.ai/api/download?dataset=fafb#collapsesynapse_attachment_rates)
+## Synapse Attachment Rates [Original Version Used Prior To July 2025] (3,257 B)
 
-**Description**
-Pre/post synapse attachment rates to proofread neurons, by neuropil.
+**Description**  
+Pre/post synapse attachment rates to proofread neurons, by neuropil.  
 
-**File info**
+**File info**  
 3,257 bytes, compressed CSV file (.csv.gz)
 
-[synapse_attachment_rates.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_attachment_rates&dataset=fafb)
+- Download: [synapse_attachment_rates.csv.gz](https://codex.flywire.ai/api/download?data_product=synapse_attachment_rates&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=synapse_attachment_rates&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=synapse_attachment_rates&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip synapse_attachment_rates.csv.gz`
 
-## [Per Neuropil Connection And Synapse Counts [Original Version Used Prior To July 2025] (4,675 KB)](https://codex.flywire.ai/api/download?dataset=fafb#collapseneuropil_synapse_table)
+## Per Neuropil Connection And Synapse Counts [Original Version Used Prior To July 2025] (4,675 KB)
 
-**Description**
-In-out synapse & partner counts by neuropil. For every cell and neuropil (region), contains the number of input and output synapses, as well as the number of input and output partners the cell has in that neuropil. One row for each cell with the first column containing the FlyWire Root ID of the cell, followed by a column for every combination of neuropil X input/output X synapse/partner. Similar to the connectivity table, connections with less than 5 synapses are filtered out. Note: this resource is a convenience, it can be derived from the connectivity table.
+**Description**  
+In-out synapse & partner counts by neuropil. For every cell and neuropil (region), contains the number of input and output synapses, as well as the number of input and output partners the cell has in that neuropil. One row for each cell with the first column containing the FlyWire Root ID of the cell, followed by a column for every combination of neuropil X input/output X synapse/partner. Similar to the connectivity table, connections with less than 5 synapses are filtered out. Note: this resource is a convenience, it can be derived from the connectivity table.  
 
-**File info**
-4,674,663 bytes, compressed CSV file (.csv.gz)
+**File info**  
+4,674,663 bytes, compressed CSV file (.csv.gz)  
 
 **Content stats**
 
@@ -800,9 +800,9 @@ In-out synapse & partner counts by neuropil. For every cell and neuropil (region
 | col 320 - output partners in WED_L | 91 unique values of type INT in range [0 .. 154] |
 | col 321 - output partners in WED_R | 93 unique values of type INT in range [0 .. 207] |
 
-[neuropil_synapse_table.csv.gz](https://codex.flywire.ai/api/download?data_product=neuropil_synapse_table&dataset=fafb)
+- Download: [neuropil_synapse_table.csv.gz](https://codex.flywire.ai/api/download?data_product=neuropil_synapse_table&dataset=fafb)
 
-[file info](https://codex.flywire.ai/api/download?data_product=neuropil_synapse_table&meta_data_only=1&dataset=fafb)
+- File info: <https://codex.flywire.ai/api/download?data_product=neuropil_synapse_table&meta_data_only=1&dataset=fafb>
 
 > To open the downloaded file go to the downloads folder in command line terminal and type: `gunzip neuropil_synapse_table.csv.gz`
 
@@ -824,11 +824,11 @@ The files available for download on this portal are synchronized with the live C
 
 ## Hierarchical Classification
 
-**Flow** Top hierarchical annotation describing signal flow of this neuron.
-**Super Class** Broadest hierarchical annotation below “flow”.
-**Class & Sub Class** Provides useful labels for small to medium-sized groups of neurons and sits between superclass and cell type.
-**Side** Soma side of the neuron in fly's perspective. Note: corrected for the left/right inversion of the FAFB image data (see FAQ page for details).
-**Nerve** Nerve through which the neuron is entering/exiting the nervous system.
+**Flow** Top hierarchical annotation describing signal flow of this neuron.  
+**Super Class** Broadest hierarchical annotation below “flow”.  
+**Class & Sub Class** Provides useful labels for small to medium-sized groups of neurons and sits between superclass and cell type.  
+**Side** Soma side of the neuron in fly's perspective. Note: corrected for the left/right inversion of the FAFB image data (see FAQ page for details).  
+**Nerve** Nerve through which the neuron is entering/exiting the nervous system.  
 **Hemilineage** Developmental (hemi-)lineage, can contain multiple cell types that are often morphologically similar.
 
 ---
@@ -837,13 +837,13 @@ See [data credits page](https://codex.flywire.ai/about_flywire) for details on a
 
 ## Cell Types
 
-Cell types are assigned from multiple sources:
-**Hemibrain and FlyWire Cell Types** Principally derived from a mapping to the Janelia hemibrain dataset which includes both previously known as well as newly described types. Sourced from [here](https://www.nature.com/articles/s41586-024-07686-5).
-**Visual System Cell Types** Cell types of neurons intrinsic to the optic lobes. Sourced from [here](https://www.nature.com/articles/s41586-024-07981-1).
-**Circadian Clock Cell Types** Sourced from [here](https://www.biorxiv.org/content/10.1101/2023.09.11.557222v2).
-**Endocrine Cell Types** Sourced from [here](https://www.biorxiv.org/content/10.1101/2024.08.28.609616v1).
-**Auditory Cell Types** Cell types of the intermediate layers of the auditory pathway. Sourced from [here](https://www.cell.com/current-biology/pdf/S0960-9822(22)00978-2.pdf).
-**Doublesex/Fruitless Cell Types** Cell types of neurons expressing doublesex and fruitless genes. Sourced from [here](https://www.biorxiv.org/content/10.1101/2025.06.10.658788).
+Cell types are assigned from multiple sources:  
+**Hemibrain and FlyWire Cell Types** Principally derived from a mapping to the Janelia hemibrain dataset which includes both previously known as well as newly described types. Sourced from [here](https://www.nature.com/articles/s41586-024-07686-5).  
+**Visual System Cell Types** Cell types of neurons intrinsic to the optic lobes. Sourced from [here](https://www.nature.com/articles/s41586-024-07981-1).  
+**Circadian Clock Cell Types** Sourced from [here](https://www.biorxiv.org/content/10.1101/2023.09.11.557222v2).  
+**Endocrine Cell Types** Sourced from [here](https://www.biorxiv.org/content/10.1101/2024.08.28.609616v1).  
+**Auditory Cell Types** Cell types of the intermediate layers of the auditory pathway. Sourced from [here](https://www.cell.com/current-biology/pdf/S0960-9822(22)00978-2.pdf).  
+**Doublesex/Fruitless Cell Types** Cell types of neurons expressing doublesex and fruitless genes. Sourced from [here](https://www.biorxiv.org/content/10.1101/2025.06.10.658788).  
 **Putative Cell Types** Inferred from community annotations. Not vetted and some might be incorrect. Read more [here](https://www.nature.com/articles/s41586-024-07558-y).
 
 ---
@@ -852,15 +852,15 @@ See [data credits page](https://codex.flywire.ai/about_flywire) for details on a
 
 ## Connectivity Tags
 
-**Rich Club** A highly connected neuron which are disproportionately connected to other rich club neurons
-**Broadcaster** An intrinsic rich club neuron which has at least 5 times as many outgoing connections as incoming connections
-**Integrator** An intrinsic rich club neuron which has at least 5 times as many incoming connections as outgoing connections
-**Attractor** The top 3% visited neurons when a random walk biased by synapse strengths is conducted through the wiring diagram
-**Repeller** The top 3% visited neurons when a reverse random walk biased by synapse strengths is conducted through the wiring diagram
-**Reciprocal** A neuron which participates in at least one reciprocal connection (A->B and B->A)
-**Feedforward Loop Participant** A neuron which participates in at least one feedforward loop (A->B, A-> C, B->C)
-**3-cycle Participant** A neuron which participates in at least one 3-unicycle (A->B, B->C, C->A)
-**Highly Reciprocal Neuron** A neuron for which at least half of its connections participate in reciprocal motifs
+**Rich Club** A highly connected neuron which are disproportionately connected to other rich club neurons  
+**Broadcaster** An intrinsic rich club neuron which has at least 5 times as many outgoing connections as incoming connections  
+**Integrator** An intrinsic rich club neuron which has at least 5 times as many incoming connections as outgoing connections  
+**Attractor** The top 3% visited neurons when a random walk biased by synapse strengths is conducted through the wiring diagram  
+**Repeller** The top 3% visited neurons when a reverse random walk biased by synapse strengths is conducted through the wiring diagram  
+**Reciprocal** A neuron which participates in at least one reciprocal connection (A->B and B->A)  
+**Feedforward Loop Participant** A neuron which participates in at least one feedforward loop (A->B, A-> C, B->C)  
+**3-cycle Participant** A neuron which participates in at least one 3-unicycle (A->B, B->C, C->A)  
+**Highly Reciprocal Neuron** A neuron for which at least half of its connections participate in reciprocal motifs  
 **NSRN (Neuropil-Specific Reciprocal Neuron)** A highly reciprocal neuron which also belongs to the rich club and has at least half of its incoming synapses and half of its outgoing synapses within a single neuropil
 
 ---
