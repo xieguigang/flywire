@@ -68,13 +68,19 @@ Imports Snake2
         ''' <summary>装配耗时 (毫秒)。</summary>
         Public ReadOnly Property ElapsedMs As Long
 
-        Private Sub New(config As SnnConfig, index As ConnectomeIndex, matrix As ConnectomeMatrix,
-                        gain As Double, elapsed As Long)
+        ''' <remarks>
+        ''' 形参名刻意避开 <c>index</c> / <c>matrix</c> / <c>gain</c>：VB 不区分大小写，
+        ''' 与同名属性（<see cref="Index"/> / <see cref="Matrix"/> / <see cref="Gain"/>）
+        ''' 撞上之后 <c>Index = index</c> 会退化成"参数给自己赋值"，
+        ''' 属性永远是 Nothing（第一次用到就炸）。
+        ''' </remarks>
+        Private Sub New(config As SnnConfig, connectome As ConnectomeIndex, csr As ConnectomeMatrix,
+                        globalGain As Double, elapsed As Long)
 
             m_config = config
-            Index = index
-            Matrix = matrix
-            Gain = gain
+            Index = connectome
+            Matrix = csr
+            Gain = globalGain
             DataDir = config.DataDir
             ElapsedMs = elapsed
         End Sub

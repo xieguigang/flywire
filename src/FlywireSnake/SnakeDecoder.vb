@@ -44,19 +44,23 @@ Imports System.Text
         ''' <summary>训练集上的准确率（诊断）。</summary>
         Public Property TrainAccuracy As Double
 
-        Public Sub New(featureCount As Integer, Optional seed As Integer = 20180923)
-            If featureCount <= 0 Then Throw New ArgumentOutOfRangeException(NameOf(featureCount))
+        ''' <remarks>
+        ''' 形参名避开 <c>featureCount</c>：VB 不区分大小写，与 <see cref="FeatureCount"/> 属性
+        ''' 同名会让"赋值"变成自赋值，特征维度永远是 0。
+        ''' </remarks>
+        Public Sub New(dimension As Integer, Optional seed As Integer = 20180923)
+            If dimension <= 0 Then Throw New ArgumentOutOfRangeException(NameOf(dimension))
 
-            FeatureCount = featureCount
+            FeatureCount = dimension
             ActionCount = SnakeSensorEncoder.ActionCount
             m_rng = New Random(seed)
             m_weights = New Double(ActionCount - 1)() {}
 
             ' 小随机初值：全零会让所有动作得分相同、梯度完全对称，学不动
             For a As Integer = 0 To ActionCount - 1
-                Dim row As Double() = New Double(featureCount - 1) {}
+                Dim row As Double() = New Double(dimension - 1) {}
 
-                For i As Integer = 0 To featureCount - 1
+                For i As Integer = 0 To dimension - 1
                     row(i) = (m_rng.NextDouble() - 0.5) * 0.01
                 Next
 

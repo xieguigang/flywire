@@ -1,0 +1,26 @@
+FlywireSnake: 果蝇大脑驾驶贪吃蛇
+data dir : F:\flywire\FAFB-v783
+episodes : 6 x 250 ticks (评估 6 局)
+
+      [      0 ms] loading cell names from names.csv ...
+      [    524 ms] building the connectome from connections_princeton.csv ...
+      [ 29,909 ms] building CSR sparse matrix from 5342446 connection rows...
+      [ 30,135 ms] merging duplicated (pre, post) pairs -> nnz = 3732460
+      [ 30,165 ms] connectome ready: 139255 neurons, nnz=3732460 (csv rows=5342446) (30164 ms)
+      [ 30,166 ms] assembling spiking network: neurons=139255, input features=5000
+      [ 30,170 ms] calibrating the global gain with 10 step probes...
+      [ 30,205 ms]   gain=1: active=5888 (4.23%), spikes=26209, 27 ms
+      [ 30,242 ms]   gain=2: active=10264 (7.37%), spikes=33874, 30 ms
+      [ 30,286 ms]   gain=4: active=44684 (32.09%), spikes=100904, 37 ms
+      [ 30,361 ms]   gain=8: active=85041 (61.07%), spikes=323892, 67 ms
+      [ 30,361 ms] selected global gain = 1 (active fraction ~ 5.00%)
+      [ 30,361 ms] playground ready: gain=1, elapsed=30360 ms
+
+
+[FATAL] ArgumentNullException: Value cannot be null. (Parameter 'matrix')
+   at FlywireAI.Connectome.BrainNetworkBuilder.Assemble(SnnConfig config, ConnectomeMatrix matrix, Stimulation stimulation, Action`1 reporter) in G:\flywire\src\FlywireAI\Connectome\BrainNetworkBuilder.vb:line 220
+   at FlywireSnake.SnakePlayground.CreateBrain(Int32 sensorsPerChannel, Int32 seed) in G:\flywire\src\FlywireSnake\SnakePlayground.vb:line 189
+   at Neuropils.FormMain.runSnakeProbe(String[] args) in G:\flywire\src\Neuropils\FormMain.Snake.vb:line 66
+
+total elapsed: 30,369 ms
+result: FAIL (1)
