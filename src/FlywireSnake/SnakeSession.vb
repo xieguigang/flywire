@@ -65,6 +65,9 @@ Imports Snake2
         Private ReadOnly m_brain As SnakeBrain
         Private m_decoder As SnakeDecoder
 
+        ''' <summary>读出层之后的决策平滑器（抑制逐 tick 左右横跳）。</summary>
+        Private ReadOnly m_filter As New SnakeDecisionFilter()
+
         Private m_lastScore As Integer
 
         ''' <summary>游戏实例（界面用它绘制画面）。</summary>
@@ -121,6 +124,13 @@ Imports Snake2
         ''' <summary>最近一个 tick 的结果。</summary>
         Public Property LastStep As SnakeStep
 
+        ''' <summary>决策平滑器（调参 / 诊断用）。</summary>
+        Public ReadOnly Property DecisionFilter As SnakeDecisionFilter
+            Get
+                Return m_filter
+            End Get
+        End Property
+
         ''' <summary>
         ''' 每个 tick 之后触发（界面重绘 + 三维活动可视化的数据源）。
         ''' </summary>
@@ -157,6 +167,7 @@ Imports Snake2
         Public Sub NewEpisode()
             Call m_game.RestartGame()
             Call m_brain.ResetEpisode()
+            Call m_filter.Reset()
 
             m_lastScore = 0
             Steps = 0
@@ -201,9 +212,20 @@ Imports Snake2
             Call m_brain.Advance(frame.Values)
 
             ' ---- 4) 运动解码（蛇不能反向，因此把反向动作禁掉）----
-            Dim action As Integer = If(forcedAction >= 0,
-                                       forcedAction,
-                                       m_decoder.Decide(m_brain.MotorFeatures, reverseAction(snake.Direction)))
+            Dim action As Integer
+
+            If forcedAction >= 0 Then
+                ' 教师（示范）策略：不经过读出层，也不该被决策平滑器影响
+                action = forcedAction
+            Else
+                Dim forbidden As Integer = reverseAction(snake.Direction)
+                Dim scores As Double() = m_decoder.Scores(m_brain.MotorFeatures, forbidden)
+
+                action = m_filter.Decide(scores,
+                                         SnakeSensorEncoder.actionOf(snake.Direction),
+                                         isBlockedAhead(frame.Values, snake.Direction))
+            End If
+
             Dim direction As Point = SnakeSensors.Directions(action)
 
             If direction <> snake.Direction Then
@@ -290,6 +312,28 @@ Imports Snake2
                 .Died = False,
                 .Seed = Episodes
             }
+        End Function
+
+        ''' <summary>
+        ''' 当前朝向是否已经走不通（前 / 后 / 左 / 右里"该方向"的危险通道亮着）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 危险通道 8..11 是<b>绝对方向</b>，顺序与 <see cref="SnakeSensors.Directions"/> 一致；
+        ''' 这个判断只用来给决策平滑器留一个安全阀（走不通时立刻改道），
+        ''' 用的信息与大脑拿到的是同一组 16 通道，没有额外作弊。
+        ''' </remarks>
+        Private Shared Function isBlockedAhead(sensorValues As Double(), direction As Point) As Boolean
+            If sensorValues Is Nothing Then Return False
+
+            For i As Integer = 0 To SnakeSensors.DangerChannels - 1
+                If SnakeSensors.Directions(i) <> direction Then Continue For
+
+                Dim channel As Integer = SnakeSensors.FoodSectors + i
+
+                Return channel < sensorValues.Length AndAlso sensorValues(channel) >= 0.5
+            Next
+
+            Return False
         End Function
 
         ''' <summary>反向动作编号（用于禁止蛇掉头）。</summary>

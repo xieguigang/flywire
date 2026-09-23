@@ -220,6 +220,10 @@ Partial Public Class FormMain
     Private Sub onSnakeBrainActivity(activeNeurons As Integer(), frame As SnakeStep)
         If m_scene Is Nothing OrElse m_dataset Is Nothing Then Return
 
+        ' 关窗之后不该再点亮任何东西：高亮器是在这里按需重建的，
+        ' 少了这道闸，残留事件会让刚被 Reset 的点云又亮起来（看起来"关掉了还在闪"）
+        If m_snakeForm Is Nothing Then Return
+
         If m_snakeHighlighter Is Nothing Then
             m_snakeHighlighter = New ReplayHighlighter(m_scene, m_dataset.Units, isHeatMap())
         End If

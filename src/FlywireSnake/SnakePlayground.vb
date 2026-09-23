@@ -267,7 +267,7 @@ Imports Snake2
             Next
 
             ' ---- 训练 ----
-            Dim accuracy As Double = decoder.Train(samples, epochs:=16, rate:=0.35)
+            Dim accuracy As Double = decoder.Train(samples, epochs:=24, rate:=0.25)
 
             Call report(reporter, $"decoder trained: {samples.Count:N0} samples, accuracy={accuracy:P1}")
 

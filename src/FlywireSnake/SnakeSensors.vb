@@ -1,4 +1,5 @@
 Imports System.Drawing
+Imports Snake2
 
 ' 注意：这里不再显式写 Namespace FlywireSnake ——
 ' VB 工程未指定 RootNamespace 时会默认用工程名作为根命名空间，
@@ -36,8 +37,17 @@ Imports System.Drawing
         ''' <summary>感觉通道总数。</summary>
         Public Const ChannelCount As Integer = FoodSectors + DangerChannels + MovingFoodSectors
 
-        ''' <summary>食物感知半径（格）。超出这个距离的食物不再产生刺激。</summary>
-        Public Const SenseRadius As Double = 45.0
+        ''' <summary>
+        ''' 食物感知半径（格）：超出这个距离的食物不再产生任何刺激。
+        ''' </summary>
+        ''' <remarks>
+        ''' 取<b>地图对角线</b> = 全图可见。原来取 45 格会留下大片盲区：食物一旦远于 45 格，
+        ''' 8 个食物方位通道就全为零 —— 此时大脑"看不见"食物，而示范教师仍然知道食物在哪，
+        ''' 训练标签与大脑的感知口径不一致，学出来的读出层只能原地兜圈（表现为随机游走）。
+        ''' 距离衰减仍然保留（<c>1 - d / R</c> 单调递减），因此"近处的食物更抢眼"这一点没变。
+        ''' </remarks>
+        Public Shared ReadOnly SenseRadius As Double =
+            Math.Sqrt(Snake2.Game.MapCols * Snake2.Game.MapCols + Snake2.Game.MapRows * Snake2.Game.MapRows)
 
         ''' <summary>四个绝对方向（上 / 下 / 左 / 右），与危险通道 8..11 一一对应。</summary>
         Public Shared ReadOnly Directions As Point() = {

@@ -387,8 +387,11 @@ Public Class SnakeBrainForm
 
     ''' <summary>在后台训练解码器，完成后立刻换上。</summary>
     Private Sub trainDecoder()
-        Dim episodes As Integer = 6
-        Dim ticks As Integer = 250
+        ' 样本量是这条"脑机接口"读出层的瓶颈：1500 条样本要拟合 1488 × 4 个权重，
+        ' 前一轮 6 局 × 250 tick 的准确率只有 0.70，蛇看起来还是乱走；
+        ' 这里把样本量翻一倍（8 局 × 350 tick）
+        Dim episodes As Integer = 8
+        Dim ticks As Integer = 350
 
         m_training.Text = "正在训练解码器（后台）..."
 
