@@ -200,8 +200,27 @@ Namespace Connectome
             ' 关闭后逐步统计留空 —— 计数由层内的设备端累加器负责，整段仿真零逐步回读。
             Dim collectPerStep As Boolean = config.KeepHistory
 
+            ' 恒流编码（DirectCurrent）下每一步的外部电流完全相同：散射一次后复用同一份缓冲。
+            ' 这不只是省一次 1.1 MB 分配 —— GPU 后端按「数组引用 + 版本号」缓存显存副本，
+            ' 复用同一个张量意味着外部电流只在第一步上传一次（否则每步都要 1.1 MB H2D，
+            ' 在 WDDM 上约 0.4 ms/步）。
+            Dim sharedExt As Tensor = Nothing
+
+            If isConstantSequence(sequence) Then
+                sharedExt = scatter(sequence(0), stimulation.InputMap, units)
+            End If
+
             For t As Integer = 0 To steps - 1
-                Dim ext As Tensor = scatter(sequence(t), stimulation.InputMap, units)
+                ' 显式分支而不是 If(sharedExt, scatter(...))：后者会把散射写在表达式里，
+                ' 一旦求值时机不如预期（例如被编译器改为"两个参数都求值"），
+                ' 每步仍然会白白分配并散射一份 1.1 MB 的张量 —— 这类性能问题极难从代码上一眼看出来
+                Dim ext As Tensor
+
+                If sharedExt IsNot Nothing Then
+                    ext = sharedExt
+                Else
+                    ext = scatter(sequence(t), stimulation.InputMap, units)
+                End If
                 Dim spikes As Tensor = layer.ForwardStep(ext)
                 Dim stepSpikes As Double = 0
                 Dim stepActive As Integer = 0
@@ -278,10 +297,24 @@ Namespace Connectome
                 Case SpikeEncoding.RateCoding
                     Return SpikeEncoders.RateEncode(input, steps, net.Rng)
                 Case SpikeEncoding.DirectCurrent
-                    Return SpikeEncoders.DirectCurrentEncode(input, steps)
+                    ' 恒流：各步内容相同，共享一份缓冲（见 execute 中关于显存上传的说明）
+                    Return SpikeEncoders.DirectCurrentEncode(input, steps, shareBuffer:=True)
                 Case Else
                     Return SpikeEncoders.LatencyEncode(input, steps)
             End Select
+        End Function
+
+        ''' <summary>
+        ''' 编码序列的每一步是否都是同一个张量（恒流编码的特征）。
+        ''' </summary>
+        Private Function isConstantSequence(sequence As List(Of Tensor)) As Boolean
+            If sequence Is Nothing OrElse sequence.Count = 0 Then Return False
+
+            For t As Integer = 1 To sequence.Count - 1
+                If Not sequence(t) Is sequence(0) Then Return False
+            Next
+
+            Return True
         End Function
 
         ''' <summary>

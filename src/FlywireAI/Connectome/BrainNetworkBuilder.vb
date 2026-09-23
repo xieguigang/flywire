@@ -32,9 +32,29 @@ Namespace Connectome
         Public ReadOnly Property StructuralFanIn As Double()
 
         ''' <summary>当前生效的全局权重增益。</summary>
-        Public ReadOnly Property Gain As Double
+        Public Property Gain As Double
+            Get
+                Return _gain
+            End Get
+            Private Set(value As Double)
+                _gain = value
+            End Set
+        End Property
+
+        Private _gain As Double
+
+        ''' <summary>
+        ''' 本网络所基于的连接组矩阵。
+        ''' </summary>
+        ''' <remarks>
+        ''' 增益状态由它持有（<see cref="ConnectomeMatrix.CurrentGain"/>）：
+        ''' 多个网络共享同一个 CSR 时，"权重里现在写的是哪个增益"只能有一个答案，
+        ''' 否则 <see cref="SetGain"/> 的幂等判断会与实际权重脱节。
+        ''' </remarks>
+        Public ReadOnly Property Matrix As ConnectomeMatrix
 
         Friend Sub New(network As SpikingNetwork,
+                       matrix As ConnectomeMatrix,
                        synapses As SparseMatrix,
                        triplets As SynapseTriplets,
                        baseValues As Double(),
@@ -42,12 +62,13 @@ Namespace Connectome
                        gain As Double)
 
             Me.Network = network
+            Me.Matrix = matrix
             Me.Synapses = synapses
             Me.Triplets = triplets
             Me.BaseValues = baseValues
             Me.StructuralFanIn = structuralFanIn
             Me.Units = synapses.Columns
-            Me.Gain = gain
+            Me._gain = gain
         End Sub
 
         ''' <summary>非零突触数量 (即合并重复 (pre, post) 之后的边数)。</summary>
@@ -60,8 +81,14 @@ Namespace Connectome
         ''' <summary>
         ''' 就地设置全局权重增益 (不重建 CSR，因此标定过程非常廉价)。
         ''' </summary>
+        ''' <remarks>
+        ''' 幂等：增益未变时不重写权重。原因见 <see cref="ConnectomeMatrix.ApplyGain"/> ——
+        ''' 无条件的重写会让设备端缓存失效，把一次 60 MB 的上传塞进每一步的计时里。
+        ''' </remarks>
         Public Sub SetGain(gain As Double)
-            Call SynapseTriplets.ApplyGain(Synapses, BaseValues, gain)
+            Call Matrix.ApplyGain(gain)
+
+            Gain = gain
         End Sub
 
         ''' <summary>当前 CSR 的权重统计。</summary>
@@ -87,12 +114,40 @@ Namespace Connectome
         Public ReadOnly Property StructuralFanIn As Double()
         Public ReadOnly Property Triplets As SynapseTriplets
 
+        ''' <summary>当前已经写入 CSR 的全局增益。</summary>
+        ''' <remarks>
+        ''' <see cref="BuildMatrix"/> 完成后 CSR 里就是单位权重 (gain = 1)。
+        ''' </remarks>
+        Public Property CurrentGain As Double = 1.0
+
         Friend Sub New(synapses As SparseMatrix, baseValues As Double(), fanIn As Double(), triplets As SynapseTriplets)
             Me.Synapses = synapses
             Me.BaseValues = baseValues
             Me.StructuralFanIn = fanIn
             Me.Triplets = triplets
         End Sub
+
+        ''' <summary>
+        ''' 就地应用全局增益 (幂等：增益没变时什么都不做)。
+        ''' </summary>
+        ''' <returns>是否真的重写了权重。</returns>
+        ''' <remarks>
+        ''' <b>幂等性是性能要求而不是优化技巧</b>：重写权重会调用
+        ''' <c>SparseMatrix.MarkModified()</c>，使设备端 (GPU) 缓存的 CSR 副本失效 ——
+        ''' 下一次稀疏乘法就得把整张连接表重新上传 (nnz = 373 万时约 60 MB，
+        ''' 在 WDDM 上约 10 ms)。而"标定完成后用同一个增益正式仿真"是常规流程，
+        ''' 不幂等会让这 10 ms 落进每一次仿真的计时窗口里，
+        ''' 足以把 GPU 的加速比从 5x 以上拉低到 3x 附近。
+        ''' </remarks>
+        Public Function ApplyGain(gain As Double) As Boolean
+            If gain = CurrentGain Then Return False
+
+            Call SynapseTriplets.ApplyGain(Synapses, BaseValues, gain)
+
+            CurrentGain = gain
+
+            Return True
+        End Function
 
         ''' <summary>神经元总数 N。</summary>
         Public ReadOnly Property Units As Integer
@@ -170,7 +225,8 @@ Namespace Connectome
 
             Dim gain As Double = If(config.GlobalGain > 0, config.GlobalGain, 1.0)
 
-            Call SynapseTriplets.ApplyGain(matrix.Synapses, matrix.BaseValues, gain)
+            ' 幂等应用增益：权重没变就不要让设备端缓存失效（详见 ConnectomeMatrix.ApplyGain）
+            Call matrix.ApplyGain(gain)
 
             Call report(reporter, $"assembling spiking network: neurons={matrix.Units}, input features={stimulation.Count}")
 
@@ -180,7 +236,7 @@ Namespace Connectome
 
             Call net.AddSparseLayer(matrix.Synapses, config.Beta, config.Threshold, config.ResetMode, stimulation.InputMap)
 
-            Return New BrainNetwork(net, matrix.Synapses, matrix.Triplets, matrix.BaseValues, matrix.StructuralFanIn, gain)
+            Return New BrainNetwork(net, matrix, matrix.Synapses, matrix.Triplets, matrix.BaseValues, matrix.StructuralFanIn, gain)
         End Function
 
         ''' <summary>

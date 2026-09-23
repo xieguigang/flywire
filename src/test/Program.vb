@@ -762,19 +762,24 @@ Module Program
         End If
 
         ' ---------------------------------------------------------------- 4) 对拍 + 加速比
+        ' 每个档位重复测量取最小值：单次测量会被 GC 停顿污染（同一配置两次可差 30%+）
+        GpuBenchmark.Repeats = GpuBenchmark.DefaultRepeats
+
+        Console.WriteLine($"    benchmark repeats: {GpuBenchmark.Repeats}")
+
         Dim benchmark As GpuBenchmarkReport = GpuBenchmark.Run(config, _connectomeMatrix, stimulation, gain, Nothing, reporter)
 
         Console.WriteLine()
         Console.WriteLine(benchmark.Describe())
 
         Call check("gpu benchmark csv written", File.Exists(benchmark.CsvFile), True)
-        Call check("cpu baseline captured", benchmark.Baseline IsNot Nothing AndAlso Not benchmark.Baseline.Skipped, True)
+        Call check("cpu baselines captured", benchmark.Baselines.Count >= 2, True)
 
-        If benchmark.Baseline IsNot Nothing AndAlso Not benchmark.Baseline.Skipped Then
+        For Each baseline As GpuBenchmarkEntry In benchmark.Baselines
             ' CPU 基准也必须走融合单步（逐算子路径是每步 6 个中间张量的旧实现）
-            Call check("[CPU baseline] all steps used the fused lif step", benchmark.Baseline.FallbackSteps, 0)
-            Call check("[CPU baseline] spike statistics are valid", benchmark.Baseline.TotalSpikes > 0, True)
-        End If
+            Call check($"[{baseline.Mode.Name}] all steps used the fused lif step", baseline.FallbackSteps, 0)
+            Call check($"[{baseline.Mode.Name}] spike statistics are valid", baseline.TotalSpikes > 0, True)
+        Next
 
         If Not gpuReady Then
             Console.WriteLine($"    [SKIP] CUDA 后端不可用，跳过 GPU 断言：{GpuRuntime.LastError}")
@@ -782,21 +787,26 @@ Module Program
             Return
         End If
 
-        Dim gated As GpuBenchmarkEntry() = benchmark.GatedEntries
+        Dim bitExact As GpuBenchmarkEntry() = benchmark.BitExactEntries
+        Dim speedup As GpuBenchmarkEntry() = benchmark.SpeedupEntries
 
-        Call check("gpu modes under test", gated.Length >= 2, True)
+        Call check("gpu modes under test", bitExact.Length >= 2, True)
+        Call check("gpu speedup modes under test", speedup.Length >= 1, True)
 
-        For Each entry As GpuBenchmarkEntry In gated
-            ' 逐位一致性：双精度常驻档的膜电位是 Double，脉冲计数必须是整数级一致
-            Call check($"[{entry.Mode.Name}] spike counts identical to CPU", entry.DifferingNeurons, 0)
-            Call check($"[{entry.Mode.Name}] max|delta| <= 1e-9", entry.MaxAbsDelta <= 1.0E-9, True)
-
-            ' 路径：必须真的走在融合单步上，否则 GPU 的固定往返开销会把收益吃掉
+        ' 路径：必须真的走在融合单步上，否则 GPU 的固定往返开销会把收益吃掉
+        For Each entry As GpuBenchmarkEntry In bitExact
             Call check($"[{entry.Mode.Name}] all steps used the fused lif step", entry.FallbackSteps, 0)
             Call check($"[{entry.Mode.Name}] last step path is Fused", entry.StepPath, "Fused")
 
-            ' 加速比门槛
-            Call check($"[{entry.Mode.Name}] speedup >= {GpuBenchmark.DefaultSpeedupGate:F1}x",
+            ' 逐位一致性：双精度常驻档的膜电位是 Double，脉冲计数必须是整数级一致
+            Call check($"[{entry.Mode.Name}] spike counts identical to CPU ({entry.BaselineName})",
+                       entry.DifferingNeurons, 0)
+            Call check($"[{entry.Mode.Name}] max|delta| <= 1e-9", entry.MaxAbsDelta <= 1.0E-9, True)
+        Next
+
+        ' 加速比门槛：同一 keepHistory 配置下与 CPU 对比
+        For Each entry As GpuBenchmarkEntry In speedup
+            Call check($"[{entry.Mode.Name}] speedup >= {GpuBenchmark.DefaultSpeedupGate:F1}x vs {entry.BaselineName}",
                        entry.Speedup >= GpuBenchmark.DefaultSpeedupGate, True)
         Next
 
@@ -843,7 +853,7 @@ Module Program
             spikes(rng.Next(units)) = 1.0
         Next
 
-        Dim sPrev As Tensor = Tensor.Wrap(spikes, New Integer() {1, units})
+        Dim sPrev As tf.Tensor = tf.Tensor.Wrap(spikes, New Integer() {1, units})
 
         ' 外部电流：刺激神经元恒流注入（与 scatter 之后的形状一致）
         Dim extData As Double() = New Double(units - 1) {}
@@ -852,7 +862,7 @@ Module Program
             extData(i) = config.StimulationValue
         Next
 
-        Dim ext As Tensor = Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
+        Dim ext As tf.Tensor = tf.Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
 
         For Each useGpu As Boolean In {False, True}
             If useGpu AndAlso GpuRuntime.Backend Is Nothing Then
@@ -860,15 +870,15 @@ Module Program
             End If
 
             If useGpu Then
-                Tensor.computeKernel = GpuRuntime.Backend
+                tf.Tensor.computeKernel = GpuRuntime.Backend
             Else
-                SIMDTensor.Register()
+                tfCompute.SIMDTensor.Register()
             End If
 
-            Dim backend = Tensor.computeKernel
-            Dim h As New Tensor(1, units)
-            Dim s As New Tensor(1, units)
-            Dim counts As New Tensor(1, units)
+            Dim backend = tf.Tensor.computeKernel
+            Dim h As New tf.Tensor(1, units)
+            Dim s As New tf.Tensor(1, units)
+            Dim counts As New tf.Tensor(1, units)
             Dim pinned As Boolean = False
 
             If useGpu Then
@@ -885,16 +895,15 @@ Module Program
                                                          Call backend.LifStep(csr, sPrev, ext, h, s, counts, config.Beta, config.Threshold, False)
                                                          Call backend.SyncFromDevice(s)
                                                      End Sub)
-            Dim tFull As Double = timePerCall(iters, Sub()
-                                                         ' 真实循环里每步都会产生一个新的外部电流张量（scatter 的结果）
-                                                         Dim stepExt = Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
+            Dim tFresh As Double = timePerCall(iters, Sub()
+                                                           ' 每步一个全新的外部电流张量（非恒流编码 / 每步重新散射的代价）
+                                                           Dim stepExt = tf.Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
 
-                                                         Call backend.LifStep(csr, sPrev, stepExt, h, s, counts, config.Beta, config.Threshold, False)
-                                                         Call backend.SyncFromDevice(s)
-                                                     End Sub)
+                                                           Call backend.LifStep(csr, sPrev, stepExt, h, s, counts, config.Beta, config.Threshold, False)
+                                                       End Sub)
 
             Console.WriteLine($"      {If(useGpu, "GPU (CUDA)", "CPU (SIMD)"),-10} spmm={tSpmm,7:F3}  " &
-                              $"lifStep={tStep,7:F3}  lif+sync={tSync,7:F3}  lif+sync+ext={tFull,7:F3}  ms/step")
+                              $"lifStep={tStep,7:F3}  lif+sync={tSync,7:F3}  lif+freshExt={tFresh,7:F3}  ms/step")
 
             If pinned Then
                 Call GpuRuntime.Backend.UnpinDevice(h)
@@ -904,7 +913,7 @@ Module Program
             End If
         Next
 
-        SIMDTensor.Register()
+        tfCompute.SIMDTensor.Register()
     End Sub
 
     ''' <summary>把一段动作重复执行若干次并返回单次平均耗时 (毫秒)。</summary>
