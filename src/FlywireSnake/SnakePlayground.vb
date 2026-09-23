@@ -73,6 +73,27 @@ Imports Snake2
         ''' <summary>装配耗时 (毫秒)。</summary>
         Public ReadOnly Property ElapsedMs As Long
 
+#Region "感觉 / 读出标定"
+
+        ''' <summary>
+        ''' 每个感觉通道使用多少个感觉神经元（"电极铺多大"）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 这份连接组做过结构归一化，注入的神经元太少时响应扩散不到运动神经元 ——
+        ''' 实测每个通道 256 个（共 4,096 个注入）时，运动神经元平均每个 tick 只有 1.1 个脉冲，
+        ''' 读出层拿到的特征几乎是空的（与示范动作的一致率只有 45.7%），
+        ''' 蛇看起来就是"没有目标地乱走"。这个值就是用来把感觉输入铺开到整个 afferent 群体的。
+        ''' </remarks>
+        Public Property SensorsPerChannel As Integer = 256
+
+        ''' <summary>感觉通道强度为 1.0 时，每个感觉神经元注入的电流。</summary>
+        Public Property SensorCurrent As Double = 2.4
+
+        ''' <summary>运动读出特征（滑动窗放电率）的窗宽（tick）。</summary>
+        Public Property FeatureWindow As Integer = 4
+
+#End Region
+
         ''' <remarks>
         ''' 形参名刻意避开 <c>index</c> / <c>matrix</c> / <c>gain</c>：VB 不区分大小写，
         ''' 与同名属性（<see cref="Index"/> / <see cref="Matrix"/> / <see cref="Gain"/>）
@@ -179,22 +200,29 @@ Imports Snake2
         ''' <summary>
         ''' 装配一个"游戏模式"的果蝇大脑（每次调用都是一份独立的状态，可以并行跑多局）。
         ''' </summary>
-        ''' <param name="sensorsPerChannel">每个感觉通道使用多少个感觉神经元</param>
         ''' <param name="seed">挑选神经元的随机种子</param>
         ''' <remarks>
         ''' 网络装配本身很轻（<c>AddSparseLayer</c> 只持有 CSR 引用），
         ''' 因此"每局一份大脑"的代价可以忽略；真正的重活是连接组装配（见 <see cref="Create"/>）。
+        ''' 
+        ''' "电极铺多大 / 注入多强 / 读出窗多宽"这三件事的口径统一由
+        ''' <see cref="SensorsPerChannel"/> / <see cref="SensorCurrent"/> / <see cref="FeatureWindow"/>
+        ''' 决定：训练（<see cref="Train"/>）、评估（<see cref="Evaluate"/>）与观战窗口
+        ''' 都走这一个入口，免得"训练时一套标定、玩的时候另一套"。
         ''' </remarks>
-        Public Function CreateBrain(Optional sensorsPerChannel As Integer = 256,
-                                    Optional seed As Integer = 42) As SnakeBrain
+        Public Function CreateBrain(Optional seed As Integer = 42) As SnakeBrain
 
             ' 这一份 Stimulation 只是给"输入特征"占个位：
             ' 游戏里的输入是每 tick 直接写进外部电流张量的（见 SnakeBrain.Advance），
             ' 不经过 Network.ForwardSparse 的散射路径。
             Dim bootstrap As Stimulation = Stimulation.CreateSingle(Index, 0, 1.0, "snake sensors")
             Dim network As BrainNetwork = BrainNetworkBuilder.Assemble(m_config, Matrix, bootstrap, Nothing)
+            Dim brain As New SnakeBrain(Index, network, SensorsPerChannel, SnakeSensorEncoder.ActionCount, seed)
 
-            Return New SnakeBrain(Index, network, sensorsPerChannel, SnakeSensorEncoder.ActionCount, seed)
+            brain.SensorCurrent = SensorCurrent
+            brain.FeatureWindow = FeatureWindow
+
+            Return brain
         End Function
 
         ''' <summary>

@@ -268,8 +268,13 @@ Partial Public Class FormMain
 #End Region
 
     ''' <summary>
-    ''' ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``
+    ''' ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]
+    ''' [每通道感觉神经元数] [感觉注入电流] [读出窗宽]``
     ''' </summary>
+    ''' <remarks>
+    ''' 后三个参数是"感觉 / 读出标定"的档位：调它们就是为了让大脑真的能感觉到游戏状态
+    ''' （见 <see cref="SnakePlayground.SensorsPerChannel"/> 的说明），留成命令行参数是为了能一档一档地实测。
+    ''' </remarks>
     Private Sub runSnakeProbe(args As String())
         Dim report As New StringBuilder()
         Dim failures As Integer = 0
@@ -286,6 +291,14 @@ Partial Public Class FormMain
         If episodes <= 0 Then episodes = 8
         If ticks <= 0 Then ticks = 300
         If evaluateRounds <= 0 Then evaluateRounds = 8
+
+        Dim sensorsPerChannel As Integer = 0
+        Dim sensorCurrent As Double = 0
+        Dim featureWindow As Integer = 0
+
+        If args.Length > 7 Then Integer.TryParse(args(7), sensorsPerChannel)
+        If args.Length > 8 Then Double.TryParse(args(8), sensorCurrent)
+        If args.Length > 9 Then Integer.TryParse(args(9), featureWindow)
 
         ' 游戏要跑很多 tick，逐 tick 回读对 CPU 后端来说太贵，因此默认尝试 GPU
         m_config.UseGpu = True
@@ -307,6 +320,14 @@ Partial Public Class FormMain
                     m_config,
                     Sub(message) Call report.AppendLine($"      [{timer.ElapsedMilliseconds,7:N0} ms] {message}"))
 
+                ' 标定档位（没给就沿用 SnakePlayground 的默认值）
+                If sensorsPerChannel > 0 Then playground.SensorsPerChannel = sensorsPerChannel
+                If sensorCurrent > 0 Then playground.SensorCurrent = sensorCurrent
+                If featureWindow > 0 Then playground.FeatureWindow = featureWindow
+
+                Call report.AppendLine()
+                Call report.AppendLine($"tuning    : 每通道感觉神经元 {playground.SensorsPerChannel} 个、" &
+                                       $"注入电流 {playground.SensorCurrent}、读出窗宽 {playground.FeatureWindow} tick")
                 Call report.AppendLine()
 
                 ' 感觉 / 运动神经元的选取：先跑一局看通路是否活着
