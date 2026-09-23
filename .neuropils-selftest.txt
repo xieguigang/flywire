@@ -1,18 +1,18 @@
 Neuropils self test
 data dir : F:\flywire\FAFB-v783
-time     : 2026-09-23 17:49:00
+time     : 2026-09-23 17:53:48
 
 ---- 1. dataset loading ----
       loading neuron index from names.csv ...
         139255 neurons, attaching annotations ...
-        [neuron index + annotations] 5301 ms (total 5301 ms)
+        [neuron index + annotations] 4937 ms (total 4937 ms)
       loading coordinates from coordinates.csv ...
         50000 coordinate rows ...
         100000 coordinate rows ...
         150000 coordinate rows ...
         200000 coordinate rows ...
         238909 coordinate rows -> 139255/139255 neurons have a position
-        [coordinates] 1476 ms (total 6777 ms)
+        [coordinates] 1254 ms (total 6191 ms)
       loading neuropil assignments from neuropil_synapse_table.csv ...
         20000 neuropil rows ...
         40000 neuropil rows ...
@@ -21,7 +21,7 @@ time     : 2026-09-23 17:49:00
         100000 neuropil rows ...
         120000 neuropil rows ...
         134181 rows -> 134181/139255 neurons assigned to 79 neuropils
-        [neuropil assignment] 891 ms (total 7668 ms)
+        [neuropil assignment] 888 ms (total 7079 ms)
       loading connections from connections_princeton.csv ...
         200000 connection rows, 199999 accepted ... (connections_princeton.csv)
         400000 connection rows, 399999 accepted ... (connections_princeton.csv)
@@ -50,16 +50,16 @@ time     : 2026-09-23 17:49:00
         5000000 connection rows, 4999999 accepted ... (connections_princeton.csv)
         5200000 connection rows, 5199999 accepted ... (connections_princeton.csv)
         5342446 rows -> 5342446 connections (0 skipped, 79 neuropils, 6 neurotransmitters)
-        [connections] 1720 ms (total 9388 ms)
+        [connections] 2062 ms (total 9141 ms)
         activity loaded from neuron_activity_celltype.csv (139255 rows)
-        [activity (optional)] 21 ms (total 9409 ms)
+        [activity (optional)] 25 ms (total 9166 ms)
       dataset ready: 139255 neurons (139255 positioned), 5342446 connections, neuropils=79
       [OK]   neuron count == 139255: actual=139255, expected=139255
       [OK]   positioned neurons > 100000: actual=True, expected=True
       [OK]   neuropil regions between 50 and 120: actual=True, expected=True
       [OK]   connections >= 5000000: actual=True, expected=True
       [OK]   every connection endpoint is indexed: actual=True, expected=True
-      load time: 9411 ms
+      load time: 9168 ms
       139255 neurons (139255 positioned), 5342446 connections, neuropils=79
       neuropil assignment coverage: 96.4%
       activity table: neuron_activity_celltype.csv
@@ -70,28 +70,28 @@ time     : 2026-09-23 17:49:00
       [OK]   [Neuropil] every category has a color text: actual=True, expected=True
       [OK]   [Neuropil] points match the visible positioned neurons: actual=139255, expected=139255
       [OK]   [Neuropil] the point -> neuron mapping stays inside the range: actual=True, expected=True
-      Neuropil        : 139255 points, 24 legend items, 90 ms
+      Neuropil        : 139255 points, 24 legend items, 93 ms
         top: ME_R=29363, ME_L=29235, (others)=17368, LO_L=9546
       [OK]   [Neurotransmitter] colorizer is available: actual=True, expected=True
       [OK]   [Neurotransmitter] legend items within 1..24: actual=True, expected=True
       [OK]   [Neurotransmitter] every category has a color text: actual=True, expected=True
       [OK]   [Neurotransmitter] points match the visible positioned neurons: actual=139255, expected=139255
       [OK]   [Neurotransmitter] the point -> neuron mapping stays inside the range: actual=True, expected=True
-      Neurotransmitter: 139255 points, 7 legend items, 20 ms
+      Neurotransmitter: 139255 points, 7 legend items, 22 ms
         top: ACH=82298, unknown=19658, GLUT=19605, GABA=16017
       [OK]   [CellType] colorizer is available: actual=True, expected=True
       [OK]   [CellType] legend items within 1..24: actual=True, expected=True
       [OK]   [CellType] every category has a color text: actual=True, expected=True
       [OK]   [CellType] points match the visible positioned neurons: actual=139255, expected=139255
       [OK]   [CellType] the point -> neuron mapping stays inside the range: actual=True, expected=True
-      CellType        : 139255 points, 24 legend items, 29 ms
+      CellType        : 139255 points, 24 legend items, 32 ms
         top: (others)=95033, R1-6=8456, KCg-m=2189, L1=1775
       [OK]   [SuperClass] colorizer is available: actual=True, expected=True
       [OK]   [SuperClass] legend items within 1..24: actual=True, expected=True
       [OK]   [SuperClass] every category has a color text: actual=True, expected=True
       [OK]   [SuperClass] points match the visible positioned neurons: actual=139255, expected=139255
       [OK]   [SuperClass] the point -> neuron mapping stays inside the range: actual=True, expected=True
-      SuperClass      : 139255 points, 10 legend items, 34 ms
+      SuperClass      : 139255 points, 10 legend items, 30 ms
         top: optic=77873, central=32381, sensory=16938, visual_projection=7684
       [OK]   [Activity] heat map colorizer: actual=True, expected=True
       [OK]   [Activity] intensity covers every neuron: actual=True, expected=True
@@ -100,16 +100,16 @@ time     : 2026-09-23 17:49:00
 
 ---- 3. connection assembly ----
       [OK]   [threshold 20] lines <= max: actual=True, expected=True
-      threshold>=20   :   504102 lines (candidates 504102, dropped 0), 136 ms
+      threshold>=20   :   504102 lines (candidates 504102, dropped 0), 131 ms
       [OK]   [threshold 100] lines <= max: actual=True, expected=True
-      threshold>=100  :    20830 lines (candidates 20830, dropped 0), 14 ms
+      threshold>=100  :    20830 lines (candidates 20830, dropped 0), 15 ms
       [OK]   [threshold 1000] lines <= max: actual=True, expected=True
-      threshold>=1000 :       33 lines (candidates 33, dropped 0), 5 ms
+      threshold>=1000 :       33 lines (candidates 33, dropped 0), 4 ms
       [OK]   neuropil aggregate links > 0: actual=True, expected=True
       [OK]   neuropil aggregate links < 2000 (宏观图应保持稀疏): actual=True, expected=True
       neuropil aggregate : 433 links (156120 connections aggregated), 63 ms
       [OK]   selected neuron has connections: actual=True, expected=True
-      focus neuron #67232 : 28786 lines, 30 ms
+      focus neuron #67232 : 28786 lines, 29 ms
 
 ---- 4. dxapi smoke test (scene + camera + hit test) ----
       [OK]   scene carries the points: actual=139255, expected=139255
@@ -130,7 +130,7 @@ time     : 2026-09-23 17:49:00
       hit test           : Point #37578 @ 0.2 px
 
 ---- 5. picking performance ----
-5 hit tests over 139255 points: 33 ms (6.6 ms/click, 5 hits)
+5 hit tests over 139255 points: 32 ms (6.4 ms/click, 5 hits)
       [OK]   one click stays interactive (< 40 ms): actual=True, expected=True
       [OK]   the pick probes found neurons: actual=True, expected=True
 

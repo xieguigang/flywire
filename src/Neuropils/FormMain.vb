@@ -43,6 +43,7 @@ Public Partial Class FormMain
     Private m_dimensionBox As ToolStripComboBox
     Private m_connectionBox As ToolStripComboBox
     Private m_lineColorBox As ToolStripComboBox
+    Private m_renderModeBox As ToolStripComboBox
     Private m_thresholdBox As NumericUpDown
     Private m_pointSizeBox As NumericUpDown
     Private m_showConnections As ToolStripButton
@@ -72,6 +73,9 @@ Public Partial Class FormMain
     Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
 
     Public Sub New()
+        ' Designer 生成的 InitializeComponent 目前是空实现，但按约定仍然先调用它
+        ' (WinForms 设计器与后续手工添加控件都依赖这个调用顺序)
+        Call InitializeComponent()
         Call initializeUi()
 
         Call m_rebuildTimer.Stop()
@@ -194,6 +198,11 @@ Public Partial Class FormMain
         m_connectionBox.SelectedIndex = 0
         AddHandler m_connectionBox.SelectedIndexChanged, AddressOf onConnectionModeChanged
 
+        m_renderModeBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 110}
+        Call m_renderModeBox.Items.AddRange(New Object() {"点云", "线框", "实体"})
+        m_renderModeBox.SelectedIndex = 0
+        AddHandler m_renderModeBox.SelectedIndexChanged, AddressOf onRenderModeChanged
+
         m_lineColorBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 130}
         Call m_lineColorBox.Items.AddRange(New Object() {
             "连线: 前突触颜色", "连线: 递质类型", "连线: 单色"
@@ -227,6 +236,8 @@ Public Partial Class FormMain
         Call bar.Items.Add(New ToolStripLabel("着色:"))
         Call bar.Items.Add(m_dimensionBox)
         Call bar.Items.Add(New ToolStripSeparator())
+        Call bar.Items.Add(New ToolStripLabel("模式:"))
+        Call bar.Items.Add(m_renderModeBox)
         Call bar.Items.Add(New ToolStripLabel("连接:"))
         Call bar.Items.Add(m_connectionBox)
         Call bar.Items.Add(m_lineColorBox)
@@ -697,6 +708,14 @@ Public Partial Class FormMain
         Call rebuildScene()
     End Sub
 
+    Private Sub onRenderModeChanged(sender As Object, e As EventArgs)
+        Select Case m_renderModeBox.SelectedIndex
+            Case 1 : m_canvas.RenderMode = SceneRenderMode.Mesh
+            Case 2 : m_canvas.RenderMode = SceneRenderMode.Surface
+            Case Else : m_canvas.RenderMode = SceneRenderMode.PointCloud
+        End Select
+    End Sub
+
     Private Sub onConnectionModeChanged(sender As Object, e As EventArgs)
         Select Case m_connectionBox.SelectedIndex
             Case 1 : m_buildOptions.Mode = ConnectionRenderMode.NeuropilAggregate
@@ -756,14 +775,24 @@ Public Partial Class FormMain
     End Sub
 
     Private Sub onAbout(sender As Object, e As EventArgs)
-        Call MessageBox.Show(
-            Me,
-            "数据来源: FlyWire FAFB v783 (codex.flywire.ai)" & Environment.NewLine &
-            "神经元数 139,255 / 连接 534 万条 (≥5 突触)" & Environment.NewLine &
-            "点云位置来自 coordinates.csv，脑区归属由 neuropil_synapse_table.csv 取 argmax" & Environment.NewLine &
-            "渲染: Microsoft.VisualBasic.Drawing (Direct3D 11)" & Environment.NewLine & Environment.NewLine &
-            "快捷键: 左键旋转 / 右键平移 / 滚轮缩放 / R 重置 / F 适配 / G 地面 / C 连接 / S 截图",
-            "关于 Neuropils", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Dim sb As New StringBuilder()
+
+        Call sb.AppendLine("数据来源: FlyWire FAFB v783 (codex.flywire.ai)")
+        Call sb.AppendLine("神经元 139,255 / 连接 534 万条 (≥5 突触)")
+        Call sb.AppendLine("点云位置来自 coordinates.csv，脑区归属由 neuropil_synapse_table.csv 取 argmax")
+        Call sb.AppendLine("渲染: Microsoft.VisualBasic.Drawing (Direct3D 11)")
+        Call sb.AppendLine()
+        Call sb.AppendLine("快捷键: 左键旋转 / 右键平移 / 滚轮缩放")
+        Call sb.AppendLine("        R 重置视角 / F 适配视图 / G 地面 / C 连线 / S 截图")
+        Call sb.AppendLine()
+        Call sb.AppendLine("命令行:")
+        Call sb.AppendLine("  Neuropils.exe [数据目录]")
+        Call sb.AppendLine("  Neuropils.exe --selftest <报告.txt> [数据目录]")
+        Call sb.AppendLine("      数据链路自检 (读表/着色/装配/拾取) 并给出实测耗时")
+        Call sb.AppendLine("  Neuropils.exe --snapshot <图片.png> [数据目录] [着色 0..4] [连接 0..3]")
+        Call sb.AppendLine("      载入后离屏抓一帧写盘然后退出 (0=不画 1=逐条 2=宏连接 3=选中神经元)")
+
+        Call MessageBox.Show(Me, sb.ToString(), "关于 Neuropils", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
 #End Region

@@ -94,11 +94,10 @@ Namespace Data
             Me.IsHeatMap = (dimension = NeuronColorDimension.Activity)
 
             ' 类别表：每个神经元的类别索引 + 每类的名称与数量
-            Dim categoryOf As Integer()
-            Dim counts As Integer()
-            Dim names As String()
-
-            Call buildCategories(dataset, dimension, categoryOf, counts, names)
+            Dim categories = buildCategories(dataset, dimension)
+            Dim categoryOf As Integer() = categories.CategoryOf
+            Dim counts As Integer() = categories.Counts
+            Dim names As String() = categories.Names
 
             m_categories = categoryOf
             m_categoryNames = names
@@ -276,11 +275,8 @@ Namespace Data
         ''' 只有离散维度会走出"类别"这一层；活跃度维度直接把连续值交给热力图，
         ''' 这里返回一个单类别表作为占位。
         ''' </remarks>
-        Private Shared Sub buildCategories(dataset As BrainDataset,
-                                           dimension As NeuronColorDimension,
-                                           ByRef categoryOf As Integer(),
-                                           ByRef counts As Integer(),
-                                           ByRef names As String())
+        Private Shared Function buildCategories(dataset As BrainDataset,
+                                               dimension As NeuronColorDimension) As (CategoryOf As Integer(), Counts As Integer(), Names As String())
 
             Dim raw As String() = New String(dataset.Units - 1) {}
             Dim index As ConnectomeIndex = dataset.Index
@@ -367,10 +363,8 @@ Namespace Data
                 total(category) += 1
             Next
 
-            categoryOf = assign
-            counts = total
-            names = nameList.ToArray()
-        End Sub
+            Return (assign, total, nameList.ToArray())
+        End Function
 
         ''' <summary>
         ''' 生成类别配色：先用 ColorBrewer 的定性色板 (区分度高)，
