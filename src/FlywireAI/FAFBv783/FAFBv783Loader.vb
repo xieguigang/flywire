@@ -21,7 +21,8 @@ Namespace FAFBv783
     ''' </summary>
     ''' <remarks>
     ''' 注意：``sk_lod1_783_healed.zip`` (Neuron Skeletons) 是 SWC 骨架的 zip 归档文件，不是表格数据，
-    ''' 因此没有定义对应的数据模型类型。
+    ''' 因此没有定义对应的表格数据模型类型，相关的骨架解析请参考 <see cref="SwcParser"/> 与
+    ''' <see cref="SkeletonArchive"/>。
     ''' </remarks>
     Public Module FAFBv783Loader
 

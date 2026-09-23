@@ -15,7 +15,9 @@ Imports Microsoft.VisualBasic.Data.Framework.IO.Linq
 ''' 2. 大表通过 ``StreamXxx`` (``DataStream.OpenHandle`` + ``AsLinq(Of T)``) 进行流式加载；
 ''' 3. 超大表通过 ``DataStream.OpenHandle`` + ``DataStream.AsLinq`` 原始接口进行流式加载；
 ''' 4. ``Long`` 类型加载 FlyWire Root ID 时的精度；
-''' 5. 未定义数据模型的 csv 文件通过 ``OpenRawHandle`` 读取原始数据行。
+''' 5. 未定义数据模型的 csv 文件通过 ``OpenRawHandle`` 读取原始数据行；
+''' 6. 流式读取与全量加载的结果一致性、以及流式 api 的框架缺陷修复回归；
+''' 7. SWC 神经元骨架解析器与 ``sk_lod1_783_healed.zip`` 归档的读取。
 ''' </summary>
 Module Program
 
@@ -43,6 +45,7 @@ Module Program
         Call run("5. raw rows for undocumented csv", AddressOf testRawRows)
         Call run("6. stream rows vs full load rows", AddressOf testRowCountConsistency)
         Call run("7. streaming api regression (framework fixes)", AddressOf testDataStreamHandleBehavior)
+        Call run("8. SWC skeleton parser + zip archive", AddressOf testSwcSkeleton)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -329,6 +332,179 @@ Module Program
         ' 4. 另一个数据流 api 的行为对照
         Dim viaLinqStream As Integer = file.OpenDataLinqStream(Of CellNames)().Count()
         Call check("DataLinqStream rows == data lines", viaLinqStream, expected)
+    End Sub
+
+    ''' <summary>
+    ''' SWC 神经元骨架解析器与 ``sk_lod1_783_healed.zip`` 归档的 demo：
+    ''' 
+    ''' 1. 打开骨架归档，读取单个骨架并校验元数据、单位、树结构与几何统计；
+    ''' 2. 校验文本入口 (``ParseText``) 与数据流入口 (``Parse``) 的解析结果一致；
+    ''' 3. 与既有 CSV 注释模型 (``names.csv`` / ``consolidated_cell_types.csv``) 按 root_id 互操作；
+    ''' 4. 惰性批量枚举若干骨架 (批量分析场景) 并统计耗时。
+    ''' </summary>
+    Private Sub testSwcSkeleton()
+        Console.WriteLine()
+        Console.WriteLine("=== 8. SWC skeleton parser + zip archive ===")
+
+        Dim zipFile As String = System.IO.Path.Combine(DATA_DIR, "sk_lod1_783_healed.zip")
+
+        If Not System.IO.File.Exists(zipFile) Then
+            Console.WriteLine($"    [SKIP] skeleton archive does not exist: {zipFile}")
+            Return
+        End If
+
+        Using archive As SkeletonArchive = SkeletonArchive.Open(zipFile)
+            Console.WriteLine($"    archive: {archive}")
+
+            Call check("archive entry count > 0", archive.EntryCount > 0, True)
+
+            ' ---------------------------------------------------------------- 单个骨架的解析
+            ' 取归档之中的第一个条目 (体积最小的条目之一)，便于快速校验；
+            ' 期望值从条目名推导而来，从而避免硬编码魔法数字
+            Dim entryName As String = archive.EntryNames().First
+            Dim expectedId As Long = Long.Parse(System.IO.Path.GetFileNameWithoutExtension(entryName))
+            Dim skeleton As SwcSkeleton = archive.ReadSkeleton(entryName)
+
+            Call check("skeleton was found in the archive", skeleton IsNot Nothing, True)
+
+            If skeleton Is Nothing Then
+                Return
+            End If
+
+            Call check("entry name", skeleton.EntryName, entryName)
+            Call check("root_id (from # Meta or entry name)", skeleton.RootId, expectedId)
+            Call check("# Meta id == entry file name", skeleton.Meta.id, System.IO.Path.GetFileNameWithoutExtension(entryName))
+            Call check("# Meta units", skeleton.Meta.units, "1 nanometer")
+            Call check("unit enum", skeleton.Unit, SwcUnits.Nanometer)
+            ' 文档描述为 microns，但是坐标的量级证明实际的单位是 nanometer
+            Call check("coordinate magnitude indicates nanometer", skeleton.Root.X > 1000, True)
+
+            Dim root As SwcNode = skeleton.Root
+
+            Call check("single root node", skeleton.Roots.Length, 1)
+            Call check("root node is the soma", root.Label, 1)
+            Call check("root node has no parent", root.Parent, -1)
+            Call check("tree structure is valid", skeleton.Validate().Length, 0)
+            Call check("no parse warnings", skeleton.Warnings.Count, 0)
+
+            ' # Labels: 段所声明的节点类型定义
+            Call check("label 1 = soma", skeleton.GetLabelName(1), "soma")
+            Call check("label 5 = fork point", skeleton.GetLabelName(5), "fork point")
+            Call check("label 6 = end point", skeleton.GetLabelName(6), "end point")
+
+            ' 树结构与节点统计的一致性
+            Dim children As Integer = skeleton.Nodes.Sum(Function(n) n.Children.Count)
+            Dim nonRoot As Integer = skeleton.Nodes.Where(Function(n) n.Parent >= 0).Count()
+
+            Call check("children count == non-root node count", children, nonRoot)
+            Call check("node lookup by id", skeleton.GetNode(root.Id) Is root, True)
+            Call check("soma node count", skeleton.SomaNodes.Length, 1)
+
+            ' 单位换算访问器
+            Call check("XMicrons * 1000 == XNm", Math.Round(root.XMicrons * 1000, 6), Math.Round(root.XNm, 6))
+            Call check("cable length nm / 1000 == cable length um",
+                       Math.Round(skeleton.CableLengthNm / 1000, 6),
+                       Math.Round(skeleton.CableLengthMicrons, 6))
+
+            Console.WriteLine($"    {skeleton}")
+            Console.WriteLine($"    root: {root}")
+            Console.WriteLine($"    bounding box: {skeleton.BoundingBox}")
+            Console.WriteLine($"    node types: {String.Join(", ", skeleton.NodeTypeHistogram.Select(Function(kv) $"{kv.Key}:{kv.Value}"))}")
+            Console.WriteLine($"    cable length: {Math.Round(skeleton.CableLengthNm, 1)} nm / {Math.Round(skeleton.CableLengthMicrons, 2)} um")
+
+            ' ---------------------------------------------------------------- 文本入口一致性
+            Dim swcText As String
+
+            Using entryStream As Stream = archive.OpenEntry(entryName)
+                Using reader As New StreamReader(entryStream)
+                    swcText = reader.ReadToEnd()
+                End Using
+            End Using
+
+            Dim viaText As SwcSkeleton = SwcParser.ParseText(swcText, entryName)
+
+            Call check("ParseText node count == Parse node count", viaText.Count, skeleton.Count)
+            Call check("ParseText root_id", viaText.RootId, skeleton.RootId)
+            Call check("ParseText tree structure is valid", viaText.Validate().Length, 0)
+            Call check("ParseText root node", viaText.Root.ToString, root.ToString)
+
+            ' ---------------------------------------------------------------- 惰性批量枚举
+            Dim timer As Stopwatch = Stopwatch.StartNew()
+            Dim batch As SwcSkeleton() = archive.EnumerateSkeletons(5).ToArray
+            timer.Stop()
+
+            Call check("batch enumeration count", batch.Length, 5)
+            Call check("batch skeletons were parsed", batch.All(Function(s) s.Count > 0), True)
+            Call check("batch root ids are unique", batch.Select(Function(s) s.RootId).Distinct().Count(), batch.Length)
+
+            Console.WriteLine($"    batch: {batch.Sum(Function(s) s.Count)} nodes from {batch.Length} skeletons in {timer.ElapsedMilliseconds} ms")
+
+            For Each s As SwcSkeleton In batch
+                Console.WriteLine($"      {s.Describe()}")
+            Next
+
+            ' 归档之中体积最大的骨架 (约 20 MB)，用于观察解析吞吐
+            timer.Restart()
+
+            Dim largest As SwcSkeleton = archive.ReadSkeleton(720575940626979621L)
+            timer.Stop()
+
+            If largest IsNot Nothing Then
+                Call check("largest skeleton was parsed", largest.Count > 0, True)
+                Console.WriteLine($"    largest: {largest.Describe()} ({timer.ElapsedMilliseconds} ms, {Math.Round(largest.Count / Math.Max(timer.Elapsed.TotalSeconds, 0.001))} nodes/sec)")
+            Else
+                Console.WriteLine("    largest skeleton is not available in the current archive")
+            End If
+
+            ' ---------------------------------------------------------------- 与 CSV 注释模型互操作
+            Dim names As List(Of CellNames) = csv("names.csv").LoadCellNames()
+            Dim cellTypes As List(Of CellTypes) = csv("consolidated_cell_types.csv").LoadCellTypes()
+            Dim nameIndex As Dictionary(Of Long, CellNames) = names.ToRootIdIndex(Function(c As CellNames) c.RootId)
+            Dim typeIndex As Dictionary(Of Long, CellTypes) = cellTypes.ToRootIdIndex(Function(c As CellTypes) c.RootId)
+
+            ' 注释表格与骨架归档并不完全重合 (骨架归档之中存在少量的额外条目)，
+            ' 所以这里取两个数据源的 root_id 交集来演示互操作
+            Dim candidates As Long() = names _
+                .Take(500) _
+                .Select(Function(c As CellNames) c.RootId) _
+                .Where(Function(id As Long) archive.Contains(id)) _
+                .Take(3) _
+                .ToArray
+
+            Call check("cells having both annotation and skeleton", candidates.Length, 3)
+
+            Dim cell As CellNames = nameIndex(candidates(0))
+
+            ' 由既有模型对象直接读取所对应的骨架
+            Dim fromCell As SwcSkeleton = archive.GetSkeleton(cell)
+
+            Call check("archive.GetSkeleton(cell) resolves the skeleton", fromCell.RootId, cell.RootId)
+            Call check("GetSkeleton(cell) returns a parsed skeleton", fromCell.Count > 0, True)
+
+            Dim cellType As CellTypes = Nothing
+
+            If typeIndex.TryGetValue(cell.RootId, cellType) Then
+                Console.WriteLine($"    annotation: {cell.Name} @ {cell.Group}, primary_type={cellType.PrimaryType}")
+                Call check("joined cell type root_id", cellType.RootId, cell.RootId)
+            End If
+
+            Dim sampleIndex As Dictionary(Of Long, SwcSkeleton) = archive.ToSkeletonIndex(candidates)
+
+            Call check("skeleton index size", sampleIndex.Count, candidates.Length)
+
+            For Each pair In candidates.JoinSkeleton(Function(id As Long) id, sampleIndex)
+                Dim name As CellNames = nameIndex(pair.cell)
+                Dim typeRow As CellTypes = Nothing
+                Dim annotation As String = $"{name.Name} @ {name.Group}"
+
+                If typeIndex.TryGetValue(pair.cell, typeRow) Then
+                    annotation &= $" [{typeRow.PrimaryType}]"
+                End If
+
+                Console.WriteLine($"    join: {pair.cell} -> {pair.skeleton.Describe()} | {annotation}")
+                Call check($"joined skeleton root_id ({pair.skeleton.EntryName})", pair.skeleton.RootId, pair.cell)
+            Next
+        End Using
     End Sub
 
 #End Region
