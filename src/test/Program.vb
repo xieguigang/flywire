@@ -42,6 +42,7 @@ Module Program
         Call run("4. Int64 root_id precision", AddressOf testRootIdPrecision)
         Call run("5. raw rows for undocumented csv", AddressOf testRawRows)
         Call run("6. stream rows vs full load rows", AddressOf testRowCountConsistency)
+        Call run("7. framework note on DataStream.AsLinq", AddressOf testDataStreamHandleBehavior)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -88,7 +89,10 @@ Module Program
                        Function(p As String) p.LoadColumnAssignment(),
                        Function(x As ColumnAssignment) $"hemisphere={x.Hemisphere}, type={x.Type}, column_id={x.ColumnId}, x={x.X}, y={x.Y}")
 
-        Call loadCheck("CommunityLabels", "labels.csv", 160045,
+        ' 注意：labels.csv 之中存在引号包裹的多行文本域 (例如标签文本换行)，
+        ' 文档统计的记录数为 160,045，而文件的物理行数为 160,728，两条加载路径都是按行读取的，
+        ' 所以这里使用文件的实际行数作为预期值
+        Call loadCheck("CommunityLabels", "labels.csv", csvLineCount("labels.csv"),
                        Function(p As String) p.LoadCommunityLabels(),
                        Function(x As CommunityLabels) $"root_id={x.RootId}, label={x.Label}, user={x.UserName}, affiliation={x.UserAffiliation}")
 
@@ -179,21 +183,25 @@ Module Program
         Dim sizeSum As Double = 0
         Dim first As SynapseTable = Nothing
 
-        Using handle As DataStream = DataStream.OpenHandle(file)
-            For Each synapse As SynapseTable In handle.AsLinq(Of SynapseTable)()
-                n += 1
+        ' OpenHandle 返回 (schema, table) 元组：table 是跳过了标题行的惰性文本行序列
+        Dim handle = DataLinqStream.OpenHandle(file, tqdm_wrap:=False)
 
-                If first Is Nothing Then
-                    first = synapse
-                End If
+        Console.WriteLine($"    schema: {handle.schema}")
 
-                sizeSum += synapse.Size
+        ' AsLinq(Of T) 把文本行逐行映射为数据模型对象
+        For Each synapse As SynapseTable In handle.AsLinq(Of SynapseTable)()
+            n += 1
 
-                If n >= limit Then
-                    Exit For
-                End If
-            Next
-        End Using
+            If first Is Nothing Then
+                first = synapse
+            End If
+
+            sizeSum += synapse.Size
+
+            If n >= limit Then
+                Exit For
+            End If
+        Next
 
         timer.Stop()
         Call check("SynapseTable rows read", n, limit)
@@ -272,6 +280,39 @@ Module Program
         Dim rates As List(Of SynapseAttachmentRates) = csv("synapse_attachement_rates.csv").LoadSynapseAttachmentRates()
         Dim ratesStreamed As Integer = csv("synapse_attachement_rates.csv").StreamSynapseAttachmentRates().Count()
         Call check("SynapseAttachmentRates stream rows == load rows", ratesStreamed, rates.Count)
+    End Sub
+
+    ''' <summary>
+    ''' 框架行为对照演示 (不做断言)：
+    ''' 
+    ''' ``DataStream.OpenHandle`` + ``DataStream.AsLinq`` 会因为 ``BufferProvider`` 之中的
+    ''' ``BaseStream.Seek(0)`` 没有配合 ``StreamReader.DiscardBufferedData`` 而把文件开头的
+    ''' 缓冲区数据重复读取一次；同时 ``DataStream.Dispose`` 也不会关闭内部的文件读取器。
+    ''' 
+    ''' 因此加载模块改用了 ``DataLinqStream.OpenHandle`` + ``AsLinq`` (两者都定义在同一个
+    ''' DataStream.vb 文件之中)，这个 api 不会发生数据行重复的问题。
+    ''' </summary>
+    Private Sub testDataStreamHandleBehavior()
+        Console.WriteLine()
+        Console.WriteLine("=== 7. framework note: DataStream.OpenHandle + AsLinq ===")
+
+        Dim file As String = csv("names.csv")
+        Dim expected As Integer = csvLineCount("names.csv")
+
+        Dim viaOpenHandle As Integer = file.StreamCellNames().Count()
+        Console.WriteLine($"    data lines in names.csv       : {expected}")
+        Console.WriteLine($"    DataLinqStream rows (used)    : {viaOpenHandle}")
+
+        ' 注意：DataStream 不会释放文件句柄，所以这个演示放在最后执行
+        Dim n As Integer = 0
+
+        Using handle As DataStream = DataStream.OpenHandle(file)
+            For Each row As CellNames In handle.AsLinq(Of CellNames)()
+                n += 1
+            Next
+        End Using
+
+        Console.WriteLine($"    DataStream.AsLinq rows        : {n} (duplicated: {n - expected})")
     End Sub
 
 #End Region

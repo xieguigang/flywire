@@ -11,6 +11,11 @@ Namespace FAFBv783
     ''' Additionally, this table contains raw labels, as they were submitted by the
     ''' FlyWire community.
     ''' </summary>
+    ''' <remarks>
+    ''' 注意：格式文档之中的统计行数 160,045 是记录数，而下载得到的 ``labels.csv`` 文件因为
+    ''' ``label`` 文本之中存在换行而具有 160,728 个物理行，行列式的读取函数 (``LoadCsv`` 以及
+    ''' ``AsLinq``) 都是按照物理行来返回数据行的。
+    ''' </remarks>
     Public Class CommunityLabels
 
         <Column("root_id", GetType(Int64Parser))>
