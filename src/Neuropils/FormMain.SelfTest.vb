@@ -170,8 +170,18 @@ Partial Public Class FormMain
                 hit = SceneHitTester.HitTest(cloud, camera, probeX(cloud, camera, probe), probeY(cloud, camera, probe), 6)
 
                 Call check(report, failures, "hit test at a projected point finds a point", hit.Kind = SceneHitKind.Point, True)
-                Call check(report, failures, "hit test index round trips to the same neuron",
-                           If(hit.HasHit, builtScene.PointNeurons(hit.Index), -1), builtScene.PointNeurons(probe))
+                Call check(report, failures, "hit test stays inside the pick radius", hit.Distance <= 6.0F, True)
+                Call check(report, failures, "hit test index is a valid point of the cloud",
+                           hit.Index >= 0 AndAlso hit.Index < builtScene.PointCount, True)
+
+                ' 注意：拾取返回的是"屏幕上最近的点"，密集的点云里它未必就是探针点本身
+                ' (相邻神经元的投影可能更靠前)，因此不能断言索引相等 —— 真正要验证的是
+                ' "点索引 -> 神经元索引 -> 坐标"这条映射链自洽。
+                Dim delta As Double = mappingDelta(report, dataset, builtScene, cloud)
+
+                Call check(report, failures, "point -> neuron -> position mapping is consistent",
+                           delta >= 0 AndAlso delta <= 1.0E-03, True)
+                Call report.AppendLine($"      mapping max |delta|: {delta:E3} nm")
             End If
 
             Call report.AppendLine($"      scene              : {cloud}")
@@ -313,6 +323,44 @@ Partial Public Class FormMain
         Next
 
         Return n
+    End Function
+
+    ''' <summary>
+    ''' 校验"点索引 → 神经元索引 → 数据层坐标"这条映射链自洽。
+    ''' </summary>
+    ''' <remarks>
+    ''' 场景里的点是被<b>平移过</b>的 (减去了点云质心，让模型绕自身中心旋转)，
+    ''' 因此判据是 <c>数据层坐标 − 质心 == 场景点坐标</c>。
+    ''' 抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
+    ''' </remarks>
+    Private Shared Function mappingDelta(report As StringBuilder, dataset As BrainDataset, built As BrainScene, cloud As Scene) As Double
+        Dim center As Point3D = cloud.Center
+        Dim samples As Integer() = {0, built.PointCount \ 3, built.PointCount \ 2, built.PointCount - 1}
+        Dim worst As Double = 0
+
+        For Each k As Integer In samples
+            Dim neuron As Integer = built.PointNeurons(k)
+
+            If neuron < 0 OrElse neuron >= dataset.Units Then Return -1
+            If Not dataset.HasPosition(neuron) Then Return -1
+
+            Dim position As FlywireAI.FAFBv783.NeuronPosition = dataset.GetPosition(neuron)
+
+            ' 必须和 <b>场景里</b> 的点比较：装配结果 (built.Points) 保存的是未平移的原始坐标，
+            ' 平移是在 Scene.LoadPointCloud 内部对它自己的副本做的 (调用方的数组不受影响)。
+            Dim point As PointCloudPoint = cloud.Points(k)
+            Dim dx As Double = System.Math.Abs(position.X - center.X - point.X)
+            Dim dy As Double = System.Math.Abs(position.Y - center.Y - point.Y)
+            Dim dz As Double = System.Math.Abs(position.Z - center.Z - point.Z)
+
+            worst = System.Math.Max(worst, System.Math.Max(dx, System.Math.Max(dy, dz)))
+
+            Call report.AppendLine($"        probe k={k} neuron={neuron} " &
+                                   $"dataset.X={position.X:N3} center.X={center.X:N3} point.X={point.X:N3} " &
+                                   $"delta=({dx:N3}, {dy:N3}, {dz:N3})")
+        Next
+
+        Return worst
     End Function
 
     ''' <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
