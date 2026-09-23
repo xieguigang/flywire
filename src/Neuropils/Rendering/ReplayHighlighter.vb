@@ -120,15 +120,29 @@ Namespace Rendering
             Return point
         End Function
 
-        ''' <summary>当前点云里最大的热值（热力图模式下的"最亮档"）。</summary>
+        ''' <summary>
+        ''' 当前点云折算出来的最大热值（热力图模式下的"最亮档"）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 必须与渲染管线的折算方式<b>完全一致</b>：热值取 0 时管线会用 Z 坐标代替
+        ''' （<c>GpuSceneGeometry.BuildCloudInstances</c>），因此最大值要在
+        ''' <c>Intensity ≠ 0 ? Intensity : Z</c> 上取。
+        ''' 照搬 <c>Intensity</c> 的最大值会算出一个低于实际量程上限的数 ——
+        ''' 那样"点亮"的神经元只是调色板中段，看起来并不比原有的高活跃神经元更亮。
+        ''' 
+        ''' 取到真正的上限值还有个附带好处：归一化区间不受影响（这个值本来就存在于点云里），
+        ''' 其余点不会被压暗。
+        ''' </remarks>
         Private Function peakHeat() As Double
             If Not Double.IsNaN(m_peakHeat) Then Return m_peakHeat
 
             Dim peak As Double = 0
 
             For i As Integer = 0 To m_base.Length - 1
-                If m_base(i).Intensity > peak Then
-                    peak = m_base(i).Intensity
+                Dim value As Double = If(m_base(i).Intensity <> 0, m_base(i).Intensity, m_base(i).Z)
+
+                If value > peak Then
+                    peak = value
                 End If
             Next
 

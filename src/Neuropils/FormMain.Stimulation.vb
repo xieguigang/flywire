@@ -742,6 +742,9 @@ Partial Public Class FormMain
                         Call updateReplayPanel()
 
                         Call Console.Out.WriteLine($"stimulation: {replay.Describe()}")
+                        Call Console.Out.WriteLine($"replay highlight mode: heatMap={isHeatMap()}, " &
+                                                   $"dimension={If(m_colorizer Is Nothing, "none", m_colorizer.Dimension.ToString)}, " &
+                                                   $"embeddedColor={m_canvas.UseEmbeddedColor}")
                         Call Console.Out.WriteLine($"rendering replay step {m_replayStep + 1}/{replay.Steps}, " &
                                                    $"active {replay.ActivePerStep(m_replayStep):N0}, " &
                                                    $"highlighted {replay.StepActive(m_replayStep).Length:N0} neurons")

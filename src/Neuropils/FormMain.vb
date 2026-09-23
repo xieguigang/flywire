@@ -668,10 +668,30 @@ Public Partial Class FormMain
             Return
         End If
 
-        ' 默认着色维度：主导脑区
-        Call rebuildColorizer(NeuronColorDimension.Neuropil, resetUi:=False)
+        ' 着色维度以工具条上的当前选择为准（默认是主导脑区）。
+        ' 这里不能写死 Neuropil：--snapshot 模式会在载入之前就把维度设好，
+        ' 写死会让"着色维度"这个命令行参数完全失效（出图出来的还是默认维度）。
+        Call rebuildColorizer(dimensionFromUi(), resetUi:=False)
         Call rebuildScene(resetView:=True)
     End Sub
+
+    ''' <summary>
+    ''' 工具条上当前选中的着色维度（界面上唯一一处"维度 → 枚举"的映射）。
+    ''' </summary>
+    Private Function dimensionFromUi() As NeuronColorDimension
+        Select Case m_dimensionBox.SelectedIndex
+            Case 1
+                Return NeuronColorDimension.Neurotransmitter
+            Case 2
+                Return NeuronColorDimension.CellType
+            Case 3
+                Return NeuronColorDimension.SuperClass
+            Case 4
+                Return NeuronColorDimension.Activity
+            Case Else
+                Return NeuronColorDimension.Neuropil
+        End Select
+    End Function
 
     ''' <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
     Private Sub onReload(sender As Object, e As EventArgs)
@@ -877,15 +897,7 @@ Public Partial Class FormMain
     Private Sub onDimensionChanged(sender As Object, e As EventArgs)
         If m_dataset Is Nothing Then Return
 
-        Dim dimension As NeuronColorDimension
-
-        Select Case m_dimensionBox.SelectedIndex
-            Case 1 : dimension = NeuronColorDimension.Neurotransmitter
-            Case 2 : dimension = NeuronColorDimension.CellType
-            Case 3 : dimension = NeuronColorDimension.SuperClass
-            Case 4 : dimension = NeuronColorDimension.Activity
-            Case Else : dimension = NeuronColorDimension.Neuropil
-        End Select
+        Dim dimension As NeuronColorDimension = dimensionFromUi()
 
         If dimension = NeuronColorDimension.Activity AndAlso Not m_dataset.HasActivity Then
             Call MessageBox.Show(
