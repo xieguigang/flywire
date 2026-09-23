@@ -53,6 +53,15 @@ Namespace Connectome
         ''' <summary>csv 之中 syn_count 的总和。</summary>
         Public ReadOnly Property SynapseTotal As Double
 
+        ''' <summary>
+        ''' 因为 root_id 不在（已冻结的）索引里而被跳过的行数。
+        ''' </summary>
+        ''' <remarks>
+        ''' 正常情况下为 0：可视化端用 ``names.csv`` 建好的索引覆盖了连接表的全部端点。
+        ''' 一旦不为 0，说明两份表来自不同的数据版本，结果会失真，报告里要能看见。
+        ''' </remarks>
+        Public ReadOnly Property UnresolvedRows As Long
+
         Private Sub New(units As Integer,
                         preIndices As Integer(),
                         postIndices As Integer(),
@@ -62,7 +71,8 @@ Namespace Connectome
                         excitatory As Long,
                         inhibitory As Long,
                         emptyNtType As Long,
-                        synapseTotal As Double)
+                        synapseTotal As Double,
+                        unresolvedRows As Long)
 
             Me.Units = units
             Me.Pre = preIndices
@@ -74,6 +84,7 @@ Namespace Connectome
             Me.InhibitoryCount = inhibitory
             Me.EmptyNtTypeCount = emptyNtType
             Me.SynapseTotal = synapseTotal
+            Me.UnresolvedRows = unresolvedRows
         End Sub
 
         ''' <summary>单个突触后神经元的最大输入强度绝对值之和。</summary>
@@ -189,12 +200,31 @@ Namespace Connectome
             Dim emptyNtType As Long = 0
             Dim synapseTotal As Double = 0
 
+            Dim unresolved As Long = 0
+            Dim frozen As Boolean = index.Frozen
+
             ' 流式读取：不把 534 万行 Connections 对象常驻内存
             For Each row As Connections In csvPath.StreamConnections()
                 csvRows += 1L
 
-                Dim preIndex As Integer = index.GetOrAddIndex(row.PreRootId)
-                Dim postIndex As Integer = index.GetOrAddIndex(row.PostRootId)
+                Dim preIndex As Integer
+                Dim postIndex As Integer
+
+                ' 索引已经冻结时不能再追加神经元。这是"可视化端先用 names.csv 建好索引、
+                ' 再交给仿真端"的用法：此时连接表里若出现索引之外的 root_id，只能跳过并计数
+                ' （本数据集里连接表的端点全部落在 names.csv 内，所以正常情况下不会命中）。
+                If frozen Then
+                    If Not index.IndexOf(row.PreRootId, preIndex) OrElse
+                       Not index.IndexOf(row.PostRootId, postIndex) Then
+                        unresolved += 1L
+
+                        Continue For
+                    End If
+                Else
+                    preIndex = index.GetOrAddIndex(row.PreRootId)
+                    postIndex = index.GetOrAddIndex(row.PostRootId)
+                End If
+
                 Dim ntType As String = If(row.NtType, "").Trim
                 Dim polarity As Double
 
@@ -239,13 +269,21 @@ Namespace Connectome
                 excitatory,
                 inhibitory,
                 emptyNtType,
-                synapseTotal
+                synapseTotal,
+                unresolved
             )
         End Function
 
         Public Overrides Function ToString() As String
-            Return $"{CsvRows} rows ({ExcitatoryCount} E / {InhibitoryCount} I / {EmptyNtTypeCount} no-nt), " &
+            Dim text As String = $"{CsvRows} rows ({ExcitatoryCount} E / {InhibitoryCount} I / {EmptyNtTypeCount} no-nt), " &
                 $"synapses={SynapseTotal}, neurons={Units}, max fan-in={MaxRawFanIn}"
+
+            ' 只在真的发生了跳过时才提示：它是"索引与连接表不匹配"的信号
+            If UnresolvedRows > 0 Then
+                text &= $", {UnresolvedRows} rows skipped (unknown root_id)"
+            End If
+
+            Return text
         End Function
 
     End Class

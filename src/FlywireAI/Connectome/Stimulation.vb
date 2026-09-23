@@ -82,6 +82,108 @@ Namespace Connectome
         End Function
 
         ''' <summary>
+        ''' 只刺激一个指定的神经元，注入强度由调用方给定。
+        ''' </summary>
+        ''' <param name="index">神经元索引</param>
+        ''' <param name="neuron">被刺激的神经元索引</param>
+        ''' <param name="strength">注入电流强度 (与膜电位阈值同一量纲)</param>
+        ''' <param name="label">方案描述 (留空时自动生成)</param>
+        ''' <remarks>
+        ''' 用于交互式电刺激：鼠标点中哪个神经元，就给哪个神经元注入电流，
+        ''' 强度由"按住左键的时长"映射而来。
+        ''' 
+        ''' 注入路径与批量刺激完全一致（<c>scatter</c> 把第 i 个特征的强度加到
+        ''' <c>InputMap(i)</c> 指定的神经元上），因此这里的 ``inputSize`` 就是 1 ——
+        ''' 网络只为一个神经元建一个输入特征，装配代价可以忽略。
+        ''' 
+        ''' 强度允许大于 1：注入的是<b>电流</b>而不是发放率，LIF 的阈值由
+        ''' <c>SnnConfig.Threshold</c> 给出（默认 1.0）。注入超过阈值的电流会让该神经元
+        ''' 立即发放；在恒流编码下每步都注入，于是它就按 β 的泄漏节奏持续发放 ——
+        ''' 这正是"电极持续放电"的语义。
+        ''' </remarks>
+        Public Shared Function CreateSingle(index As ConnectomeIndex,
+                                            neuron As Integer,
+                                            strength As Double,
+                                            Optional label As String = Nothing) As Stimulation
+
+            If index Is Nothing Then
+                Throw New ArgumentNullException(NameOf(index))
+            End If
+            If neuron < 0 OrElse neuron >= index.Size Then
+                Throw New ArgumentOutOfRangeException(NameOf(neuron), neuron, $"神经元索引应落在 [0, {index.Size})")
+            End If
+            If strength <= 0 Then
+                Throw New ArgumentOutOfRangeException(NameOf(strength), strength, "刺激强度必须为正数")
+            End If
+
+            Dim rootId As Long = index.GetRootId(neuron)
+
+            If String.IsNullOrWhiteSpace(label) Then
+                label = $"single neuron #{neuron} (root_id {rootId}) @ {strength:F2}"
+            End If
+
+            Return New Stimulation(
+                StimulationMode.RandomNeurons,
+                New Integer() {neuron},
+                New Double() {strength},
+                New Long() {rootId},
+                label)
+        End Function
+
+        ''' <summary>
+        ''' 对<b>一组</b>指定神经元注入同一强度的电流（"电极附近被募集的一群神经元"）。
+        ''' </summary>
+        ''' <param name="index">神经元索引</param>
+        ''' <param name="neurons">被募集的神经元索引</param>
+        ''' <param name="strength">注入电流强度（与膜电位阈值同量纲）</param>
+        ''' <param name="label">方案描述</param>
+        ''' <remarks>
+        ''' <b>为什么电刺激必须是一群而不是一个</b>
+        ''' 
+        ''' 本数据集的权重经过结构归一化：每个神经元的总输入幅度被缩放到约一个阈值，
+        ''' 因此<b>单个</b>突触前神经元的一次发放对突触后的贡献只有 1/扇入 量级。
+        ''' 实测（全脑 139,255 神经元 / 373 万突触）单个神经元即使持续注入 16 倍阈值电流，
+        ''' 也只激活它自己（active=1，无任何传播）—— 这是网络动力学的正确结果，不是缺陷。
+        ''' 
+        ''' 真实电极也是如此：电流从电极尖端扩散，同时兴奋附近的一群神经元
+        ''' （微刺激实验里"刺激强度"指的就是被募集的组织范围）。
+        ''' 因此这里的刺激方案 = <b>点击位置附近的一群神经元 + 每点一个注入电流</b>。
+        ''' </remarks>
+        Public Shared Function CreatePatch(index As ConnectomeIndex,
+                                           neurons As Integer(),
+                                           strength As Double,
+                                           Optional label As String = Nothing) As Stimulation
+
+            If index Is Nothing Then
+                Throw New ArgumentNullException(NameOf(index))
+            End If
+            If neurons Is Nothing OrElse neurons.Length = 0 Then
+                Throw New ArgumentException("被募集的神经元不能为空", NameOf(neurons))
+            End If
+            If strength <= 0 Then
+                Throw New ArgumentOutOfRangeException(NameOf(strength), strength, "刺激强度必须为正数")
+            End If
+
+            Dim values As Double() = New Double(neurons.Length - 1) {}
+            Dim rootIds As Long() = New Long(neurons.Length - 1) {}
+
+            For i As Integer = 0 To neurons.Length - 1
+                If neurons(i) < 0 OrElse neurons(i) >= index.Size Then
+                    Throw New ArgumentOutOfRangeException(NameOf(neurons), neurons(i), $"神经元索引应落在 [0, {index.Size})")
+                End If
+
+                values(i) = strength
+                rootIds(i) = index.GetRootId(neurons(i))
+            Next
+
+            If String.IsNullOrWhiteSpace(label) Then
+                label = $"{neurons.Length} recruited neurons @ {strength:F2}"
+            End If
+
+            Return New Stimulation(StimulationMode.RandomNeurons, neurons, values, rootIds, label)
+        End Function
+
+        ''' <summary>
         ''' 随机挑选一批神经元进行刺激。
         ''' </summary>
         Public Shared Function RandomNeurons(config As SnnConfig, index As ConnectomeIndex) As Stimulation

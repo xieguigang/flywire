@@ -5,6 +5,7 @@ Imports System.Text
 Imports System.Threading
 Imports System.Threading.Tasks
 Imports System.Windows.Forms
+Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
@@ -51,6 +52,22 @@ Public Partial Class FormMain
     Private m_progress As ToolStripProgressBar
     Private m_statusText As ToolStripStatusLabel
     Private m_sceneText As ToolStripStatusLabel
+
+    ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
+    Private m_stimulateMode As ToolStripButton
+    Private m_stimStrengthBox As NumericUpDown
+    Private m_stimStepsBox As NumericUpDown
+    Private m_holdLabel As ToolStripLabel
+    Private m_replayPanel As Control
+    Private m_replayPlay As Button
+    Private m_replayFirst As Button
+    Private m_replayPrev As Button
+    Private m_replayNext As Button
+    Private m_replayLast As Button
+    Private m_replayClear As Button
+    Private m_replayTrack As TrackBar
+    Private m_replaySpeed As NumericUpDown
+    Private m_replayText As Label
 
     Private m_dataset As BrainDataset
     Private m_colorizer As NeuronColorizer
@@ -138,6 +155,7 @@ Public Partial Class FormMain
         Me.Controls.Add(createStatusBar())
 
         Call refreshLegend()
+        Call initializeStimulation()
     End Sub
 
     Private Function createMenu() As MenuStrip
@@ -233,6 +251,25 @@ Public Partial Class FormMain
         Dim reload As New ToolStripButton("重新载入")
         AddHandler reload.Click, AddressOf onReload
 
+        ' ---- 电刺激模式 ----
+        m_stimulateMode = New ToolStripButton("电刺激模式") With {
+            .CheckOnClick = True,
+            .Checked = False,
+            .ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
+        }
+        AddHandler m_stimulateMode.CheckedChanged, AddressOf onStimulateModeChanged
+
+        m_stimStrengthBox = New NumericUpDown With {
+            .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20.0D, .Increment = 0.5D, .Value = 1.0D, .Width = 56
+        }
+
+        m_stimStepsBox = New NumericUpDown With {
+            .Minimum = 5, .Maximum = 200, .Increment = 5, .Value = 30, .Width = 56
+        }
+        AddHandler m_stimStepsBox.ValueChanged, AddressOf onStimulusStepsChanged
+
+        m_holdLabel = New ToolStripLabel("")
+
         Call bar.Items.Add(New ToolStripLabel("着色:"))
         Call bar.Items.Add(m_dimensionBox)
         Call bar.Items.Add(New ToolStripSeparator())
@@ -251,6 +288,13 @@ Public Partial Class FormMain
         Call bar.Items.Add(New ToolStripSeparator())
         Call bar.Items.Add(snapshot)
         Call bar.Items.Add(reload)
+        Call bar.Items.Add(New ToolStripSeparator())
+        Call bar.Items.Add(m_stimulateMode)
+        Call bar.Items.Add(New ToolStripLabel("强度×"))
+        Call bar.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
+        Call bar.Items.Add(New ToolStripLabel("仿真步数"))
+        Call bar.Items.Add(New ToolStripControlHost(m_stimStepsBox))
+        Call bar.Items.Add(m_holdLabel)
 
         Return bar
     End Function
@@ -259,15 +303,17 @@ Public Partial Class FormMain
         Dim panel As New TableLayoutPanel With {
             .Dock = DockStyle.Fill,
             .ColumnCount = 1,
-            .RowCount = 5,
+            .RowCount = 7,
             .Padding = New Padding(6)
         }
 
         Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
         Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 45))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 38))
         Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 55))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 34))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 112))
 
         Call panel.Controls.Add(newLabel("图例 / 筛选 (勾选控制显示)"), 0, 0)
 
@@ -295,8 +341,111 @@ Public Partial Class FormMain
         }
 
         Call panel.Controls.Add(m_details, 0, 4)
+        Call panel.Controls.Add(newLabel("电刺激 / 回放"), 0, 5)
+
+        m_replayPanel = createReplayPanel()
+
+        Call panel.Controls.Add(m_replayPanel, 0, 6)
 
         Return panel
+    End Function
+
+    ''' <summary>
+    ''' 回放控制面板：播放/暂停、单步、进度条、速度与状态。
+    ''' </summary>
+    Private Function createReplayPanel() As Control
+        Dim panel As New TableLayoutPanel With {
+            .Dock = DockStyle.Fill,
+            .ColumnCount = 1,
+            .RowCount = 3,
+            .Margin = New Padding(0)
+        }
+
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
+        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
+
+        Dim buttons As New FlowLayoutPanel With {
+            .Dock = DockStyle.Fill,
+            .FlowDirection = FlowDirection.LeftToRight,
+            .WrapContents = False,
+            .Margin = New Padding(0)
+        }
+
+        m_replayFirst = newReplayButton("|◀", AddressOf onReplayFirst)
+        m_replayPrev = newReplayButton("◀", AddressOf onReplayPrev)
+        m_replayPlay = newReplayButton("播放", AddressOf onReplayPlay, 52)
+        m_replayNext = newReplayButton("▶", AddressOf onReplayNext)
+        m_replayLast = newReplayButton("▶|", AddressOf onReplayLast)
+
+        Call buttons.Controls.Add(m_replayFirst)
+        Call buttons.Controls.Add(m_replayPrev)
+        Call buttons.Controls.Add(m_replayPlay)
+        Call buttons.Controls.Add(m_replayNext)
+        Call buttons.Controls.Add(m_replayLast)
+
+        m_replayTrack = New TrackBar With {
+            .Dock = DockStyle.Fill,
+            .Minimum = 0,
+            .Maximum = 0,
+            .TickStyle = TickStyle.None,
+            .SmallChange = 1,
+            .LargeChange = 5
+        }
+        AddHandler m_replayTrack.ValueChanged, AddressOf onReplayTrackScroll
+
+        Dim bottom As New TableLayoutPanel With {
+            .Dock = DockStyle.Fill,
+            .ColumnCount = 3,
+            .RowCount = 1,
+            .Margin = New Padding(0)
+        }
+
+        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 34))
+        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 86))
+        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
+
+        m_replaySpeed = New NumericUpDown With {
+            .Minimum = 30, .Maximum = 1000, .Increment = 20, .Value = 120, .Width = 62, .Margin = New Padding(0)
+        }
+        AddHandler m_replaySpeed.ValueChanged, AddressOf onReplaySpeedChanged
+
+        m_replayClear = New Button With {.Text = "清除", .Dock = DockStyle.Fill, .Margin = New Padding(4, 0, 0, 0)}
+        AddHandler m_replayClear.Click, AddressOf onReplayClear
+
+        m_replayText = New Label With {
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .AutoEllipsis = True,
+            .Margin = New Padding(6, 0, 0, 0)
+        }
+
+        Call bottom.Controls.Add(New Label With {.Text = "速度", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}, 0, 0)
+        Call bottom.Controls.Add(m_replaySpeed, 1, 0)
+        Call bottom.Controls.Add(m_replayText, 2, 0)
+
+        Call panel.Controls.Add(buttons, 0, 0)
+        Call panel.Controls.Add(m_replayTrack, 0, 1)
+        Call panel.Controls.Add(bottom, 0, 2)
+
+        ' 清除按钮与速度靠在一起放在按钮行的右侧
+        Call buttons.Controls.Add(m_replayClear)
+
+        Return panel
+    End Function
+
+    Private Shared Function newReplayButton(text As String, handler As EventHandler, Optional width As Integer = 40) As Button
+        Dim button As New Button With {
+            .Text = text,
+            .Width = width,
+            .Height = 26,
+            .Margin = New Padding(0, 0, 4, 0),
+            .TabStop = False
+        }
+
+        AddHandler button.Click, handler
+
+        Return button
     End Function
 
     Private Shared Function newLabel(text As String) As Label
@@ -329,6 +478,18 @@ Public Partial Class FormMain
     Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_config.DataDir = DefaultDataDir
 
+        ' 电刺激仿真默认尝试 GPU。注册失败会自动回退 CPU（GpuRuntime.TryRegister 的契约：
+        ' 没有 NVIDIA 显卡 / NVRTC 缺失 / 驱动不匹配都返回 False，仿真照常跑完），
+        ' 因此打开这个开关是安全的 —— 实际生效的后端会显示在状态栏与刺激报告里。
+        m_config.UseGpu = True
+
+        ' 回放需要"每一步哪些神经元发放"，它来自层内的逐步脉冲轨迹：
+        ' 只有 KeepHistory = True 时 SHistory 才会有内容。
+        ' 融合单步 + 双精度常驻则是让一次刺激保持在"点一下就能看到结果"的量级。
+        m_config.KeepHistory = True
+        m_config.UseFusedStep = True
+        m_config.ResidentPrecision = LifResidentPrecision.Double64
+
         Call adjustSplitter()
 
         Dim args As String() = Environment.GetCommandLineArgs()
@@ -336,6 +497,13 @@ Public Partial Class FormMain
         ' 自检模式：把数据层与场景装配的实测结果写成报告，便于无人值守的回归
         If args.Length > 1 AndAlso String.Equals(args(1), "--selftest", StringComparison.OrdinalIgnoreCase) Then
             Call runSelfTest(args)
+
+            Return
+        End If
+
+        ' 电刺激探针：扫强度跑仿真并落盘回放数据（用于标定"按住时长 → 强度"的映射）
+        If args.Length > 2 AndAlso String.Equals(args(1), "--stimulate", StringComparison.OrdinalIgnoreCase) Then
+            Call runStimulationProbe(args)
 
             Return
         End If
@@ -359,6 +527,11 @@ Public Partial Class FormMain
                     m_connectionBox.SelectedIndex = System.Math.Max(0, System.Math.Min(2, connections - 1))
                     m_showConnections.Checked = True
                 End If
+            End If
+
+            ' 可选：先跑一次电刺激再把指定步的高亮画出来（离线验证回放渲染）
+            If args.Length > 6 AndAlso args(6).StartsWith("stim=", StringComparison.OrdinalIgnoreCase) Then
+                Call parseSnapshotStimulus(args(6).Substring("stim=".Length))
             End If
         ElseIf args.Length > 1 AndAlso Directory.Exists(args(1)) Then
             m_config.DataDir = args(1)
@@ -626,6 +799,17 @@ Public Partial Class FormMain
             Call drawFocusMarker(m_focusNeuron)
         End If
 
+        ' 场景换了（着色维度 / 筛选 / 连接档位变化都会换）：回放高亮器要重新绑定，
+        ' 否则它会把旧配色下的颜色写进新点云
+        Call rebindHighlighter()
+
+        ' 出图模式若带刺激规格：先跑仿真并高亮，抓帧交给它自己完成
+        If m_snapshotStimulus.HasValue Then
+            Call applySnapshotStimulus()
+
+            Return
+        End If
+
         If m_snapshotPath IsNot Nothing Then
             Call captureAndExit()
         End If
@@ -785,12 +969,21 @@ Public Partial Class FormMain
         Call sb.AppendLine("快捷键: 左键旋转 / 右键平移 / 滚轮缩放")
         Call sb.AppendLine("        R 重置视角 / F 适配视图 / G 地面 / C 连线 / S 截图")
         Call sb.AppendLine()
+        Call sb.AppendLine("电刺激仿真:")
+        Call sb.AppendLine("  1. 勾选工具条上的「电刺激模式」")
+        Call sb.AppendLine("  2. 在神经元上按住左键并松开（按住越久注入电流越强，按住期间会实时回显强度）")
+        Call sb.AppendLine("  3. 松开后自动运行一次全脑 SNN 仿真，随后在右侧面板回放激活过程")
+        Call sb.AppendLine("     （被激活的神经元会点亮并放大，前几步保留余辉）")
+        Call sb.AppendLine("  结果落盘到 <数据目录>\snn-output\<时间戳>_stimulation\")
+        Call sb.AppendLine()
         Call sb.AppendLine("命令行:")
         Call sb.AppendLine("  Neuropils.exe [数据目录]")
         Call sb.AppendLine("  Neuropils.exe --selftest <报告.txt> [数据目录]")
         Call sb.AppendLine("      数据链路自检 (读表/着色/装配/拾取) 并给出实测耗时")
         Call sb.AppendLine("  Neuropils.exe --snapshot <图片.png> [数据目录] [着色 0..4] [连接 0..3]")
         Call sb.AppendLine("      载入后离屏抓一帧写盘然后退出 (0=不画 1=逐条 2=宏连接 3=选中神经元)")
+        Call sb.AppendLine("  Neuropils.exe --stimulate <报告.txt> [数据目录] [神经元] [强度列表,默认 1,2,4,8,16]")
+        Call sb.AppendLine("      对单个神经元扫强度跑仿真，输出逐步激活规模并落盘回放数据")
 
         Call MessageBox.Show(Me, sb.ToString(), "关于 Neuropils", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
@@ -889,6 +1082,11 @@ Public Partial Class FormMain
 
         m_mouseDown = New Point(e.X, e.Y)
         m_mouseDownValid = True
+
+        ' 电刺激模式下同时开始"按住计时"：强度由按住时长决定，因此在按下期间就要回显
+        If m_stimulateMode.Checked Then
+            Call beginStimulationHold(e.X, e.Y)
+        End If
     End Sub
 
     Private Sub onCanvasMouseUp(sender As Object, e As MouseEventArgs)
@@ -896,12 +1094,22 @@ Public Partial Class FormMain
 
         m_mouseDownValid = False
 
+        ' 先取按住时长再判断是不是点击：无论走哪条分支都要把计时停下来
+        Dim holdMs As Long = endStimulationHold()
+
         ' 拖动 (旋转视角) 不是点击：位移超过几个像素就忽略
         If System.Math.Abs(e.X - m_mouseDown.X) > 4 OrElse System.Math.Abs(e.Y - m_mouseDown.Y) > 4 Then
+            Call cancelStimulationHold()
+
             Return
         End If
 
-        Call pickAt(e.X, e.Y)
+        If m_stimulateMode.Checked Then
+            Call stimulateAt(e.X, e.Y, holdMs)
+        Else
+            Call cancelStimulationHold()
+            Call pickAt(e.X, e.Y)
+        End If
     End Sub
 
     ''' <summary>在画布的给定位置拾取神经元，并在详情面板里显示它的注释。</summary>
