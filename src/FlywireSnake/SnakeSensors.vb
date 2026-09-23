@@ -17,7 +17,9 @@ Imports Snake2
     '''         是因为蛇不能反向移动，"前方 / 左侧 / 右侧"才是可学习的刺激量；</item>
     '''   <item>8..11：<b>碰撞危险</b>，上 / 下 / 左 / 右四个绝对方向
     '''         （墙体、障碍物、自己与 AI 蛇的身体）；</item>
-    '''   <item>12..15：<b>活动食物方位</b>，同样以朝向为参考系的 4 个粗扇区。</item>
+    '''   <item>12..15：<b>特殊食物方位</b>（活动食物 / 超级食物），同样以朝向为参考系的
+    '''         4 个粗扇区。它们的分值远高于常规食物（活动 5 分 / 超级 30 分，常规 1 分），
+    '''         因此必须让大脑看得见，否则"不该追的东西看得见、该追的看不见"。</item>
     ''' </list>
     ''' 
     ''' 强度约定：食物通道取"最近的那份食物"的距离衰减 <c>1 - d / R</c>（R = 可视半径），
@@ -31,11 +33,11 @@ Imports Snake2
         ''' <summary>碰撞危险通道数（上 / 下 / 左 / 右）。</summary>
         Public Const DangerChannels As Integer = 4
 
-        ''' <summary>活动食物方位扇区数。</summary>
-        Public Const MovingFoodSectors As Integer = 4
+        ''' <summary>特殊食物（活动食物 / 超级食物）方位扇区数。</summary>
+        Public Const SpecialFoodSectors As Integer = 4
 
         ''' <summary>感觉通道总数。</summary>
-        Public Const ChannelCount As Integer = FoodSectors + DangerChannels + MovingFoodSectors
+        Public Const ChannelCount As Integer = FoodSectors + DangerChannels + SpecialFoodSectors
 
         ''' <summary>
         ''' 食物感知半径（格）：超出这个距离的食物不再产生任何刺激。
@@ -63,7 +65,7 @@ Imports Snake2
                 Return $"危险 {part(channel - FoodSectors)}"
             Else
                 Dim part As String() = {"前方", "左方", "右方", "后方"}
-                Return $"活动食物 {part(channel - FoodSectors - DangerChannels)}"
+                Return $"特殊食物 {part(channel - FoodSectors - DangerChannels)}"
             End If
         End Function
 

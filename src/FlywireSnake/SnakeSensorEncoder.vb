@@ -23,8 +23,8 @@ Imports Snake2
 
             If heading = Point.Empty Then heading = New Point(1, 0)
 
-            ' ---- 0..7 食物方位（以朝向为参考系）----
-            Dim food As Food = nearestFood(game, snake.Head, includeMoving:=False)
+            ' ---- 0..7 常规食物方位（以朝向为参考系）----
+            Dim food As Food = nearestFood(game, snake.Head, RegularFoodKinds)
             Dim foodDistance As Integer = -1
 
             If food IsNot Nothing Then
@@ -49,16 +49,19 @@ Imports Snake2
                 End If
             Next
 
-            ' ---- 12..15 活动食物方位（粗扇区）----
-            Dim moving As Food = nearestFood(game, snake.Head, includeMoving:=True)
+            ' ---- 12..15 特殊食物方位（活动食物 / 超级食物，粗扇区）----
+            Dim special As Food = nearestFood(game, snake.Head, SpecialFoodKinds)
 
-            If moving IsNot Nothing Then
-                Dim delta As New Point(moving.Position.X - snake.Head.X, moving.Position.Y - snake.Head.Y)
+            If special IsNot Nothing Then
+                Dim delta As New Point(special.Position.X - snake.Head.X, special.Position.Y - snake.Head.Y)
                 Dim distance As Double = Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y)
                 Dim channel As Integer = SnakeSensors.FoodSectors + SnakeSensors.DangerChannels +
-                                         relativeSector(heading, delta, SnakeSensors.MovingFoodSectors)
+                                         relativeSector(heading, delta, SnakeSensors.SpecialFoodSectors)
 
                 values(channel) = Math.Max(values(channel), Math.Max(0.0, 1.0 - distance / SnakeSensors.SenseRadius))
+
+                ' 面板上的"距离食物"显示的是最近的那份猎物，它可能正是这个特殊食物
+                If foodDistance < 0 OrElse distance < foodDistance Then foodDistance = CInt(distance)
             End If
 
             Return New SnakeSensorFrame With {
@@ -103,18 +106,23 @@ Imports Snake2
         End Function
 
         ''' <summary>
-        ''' 示范动作：在各条可行方向里挑"最靠近最近食物"的那一条。
+        ''' 示范动作：在各条可行方向里挑"最靠近最优猎物"的那一条。
         ''' </summary>
         ''' <remarks>
         ''' 这只是一个供训练用的<b>教师</b>（贪心策略），不是游戏的操作逻辑本身 ——
         ''' 果蝇大脑的运动由读出层解码得到，教师只提供训练样本。
         ''' 若所有方向都被堵住，则保持原方向（反正怎么走都要撞）。
+        ''' 
+        ''' <b>猎物不限于常规食物</b>：常规食物 1 分，活动食物 5 分，超级食物 30 分。
+        ''' 全图上常驻几百只活动食物，而常规食物只有 3 只 —— 教师如果只盯着常规食物，
+        ''' 就会带着蛇横穿整张地图去追一份 1 分的食物（实测最近的那份常规食物在 142 格开外），
+        ''' 期间对身边一堆 5 分的猎物视而不见。因此这里按"价值折算成距离折扣"来选目标：
+        ''' 代价 = 曼哈顿距离 − 价值，代价最小的猎物就是目标，再朝它走一步。
         ''' </remarks>
         Public Shared Function TeacherAction(game As Game) As Integer
             Dim snake As Snake = game.playerSnake
             Dim heading As Point = snake.Direction
             Dim reverse As New Point(-heading.X, -heading.Y)
-            Dim food As Food = nearestFood(game, snake.Head, includeMoving:=False)
             Dim best As Integer = actionOf(heading, snake.Direction)
             Dim bestScore As Double = Double.MaxValue
 
@@ -128,13 +136,7 @@ Imports Snake2
 
                 If IsBlocked(game, cell, snake) Then Continue For
 
-                Dim score As Double
-
-                If food Is Nothing Then
-                    score = 0.0
-                Else
-                    score = Math.Abs(cell.X - food.Position.X) + Math.Abs(cell.Y - food.Position.Y)
-                End If
+                Dim score As Double = preyCost(game, cell)
 
                 ' 同分时优先保持原方向，避免原地抖动
                 If direction = heading Then score -= 0.25
@@ -146,6 +148,38 @@ Imports Snake2
             Next
 
             Return best
+        End Function
+
+        ''' <summary>走到 <paramref name="cell"/> 之后，离"最划算的猎物"还有多远（越小越好）。</summary>
+        ''' <remarks>
+        ''' 对每份食物各算一次"折算代价" = 曼哈顿距离 − 价值折分（越贵的越值得多走几步），
+        ''' 取其中最小的那个。全图没有食物时返回 0（四处找吃的都一样）。
+        ''' </remarks>
+        Private Shared Function preyCost(game As Game, cell As Point) As Double
+            Dim best As Double = Double.MaxValue
+
+            For Each food As Food In game.foods
+                Dim distance As Double = Math.Abs(cell.X - food.Position.X) + Math.Abs(cell.Y - food.Position.Y)
+                Dim cost As Double = distance - valueOf(food.Type)
+
+                If cost < best Then best = cost
+            Next
+
+            If best = Double.MaxValue Then Return 0.0
+
+            Return best
+        End Function
+
+        ''' <summary>猎物分值（与游戏内的计分一致：常规 1 / 活动 5 / 超级 30）。</summary>
+        Private Shared Function valueOf(type As FoodType) As Double
+            Select Case type
+                Case FoodType.Moving
+                    Return 5.0
+                Case FoodType.Super
+                    Return 30.0
+                Case Else
+                    Return 1.0
+            End Select
         End Function
 
         ''' <summary>方向 → 动作编号（找不到时返回 <paramref name="fallback"/>，再找不到就返回"向右"）。</summary>
@@ -167,17 +201,29 @@ Imports Snake2
             Return 3
         End Function
 
-        ''' <summary>最近的食物（不含活动食物），没有则返回 Nothing。</summary>
-        Private Shared Function nearestFood(game As Game, position As Point, includeMoving As Boolean) As Food
+        ''' <summary>通道 0..7 关心的食物类型（常规食物）。</summary>
+        Private Shared ReadOnly RegularFoodKinds As FoodType() = {FoodType.Regular}
+
+        ''' <summary>通道 12..15 关心的食物类型（活动 / 超级食物）。</summary>
+        Private Shared ReadOnly SpecialFoodKinds As FoodType() = {FoodType.Moving, FoodType.Super}
+
+        ''' <summary>在指定的几类食物里找最近的一个（欧氏距离），没有则返回 Nothing。</summary>
+        Private Shared Function nearestFood(game As Game, position As Point, kinds As FoodType()) As Food
             Dim best As Food = Nothing
             Dim bestDistance As Double = Double.MaxValue
 
             For Each food As Food In game.foods
-                If food.Type = FoodType.Moving Then
-                    If Not includeMoving Then Continue For
-                ElseIf includeMoving Then
-                    Continue For
-                End If
+                Dim matched As Boolean = False
+
+                For Each kind As FoodType In kinds
+                    If food.Type = kind Then
+                        matched = True
+
+                        Exit For
+                    End If
+                Next
+
+                If Not matched Then Continue For
 
                 Dim dx As Double = food.Position.X - position.X
                 Dim dy As Double = food.Position.Y - position.Y
