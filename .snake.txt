@@ -3,24 +3,36 @@ data dir : F:\flywire\FAFB-v783
 episodes : 6 x 250 ticks (评估 6 局)
 
       [      0 ms] loading cell names from names.csv ...
-      [    524 ms] building the connectome from connections_princeton.csv ...
-      [ 29,909 ms] building CSR sparse matrix from 5342446 connection rows...
-      [ 30,135 ms] merging duplicated (pre, post) pairs -> nnz = 3732460
-      [ 30,165 ms] connectome ready: 139255 neurons, nnz=3732460 (csv rows=5342446) (30164 ms)
-      [ 30,166 ms] assembling spiking network: neurons=139255, input features=5000
-      [ 30,170 ms] calibrating the global gain with 10 step probes...
-      [ 30,205 ms]   gain=1: active=5888 (4.23%), spikes=26209, 27 ms
-      [ 30,242 ms]   gain=2: active=10264 (7.37%), spikes=33874, 30 ms
-      [ 30,286 ms]   gain=4: active=44684 (32.09%), spikes=100904, 37 ms
-      [ 30,361 ms]   gain=8: active=85041 (61.07%), spikes=323892, 67 ms
-      [ 30,361 ms] selected global gain = 1 (active fraction ~ 5.00%)
-      [ 30,361 ms] playground ready: gain=1, elapsed=30360 ms
+      [    562 ms] building the connectome from connections_princeton.csv ...
+      [ 30,481 ms] building CSR sparse matrix from 5342446 connection rows...
+      [ 30,703 ms] merging duplicated (pre, post) pairs -> nnz = 3732460
+      [ 30,732 ms] connectome ready: 139255 neurons, nnz=3732460 (csv rows=5342446) (30731 ms)
+      [ 30,734 ms] assembling spiking network: neurons=139255, input features=5000
+      [ 30,737 ms] calibrating the global gain with 10 step probes...
+      [ 30,773 ms]   gain=1: active=5888 (4.23%), spikes=26209, 27 ms
+      [ 30,808 ms]   gain=2: active=10264 (7.37%), spikes=33874, 29 ms
+      [ 30,853 ms]   gain=4: active=44684 (32.09%), spikes=100904, 37 ms
+      [ 30,924 ms]   gain=8: active=85041 (61.07%), spikes=323892, 64 ms
+      [ 30,924 ms] selected global gain = 1 (active fraction ~ 5.00%)
+      [ 30,925 ms] playground ready: gain=1, elapsed=30924 ms
+
+      afferent(感觉输入)=19,300, efferent(运动输出)=1,491
+      感觉通道神经元：16 通道 x 32 个
+      运动读出神经元：1488 个（4 组）
+
+      [OK]   大脑每个 tick 都有神经元发放: actual=True, expected=True
+      [OK]   感觉通道确实被激活: actual=True, expected=True
+      40 tick 健全性检查：平均发放 72 个神经元 / tick，感觉通道累计激活 82 次，存活 40 tick
 
 
-[FATAL] ArgumentNullException: Value cannot be null. (Parameter 'matrix')
-   at FlywireAI.Connectome.BrainNetworkBuilder.Assemble(SnnConfig config, ConnectomeMatrix matrix, Stimulation stimulation, Action`1 reporter) in G:\flywire\src\FlywireAI\Connectome\BrainNetworkBuilder.vb:line 220
-   at FlywireSnake.SnakePlayground.CreateBrain(Int32 sensorsPerChannel, Int32 seed) in G:\flywire\src\FlywireSnake\SnakePlayground.vb:line 189
-   at Neuropils.FormMain.runSnakeProbe(String[] args) in G:\flywire\src\Neuropils\FormMain.Snake.vb:line 66
+      样本 1,409（与教师一致率 28.9%）· 均分：未训练 2.5 → 训练后 1.7（教师上限 14.5）· 6 局 × 250 tick · 6,382 ms
 
-total elapsed: 30,369 ms
+      [OK]   训练采集到样本: actual=True, expected=True
+      [FAIL] 解码器学到了示范动作: actual=False, expected=True
+      [OK]   教师策略能吃到食物: actual=True, expected=True
+      训练后再评估 6 局：均分 2.83
+      解码器权重: F:\flywire\FAFB-v783\snn-output\snake\snake_decoder.csv
+      训练报告  : F:\flywire\FAFB-v783\snn-output\snake\snake_training.csv
+
+total elapsed: 38,148 ms
 result: FAIL (1)
