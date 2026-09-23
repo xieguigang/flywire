@@ -49,11 +49,22 @@ Namespace Rendering
         ''' 连线的数量上限，``&lt;= 0`` 表示不限制。
         ''' </summary>
         ''' <remarks>
-        ''' 每条线在显存里占 2 个顶点 (每个 16 字节)，200 万条约 64 MB；
-        ''' 全量 534 万条约 171 MB。上限的作用是保护显存与上传时间，
-        ''' 而不是保护主机内存 (连接表本身就是 100 MB 的并行数组)。
+        ''' 默认值高于本数据集的全量连接数 (534 万)，也就是"默认不截断"：真正控制画面密度的是
+        ''' <see cref="SynapseThreshold"/> (≥20 突触时约 50 万条线)，这里只是防止显存与
+        ''' 上传时间被极端参数打爆。
+        ''' 显存量级：每条线 2 个顶点 × 16 字节，200 万条约 64 MB，全量约 171 MB。
         ''' </remarks>
-        Public Property MaxLines As Integer = 2000000
+        Public Property MaxLines As Integer = 6000000
+
+        ''' <summary>
+        ''' 连线列表的初始容量上限。
+        ''' </summary>
+        ''' <remarks>
+        ''' 不要按"可能的最大条数"预分配：滑块把阈值从 20 提到 100 时实际只需要 2 万条线，
+        ''' 却会为此预留/清零几百 MB (534 万 × 每个 LineSegment 56 字节 ≈ 300 MB)。
+        ''' 这里只预留一个有代表性的大小，超出部分交给 List 自己的增长策略。
+        ''' </remarks>
+        Public Const LineListPresetCapacity As Integer = 200000
 
         ''' <summary>连线的数量是否有限制？</summary>
         Public ReadOnly Property HasLineLimit As Boolean
@@ -337,7 +348,12 @@ Namespace Rendering
 
             Dim total As Integer = dataset.ConnectionCount
             Dim limited As Boolean = options.HasLineLimit
-            Dim capacity As Integer = If(limited, System.Math.Min(total, System.Math.Max(1024, options.MaxLines)), total)
+            Dim capacity As Integer = System.Math.Min(total, LineListPresetCapacity)
+
+            If limited Then
+                capacity = System.Math.Min(capacity, System.Math.Max(1024, options.MaxLines))
+            End If
+
             Dim lines As New List(Of LineSegment)(capacity)
             Dim pre As Integer() = dataset.Pre
             Dim post As Integer() = dataset.Post
