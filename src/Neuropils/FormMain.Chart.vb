@@ -121,6 +121,103 @@ Partial Public Class FormMain
         Call Environment.Exit(If(failures = 0, 0, 1))
     End Sub
 
+    ''' <summary>
+    ''' ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
+    ''' </summary>
+    ''' <remarks>
+    ''' <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
+    ''' 等首帧渲染完成后抓帧写盘再退出。
+    ''' 
+    ''' 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
+    ''' "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
+    ''' </remarks>
+    Private Sub runChartWindowProbe(args As String())
+        Dim report As New StringBuilder()
+        Dim failures As Integer = 0
+        Dim png As String = args(2)
+
+        m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+
+        Dim reportDir As String = If(args.Length > 4, args(4), "")
+
+        If String.IsNullOrWhiteSpace(reportDir) OrElse String.Equals(reportDir, "latest", StringComparison.OrdinalIgnoreCase) Then
+            reportDir = StimulationArchive.Latest(IO.Path.Combine(m_config.DataDir, "snn-output"))
+        End If
+
+        Dim dimension As NeuronLabelDimension = parseDimension(If(args.Length > 5, args(5), "neuropil"))
+        Dim mode As ResponseSignalMode = parseSignal(If(args.Length > 6, args(6), "potential"))
+        Dim aggregation As CurveAggregation = parseAggregation(If(args.Length > 7, args(7), "mean"))
+
+        Try
+            Call PlotRuntime.EnsureRegistered()
+
+            Dim loader As New BrainDatasetLoader(m_config)
+            Dim dataset As BrainDataset = loader.Load(Sub(message) Trace.WriteLine(message))
+
+            If String.IsNullOrWhiteSpace(reportDir) Then
+                Throw New DirectoryNotFoundException("没有找到任何电刺激实验记录目录")
+            End If
+
+            Dim data As ResponseDataset = ResponseDataset.FromReport(reportDir, dataset)
+
+            ' 默认按"组均值"视图打开自检：标签取值多的时候曲线数量可控、画面稳定
+            Dim form As New ResponseChartForm(data, dataset)
+
+            Call form.Show()
+
+            For i As Integer = 1 To 80
+                Call Application.DoEvents()
+
+                If form.CanvasReady Then Exit For
+
+                Call Threading.Thread.Sleep(50)
+            Next
+
+            ' 首帧之后再抓两帧：控件尺寸定下来之后布局才是最终的样子
+            Call Application.DoEvents()
+            Call Threading.Thread.Sleep(300)
+            Call Application.DoEvents()
+
+            Call check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
+
+            Dim ok As Boolean = form.CaptureTo(png)
+
+            Call check(report, failures, "captured the window frame", ok, True)
+            Call check(report, failures, "captured image written", File.Exists(png), True)
+
+            Call report.AppendLine($"      record dir : {reportDir}")
+            Call report.AppendLine($"      responders : {data.Responders.Length:N0}, steps={data.Steps}, potential={data.HasPotential}")
+            Call report.AppendLine($"      image      : {png} ({If(File.Exists(png), (New FileInfo(png)).Length \ 1024, 0):N0} KB)")
+
+            ' 顺带让窗口渲染一遍不同视图，确认切换筛选不会炸
+            For Each candidate In {CurveAggregation.Individual, CurveAggregation.GroupEnvelope}
+                Call form.ApplyOptions(dimension, mode, candidate)
+
+                For i As Integer = 1 To 12
+                    Call Application.DoEvents()
+                    Call Threading.Thread.Sleep(30)
+                Next
+            Next
+
+            Call check(report, failures, "view switching did not throw", "ok", "ok")
+            Call form.Close()
+        Catch ex As Exception
+            Call report.AppendLine()
+            Call report.AppendLine($"[FATAL] {ex.GetType().Name}: {ex.Message}")
+            Call report.AppendLine(ex.StackTrace)
+
+            failures += 1
+        End Try
+
+        Call report.AppendLine()
+        Call report.AppendLine($"result: {(If(failures = 0, "PASS", $"FAIL ({failures})"))}")
+
+        Call Console.Out.Write(report.ToString())
+        Call Console.Out.Flush()
+
+        Call Environment.Exit(If(failures = 0, 0, 1))
+    End Sub
+
     Private Shared Function parseDimension(text As String) As NeuronLabelDimension
         Select Case If(text, "").Trim.ToLowerInvariant
             Case "nt", "neurotransmitter"

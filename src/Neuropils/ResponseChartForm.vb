@@ -270,6 +270,60 @@ Public Class ResponseChartForm
 
 #Region "数据装配"
 
+    ''' <summary>
+    ''' 按给定参数切换视图（供自动化自检与外部调用；界面上等价于改三个下拉框）。
+    ''' </summary>
+    Public Sub ApplyOptions(dimension As NeuronLabelDimension,
+                            mode As ResponseSignalMode,
+                            aggregation As CurveAggregation)
+
+        m_loading = True
+
+        Try
+            m_dimensionBox.SelectedIndex = dimensionIndex(dimension)
+            m_aggregationBox.SelectedIndex = aggregationIndex(aggregation)
+
+            ' 口径可能不在可用列表里（例如这份记录没有膜电位），此时退到第一个可用口径
+            Dim modes As ResponseSignalMode() = m_data.AvailableModes
+            Dim index As Integer = System.Array.IndexOf(modes, mode)
+
+            m_modeBox.SelectedIndex = If(index >= 0, index, 0)
+        Finally
+            m_loading = False
+        End Try
+
+        Call refreshCategories()
+        Call rebuildSeries()
+    End Sub
+
+    Private Shared Function dimensionIndex(dimension As NeuronLabelDimension) As Integer
+        Select Case dimension
+            Case NeuronLabelDimension.Neurotransmitter
+                Return 1
+            Case NeuronLabelDimension.PrimaryType
+                Return 2
+            Case NeuronLabelDimension.SuperClass
+                Return 3
+            Case NeuronLabelDimension.CellClass
+                Return 4
+            Case NeuronLabelDimension.CellGroup
+                Return 5
+            Case Else
+                Return 0
+        End Select
+    End Function
+
+    Private Shared Function aggregationIndex(aggregation As CurveAggregation) As Integer
+        Select Case aggregation
+            Case CurveAggregation.GroupMean
+                Return 1
+            Case CurveAggregation.GroupEnvelope
+                Return 2
+            Case Else
+                Return 0
+        End Select
+    End Function
+
     Private Function currentDimension() As NeuronLabelDimension
         Select Case m_dimensionBox.SelectedIndex
             Case 1
@@ -472,13 +526,29 @@ Public Class ResponseChartForm
 
             If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
 
-            If m_canvas.SaveImage(dialog.FileName) Then
+            If CaptureTo(dialog.FileName) Then
                 m_status.Text = $"已保存: {dialog.FileName}"
             Else
                 m_status.Text = $"保存失败: {m_canvas.LastError}"
             End If
         End Using
     End Sub
+
+    ''' <summary>把控件当前画面（也就是曲线图）抓成一帧写盘。</summary>
+    ''' <remarks>
+    ''' 走的是控件的 GPU 画布回读：强制同步重绘一帧并保存，
+    ''' 因此拿到的是屏幕上真正显示的内容，而不是另画一遍。
+    ''' </remarks>
+    Public Function CaptureTo(file As String) As Boolean
+        Return m_canvas.SaveImage(file)
+    End Function
+
+    ''' <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
+    Public ReadOnly Property CanvasReady As Boolean
+        Get
+            Return m_canvas IsNot Nothing AndAlso m_canvas.IsCanvasCreated
+        End Get
+    End Property
 
 #End Region
 

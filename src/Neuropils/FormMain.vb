@@ -588,6 +588,13 @@ Public Partial Class FormMain
             Return
         End If
 
+        ' 响应曲线窗口自检：真的开窗、等首帧、抓帧写盘（验证"画在控件 GPU 画布上"这条路径）
+        If args.Length > 2 AndAlso String.Equals(args(1), "--chart-window", StringComparison.OrdinalIgnoreCase) Then
+            Call runChartWindowProbe(args)
+
+            Return
+        End If
+
         ' 出图模式：载入 → 装配 → 抓一帧写成 png → 退出。
         ' 除了给论文/报告出图，它还是"渲染管线真的能跑起来"的可验证产物
         ' (自检模式只覆盖数据链路，不碰 GPU)。
