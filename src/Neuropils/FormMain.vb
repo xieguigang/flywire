@@ -620,6 +620,14 @@ Public Partial Class FormMain
             Return
         End If
 
+        ' 观战窗口自检：正常载入数据 → 自动开窗 → 跑若干 tick → 抓屏退出
+        If args.Length > 2 AndAlso String.Equals(args(1), "--snake-window", StringComparison.OrdinalIgnoreCase) Then
+            m_snakeProbePng = args(2)
+            m_snakeProbeTicks = If(args.Length > 4, CInt(Val(args(4))), 12)
+
+            If m_snakeProbeTicks <= 0 Then m_snakeProbeTicks = 12
+        End If
+
         ' 出图模式：载入 → 装配 → 抓一帧写成 png → 退出。
         ' 除了给论文/报告出图，它还是"渲染管线真的能跑起来"的可验证产物
         ' (自检模式只覆盖数据链路，不碰 GPU)。
@@ -789,6 +797,11 @@ Public Partial Class FormMain
         ' 有历史实验记录时就可以直接看响应曲线（不必先做一次刺激）
         If Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir()) IsNot Nothing Then
             m_chartLink.Enabled = True
+        End If
+
+        ' 观战窗口自检：数据就绪后自动开窗
+        If m_snakeProbePng IsNot Nothing Then
+            Call openSnakeWindow()
         End If
     End Sub
 

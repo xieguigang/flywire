@@ -83,7 +83,7 @@ Public Class SnakeBrainForm
         m_gamePanel = New Panel With {
             .Location = New Point(0, 0),
             .Size = New Size(width, height),
-            .BackColor = Render.BackgroundColor
+            .BackColor = Color.Black
         }
         AddHandler m_gamePanel.Paint, AddressOf onGamePaint
 
@@ -191,7 +191,7 @@ Public Class SnakeBrainForm
         Dim g As Graphics = e.Graphics
 
         g.SmoothingMode = SmoothingMode.None
-        g.Clear(Render.BackgroundColor)
+        g.Clear(Color.Black)
 
         If m_session IsNot Nothing Then
             Call m_session.Render.Draw(g)
@@ -263,7 +263,6 @@ Public Class SnakeBrainForm
     End Sub
 
     Private Sub onStepped(session As SnakeSession, frame As SnakeStep)
-        Call CType(sender, SnakeSession)
         RaiseEvent BrainActivityChanged(frame.ActiveNeurons, frame)
     End Sub
 
@@ -292,7 +291,7 @@ Public Class SnakeBrainForm
         m_detail.Text = $"脑活动 {frame.ActiveNeurons.Length:N0} 个神经元 / tick（运动神经元 {m_brain.MotorActiveCount} 个）" &
                         Environment.NewLine &
                         $"距离食物 {(If(frame.FoodDistance < 0, "—", frame.FoodDistance.ToString))} 格  " &
-                        $"背压 {If(m_brain.LastStepPath Is Nothing, "", m_brain.LastStepPath.ToString)}" &
+                        $"单步路径 {m_brain.LastStepPath}" &
                         Environment.NewLine &
                         $"感觉输入 {m_brain.SensorNeurons(0).Length * SnakeSensors.ChannelCount:N0} 个 afferent 神经元，" &
                         $"读出 {m_brain.MotorFeatures.Length:N0} 个 efferent 神经元"
@@ -362,18 +361,19 @@ Public Class SnakeBrainForm
 
     Private Sub loadTrainedDecoder()
         Try
-            Dim file As String = Path.Combine(m_playground.DataDir, "snn-output", "snake", "snake_decoder.csv")
+            ' 局部变量避开 file / path：会遮蔽 System.IO.File / Path（VB 不区分大小写）
+            Dim decoderFile As String = IO.Path.Combine(m_playground.DataDir, "snn-output", "snake", "snake_decoder.csv")
 
-            If Not File.Exists(file) Then
-                m_training.Text = $"没有找到已训练的解码器: {file}"
+            If Not IO.File.Exists(decoderFile) Then
+                m_training.Text = $"没有找到已训练的解码器: {decoderFile}"
 
                 Return
             End If
 
-            Dim decoder As SnakeDecoder = SnakeDecoder.Load(file, m_brain.MotorFeatures.Length)
+            Dim decoder As SnakeDecoder = SnakeDecoder.Load(decoderFile, m_brain.MotorFeatures.Length)
 
             m_session.Decoder = decoder
-            m_training.Text = $"已载入已训练的解码器（{file}）"
+            m_training.Text = $"已载入已训练的解码器（{decoderFile}）"
         Catch ex As Exception
             m_training.Text = $"载入失败: {ex.Message}"
         End Try

@@ -3,6 +3,7 @@ Imports System.IO
 Imports System.Linq
 Imports System.Text
 Imports System.Threading.Tasks
+Imports FlywireAI.Connectome
 Imports FlywireSnake
 Imports Neuropils.Rendering
 Imports Snake2
@@ -41,6 +42,11 @@ Partial Public Class FormMain
     ''' 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
     ''' </summary>
     Private Sub onOpenSnakeWindow(sender As Object, e As LinkLabelLinkClickedEventArgs)
+        Call openSnakeWindow()
+    End Sub
+
+    ''' <summary>打开观战窗口（链接与命令行自检共用）。</summary>
+    Private Sub openSnakeWindow()
         If m_dataset Is Nothing Then Return
 
         If m_snakeForm IsNot Nothing AndAlso Not m_snakeForm.IsDisposed Then
@@ -117,18 +123,72 @@ Partial Public Class FormMain
         Call m_snakeForm.Show(Me)
 
         m_statusText.Text = $"观战窗口已打开：{brain.FlowSummary}"
+
+        ' 命令行自检：跑够指定帧数后抓屏退出
+        If m_snakeProbeTicks > 0 Then
+            Call startSnakeProbeCapture(m_snakeForm)
+        End If
+    End Sub
+
+#End Region
+
+#Region "观战窗口的自动化验证"
+
+    ''' <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
+    Private m_snakeProbePng As String = Nothing
+    Private m_snakeProbeTicks As Integer
+    Private m_snakeProbeSeen As Integer
+
+    ''' <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
+    ''' <remarks>
+    ''' 抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
+    ''' 因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
+    ''' </remarks>
+    Private Sub startSnakeProbeCapture(snakeForm As SnakeBrainForm)
+        AddHandler snakeForm.BrainActivityChanged,
+            Sub(activeNeurons As Integer(), frame As SnakeStep)
+                m_snakeProbeSeen += 1
+
+                If m_snakeProbeSeen <> m_snakeProbeTicks Then Return
+
+                ' 让最后一帧先画出来，再抓屏
+                Call Application.DoEvents()
+                Call Threading.Thread.Sleep(400)
+                Call Application.DoEvents()
+
+                Call captureScreen(m_snakeProbePng)
+                Call Console.Out.WriteLine($"snake window probe: {m_snakeProbeSeen} ticks rendered, " &
+                                           $"active neurons={activeNeurons.Length}, score={frame.Score}, " &
+                                           $"saved={m_snakeProbePng}")
+                Call Console.Out.Flush()
+                Call Environment.Exit(0)
+            End Sub
+    End Sub
+
+    ''' <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
+    Private Shared Sub captureScreen(file As String)
+        Dim bounds As Rectangle = Screen.PrimaryScreen.Bounds
+
+        Using bmp As New Bitmap(bounds.Width, bounds.Height)
+            Using g As Graphics = Graphics.FromImage(bmp)
+                Call g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size)
+            End Using
+
+            Call bmp.Save(file, Imaging.ImageFormat.Png)
+        End Using
     End Sub
 
     ''' <summary>尽量用已训练好的解码器开局（没有就用随机读出）。</summary>
     Private Function loadTrainedDecoder(brain As SnakeBrain) As SnakeDecoder
         Try
-            Dim file As String = IO.Path.Combine(m_config.ResolveActivityDir(), "snake", "snake_decoder.csv")
+            ' 局部变量不能叫 file：会遮蔽 System.IO.File（VB 不区分大小写）
+            Dim decoderFile As String = IO.Path.Combine(m_config.ResolveActivityDir(), "snake", "snake_decoder.csv")
 
-            If File.Exists(file) Then
-                Return SnakeDecoder.Load(file, brain.MotorFeatures.Length)
+            If IO.File.Exists(decoderFile) Then
+                Return SnakeDecoder.Load(decoderFile, brain.MotorFeatures.Length)
             End If
         Catch ex As Exception
-            Debug.WriteLine($"unable to load the trained decoder: {ex.Message}")
+            System.Diagnostics.Debug.WriteLine($"unable to load the trained decoder: {ex.Message}")
         End Try
 
         Return New SnakeDecoder(brain.MotorFeatures.Length)

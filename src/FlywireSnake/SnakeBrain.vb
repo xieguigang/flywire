@@ -104,6 +104,15 @@ Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
 
         Private m_motorActive As Integer
 
+        ''' <summary>最近一个 tick 实际走的单步实现路径（Fused = 融合内核，OpByOp = 逐算子回退）。</summary>
+        Public ReadOnly Property LastStepPath As String
+            Get
+                If m_layer Is Nothing Then Return ""
+
+                Return m_layer.LastStepPath.ToString
+            End Get
+        End Property
+
         ''' <summary>最近一个 tick 里运动神经元的总脉冲数。</summary>
         Public ReadOnly Property MotorActiveSpikes As Double
             Get
