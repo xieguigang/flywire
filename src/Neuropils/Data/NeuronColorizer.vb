@@ -71,10 +71,13 @@ Namespace Data
         Private ReadOnly m_legend As New List(Of ColorLegendItem)()
         Private ReadOnly m_hidden As New HashSet(Of Integer)()
 
-        ''' <summary>每个神经元的颜色缓存 (ARGB)，离散配色维度使用。</summary>
-        Private ReadOnly m_argb As Integer()
-
-        ''' <summary>每个 GPU 点所用的 html 颜色字符串 (按类别驻留，避免 13 万个字符串)。</summary>
+        ''' <summary>
+        ''' 每个神经元的 html 颜色字符串。
+        ''' </summary>
+        ''' <remarks>
+        ''' 字符串按类别驻留并复用引用：13 万个点如果各自持有独立的字符串实例，
+        ''' 会白白产生 13 万个小字符串 (每个约 24 字节外加一次分配)。
+        ''' </remarks>
         Private ReadOnly m_colorText As String()
 
         Public ReadOnly Property Dimension As NeuronColorDimension
@@ -91,52 +94,39 @@ Namespace Data
             Me.IsHeatMap = (dimension = NeuronColorDimension.Activity)
 
             ' 类别表：每个神经元的类别索引 + 每类的名称与数量
-            Dim keys As String()
             Dim categoryOf As Integer()
             Dim counts As Integer()
             Dim names As String()
 
-            Call buildCategories(dataset, dimension, keys, categoryOf, counts, names)
+            Call buildCategories(dataset, dimension, categoryOf, counts, names)
 
             m_categories = categoryOf
             m_categoryNames = names
-            m_argb = New Integer(dataset.Units - 1) {}
-
-            If Not IsHeatMap Then
-                m_colorText = New String(dataset.Units - 1) {}
-            End If
 
             Dim palette As Color() = buildPalette(names.Length)
-            Dim colorTexts As New Dictionary(Of Integer, String)()
+
+            m_categoryColors = palette
+
+            Dim colorText As String() = New String(names.Length - 1) {}
 
             For i As Integer = 0 To names.Length - 1
-                Dim argb As Integer = palette(i).ToArgb()
-                Dim text As String = $"#{palette(i).R:x2}{palette(i).G:x2}{palette(i).B:x2}"
+                colorText(i) = $"#{palette(i).R:x2}{palette(i).G:x2}{palette(i).B:x2}"
 
-                Call colorTexts.Add(i, text)
-
-                If i < names.Length Then
-                    Call m_legend.Add(New ColorLegendItem With {
-                        .Key = names(i),
-                        .Color = palette(i),
-                        .Count = counts(i)
-                    })
-                End If
-            Next
-
-            For i As Integer = 0 To dataset.Units - 1
-                If IsHeatMap Then
-                    Continue For
-                End If
-
-                m_argb(i) = colorTexts(categoryOf(i)).Length = 0
-                ' 说明：上面一行只用于占位，真正的赋值在下面（保持代码可读）
-                m_argb(i) = palette(categoryOf(i)).ToArgb()
-                m_colorText(i) = colorTexts(categoryOf(i))
+                Call m_legend.Add(New ColorLegendItem With {
+                    .Key = names(i),
+                    .Color = palette(i),
+                    .Count = counts(i)
+                })
             Next
 
             If IsHeatMap Then
                 Me.Intensity = dataset.Activity
+            Else
+                m_colorText = New String(dataset.Units - 1) {}
+
+                For i As Integer = 0 To dataset.Units - 1
+                    m_colorText(i) = colorText(categoryOf(i))
+                Next
             End If
         End Sub
 
@@ -231,6 +221,30 @@ Namespace Data
             Return m_colorText(index)
         End Function
 
+        ''' <summary>
+        ''' 神经元的离散颜色 (不含透明度)。
+        ''' </summary>
+        ''' <remarks>
+        ''' 连线的着色需要把"前突触神经元的颜色"再叠上自己的透明度，
+        ''' 因此这里返回颜色值而不是 html 字符串。
+        ''' </remarks>
+        Public Function GetColor(index As Integer) As Color
+            If IsHeatMap OrElse m_categoryColors Is Nothing OrElse m_categories Is Nothing Then
+                Return Color.Empty
+            End If
+
+            Return m_categoryColors(m_categories(index))
+        End Function
+
+        ''' <summary>类别颜色表 (索引与 <see cref="Legend"/> 的类别索引一致)。</summary>
+        Public Function GetCategoryColor(categoryIndex As Integer) As Color
+            If m_categoryColors Is Nothing OrElse categoryIndex < 0 OrElse categoryIndex >= m_categoryColors.Length Then
+                Return Color.Empty
+            End If
+
+            Return m_categoryColors(categoryIndex)
+        End Function
+
         ''' <summary>神经元所属类别的名字。</summary>
         Public Function GetCategoryName(index As Integer) As String
             If m_categoryNames Is Nothing OrElse m_categoryNames.Length = 0 Then Return ""
@@ -264,7 +278,6 @@ Namespace Data
         ''' </remarks>
         Private Shared Sub buildCategories(dataset As BrainDataset,
                                            dimension As NeuronColorDimension,
-                                           ByRef keys As String(),
                                            ByRef categoryOf As Integer(),
                                            ByRef counts As Integer(),
                                            ByRef names As String())
@@ -309,7 +322,6 @@ Namespace Data
                 End If
 
                 counter(key) = n + 1
-                assign(i) = -1
                 raw(i) = key
             Next
 
@@ -355,7 +367,6 @@ Namespace Data
                 total(category) += 1
             Next
 
-            keys = ordered
             categoryOf = assign
             counts = total
             names = nameList.ToArray()
