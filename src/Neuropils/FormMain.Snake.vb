@@ -173,12 +173,28 @@ Partial Public Class FormMain
                 Call Application.DoEvents()
 
                 Call captureScreen(m_snakeProbePng)
+                Call captureWindow(snakeForm, IO.Path.ChangeExtension(m_snakeProbePng, ".window.png"))
                 Call Console.Out.WriteLine($"snake window probe: {m_snakeProbeSeen} ticks rendered, " &
                                            $"active neurons={activeNeurons.Length}, score={frame.Score}, " &
                                            $"saved={m_snakeProbePng}")
                 Call Console.Out.Flush()
                 Call Environment.Exit(0)
             End Sub
+    End Sub
+
+    ''' <summary>
+    ''' 把观战窗口<b>自身</b>画成一张图。
+    ''' </summary>
+    ''' <remarks>
+    ''' 与 <see cref="captureScreen"/> 的区别是它与屏幕上的 z 序无关：
+    ''' 窗口被别人挡着也照样能拿到内容，因此适合在自动化里核对
+    ''' "右侧的感觉通道 / 运动读出到底有没有画出数据"。
+    ''' </remarks>
+    Private Shared Sub captureWindow(window As Form, outputFile As String)
+        Using bmp As New Bitmap(window.Width, window.Height)
+            Call window.DrawToBitmap(bmp, New Rectangle(0, 0, bmp.Width, bmp.Height))
+            Call bmp.Save(outputFile, System.Drawing.Imaging.ImageFormat.Png)
+        End Using
     End Sub
 
     ''' <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
