@@ -1,0 +1,1938 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Data.BinaryData
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Data.IO.BufferRegion">
+ <summary>
+ A binary data region in the binary raw data file
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BufferRegion.position">
+ <summary>
+ the start position of the data region
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BufferRegion.size">
+ <summary>
+ the region size in bytes
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BufferRegion.Zero">
+ <summary>
+ start position is zero and there is no buffer size
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ByteBuffer.get(System.Double[])">
+ <summary>
+ asDoubleBuffer
+ </summary>
+ <param name="dst"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ByteBuffer.get(System.Int64[])">
+ <summary>
+ asLongBuffer
+ </summary>
+ <param name="dst"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ByteBuffer.get(System.Int32[])">
+ <summary>
+ asIntBuffer
+ </summary>
+ <param name="dst"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ByteBuffer.get(System.Int16[])">
+ <summary>
+ asShortBuffer
+ </summary>
+ <param name="dst"></param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.ByteOrder">
+ <summary>
+ Represents the possible endianness of binary data.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.ByteOrder.BigEndian">
+ <summary>
+ The binary data is present in big endian.
+ 
+ (network byte order)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.ByteOrder.LittleEndian">
+ <summary>
+ The binary data is present in little endian.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.ByteOrderHelper">
+ <summary>
+ Represents helper methods to handle data byte order.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.ByteOrderHelper.SystemByteOrder">
+ <summary>
+ Gets the <see cref="T:Microsoft.VisualBasic.Data.IO.ByteOrder"/> of the system executing the assembly.
+ </summary>
+ <remarks>
+ 当这个属性返回<see cref="F:Microsoft.VisualBasic.Data.IO.ByteOrder.LittleEndian"/>的时候，networkByteOrder需要对数据进行反转
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToInt16(System.Byte[],System.Int32)">
+ <summary>
+ Returns a 16-bit signed integer converted from two bytes at a specified position
+ in a byte array.
+ </summary>
+ <param name="value">An array of bytes that includes the two bytes to convert.</param>
+ <param name="startIndex">The starting position within value.</param>
+ <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.GetBytes(System.Int16)">
+ <summary>
+ Returns the specified 16-bit signed integer value as an array of bytes.
+ </summary>
+ <param name="value">The number to convert.</param>
+ <returns>An array of bytes with length 2.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToInt64(System.Byte[],System.Int32)">
+ <summary>
+ Returns a 64-bit signed integer converted from eight bytes at a specified position
+ in a byte array.
+ </summary>
+ <param name="value">An array of bytes that includes the eight bytes to convert.</param>
+ <param name="startIndex">The starting position within value.</param>
+ <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.GetBytes(System.Int64)">
+ <summary>
+ Returns the specified 64-bit signed integer value as an array of bytes.
+ </summary>
+ <param name="value">The number to convert.</param>
+ <returns>An array of bytes with length 8.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.GetBytes(System.Double)">
+ <summary>
+ Returns the specified double-precision floating-point value as an array of bytes.
+ </summary>
+ <param name="value">The number to convert.</param>
+ <returns>An array of bytes with length 8.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToDouble(System.Byte[])">
+ <summary>
+ Returns a double-precision floating point number converted from eight bytes at
+ a specified position in a byte array.
+ </summary>
+ <param name="value">An array of bytes that includes the eight bytes to convert.</param>
+ <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToDouble(System.Byte[],System.Int32)">
+ <summary>
+ Returns a double-precision floating point number converted from eight bytes at
+ a specified position in a byte array.
+ </summary>
+ <param name="value">An array of bytes that includes the eight bytes to convert.</param>
+ <param name="startIndex">The starting position within value.</param>
+ <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToInt32(System.Byte[],System.Int32)">
+ <summary>
+ Returns a 32-bit signed integer converted from four bytes at a specified position
+ in a byte array.
+ </summary>
+ <param name="value">An array of bytes that includes the four bytes to convert.</param>
+ <param name="startIndex">The starting position within value.</param>
+ <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.GetBytes(System.Int32)">
+ <summary>
+ Returns the specified 32-bit signed integer value as an array of bytes.
+ </summary>
+ <param name="value">The number to convert.</param>
+ <returns>An array of bytes with length 4.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.ToSingle(System.Byte[],System.Int32)">
+ <summary>
+ Returns a single-precision floating point number converted from four bytes at
+ a specified position in a byte array.
+ </summary>
+ <param name="value">An array of bytes.</param>
+ <param name="startIndex">The starting position within value.</param>
+ <returns>
+ A single-precision floating point number formed by four bytes beginning at 
+ startIndex.
+ </returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.NetworkByteOrderBitConvertor.GetBytes(System.Single)">
+ <summary>
+ Returns the specified single-precision floating point value as an array of bytes.
+ </summary>
+ <param name="value">The number to convert.</param>
+ <returns>An array of bytes with length 4.</returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitInputStream">
+ <summary>
+ Implements a bit-wise input stream
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitInputStream.#ctor(System.IO.Stream)">
+ <summary>Public constructor</summary>
+ <param name="inputStream">The input stream to wrap</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitInputStream.ReadBoolean">
+ <summary>Reads a single bit from the wrapped input stream</summary>
+ <return>true if the bit read was 1, otherwise false</return>
+ <exception cref="T:System.Exception">if no more bits are available in the input stream</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitInputStream.ReadUnary">
+ <summary>Reads a zero-terminated unary number from the wrapped input stream</summary>
+ <return>The unary number</return>
+ <exception cref="T:System.Exception">if no more bits are available in the input stream</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitInputStream.ReadBits(System.Int32)">
+ <summary>Reads up to 32 bits from the wrapped input stream</summary>
+ <param name="count">The number of bits to read (maximum 32)</param>
+ <return>The bits requested, right-aligned within the integer</return>
+ <exception cref="T:System.Exception">if no more bits are available in the input stream</exception>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BitOutputStream">
+ <summary>Implements a bit-wise output stream</summary>
+ <remarks>
+ Allows the writing of single bit booleans, unary numbers, bit
+ strings of arbitrary length(up to 24 bits), and bit aligned 32-bit integers.A single byte at a
+ time is written to the wrapped stream when sufficient bits have been accumulated
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BlockCompressor">
+ <summary>Compresses and writes a single BZip2 block</summary>
+ <remarks>
+ Block encoding consists of the following stages:
+ 1. Run-Length Encoding[1] - write()
+ 2. Burrows Wheeler Transform - close() (through BZip2DivSufSort)
+ 3. Write block header - close()
+ 4. Move To Front Transform - close() (through BZip2HuffmanStageEncoder)
+ 5. Run-Length Encoding[2] - close()  (through BZip2HuffmanStageEncoder)
+ 6. Create and write Huffman tables - close() (through BZip2HuffmanStageEncoder)
+ 7. Huffman encode and write data - close() (through BZip2HuffmanStageEncoder)
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2BlockDecompressor">
+ <summary> Reads and decompresses a single BZip2 block </summary>
+ <remarks>
+ Block decoding consists of the following stages:
+ 1. Read block header - BZip2BlockDecompressor()
+ 2. Read Huffman tables - readHuffmanTables()
+ 3. Read and decode Huffman encoded data - decodeHuffmanData()
+ 4. Run-Length Decoding[2] - decodeHuffmanData()
+ 5. Inverse Move To Front Transform - decodeHuffmanData()
+ 6. Inverse Burrows Wheeler Transform - initialiseInverseBWT()
+ 7. Run-Length Decoding[1] - read()
+ 8. Optional Block De-Randomisation - read() (through decodeNextBWTByte())
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2DivSufSort">
+ <summary>
+ DivSufSort suffix array generator
+ Based on libdivsufsort 1.2.3 patched to support BZip2
+ </summary>
+ <remarks>
+ This is a simple conversion of the original C with two minor bugfixes applied(see "BUGFIX"
+ comments within the class). Documentation within the class is largely absent.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2HuffmanStageDecoder">
+ <summary>
+ A decoder for the BZip2 Huffman coding stage
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2HuffmanStageEncoder">
+ <summary>
+ An encoder for the BZip2 Huffman encoding stage
+ </summary>	 
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2MTFAndRLE2StageEncoder">
+ <summary>An encoder for the BZip2 Move To Front Transform and Run-Length Encoding[2] stages</summary>
+ <remarks>
+ An encoder for the BZip2 Move To Front Transform and Run-Length Encoding[2] stages.
+ Although conceptually these two stages are separate, it is computationally efficient to perform them in one pass.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2InputStream">
+ <summary>An InputStream wrapper that decompresses BZip2 data</summary>
+ <remarks>Instances of this class are not threadsafe</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2InputStream.#ctor(System.IO.Stream,System.Boolean)">
+ <summary>Public constructor</summary>
+ <param name="inputStream">The InputStream to wrap</param>
+ <param name="headerless">If true, the caller is assumed to have read away the stream's 
+ leading "BZ" identifier bytes</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2InputStream.InitialiseStream">
+ <summary>Reads the stream header and checks that the data appears to be a valid BZip2 stream</summary>
+ <exception cref="T:System.IO.IOException">if the stream header is not valid</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2InputStream.InitialiseNextBlock">
+ <summary>Prepares a new block for decompression if any remain in the stream</summary>
+ <remarks>If a previous block has completed, its CRC is checked and merged into the stream CRC.
+ If the previous block was the final block in the stream, the stream CRC is validated</remarks>
+ <return>true if a block was successfully initialised, or false if the end of file marker was encountered</return>
+ <exception cref="T:System.IO.IOException">If either the block or stream CRC check failed, if the following data is
+ not a valid block-header or end-of-file marker, or if the following block could not be decoded</exception>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream">
+ <summary>An OutputStream wrapper that compresses BZip2 data</summary>
+ <remarks>Instances of this class are not threadsafe</remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.STREAM_START_MARKER_1">
+ <summary>The first 2 bytes of a Bzip2 marker</summary> 
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.STREAM_START_MARKER_2">
+ <summary>The 'h' that distinguishes BZip from BZip2</summary> 
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.STREAM_END_MARKER_1">
+ <summary>First three bytes of the end of stream marker</summary> 
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.STREAM_END_MARKER_2">
+ <summary>Last three bytes of the end of stream marker</summary> 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.#ctor(System.IO.Stream,System.Boolean,System.Int32)">
+ <summary>Public constructor</summary>
+ <param name="outputStream">The output stream to write to</param>
+ <param name="blockSizeMultiplier">The BZip2 block size as a multiple of 100,000 bytes (minimum 1, maximum 9)</param>
+ <param name="isOwner">True if the underlying stream will be closed with the current Stream</param>
+ <exception cref="T:System.ArgumentException">On any I/O error writing to the output stream</exception>
+ <remarks>Larger block sizes require more memory for both compression and decompression,
+ but give better compression ratios. 9 will usually be the best value to use</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.InitialiseNextBlock">
+ <summary>Initialises a new block for compression</summary> 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.CloseBlock">
+ <summary>Compress and write out the block currently in progress</summary>
+ <remarks>If no bytes have been written to the block, it is discarded</remarks>
+ <exception cref="T:System.Exception">On any I/O error writing to the output stream</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.BZip2OutputStream.Finish">
+ <summary>Compresses and writes out any as yet unwritten data, then writes the end of the BZip2 stream</summary>
+ <remarks>The underlying OutputStream is not closed</remarks>
+ <exception cref="T:System.Exception">On any I/O error writing to the output stream</exception>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32">
+ <summary>
+ A CRC32 calculator
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32.Crc32Lookup">
+ <summary>The CRC lookup table</summary> 
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32.crcField">
+ <summary>The current CRC</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32.CRC">
+ <summary>Gets the current CRC</summary> 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32.UpdateCrc(System.Int32)">
+ <summary>Updates the CRC with a single byte</summary>
+ <param name="value">The value to update the CRC with</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.CRC32.UpdateCrc(System.Int32,System.Int32)">
+ <summary>Update the CRC with a sequence of identical bytes</summary>	
+ <param name="value">The value to update the CRC with</param>
+ <param name="count">The number of bytes</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.Math.HuffmanAllocator">
+ <summary>An in-place, length restricted Canonical Huffman code length allocator</summary>
+ <remarks>
+ Based on the algorithm proposed by R.L.Milidiú, A.A.Pessoa and E.S.Laber 
+ in "In-place Length-Restricted Prefix Coding" (see: http://www-di.inf.puc-rio.br/~laber/public/spire98.ps)
+ and incorporating additional ideas from the implementation of "shcodec" by Simakov Alexander
+ (see: http://webcenter.ru/~xander/)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.HuffmanAllocator.AllocateHuffmanCodeLengths(System.Int32[],System.Int32)">
+ <summary>Allocates Canonical Huffman code lengths in place based on a sorted frequency array</summary>
+ <param name="array">On input, a sorted array of symbol frequencies; On output, an array of Canonical Huffman code lenghts</param>
+ <param name="maximumLength">The maximum code length. Must be at least ceil(log2(array.length))</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.Math.MoveToFront">
+ <summary>
+ A 256 entry Move To Front transform
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.Bzip2.Math.MoveToFront.mtf">
+ <summary>The Move To Front list</summary> 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.MoveToFront.#ctor">
+ <summary>Public constructor</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.MoveToFront.ValueToFront(System.Byte)">
+ <summary>Moves a value to the head of the MTF list (forward Move To Front transform)</summary>
+ <param name="value">The value to move</param>
+ <return>The position the value moved from</return>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Bzip2.Math.MoveToFront.IndexToFront(System.Int32)">
+ <summary>Gets the value from a given index and moves it to the front of the MTF list (inverse Move To Front transform)</summary>
+ <param name="index">The index to move</param>
+ <return>The value at the given index</return>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.Math.NamespaceDoc">
+ <summary>
+ Supporting primitives for the BZip2 codec: CRC32 checksums, Huffman code allocation and
+ the move-to-front transformation.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Bzip2.NamespaceDoc">
+ <summary>
+ The BZip2 compression codec: block based input and output streams together with the
+ Huffman, move-to-front/RLE and suffix sort algorithm internals.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.IMagicBlock.magic">
+ <summary>
+ Magic字符串为数据块的起始位置处的指定字节数量ASCII字符串数据
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.CheckMagicNumber(Microsoft.VisualBasic.Parallel.RequestStream,System.Collections.Generic.IEnumerable{System.Byte})">
+ <summary>
+ check the magic number inside <see cref="P:Microsoft.VisualBasic.Parallel.RequestStream.ChunkBuffer"/>
+ </summary>
+ <param name="s"></param>
+ <param name="magic"></param>
+ <returns></returns>
+ <remarks>
+ this function will verify the given target stream <paramref name="s"/> is null or empty.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.VerifyMagicSignature(Microsoft.VisualBasic.Data.IO.IMagicBlock,System.String)">
+ <summary>
+ 使用整形数存储的验证数据
+ </summary>
+ <param name="block"></param>
+ <param name="signature$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.VerifyMagicSignature(Microsoft.VisualBasic.Data.IO.IMagicBlock,System.Collections.Generic.IEnumerable{System.Byte})">
+ <summary>
+ 使用base64存储的验证数据
+ </summary>
+ <param name="block"></param>
+ <param name="signature"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.OpenBinaryReader(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Open <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/>
+ </summary>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.ReadAsDoubleVector(Microsoft.VisualBasic.Data.IO.BinaryDataReader)">
+ <summary>
+ 整个文件都是<see cref="T:System.Double"/>类型的值
+ </summary>
+ <param name="bin"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Extensions.ReadAsInt64Vector(Microsoft.VisualBasic.Data.IO.BinaryDataReader)">
+ <summary>
+ 整个文件都是<see cref="T:System.Int64"/>类型的值
+ </summary>
+ <param name="bin"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MSWindows">
+ <summary>
+ # Windows Data Types
+ 
+ > https://docs.microsoft.com/en-us/windows/desktop/WinProg/windows-data-types
+ 
+ The data types supported by Windows are used to define function return values, 
+ function and message parameters, and structure members. They define the size 
+ and meaning of these elements. For more information about the underlying C/C++ 
+ data types, see Data Type Ranges.
+ 
+ The following table contains the following types: character, Integer, Boolean, 
+ pointer, And handle.The character, Integer, And Boolean types are common to 
+ most C compilers. Most of the pointer-type names begin with a prefix of P Or LP. 
+ Handles refer to a resource that has been loaded into memory.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.LZW.LZW">
+ <summary>
+ LZW Based Decompressor - basic algorithm used as described on Mark Nelson's website  http://marknelson.us
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.MAX_BITS">
+ <summary>
+ maimxum bits allowed to read
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.HASH_BIT">
+ <summary>
+ hash bit to use with the hasing algorithm to find correct index
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.MAX_VALUE">
+ <summary>
+ max value allowed based on max bits
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.MAX_CODE">
+ <summary>
+ max code possible
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.TABLE_SIZE">
+ <summary>
+ must be bigger than the maximum allowed by maxbits and prime
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.codeTable">
+ <summary>
+ code table
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.prefixTable">
+ <summary>
+ prefix table
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.charTable">
+ <summary>
+ character table
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.bitBuffer">
+ <summary>
+ bit buffer to temporarily store bytes read from the files
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.LZW.LZW.bitCounter">
+ <summary>
+ counter for knowing how many bits are in the bit buffer
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.LZW.Encoder.FindMatch(System.Int32,System.Int32)">
+ <summary>
+ hasing function, tries to find index of prefix+char, 
+ if not found returns -1 to signify space available
+ </summary>
+ <param name="pPrefix"></param>
+ <param name="pChar"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.LZW.NamespaceDoc">
+ <summary>
+ The LZW (Lempel-Ziv-Welch) dictionary compression codec for binary data streams.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.NamespaceDoc">
+ <summary>
+ Low level binary data stream toolkit: endianness aware extensions for BinaryReader and
+ BinaryWriter, byte buffers and buffer regions, and the byte order handling used to parse
+ custom binary file formats.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.ComplexNumber">
+ <summary>
+ 表示 Python 的复数类型 (complex)。
+ Python 原生支持复数运算，.NET 没有内置复数类型（System.Numerics.Complex 
+ 需要额外引用），因此提供此轻量级实现。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.ComplexNumber.Real">
+ <summary>实部</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.ComplexNumber.Imaginary">
+ <summary>虚部</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler">
+ <summary>
+ Pickle 序列化器，将 .NET 对象序列化为 Pickle 协议4格式。
+ 生成的数据可被 Python 的 pickle.loads() 正确反序列化。
+ 
+ 支持的 .NET 类型到 Python 类型的映射：
+   Nothing / null    → None
+   Boolean           → bool
+   整数类型          → int
+   Single/Double     → float
+   Decimal           → float (精度可能损失)
+   String / Char     → str
+   Byte()            → bytes
+   IDictionary       → dict
+   IList / Array     → list
+   PythonTuple       → tuple
+   PythonSet         → list (简化处理，Python 可再转换)
+   PythonObject      → 通过 GLOBAL+REDUCE+BUILD 还原
+   ComplexNumber     → complex
+   DateTime          → datetime.datetime
+   其他对象          → 通过反射序列化属性为 dict
+ 
+ 特性：
+   - 支持 memo 机制，正确处理共享引用和循环引用
+   - 使用协议4格式，兼容 Python 3.4+
+   - 自动选择最优的整数编码（BININT1/BININT2/BININT/LONG1）
+   - 自动选择最优的字符串编码（SHORT_BINUNICODE/BINUNICODE）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.Pickle(System.Object)">
+ <summary>
+ 将 .NET 对象序列化为 Pickle 格式的字节数组。
+ 这是最核心的序列化方法，生成的数据可被 Python 的 pickle.loads() 直接读取。
+ </summary>
+ <param name="obj">要序列化的 .NET 对象</param>
+ <returns>Pickle 协议4格式的字节数组</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.PickleToBase64(System.Object)">
+ <summary>
+ 将 .NET 对象序列化为 Base64 编码字符串。
+ 适合在文本协议（如 JSON、XML）中传输 Pickle 数据。
+ </summary>
+ <param name="obj">要序列化的 .NET 对象</param>
+ <returns>Base64 编码的 Pickle 数据</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.PickleToFile(System.Object,System.String)">
+ <summary>
+ 将 .NET 对象序列化并写入文件。
+ 生成的文件可被 Python 的 pickle.load(open('file', 'rb')) 读取。
+ </summary>
+ <param name="obj">要序列化的 .NET 对象</param>
+ <param name="filePath">输出文件路径</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.Serialize(System.Object)">
+ <summary>
+ 执行实际的序列化过程：写入协议头、序列化根对象、写入结束标记。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeObject(System.Object)">
+ <summary>
+ 核心序列化分派方法。根据对象类型选择合适的 Pickle 操作码进行序列化。
+ 处理 memo 查找（共享引用和循环引用），以及类型分派。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeBoolean(System.Boolean)">
+ <summary>
+ 序列化布尔值。使用 NEWTRUE/NEWFALSE 操作码（协议2+）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeLong(System.Int64)">
+ <summary>
+ 序列化有符号长整数。自动选择最紧凑的编码方式：
+   0-255       → BININT1 (2字节)
+   0-65535     → BININT2 (3字节)
+   Int32范围   → BININT (5字节)
+   超出范围    → LONG1 (变长)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeULong(System.UInt64)">
+ <summary>
+ 序列化无符号长整数（ULong）。处理超出 Long 范围的情况。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeFloat(System.Double)">
+ <summary>
+ 序列化双精度浮点数。使用 BINFLOAT 操作码（8字节大端序 IEEE 754）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeString(System.String)">
+ <summary>
+ 序列化 UTF-8 字符串。自动选择长度前缀大小：
+   UTF8字节长度 &lt;= 255  → SHORT_BINUNICODE (2字节头)
+   UTF8字节长度 > 255   → BINUNICODE (5字节头)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeBytes(System.Byte[])">
+ <summary>
+ 序列化字节数组。自动选择长度前缀大小：
+   长度 &lt;= 255  → SHORT_BINBYTES (2字节头)
+   长度 > 255   → BINBYTES (5字节头)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeDict(System.Collections.IDictionary)">
+ <summary>
+ 序列化字典。使用 EMPTY_DICT + MEMOIZE + MARK + 键值对 + SETITEMS 模式。
+ 先将空字典注册到 memo（处理循环引用），然后批量设置键值对。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeList(System.Collections.IList)">
+ <summary>
+ 序列化列表。使用 EMPTY_LIST + MEMOIZE + MARK + 元素 + APPENDS 模式。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeArray(System.Array)">
+ <summary>
+ 序列化数组。与列表相同的 Pickle 表示（Python 没有区分数组和列表）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeTuple(Microsoft.VisualBasic.Data.IO.Pickle.PythonTuple)">
+ <summary>
+ 序列化 PythonTuple 元组。根据元素数量选择最优编码：
+   0元素 → EMPTY_TUPLE
+   1元素 → TUPLE1
+   2元素 → TUPLE2
+   3元素 → TUPLE3
+   4+元素 → MARK + items + TUPLE
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeSet(Microsoft.VisualBasic.Data.IO.Pickle.PythonSet)">
+ <summary>
+ 序列化 PythonSet 集合。
+ 由于 Python pickle 对 set 的序列化使用 GLOBAL+REDUCE 模式较复杂，
+ 此处简化为序列化为列表。Python 端可用 set() 转换回来。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeDateTime(System.DateTime)">
+ <summary>
+ 序列化 DateTime 为 Python datetime.datetime 对象。
+ 使用 GLOBAL + 参数元组 + REDUCE 模式。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeTimeSpan(System.TimeSpan)">
+ <summary>
+ 序列化 TimeSpan 为 Python datetime.timedelta 对象。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeComplex(Microsoft.VisualBasic.Data.IO.Pickle.ComplexNumber)">
+ <summary>
+ 序列化 ComplexNumber 为 Python complex 对象。
+ 使用 GLOBAL + 参数元组 + REDUCE 模式。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializePythonObject(Microsoft.VisualBasic.Data.IO.Pickle.PythonObject)">
+ <summary>
+ 序列化 PythonObject 自定义对象。
+ 使用 GLOBAL + 参数元组 + REDUCE + BUILD 模式，
+ 完整还原 Python 对象的类名、构造参数和状态。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.SerializeAsDict(System.Object)">
+ <summary>
+ 将任意 .NET 对象通过反射序列化。
+ 使用 GLOBAL + REDUCE + BUILD 模式，将对象的公共属性作为状态字典传递。
+ Python 端需要对应的类定义才能完整还原。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.EncodeLong(System.Int64)">
+ <summary>
+ 将有符号长整数编码为小端序补码字节序列。
+ 这是 Python LONG1/LONG4 操作码使用的编码格式。
+ 编码规则：
+   - 使用小端序（最低有效字节在前）
+   - 使用补码表示负数
+   - 如果最高字节的最高位与符号不一致，需要额外的符号字节
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPicklePickler.AddToMemo(System.Object)">
+ <summary>
+ 将对象添加到 memo 表，并写入 MEMOIZE 操作码。
+ Memo 机制用于处理共享引用（同一个对象被多次引用）
+ 和循环引用（对象直接或间接引用自身）。
+ 仅对引用类型进行 memo，值类型和字符串不需要。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler">
+ <summary>
+ 扩展的 Pickle 协议反序列化器，支持协议 0-5 的大部分操作码。
+ 能够将 Python Pickle 二进制数据反序列化为对应的 .NET 对象。
+ 
+ 类型映射关系：
+   Python None     → VB.NET Nothing
+   Python bool     → VB.NET Boolean
+   Python int      → VB.NET Long (或 Integer，取决于大小)
+   Python float    → VB.NET Double
+   Python str      → VB.NET String
+   Python bytes    → VB.NET Byte()
+   Python list     → VB.NET List(Of Object)
+   Python dict     → VB.NET Dictionary(Of Object, Object)
+   Python tuple    → PythonTuple
+   Python set      → PythonSet
+   Python complex  → ComplexNumber
+   Python datetime → VB.NET DateTime
+   其他自定义对象  → PythonObject
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.Unpickle(System.String)">
+ <summary>
+ 从 Base64 字符串反序列化 Pickle 数据。
+ 这是最便捷的入口方法，适合从文本传输或存储中恢复 Python 对象。
+ </summary>
+ <param name="base64Str">Base64 编码的 Pickle 数据</param>
+ <returns>反序列化后的 .NET 对象</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.UnpickleFromBytes(System.Byte[])">
+ <summary>
+ 从字节数组反序列化 Pickle 数据。
+ 适合从文件读取或网络接收的原始二进制数据。
+ </summary>
+ <param name="data">Pickle 格式的字节数组</param>
+ <returns>反序列化后的 .NET 对象</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.UnpickleFromStream(System.IO.Stream)">
+ <summary>
+ 从流反序列化 Pickle 数据。
+ 支持任意 Stream 来源，包括文件流、网络流、内存流等。
+ </summary>
+ <param name="stream">包含 Pickle 数据的流</param>
+ <returns>反序列化后的 .NET 对象</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.ReadLine(System.IO.BinaryReader)">
+ <summary>
+ 读取一行文本（以 LF 换行符结尾）。协议0使用换行符作为分隔符。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.PopToMark(System.Collections.Generic.Stack{System.Object})">
+ <summary>
+ 弹出栈中到 MarkObject 为止的所有元素（不包括 MarkObject 本身），
+ 返回的列表保持原始压栈顺序（先压入的在前）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.DecodeLong(System.Byte[])">
+ <summary>
+ 解码小端序有符号长整数。
+ Python 使用任意长度的补码表示法，最高字节的最高位为符号位。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.RawUnicodeEscapeDecode(System.String)">
+ <summary>
+ 解码 Python raw-unicode-escape 格式字符串。
+ 支持 \uXXXX（4位十六进制）和 \UXXXXXXXX（8位十六进制）转义序列，
+ 以及 \\ 反斜杠转义。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.EscapeDecode(System.String)">
+ <summary>
+ 解码 Python 字符串转义序列。
+ 支持 \n, \r, \t, \\, \', \", \xHH 和八进制转义 \OOO。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.ReduceCallable(System.Object,System.Object)">
+ <summary>
+ 处理 REDUCE 操作码：调用可调用对象并传入参数。
+ 如果可调用对象是 PythonGlobalRef，尝试构造对应的 .NET 对象；
+ 否则返回 PythonObject 包装器。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.NewObjf(System.Object,System.Object)">
+ <summary>
+ 处理 NEWOBJ 操作码：使用类引用和参数构造新式类实例。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.ExtractArgs(System.Object)">
+ <summary>
+ 从参数对象中提取参数数组。支持 PythonTuple、IList 和 Object()。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.ConstructPythonObject(Microsoft.VisualBasic.Data.IO.Pickle.PythonGlobalRef,System.Object)">
+ <summary>
+ 根据全局引用构造 Python 对象的 .NET 等价物。
+ 对常见的 Python 内置类型和标准库类型进行映射，
+ 未知类型则返回 PythonObject 包装器以保留信息。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Pickle.MinimalPickleUnpickler.BuildObject(System.Object,System.Object)">
+ <summary>
+ 处理 BUILD 操作码：将状态应用到已构造的对象上。
+ 对于 PythonObject，将状态字典合并到 State 属性中；
+ 对于字典类型，将状态字典的键值对合并到目标字典中。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.NamespaceDoc">
+ <summary>
+ A Python pickle serialization codec: pickler and unpickler implementations together with
+ the Python object model for tuples, sets, complex numbers and global references.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.PythonGlobalRef">
+ <summary>
+ 内部类型：表示 Python 全局引用（module.classname）。
+ 由 GLOBAL 操作码产生，供 REDUCE / NEWOBJ 消费。
+ 不对外公开，因为用户应通过 PythonObject 访问反序列化结果。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject">
+ <summary>
+ 表示从 Pickle 反序列化的未知 Python 对象。
+ 当遇到无法映射到 .NET 类型的 Python 类实例时，
+ 使用此包装器保存模块名、类名、构造参数和对象状态，
+ 以便后续代码能够识别和处理这些对象。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject.ModuleName">
+ <summary>Python 模块名（如 "collections"）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject.ClassName">
+ <summary>Python 类名（如 "OrderedDict"）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject.ConstructorArgs">
+ <summary>传递给 __init__ 的构造参数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject.State">
+ <summary>对象的 __dict__ 状态（由 BUILD 操作码设置）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonObject.FullName">
+ <summary>获取状态的完整限定类名</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.PythonSet">
+ <summary>
+ 表示 Python 的 set 类型。Python 的 set 是无序且元素唯一的集合，
+ 类似于 .NET 的 HashSet，但提供与 Python 互操作所需的类型标识。
+ 支持 frozenset 和 set 两种语义（此类型不区分可变/不可变）。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Pickle.PythonTuple">
+ <summary>
+ 表示 Python 的 tuple 类型。.NET 没有原生的不可变元组类型，
+ 因此使用此包装类来保持 Python 语义上的不可变性和有序性。
+ 元组在 Python 中常用于函数返回多值、字典键等场景。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonTuple.Item(System.Int32)">
+ <summary>按索引访问元组元素</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonTuple.Length">
+ <summary>元组元素数量</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Pickle.PythonTuple.Items">
+ <summary>获取元素数组的副本（防止外部修改）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader">
+ <summary>
+ Represents an extended <see cref="T:System.IO.BinaryReader"/> supporting special file format data types.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.BufferView">
+ <summary>
+ [debug view]以ascii显示当前位置的附近16个字节的内容
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.IO.Stream)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> class based on the specified stream and
+ using UTF-8 encoding.
+ </summary>
+ <param name="input">The input stream.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support reading, is null, or is already closed.
+ </exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.Collections.Generic.IEnumerable{System.Byte},Microsoft.VisualBasic.Data.IO.ByteOrder)">
+ <summary>
+ Create binary data reader from the in-memory data buffer
+ </summary>
+ <param name="data"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.IO.Stream,System.Boolean)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> class based on the specified stream, UTF-8
+ encoding and optionally leaves the stream open.
+ </summary>
+ <param name="input">The input stream.</param>
+ <param name="leaveOpen"><c>true</c> to leave the stream open after the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> object
+ is disposed; otherwise <c>false</c>.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support reading, is null, or is already closed.
+ </exception>
+ <exception cref="T:System.ArgumentNullException">encoding is null.</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.IO.Stream,System.Text.Encoding)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> class based on the specified stream and
+ character encoding.
+ </summary>
+ <param name="input">The input stream.</param>
+ <param name="encoding">The character encoding to use.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support reading, is null, or is already closed.
+ </exception>
+ <exception cref="T:System.ArgumentNullException">encoding is null.</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.IO.Stream,Microsoft.VisualBasic.Data.IO.ByteOrder)">
+ <summary>
+ the constructor works for the numeric stream
+ </summary>
+ <param name="input"></param>
+ <param name="byteOrder"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.#ctor(System.IO.Stream,System.Text.Encoding,System.Boolean)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> class based on the specified stream and
+ character encoding, and optionally leaves the stream open.
+ </summary>
+ <param name="input">The input stream.</param>
+ <param name="encoding">The character encoding to use.</param>
+ <param name="leaveOpen"><c>true</c> to leave the stream open after the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataReader"/> object
+ is disposed; otherwise <c>false</c>.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support reading, is null, or is already closed.
+ </exception>
+ <exception cref="T:System.ArgumentNullException">encoding is null.</exception>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ByteOrder">
+ <summary>
+ Gets or sets the byte order used to parse binary data with.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Encoding">
+ <summary>
+ Gets the encoding used for string related operations where no other encoding has been provided. Due to the
+ way the underlying <see cref="T:System.IO.BinaryReader"/> is instantiated, it can only be specified at creation time.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Length">
+ <summary>
+ Gets the length in bytes of the stream in bytes. This is a shortcut to the base stream Length property.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Position">
+ <summary>
+ Gets or sets the position within the current stream. This is a shortcut to the base stream Position
+ property.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataReader.EndOfStream">
+ <summary>
+ Gets a value indicating whether the end of the stream has been reached and no more data can be read.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Mark">
+ <summary>
+ Mark current stream buffer position
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Reset">
+ <summary>
+ Move the buffer back to the position that marked by <see cref="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Mark"/> method.
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Align(System.Int32)">
+ <summary>
+ Aligns the reader to the next given byte multiple.
+ </summary>
+ <param name="alignment">The byte multiple.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadDateTime(Microsoft.VisualBasic.Data.IO.BinaryDateTimeFormat)">
+ <summary>
+ Reads a <see cref="T:System.DateTime"/> from the current stream. The <see cref="T:System.DateTime"/> is available in the
+ specified binary format.
+ </summary>
+ <param name="format">The binary format, in which the <see cref="T:System.DateTime"/> will be read.</param>
+ <returns>The <see cref="T:System.DateTime"/> read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadDecimal">
+ <summary>
+ Reads an 16-byte floating point value from the current stream and advances the current position of the
+ stream by sixteen bytes.
+ </summary>
+ <returns>The 16-byte floating point value read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadDecimals(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Decimal"/> values from the current stream into a
+ <see cref="T:System.Decimal"/> array and advances the current position by that number of <see cref="T:System.Decimal"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Decimal"/> values to read.</param>
+ <returns>The <see cref="T:System.Decimal"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadDouble">
+ <summary>
+ Reads an 8-byte floating point value from the current stream and advances the current position of the stream
+ by eight bytes.
+ </summary>
+ <returns>The 8-byte floating point value read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadDoubles(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Double"/> values from the current stream into a
+ <see cref="T:System.Double"/> array and advances the current position by that number of <see cref="T:System.Double"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Double"/> values to read.</param>
+ <returns>The <see cref="T:System.Double"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt16">
+ <summary>
+ Reads a 2-byte signed integer from the current stream and advances the current position of the stream by two
+ bytes.
+ </summary>
+ <returns>The 2-byte signed integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt16s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Int16"/> values from the current stream into a <see cref="T:System.Int16"/>
+ array and advances the current position by that number of <see cref="T:System.Int16"/> values multiplied with the
+ size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Int16"/> values to read.</param>
+ <returns>The <see cref="T:System.Int16"/> array containing data read from the current stream. This might be less than
+ the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt32">
+ <summary>
+ Reads a 4-byte signed integer from the current stream and advances the current position of the stream by
+ four bytes.
+ </summary>
+ <returns>The 4-byte signed integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt32s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Int32"/> values from the current stream into a <see cref="T:System.Int32"/>
+ array and advances the current position by that number of <see cref="T:System.Int32"/> values multiplied with the
+ size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Int32"/> values to read.</param>
+ <returns>The <see cref="T:System.Int32"/> array containing data read from the current stream. This might be less than
+ the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt64">
+ <summary>
+ Reads an 8-byte signed integer from the current stream and advances the current position of the stream by
+ eight bytes.
+ </summary>
+ <returns>The 8-byte signed integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadInt64s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Int64"/> values from the current stream into a <see cref="T:System.Int64"/>
+ array and advances the current position by that number of <see cref="T:System.Int64"/> values multiplied with the
+ size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Int64"/> values to read.</param>
+ <returns>The <see cref="T:System.Int64"/> array containing data read from the current stream. This might be less than
+ the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadSBytes(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.SByte"/> values from the current stream into a <see cref="T:System.SByte"/>
+ array and advances the current position by that number of <see cref="T:System.SByte"/> values multiplied with the
+ size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.SByte"/> values to read.</param>
+ <returns>The <see cref="T:System.SByte"/> array containing data read from the current stream. This might be less than
+ the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadSingle">
+ <summary>
+ Reads a 4-byte floating point value from the current stream and advances the current position of the stream
+ by four bytes.
+ </summary>
+ <returns>The 4-byte floating point value read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadSingles(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.Single"/> values from the current stream into a
+ <see cref="T:System.Single"/> array and advances the current position by that number of <see cref="T:System.Single"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.Single"/> values to read.</param>
+ <returns>The <see cref="T:System.Single"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadString(Microsoft.VisualBasic.Data.IO.BinaryStringFormat)">
+ <summary>
+ Reads a string from the current stream. The string is available in the specified binary format.
+ </summary>
+ <param name="format">The binary format, in which the string will be read.</param>
+ <returns>The string read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadString(Microsoft.VisualBasic.Data.IO.BinaryStringFormat,System.Text.Encoding)">
+ <summary>
+ Reads a string from the current stream. The string is available in the specified binary format and encoding.
+ </summary>
+ <param name="format">The binary format, in which the string will be read.</param>
+ <param name="encoding">The encoding used for converting the string.</param>
+ <returns>The string read from the current stream.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadString(System.Int32)">
+ <summary>
+ Reads a string from the current stream. The string has neither a prefix or postfix, the length has to be
+ specified manually.
+ </summary>
+ <param name="length">The length of the string.</param>
+ <returns>The string read from the current stream.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadString(System.Int32,System.Text.Encoding)">
+ <summary>
+ Reads a string from the current stream. The string has neither a prefix or postfix, the length has to be
+ specified manually. The string is available in the specified encoding.
+ </summary>
+ <param name="length">The length of the string.</param>
+ <param name="encoding">The encoding to use for reading the string.</param>
+ <returns>The string read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt16">
+ <summary>
+ Reads a 2-byte unsigned integer from the current stream using little-endian encoding and advances the
+ position of the stream by two bytes.
+ </summary>
+ <returns>The 2-byte unsigned integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt16s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.UInt16"/> values from the current stream into a
+ <see cref="T:System.UInt16"/> array and advances the current position by that number of <see cref="T:System.UInt16"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.UInt16"/> values to read.</param>
+ <returns>The <see cref="T:System.UInt16"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt32">
+ <summary>
+ Reads an 4-byte unsigned integer from the current stream and advances the position of the stream by eight
+ bytes.
+ </summary>
+ <returns>The 4-byte unsigned integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt32s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.UInt32"/> values from the current stream into a
+ <see cref="T:System.UInt32"/> array and advances the current position by that number of <see cref="T:System.UInt32"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.UInt32"/> values to read.</param>
+ <returns>The <see cref="T:System.UInt32"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt64">
+ <summary>
+ Reads an 8-byte unsigned integer from the current stream and advances the position of the stream by eight
+ bytes.
+ </summary>
+ <returns>The 8-byte unsigned integer read from the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.ReadUInt64s(System.Int32)">
+ <summary>
+ Reads the specified number of <see cref="T:System.UInt64"/> values from the current stream into a
+ <see cref="T:System.UInt64"/> array and advances the current position by that number of <see cref="T:System.UInt64"/> values
+ multiplied with the size of a single value.
+ </summary>
+ <param name="count">The number of <see cref="T:System.UInt64"/> values to read.</param>
+ <returns>The <see cref="T:System.UInt64"/> array containing data read from the current stream. This might be less
+ than the number of bytes requested if the end of the stream is reached.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Seek(System.Int64)">
+ <summary>
+ Sets the position within the current stream. This is a shortcut to the base stream Seek method.
+ </summary>
+ <param name="offset">A byte offset relative to the current position in the stream.</param>
+ <returns>The new position within the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.Seek(System.Int64,System.IO.SeekOrigin)">
+ <summary>
+ Sets the position within the current stream. This is a shortcut to the base stream Seek method.
+ </summary>
+ <param name="offset">A byte offset relative to the origin parameter.</param>
+ <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain
+ the new position.</param>
+ <returns>The new position within the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.TemporarySeek">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to restore the current position after it has been disposed.
+ </summary>
+ <returns>The <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to be disposed to restore to the current position.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.TemporarySeek(System.Int64)">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> with the given parameters. As soon as the returned <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/>
+ is disposed, the previous stream position will be restored.
+ </summary>
+ <param name="offset">A byte offset relative to the current position in the stream.</param>
+ <returns>The <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to be disposed to undo the seek.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataReader.TemporarySeek(System.Int64,System.IO.SeekOrigin)">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> with the given parameters. As soon as the returned <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/>
+ is disposed, the previous stream position will be restored.
+ </summary>
+ <param name="offset">A byte offset relative to the origin parameter.</param>
+ <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain
+ the new position.</param>
+ <returns>The <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to be disposed to undo the seek.</returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter">
+ <summary>
+ Represents an extended <see cref="T:System.IO.BinaryWriter"/> supporting special file format data types.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.#ctor(System.IO.Stream)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> class based on the specified stream and
+ using UTF-8 encoding.
+ </summary>
+ <param name="output">The output stream.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support writing or is already closed.</exception>
+ <exception cref="T:System.ArgumentNullException">output is null.</exception>
+ <remarks>
+ this data writer object inherits the <see cref="T:System.IO.BinaryWriter"/>.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.#ctor(System.IO.Stream,System.Boolean)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> class based on the specified stream, UTF-8
+ encoding and optionally leaves the stream open.
+ </summary>
+ <param name="output">The output stream.</param>
+ <param name="leaveOpen"><c>true</c> to leave the stream open after the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> object
+ is disposed; otherwise <c>false</c>.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support writing or is already closed.</exception>
+ <exception cref="T:System.ArgumentNullException">output is null.</exception>
+ <remarks>
+ this data writer object inherits the <see cref="T:System.IO.BinaryWriter"/>.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.#ctor(System.IO.Stream,System.Text.Encoding)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> class based on the specified stream and
+ character encoding.
+ </summary>
+ <param name="output">The output stream.</param>
+ <param name="encoding">The character encoding to use.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support writing or is already closed.</exception>
+ <exception cref="T:System.ArgumentNullException">output or encoding is null.</exception>
+ <remarks>
+ this data writer object inherits the <see cref="T:System.IO.BinaryWriter"/>.as
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.#ctor(System.IO.Stream,System.Text.Encoding,System.Boolean)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> class based on the specified stream and
+ character encoding, and optionally leaves the stream open.
+ </summary>
+ <param name="output">The output stream.</param>
+ <param name="encoding">The character encoding to use.</param>
+ <param name="leaveOpen"><c>true</c> to leave the stream open after the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> object
+ is disposed; otherwise <c>false</c>.</param>
+ <exception cref="T:System.ArgumentException">The stream does not support writing or is already closed.</exception>
+ <exception cref="T:System.ArgumentNullException">output or encoding is null.</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.#ctor(System.IO.Stream,Microsoft.VisualBasic.Data.IO.ByteOrder)">
+ <summary>
+ Construct a data writer for write a numeric vector
+ </summary>
+ <param name="output"></param>
+ <param name="byteOrder"></param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.ByteOrder">
+ <summary>
+ Gets or sets the byte order used to parse binary data with.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.RerouteInt32ToUnsigned">
+ <summary>
+ 为了兼容一些VB6.0的程序数据, 启用这个选项之后,
+ 所有的<see cref="T:System.Int32"/>在写入文件之前都将会被转换为<see cref="T:System.UInt32"/>
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Encoding">
+ <summary>
+ Gets the encoding used for string related operations where no other encoding has been provided. Due to the
+ way the underlying <see cref="T:System.IO.BinaryWriter"/> is instantiated, it can only be specified at creation time.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Position">
+ <summary>
+ Gets or sets the position within the current stream. This is a shortcut to the base stream Position
+ property.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.ReserveOffset">
+ <summary>
+ Allocates space for an <see cref="T:Microsoft.VisualBasic.Data.IO.Offset"/> which can be satisfied later on.
+ </summary>
+ <returns>An <see cref="T:Microsoft.VisualBasic.Data.IO.Offset"/> to satisfy later on.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Align(System.Int32)">
+ <summary>
+ Aligns the reader to the next given byte multiple..
+ </summary>
+ <param name="alignment">The byte multiple.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Seek(System.Int64)">
+ <summary>
+ Sets the position within the current stream. This is a shortcut to the base stream Seek method.
+ </summary>
+ <param name="offset">A byte offset relative to the current position in the stream.</param>
+ <returns>The new position within the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Seek(System.Int64,System.IO.SeekOrigin)">
+ <summary>
+ Sets the position within the current stream. This is a shortcut to the base stream Seek method.
+ </summary>
+ <param name="offset">A byte offset relative to the origin parameter.</param>
+ <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain
+ the new position.</param>
+ <returns>The new position within the current stream.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.TemporarySeek(System.Int64)">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> with the given parameters. As soon as the returned <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/>
+ is disposed, the previous stream position will be restored.
+ </summary>
+ <param name="offset">A byte offset relative to the current position in the stream.</param>
+ <returns>A <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to be disposed to undo the seek.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.TemporarySeek(System.Int64,System.IO.SeekOrigin)">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> with the given parameters. As soon as the returned <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/>
+ is disposed, the previous stream position will be restored.
+ </summary>
+ <param name="offset">A byte offset relative to the origin parameter.</param>
+ <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain
+ the new position.</param>
+ <returns>A <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> to be disposed to undo the seek.</returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Byte[])">
+ <inheritdoc />
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.DateTime,Microsoft.VisualBasic.Data.IO.BinaryDateTimeFormat)">
+ <summary>
+ Writes a <see cref="T:System.DateTime"/> to this stream. The <see cref="T:System.DateTime"/> will be available in the
+ specified binary format.
+ </summary>
+ <param name="value">The value to write.</param>
+ <param name="format">The binary format in which the <see cref="T:System.DateTime"/> will be written.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Decimal)">
+ <summary>
+ Writes an 16-byte floating point value to this stream and advances the current position of the stream by
+ sixteen bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.IO.Stream,System.Int32)">
+ <summary>
+ 将<paramref name="buffer"/>之中的所有数据都追加到当前的数据流之中
+ </summary>
+ <param name="buffer"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Decimal[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Decimal"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Decimal"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Decimal"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Double)">
+ <summary>
+ Writes an 8-byte floating point value to this stream and advances the current position of the stream by
+ eight bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Double[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Double"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Double"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Double"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int16)">
+ <summary>
+ Writes an 2-byte signed integer to this stream and advances the current position of the stream by two bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int16[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Int16"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Int16"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Int16"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int32)">
+ <summary>
+ Writes an 4-byte signed integer to this stream and advances the current position of the stream by four
+ bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int32[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Int32"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Int32"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Int32"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int64)">
+ <summary>
+ Writes an 8-byte signed integer to this stream and advances the current position of the stream by eight
+ bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Int64[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Int64"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Int64"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Int64"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Single)">
+ <summary>
+ Writes an 4-byte floating point value to this stream and advances the current position of the stream by four
+ bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.Single[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.Single"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.Single"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.Single"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.String,Microsoft.VisualBasic.Data.IO.BinaryStringFormat)">
+ <summary>
+ Writes a string to this stream in the current encoding of the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> and advances
+ the current position of the stream in accordance with the encoding used and the specific characters being
+ written to the stream. The string will be available in the specified binary format.
+ </summary>
+ <param name="value">The value to write.</param>
+ <param name="format">The binary format in which the string will be written.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.String,Microsoft.VisualBasic.Data.IO.BinaryStringFormat,System.Text.Encoding)">
+ <summary>
+ Writes a string to this stream with the given encoding and advances the current position of the stream in
+ accordance with the encoding used and the specific characters being written to the stream. The string will
+ be available in the specified binary format.
+ </summary>
+ <param name="value">The value to write.</param>
+ <param name="format">The binary format in which the string will be written.</param>
+ <param name="encoding">The encoding used for converting the string.</param>
+ <returns>
+ 这个函数返回写入的数据的字节大小长度,主要是用于字节的padding操作
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt16)">
+ <summary>
+ Writes an 2-byte unsigned integer value to this stream and advances the current position of the stream by
+ two bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt16[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.UInt16"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.UInt16"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.UInt16"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt32)">
+ <summary>
+ Writes an 4-byte unsigned integer value to this stream and advances the current position of the stream by
+ four bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt32[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.UInt32"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.UInt32"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.UInt32"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt64)">
+ <summary>
+ Writes an 8-byte unsigned integer value to this stream and advances the current position of the stream by
+ eight bytes.
+ </summary>
+ <param name="value">The value to write.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.Write(System.UInt64[])">
+ <summary>
+ Writes the specified number of <see cref="T:System.UInt64"/> values into the current stream and advances the current
+ position by that number of <see cref="T:System.UInt64"/> values multiplied with the size of a single value.
+ </summary>
+ <param name="values">The <see cref="T:System.UInt64"/> values to write.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.WriteByteLengthPrefixString(System.String,System.Text.Encoding)">
+ <summary>
+ 1 + size
+ </summary>
+ <param name="value"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.WriteWordLengthPrefixString(System.String,System.Text.Encoding)">
+ <summary>
+ 2 + size
+ </summary>
+ <param name="value"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.WriteDwordLengthPrefixString(System.String,System.Text.Encoding)">
+ <summary>
+ 4 + size
+ </summary>
+ <param name="value"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.WriteZeroTerminatedString(System.String,System.Text.Encoding)">
+ <summary>
+ size + 1
+ </summary>
+ <param name="value"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.BinaryDataWriter.WriteNoPrefixOrTerminationString(System.String,System.Text.Encoding)">
+ <summary>
+ size
+ </summary>
+ <param name="value"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.BinaryDateTimeFormat">
+ <summary>
+ Represents the set of formats of binary date and time encodings.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryDateTimeFormat.CTime">
+ <summary>
+ The <see cref="T:System.DateTime"/> has the time_t format of the C library.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryDateTimeFormat.NetTicks">
+ <summary>
+ The <see cref="T:System.DateTime"/> is stored as the ticks of a .NET <see cref="T:System.DateTime"/> instance.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.BinaryStringFormat">
+ <summary>
+ Represents the set of formats of binary string encodings.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.ByteLengthPrefix">
+ <summary>
+ The string has a prefix of 1 byte determining the length of the string and no postfix.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.WordLengthPrefix">
+ <summary>
+ The string has a prefix of 2 bytes determining the length of the string and no postfix.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.DwordLengthPrefix">
+ <summary>
+ The string has a prefix of 4 bytes determining the length of the string and no postfix.
+ (<see cref="T:System.Int32"/>)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.UInt32LengthPrefix">
+ <summary>
+ The string has a prefix of 4 bytes determining the length of the string and no postfix.
+ (<see cref="T:System.UInt32"/>)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.ZeroTerminated">
+ <summary>
+ The string has no prefix and is terminated with a byte of the value 0.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.BinaryStringFormat.NoPrefixOrTermination">
+ <summary>
+ The string has neither prefix nor postfix. This format is only valid for writing strings. For reading
+ strings, the length has to be specified manually.
+ (经常使用这种模式用于写入Magic Header字符串)
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Offset">
+ <summary>
+ Represents a space of 4 bytes reserved in the underlying stream of a <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> which can
+ be comfortably satisfied later on.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Offset.#ctor(Microsoft.VisualBasic.Data.IO.BinaryDataWriter)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.Offset"/> class reserving an offset with the specified
+ <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> at the current position.
+ </summary>
+ <param name="writer">The <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> holding the stream in which the offset will be
+ reserved.</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Offset.Writer">
+ <summary>
+ Gets the <see cref="T:Microsoft.VisualBasic.Data.IO.BinaryDataWriter"/> in which underlying stream the allocation is made.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.Offset.Position">
+ <summary>
+ Gets the address at which the allocation is made.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Offset.Satisfy">
+ <summary>
+ Satisfies the offset by writing the current position of the underlying stream at the reserved
+ <see cref="P:Microsoft.VisualBasic.Data.IO.Offset.Position"/>, then seeking back to the current position.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReadonlyStream.Flush">
+ <summary>
+ do nothing at here 
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReadonlyStream.SetLength(System.Int64)">
+ <summary>
+ do nothing at here
+ </summary>
+ <param name="value"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReadonlyStream.Write(System.Byte[],System.Int32,System.Int32)">
+ <summary>
+ do nothing at here
+ </summary>
+ <param name="buffer"></param>
+ <param name="offset"></param>
+ <param name="count"></param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.SeekTask">
+ <summary>
+ Represents a temporary seek to another position which is undone after the task has been disposed.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.SeekTask.Stream">
+ <summary>
+ Gets the <see cref="P:Microsoft.VisualBasic.Data.IO.SeekTask.Stream"/> which is temporarily sought to another position.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.SeekTask.PreviousPosition">
+ <summary>
+ Gets the absolute position to which the <see cref="P:Microsoft.VisualBasic.Data.IO.SeekTask.Stream"/> will be rewound after this task is disposed.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.SeekTask.#ctor(System.IO.Stream,System.Int64,System.IO.SeekOrigin)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.Data.IO.SeekTask"/> class to temporarily seek the given
+ <see cref="P:Microsoft.VisualBasic.Data.IO.SeekTask.Stream"/> to the specified position. The <see cref="T:System.IO.Stream"/> is rewound to its
+ previous position after the task is disposed.
+ </summary>
+ <param name="stream">A <see cref="T:System.IO.Stream"/> to temporarily seek.</param>
+ <param name="offset">A byte offset relative to the origin parameter.</param>
+ <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin"/> indicating the reference point used to obtain
+ the new position.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.SeekTask.Dispose">
+ <summary>
+ Rewinds the <see cref="P:Microsoft.VisualBasic.Data.IO.SeekTask.Stream"/> to its previous position.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.BindAttribute">
+ <summary>
+ bind data type to read/write
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.FieldAttribute.N">
+ <summary>
+ the array length
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.FieldAttribute.offset">
+ <summary>
+ the binary data file offset
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.FieldAttribute.#ctor(System.Int32,System.Int32)">
+ <summary>
+ 
+ </summary>
+ <param name="ordinal">The ordinal position in the rawdata layout</param>
+ <param name="n">for array used only, means array length to read, default negative means scalar</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.ReaderProvider.URI">
+ <summary>
+ The target file path
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.IO.ReaderProvider.ReadScalar">
+ <summary>
+ Read a single scalar value
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.#ctor(System.String,Microsoft.VisualBasic.Text.Encodings,System.Int64)">
+ <summary>
+ 
+ </summary>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <param name="buffered"></param>
+ <remarks>
+ Create a lazy data
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.Open">
+ <summary>
+ 请使用<see cref="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.Cleanup(Microsoft.VisualBasic.Data.IO.BinaryDataReader)"/>方法来释放资源
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.Cleanup(Microsoft.VisualBasic.Data.IO.BinaryDataReader)">
+ <summary>
+ 使用这个清理方法来释放<see cref="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.Open"/>打开的指针
+ </summary>
+ <param name="reader"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.Read(System.Action{Microsoft.VisualBasic.Data.IO.BinaryDataReader},System.Int64)">
+ <summary>
+ 
+ </summary>
+ <param name="run">
+ 请不要在这里面执行<see cref="M:System.IO.BinaryReader.Close"/>或者<see cref="M:System.IO.BinaryReader.Dispose"/>
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.ReaderProvider.LoadObject``1(System.Int64)">
+ <summary>
+ 
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="offset"></param>
+ <returns></returns>
+ <remarks>
+ only read the rawdata with <see cref="T:Microsoft.VisualBasic.Data.IO.FieldAttribute"/> layout information
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.Xdr.NamespaceDoc">
+ <summary>
+ XDR (External Data Representation) encoding and decoding of primitive and structured values
+ in binary streams.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeInt32(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the Int32.
+ http://tools.ietf.org/html/rfc4506#section-4.1
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeInt32(System.Int32,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the Int32.
+ http://tools.ietf.org/html/rfc4506#section-4.1
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeUInt32(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the UInt32.
+ http://tools.ietf.org/html/rfc4506#section-4.2
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeUInt32(System.UInt32,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the UInt32.
+ http://tools.ietf.org/html/rfc4506#section-4.2
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeInt64(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the Int64.
+ http://tools.ietf.org/html/rfc4506#section-4.5
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeInt64(System.Int64,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the Int64.
+ http://tools.ietf.org/html/rfc4506#section-4.5
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeUInt64(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the UInt64.
+ http://tools.ietf.org/html/rfc4506#section-4.5
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeUInt64(System.UInt64,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the UInt64.
+ http://tools.ietf.org/html/rfc4506#section-4.5
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeSingle(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the Single.
+ http://tools.ietf.org/html/rfc4506#section-4.6
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeSingle(System.Single,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the Single.
+ http://tools.ietf.org/html/rfc4506#section-4.6
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.DecodeDouble(Microsoft.VisualBasic.Data.IO.IByteReader)">
+ <summary>
+ Decodes the Double.
+ http://tools.ietf.org/html/rfc4506#section-4.7
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.Xdr.XdrEncoding.EncodeDouble(System.Double,Microsoft.VisualBasic.Data.IO.IByteWriter)">
+ <summary>
+ Encodes the Double.
+ http://tools.ietf.org/html/rfc4506#section-4.7
+ </summary>
+</member>
+</members>
+</doc>

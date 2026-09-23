@@ -1,0 +1,3979 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Data.Framework
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Data.Framework.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataFrame">
+ <summary>
+ R language liked dataframe object
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.features">
+ <summary>
+ the dataframe columns
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.name">
+ <summary>
+ the name of current dataset
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.description">
+ <summary>
+ the comment text about this dataset
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.rownames">
+ <summary>
+ get the row names labels in current dataframe object, the size of 
+ this row names vector should be equals to the number of rows in 
+ current dataframe object.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.dims">
+ <summary>
+ the dimension size of current dataframe object, with data axis dimension 
+ mapping of:
+ 
+ 1. width: feature size, column size
+ 2. height: sample size, row size
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.featureNames">
+ <summary>
+ the column field names
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.nsamples">
+ <summary>
+ the n rows of the matrix
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.nfeatures">
+ <summary>
+ get the number of the feature columns inside current dataframe object
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.Item(System.String)">
+ <summary>
+ get a column field from dataframe by given feature column name
+ </summary>
+ <param name="featureName"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.DataFrame.Item(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ make dataframe column fields projection
+ </summary>
+ <param name="cols"></param>
+ <returns>a subset of the dataframe value with fields projection</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.delete(System.String)">
+ <summary>
+ removes a column field from current dataframe object by a given field name
+ </summary>
+ <param name="featureName"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.add(System.String,System.Collections.Generic.IEnumerable{System.Double})">
+ <summary>
+ add a new feature column into current dataframe object
+ </summary>
+ <param name="featureName"></param>
+ <param name="v">
+ a data field column data in double numeric type
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.add(System.String,System.Collections.Generic.IEnumerable{System.Single})">
+ <summary>
+ add a new feature column into current dataframe object
+ </summary>
+ <param name="featureName"></param>
+ <param name="v">
+ a data field column data in double numeric type
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.add(System.String,System.Collections.Generic.IEnumerable{System.Int32})">
+ <summary>
+ add a new feature column into current dataframe object
+ </summary>
+ <param name="featureName"></param>
+ <param name="v">
+ a data field column data in integer type
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.add(Microsoft.VisualBasic.Data.Framework.FeatureVector)">
+ <summary>
+ add a new feature column into current dataframe object
+ </summary>
+ <param name="feature"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.row(System.Int32)">
+ <summary>
+ get row by index
+ </summary>
+ <param name="i"></param>
+ <returns>
+ A row data without row names
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.foreachRow">
+ <summary>
+ iterates through all data rows inside current dataframe object
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.slice(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ slice the dataframe row by a collection of the given row names labels
+ </summary>
+ <param name="rownames"></param>
+ <returns></returns>
+ <remarks>
+ this function could be used for make dataframe rows re-order by rownames
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataFrame.Union(Microsoft.VisualBasic.Data.Framework.DataFrame)">
+ <summary>
+ current dataframe object append the additional data 
+ to right side and then create a new dataframe
+ </summary>
+ <param name="append"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.FastLoader.ReadCsv(System.IO.Stream,System.Char,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean)">
+ <summary>
+ 在这里仅是针对简单格式的csv文件进行快速文件读取操作，对于包含有复杂格式字符串的csv文件，
+ 任然需要通过csv文件模块进行读取，之后再通过相应的API进行对象转换
+ </summary>
+ <param name="file"></param>
+ <returns></returns>
+ <remarks>
+ 简单格式的含义：
+ 
+ 1. csv文件之中无注释元数据信息
+ 2. 单元格的字符串之中无逗号，制表符等分隔符
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.FastLoader.ParseFeature(Microsoft.VisualBasic.Language.List{System.String},System.String)">
+ <summary>
+ Parse the feature column
+ </summary>
+ <param name="data"></param>
+ <param name="name"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.FeatureVector">
+ <summary>
+ the feature column vector
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.vector">
+ <summary>
+ a generic data vector
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.type">
+ <summary>
+ the vector element scalar type, example as <see cref="T:System.Int32"/>, <see cref="T:System.Double"/>, etc...
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.name">
+ <summary>
+ the feature name
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.isScalar">
+ <summary>
+ does current vector has no data or just a single value?
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.size">
+ <summary>
+ the vector length
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.FeatureVector.GetValue(System.Int32)">
+ <summary>
+ get element value by index
+ </summary>
+ <param name="i"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.FileWriter.WriteCsv(Microsoft.VisualBasic.Data.Framework.DataFrame,System.String,System.String)">
+ <summary>
+ save dataframe object as csv file
+ </summary>
+ <param name="df">dataframe should contains the row names values</param>
+ <param name="file"></param>
+ <param name="blank"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.FileWriter.WriteCsv(Microsoft.VisualBasic.Data.Framework.DataFrame,System.IO.Stream,System.String)">
+ <summary>
+ save dataframe object as csv file
+ </summary>
+ <param name="df">dataframe should contains the row names values</param>
+ <param name="file"></param>
+ <param name="blank"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Mapper.as_dataframe``1(System.Collections.Generic.IEnumerable{``0},System.Boolean,System.String,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Collections.Generic.Dictionary{System.String,System.Int32},System.Boolean,System.Boolean)">
+ <summary>
+ cast the clr object collection as the dataframe
+ </summary>
+ <remarks>
+ this function will create a new dataframe object, and the dataframe object will be
+ created by the given clr object collection
+ </remarks>
+ <example>
+ <code>
+ Dim df As DataFrame = list.StreamToFrame()
+ </code>
+ </example>
+ <typeparam name="T"></typeparam>
+ <param name="list">a generic clr object collection for make data cast</param>
+ <param name="strict">only extract the property/field value which has column attribute tagged if this parameter value is config as TRUE.</param>
+ <param name="metaBlank"></param>
+ <param name="nonParallel"></param>
+ <param name="maps"></param>
+ <param name="reorderKeys"></param>
+ <param name="layout"></param>
+ <param name="transpose"></param>
+ <param name="silent"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Mapper.StreamToFrame(System.Object[],System.Type,System.Boolean,System.String,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Collections.Generic.Dictionary{System.String,System.Int32},System.Boolean,System.Boolean)">
+ <summary>
+ cast the clr object collection as the dataframe
+ </summary>
+ <remarks>
+ this function will create a new dataframe object, and the dataframe object will be
+ created by the given clr object collection
+ </remarks>
+ <param name="source">a generic clr object collection for make data cast</param>
+ <param name="strict">only extract the property/field value which has column attribute tagged if this parameter value is config as TRUE.</param>
+ <param name="metaBlank"></param>
+ <param name="nonParallel"></param>
+ <param name="maps"></param>
+ <param name="reorderKeys"></param>
+ <param name="layout"></param>
+ <param name="transpose"></param>
+ <param name="silent"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericDataSet.NumericGetter(Microsoft.VisualBasic.Data.Framework.FeatureVector)">
+ <summary>
+ a getter delegate helper for number type
+ </summary>
+ <param name="v"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericDataSet.PullDataSet``1(Microsoft.VisualBasic.Data.Framework.DataFrame)">
+ <summary>
+ convert the row data inside the given dataframe as given type of the row data objects
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="df"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericDataSet.NumericMatrix(Microsoft.VisualBasic.Data.Framework.DataFrame)">
+ <summary>
+ returns a data matrix in row collections
+ </summary>
+ <param name="df"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.NumericTableConversion">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.Data.NumericTable"/> 与 <see cref="T:Microsoft.VisualBasic.Data.Framework.DataFrame"/> 之间的相互转换。
+ 
+ 其中标签列统一以 <see cref="F:Microsoft.VisualBasic.Data.NumericTableExtensions.DefaultLabelPrefix"/> 作为列名前缀参与转换，
+ 因此 ``table -> dataframe -> table`` 的往返是无损的：行名、特征列、标签列、
+ 表名与描述文本都可以完整地还原。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableConversion.AsDataFrame(Microsoft.VisualBasic.Data.NumericTable,System.String)">
+ <summary>
+ 将二维表转换为数据帧对象：
+ 
+ 1. 全部特征列沿用 <see cref="P:Microsoft.VisualBasic.Data.NumericTable.featureNames"/> 作为列名
+ 2. 全部标签列使用 ``{labelPrefix}{标签列名}`` 作为列名
+ 3. 行名写入 <see cref="P:Microsoft.VisualBasic.Data.Framework.DataFrame.rownames"/>
+ </summary>
+ <param name="table">需要转换的二维表对象</param>
+ <param name="labelPrefix">标签列的列名前缀</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableConversion.AsNumericTable(Microsoft.VisualBasic.Data.Framework.DataFrame,System.String[],System.String,System.Boolean)">
+ <summary>
+ 将数据帧对象转换为二维表：
+ 
+ 1. 列名以 <paramref name="labelPrefix"/> 开头的列归入标签矩阵（列名去掉前缀）
+ 2. 列名出现在 <paramref name="labels"/> 参数之中的列同样归入标签矩阵
+ 3. 其余的列归入特征矩阵；<see cref="P:Microsoft.VisualBasic.Data.Framework.DataFrame.rownames"/> 作为行名
+ </summary>
+ <param name="df">需要转换的数据帧对象</param>
+ <param name="labels">需要额外作为标签列的列名集合</param>
+ <param name="labelPrefix">标签列的列名前缀</param>
+ <param name="strict">
+ 无法解析为数值的单元格的处理策略：True 直接抛出 ``InvalidDataException``，
+ False 则置为 <see cref="T:System.Double"/>
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableConversion.Column(System.Double[][],System.Int32,System.Int32)">
+ <summary>
+ 取出矩阵之中的指定列
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.NumericTableIO">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.Data.NumericTable"/> 对象的 csv/tsv 文本文件读写。
+ 
+ 文本布局（第一行为表头）：
+ 
+ ```
+ ,f1,f2,f3,label:cluster,label:score
+ s1,1.5,-2.25,0,1,0.1
+ s2,3.75,4.5,-5.125,1,0.2
+ ```
+ 
+ 即「首列行名 + 全部特征列 + 末尾带 <see cref="F:Microsoft.VisualBasic.Data.NumericTableExtensions.DefaultLabelPrefix"/> 前缀的标签列」；
+ 读入的时候会依据该前缀自动把标签列还原到标签矩阵之中（前缀会被去掉），
+ 并可以再通过 <c>labels</c> 参数叠加指定其它的标签列。
+ 
+ 文本格式是一种简单格式：单元格的内容不应该包含分隔符、双引号或者换行符，
+ 否则无法保证读写的往返一致性。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteDelimited(Microsoft.VisualBasic.Data.NumericTable,System.String,System.Char,System.String,System.String)">
+ <summary>
+ 将二维表保存为分隔符文本文件（csv / tsv）。
+ 
+ 这个方法不会抛出IO异常：文件写入失败的时候会返回 False
+ （与 <c>FileWriter.WriteCsv(String)</c> 的约定一致）。
+ </summary>
+ <param name="table">需要保存的二维表对象</param>
+ <param name="file">目标文件的路径</param>
+ <param name="delimiter">列分隔符，``","c`` 为 csv、``vbTab`` 为 tsv</param>
+ <param name="labelPrefix">标签列的列名前缀</param>
+ <param name="naValue">缺失值（<see cref="T:System.Double"/>）在文件之中的文本表示</param>
+ <returns>是否保存成功</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteDelimited(Microsoft.VisualBasic.Data.NumericTable,System.IO.Stream,System.Char,System.String,System.String)">
+ <summary>
+ 将二维表写入到指定的流之中（**不会关闭调用方传入的流**）。
+ </summary>
+ <param name="table">需要保存的二维表对象</param>
+ <param name="stream">目标数据流</param>
+ <param name="delimiter">列分隔符</param>
+ <param name="labelPrefix">标签列的列名前缀</param>
+ <param name="naValue">缺失值的文本表示</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteCsv(Microsoft.VisualBasic.Data.NumericTable,System.String,System.String,System.String)">
+ <summary>
+ 将二维表保存为逗号分隔的 csv 文件
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteCsv(Microsoft.VisualBasic.Data.NumericTable,System.IO.Stream,System.String,System.String)">
+ <summary>
+ 将二维表写入到指定的流之中，逗号分隔的 csv 格式
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteTsv(Microsoft.VisualBasic.Data.NumericTable,System.String,System.String,System.String)">
+ <summary>
+ 将二维表保存为制表符分隔的 tsv 文件
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.WriteTsv(Microsoft.VisualBasic.Data.NumericTable,System.IO.Stream,System.String,System.String)">
+ <summary>
+ 将二维表写入到指定的流之中，制表符分隔的 tsv 格式
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadCsv(System.String,System.String[],System.String,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.String[])">
+ <summary>
+ 从逗号分隔的 csv 文件之中加载一个二维表对象
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadCsv(System.IO.Stream,System.String[],System.String,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.String[])">
+ <summary>
+ 从逗号分隔的 csv 数据流之中加载一个二维表对象（**不会关闭调用方传入的流**）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadTsv(System.String,System.String[],System.String,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.String[])">
+ <summary>
+ 从制表符分隔的 tsv 文件之中加载一个二维表对象
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadTsv(System.IO.Stream,System.String[],System.String,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.String[])">
+ <summary>
+ 从制表符分隔的 tsv 数据流之中加载一个二维表对象（**不会关闭调用方传入的流**）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadDelimited(System.IO.Stream,System.Char,System.String[],System.String,System.Boolean,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.String[])">
+ <summary>
+ 从分隔符文本数据流之中加载一个二维表对象。
+ 
+ 列归属规则：
+ 
+ 1. 列名以 <paramref name="labelPrefix"/> 开头的列归入**标签矩阵**（列名会被去掉前缀）
+ 2. 列名出现在 <paramref name="labels"/> 参数之中的列同样归入标签矩阵
+ 3. 其余的列归入**特征矩阵**
+ </summary>
+ <param name="stream">文本数据流（**不会关闭调用方传入的流**）</param>
+ <param name="delimiter">列分隔符</param>
+ <param name="labels">
+ 需要额外作为标签列的列名集合；可以写成带前缀的原始列名，也可以写成去掉前缀之后的标签名
+ </param>
+ <param name="labelPrefix">标签列的列名前缀</param>
+ <param name="rowHeader">是否第一列是行名</param>
+ <param name="encoding">文本编码</param>
+ <param name="strict">
+ 无法解析为数值的单元格的处理策略：
+ 
+ + True（缺省）：直接抛出 <see cref="T:System.IO.InvalidDataException"/>
+ + False：宽容模式下将该单元格置为 <see cref="T:System.Double"/>
+ </param>
+ <param name="columns">
+ 需要加载的列名白名单（缺省加载全部列）；不在白名单之中的列会被完全忽略，
+ 因此可以借助这个参数跳过 csv 文件之中的ID列、文本类别列等非数值列
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ReadLines(System.IO.Stream,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 读取文本之中的全部非空行
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.BuildMatrix(System.Collections.Generic.List{System.String[]},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.String},System.Boolean)">
+ <summary>
+ 依据列下标从单元格文本之中构建行主序的数值矩阵
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.SplitColumns(System.String[],System.String[],System.String)">
+ <summary>
+ 依据 ``label:`` 前缀与 <c>labels</c> 参数把列名拆分为特征列与标签列。
+ 
+ 返回值之中的 <c>labels</c> 是**去掉前缀之后**的标签列名（写入标签矩阵的名称），
+ <c>labelColumns</c> 则是标签列在源表格之中的**原始列名**（用于取值）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.IsSelected(System.String,System.String[])">
+ <summary>
+ 指定的列是否在加载白名单之中（白名单为空的时候表示加载全部列）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ToMatrix(Microsoft.VisualBasic.Data.Framework.DataFrame,System.String[],System.Int32,System.Boolean)">
+ <summary>
+ 按照指定的列名顺序把数据帧转换为行主序的数值矩阵
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ParseValue(System.Object,System.String,System.Int32,System.Boolean)">
+ <summary>
+ 把数据帧之中的单元格转换为数值（单元格可能已经是数值类型）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.ParseText(System.String,System.String,System.Int32,System.Boolean)">
+ <summary>
+ 把单元格的文本转换为数值。
+ 
+ 空串以及 ``NA``/``N/A``/``NaN``/``null``/``none``/``nil``/``missing``/``?``
+ 等缺失值标记会被转换为 <see cref="T:System.Double"/>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.IsNaNToken(System.String)">
+ <summary>
+ 是否为缺失值的文本标记
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.NumericTableIO.FeatureNameList(Microsoft.VisualBasic.Data.NumericTable)">
+ <summary>
+ 获取特征矩阵的列名（缺失的时候自动生成 ``1..n`` 序号）
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows">
+ <summary>
+ 提供了类似于R语言之中的``cbind``操作类似的按照列进行数据框合并的方法
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.entityList">
+ <summary>
+ Row data in the csv table
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.As``1">
+ <summary>
+ Convert row object as target .NET object
+ </summary>
+ <typeparam name="T"></typeparam>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.ToString">
+ <summary>
+ Get all entity keys
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.SaveTable(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Save as csv file.
+ </summary>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.Load(System.String,Microsoft.VisualBasic.Text.Encodings,System.String,System.Boolean)">
+ <summary>
+ Load from a csv file
+ </summary>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.op_Addition(Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows,System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject})">
+ <summary>
+ ``cbind`` operation.
+ （通过这个操作符进行两个数据集的合并，不会出现数据遗漏）
+ </summary>
+ <param name="data">unique</param>
+ <param name="appends">multiple</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows.Append(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject},Microsoft.VisualBasic.Data.Framework.DataSetExtensions.DataRows,System.Boolean)">
+ <summary>
+ 这是一个可伸缩的Linq方法，可能会出现数据遗漏，即<paramref name="unique"/>数据集之中的数据可能会在合并之后出现缺失
+ </summary>
+ <param name="multiple"></param>
+ <param name="unique"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.Excel.Coordinates.YValue(System.Collections.Generic.IEnumerable{System.Char})">
+ <summary>
+ 也就是获取得到列的顶点编号
+ </summary>
+ <param name="x"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.Excel.Coordinates.Spans(Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ 返回非空白列的起始列编号和结束列表号
+ </summary>
+ <param name="row"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.Excel.NamespaceDoc">
+ <summary>
+ Excel coordinate and numeric function helpers for exporting data sets to spreadsheet cells.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.HTMLWriter">
+ <summary>
+ file generator for mshtml
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.HTMLWriter.ToHTML``1(System.Collections.Generic.IEnumerable{``0},System.String,System.String)">
+ <summary>
+ Render target object collection as a html table
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="title"></param>
+ <param name="evenRowClassName"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.HTMLWriter.html(Microsoft.VisualBasic.Data.Framework.IO.File)">
+ <summary>
+ 只是生成table，而非完整的html文档
+ </summary>
+ <param name="table"></param>
+ <returns></returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MatrixProvider">
+ <summary>
+ A numeric data matrix provider
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MatrixProvider.GetMatrix">
+ <summary>
+ populate the matrix data in row by row
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL">
+ <summary>
+ MySQL data extensions
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.DumpToTable``1(System.Collections.Generic.IEnumerable{``0},System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 提供了一个与SQL DUMP功能类似的拓展方法，这个函数会自动的将目标集合写入所指定的文件夹之中的某一个csv文件。
+ 这个csv文件的文件名为泛型类型的Class名称
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="data"></param>
+ <param name="handle$">Directory or file name(``*.csv``)</param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.SQLEntityData(System.String,System.String,System.Boolean)">
+ <summary>
+ 将SQL脚本之中的数据转换为Excel数据框模型，这个函数仅对简单的SQL脚本有效，
+ **例如仅包含有数值类型的，字符串之中不包含有逗号，双引号之类的csv格式控制符号，**
+ 假若字段之中的值是比较复杂的字符串，则这个函数就无能为力了
+ </summary>
+ <param name="SQL$"></param>
+ <param name="primary$"></param>
+ <param name="dumpMode"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.SQLData(System.String,System.Boolean)">
+ <summary>
+ 加入是以Dump模型运行的话，标题只会被解析一次，其他的行数据的标题都会使用第一行的数据的标题，
+ 这个函数只适用于``INSERT INTO``数据插入语句
+ </summary>
+ <param name="handle">SQL文本或者文件的路径</param>
+ <param name="dumpMode"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.ImportsMySQLDump(System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="sql$">
+ The file path of the MySQL dump *.sql file. This sql file should only contains the ``INSERT INTO`` sql statement.
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.INSERT_LineParser(System.String)">
+ <summary>
+ Handle the MySQL dump
+ </summary>
+ <param name="insert$">
+ ```SQL
+ INSERT INTO `term_synonym` VALUES (0,1,'mitochondrial inheritance','EXACT',''),(1,3,'reproductive physiological process','EXACT',''),...
+ ```
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.SQLValues(System.String)">
+ <summary>
+ Parse the ``VALUES`` data from the INSERT INTo SQL statement.
+ </summary>
+ <param name="insertSQL$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.MySQL.SQLFields(System.String)">
+ <summary>
+ Gets the fields list from INSERT INTO SQL.
+ </summary>
+ <param name="insertSQL$"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.NamespaceDoc">
+ <summary>
+ DataSet extensions: data rows, table unions, the HTML writer, the matrix provider together
+ with MySQL and R data frame helpers.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.RDataFrameHelpers">
+ <summary>
+ Helpers function for R dataframe data imports
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.RDataFrameHelpers.StripNaN(System.String,System.String)">
+ <summary>
+ 对于一些数学计算的数值结果，无穷大，无穷小或者非实数会被转换为中文，导致R程序无法识别
+ 则需要使用这个函数来将这些数值替换为目标字符串<paramref name="replaceAs"/>
+ </summary>
+ <param name="path$"></param>
+ <param name="replaceAs$">默认为R之中可以识别的``NA``常数值</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetExtensions.CbindProvider`1">
+ <summary>
+ An abstract union operation data model
+ </summary>
+ <typeparam name="T"></typeparam>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataImports">
+ <summary>
+ Module provides the csv data imports operation of the csv document creates from a text file.
+ (模块提供了从文本文档之中导入数据的方法)
+ </summary>
+ <remarks></remarks>
+ 
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.DataImports.SplitRegxExpression">
+ <summary>
+ A regex expression string that use for split the line text.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.ReadCsv(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Parse the csv table file
+ </summary>
+ <param name="file"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.Imports(System.String,System.String,System.Text.Encoding,System.Boolean)">
+ <summary>
+ Imports the data in a well formatted text file using a specific delimiter, default delimiter is comma character.
+ </summary>
+ <param name="txtPath">The file path for the data imports text file.(将要进行数据导入的文本文件)</param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.Imports``1(System.String,System.String,System.Text.Encoding,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Boolean)">
+ <summary>
+ Imports data source by using specific delimiter.(这个函数是一个安全的函数，当目标文件不存在的时候，返回的是一个空集合)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path"></param>
+ <param name="delimiter"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.ImportsData(System.Collections.Generic.IEnumerable{System.String},System.String,System.Boolean)">
+ <summary>
+ 通过正则表达式按照特定的分隔符对文本行进行切分，并将切分后的结果封装成一个csvFile对象返回。
+ </summary>
+ <param name="lines"></param>
+ <param name="delimiter"></param>
+ <param name="skipComment">
+ 是否跳过以#开头的注释行，默认值为False。如果设置为True，则在处理文本行时会忽略掉所有以#开头的行，这些行通常被视为注释或元数据，不会被解析为数据行。
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.ImportsData``1(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+ <summary>
+ 使用特定的分隔符进行数据的导入操作
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="text$"></param>
+ <param name="delimiter$"></param>
+ <param name="maps"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.ImportsData``1(System.Collections.Generic.IEnumerable{System.String},System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+ <summary>
+ 使用特定的分隔符进行数据的导入操作
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="text"></param>
+ <param name="delimiter$"></param>
+ <param name="maps"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.ImportsTsv``1(System.Collections.Generic.IEnumerable{System.String},Microsoft.VisualBasic.ComponentModel.NameMapping)">
+ <summary>
+ 导入TSV数据为内存表
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="lines"></param>
+ <param name="maps"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.RowParsing(System.String,System.String)">
+ <summary>
+ Row parsing its column tokens
+ </summary>
+ <param name="Line"></param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.FixLengthImports(System.String,System.Int32,System.Text.Encoding)">
+ <summary>
+ Imports the data in a well formatted text file using the fix length as the data separate method.
+ </summary>
+ <param name="txtPath"></param>
+ <param name="length">The string length width of the data row.(固定的列字符数的宽度)</param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DataImports.SampleForType(System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
+ <summary>
+ 从字符串集合之中推测可能的列数据的类型
+ </summary>
+ <param name="column"></param>
+ <returns></returns>
+ <remarks>
+ 推测规则：
+ 会对数据进行采样
+ 类型的优先级别为：
+ </remarks>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DocumentExtensions">
+ <summary>
+ The csv document extensions API
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.Normalization(System.String,System.String)">
+ <summary>
+ 将一些奇怪的符号去除
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.Distinct(System.String,System.Int32,System.Boolean)">
+ <summary>
+ 去除Csv文件之中的重复记录
+ </summary>
+ <param name="file"></param>
+ <param name="orderBy">当为本参数指定一个非负数值的时候，程序会按照指定的列值进行排序</param>
+ <param name="asc">当进行排序操作的时候，是否按照升序进行排序，否则按照降序排序</param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.JoinColumns(System.Collections.Generic.IEnumerable{System.String[]})">
+ <summary>
+ 将列数据合并为一个csv文件对象
+ </summary>
+ <param name="cols"><see cref="P:Microsoft.VisualBasic.Data.Framework.IO.File.Columns"/> filtering results.</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.Apply(Microsoft.VisualBasic.Data.Framework.IO.RowObject@,System.Func{System.String,System.String},System.Int32)">
+ <summary>
+ Apply a given value processing on each column of current row data.
+ </summary>
+ <param name="row"></param>
+ <param name="action"></param>
+ <param name="skip"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.DirectAppends(System.Collections.Generic.IEnumerable{System.String},System.String,Microsoft.VisualBasic.Text.Encodings,System.Func{System.Collections.Generic.Dictionary{System.String,System.String},System.Double})">
+ <summary>
+ Directly merges the csv table files from the target source <paramref name="files"/>, 
+ and save the result to a specific file location <paramref name="EXPORT"/>
+ </summary>
+ <param name="files"></param>
+ <param name="EXPORT$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadData(System.String,System.Boolean)">
+ <summary>
+ 文件之中的每一列都是数据
+ </summary>
+ <param name="path$"></param>
+ <param name="skipFirstColumn">假若第一列是固定的时间序列的话，是否需要跳过这第一列？？</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadTsv``1(System.String,System.Text.Encoding,Microsoft.VisualBasic.ComponentModel.NameMapping,System.Boolean)">
+ <summary>
+ Load a .NET collection from a tsv file which is specific by <paramref name="path"/> value.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <param name="nameMaps"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadTsv``1(System.String,Microsoft.VisualBasic.Text.Encodings,Microsoft.VisualBasic.ComponentModel.NameMapping,System.Boolean,System.Boolean)">
+ <summary>
+ Load a .NET collection from a tsv file which is specific by <paramref name="path"/> value.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <param name="nameMaps"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadTsv``1(System.String,System.Text.Encoding,Microsoft.VisualBasic.ComponentModel.NameMapping)">
+ <summary>
+ Load a .NET collection from a tsv file which is specific by <paramref name="path"/> value.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <param name="nameMaps"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.GetColumnValues(Microsoft.VisualBasic.Data.Framework.IO.File,System.String)">
+ <summary>
+ get a specific column value by name
+ </summary>
+ <param name="csv"></param>
+ <param name="column">the column name that will be find in the table header row</param>
+ <returns>
+ this function will returns nothing if the speicifc <paramref name="column"/> 
+ is not exists in the table headers
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.GetColumnValues(Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver,System.String)">
+ <summary>
+ get a specific column value by name
+ </summary>
+ <param name="csv">
+ 20221127 the dataframe object is already skip the title row
+ </param>
+ <param name="column">the column name that will be find in the table header row</param>
+ <returns>
+ this function will returns nothing if the speicifc <paramref name="column"/> 
+ is not exists in the table headers
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadCsv(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Load csv table from a given file path.
+ </summary>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ <remarks>
+ A wrapper function of <see cref="M:Microsoft.VisualBasic.Data.Framework.IO.File.Load(System.String,System.Text.Encoding,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean,System.Boolean)"/>.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadDictionary``1(System.String,Microsoft.VisualBasic.Serialization.IStringParser{``0})">
+ <summary>
+ Default using <see cref="M:Microsoft.VisualBasic.Scripting.InputHandler.CTypeDynamic``1(System.String,``0)"/> 
+ scripting type casting helper.
+ (从一个csv文件数据之中加载一个字典对象，必须要保证第一列是键名，第二列
+ 才是数据，文件不存在或者内容为空的时候，会返回空字典)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="parser">值<typeparamref name="T"/>的字符串解析函数</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.LoadTable(System.String,Microsoft.VisualBasic.Text.Encodings,System.Int32)">
+ <summary>
+ 这个函数会自动判断对象的格式为tsv还是csv文件格式
+ </summary>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ <remarks>
+ 采样前几行的数据，假若是csv文件的话，则逗号出现的频率要高于tab分隔符，反之亦然
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.ParseDoc(System.String,System.Boolean)">
+ <summary>
+ 
+ </summary>
+ <param name="csv">the csv document text</param>
+ <param name="removesBlank">
+ removes blank row which is all content is looks like ``,,,,,,``?
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.GetLastRow``1(System.String,Microsoft.VisualBasic.Text.Encodings,System.Boolean,System.Boolean)">
+ <summary>
+ 获取最后一行数据
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.DocumentExtensions.AsJSONObjects(Microsoft.VisualBasic.Data.Framework.IO.File)">
+ <summary>
+ cast csv table to json object array
+ </summary>
+ <param name="table"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.Extensions">
+ <summary>
+ The shortcuts operation for the common csv document operations.
+ </summary>
+ <remarks></remarks>
+
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.IsEmptyTable(System.String)">
+ <summary>
+ 判断这个表格文件是否是空的？
+ 
+ > 只包含有标题行，文件不存在，文件为空等都会被判断为空
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.LoadCsv``1(System.String,``0,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Anonymous type data reader helper.(System.MissingMethodException occurred
+  HResult=0x80131513
+  Message=No parameterless constructor defined for this object.
+  Source=mscorlib
+  StackTrace:
+   at System.RuntimeTypeHandle.CreateInstance(RuntimeType type, Boolean publicOnly, Boolean noCheck, Boolean&amp; canBeCached, RuntimeMethodHandleInternal&amp; ctor, Boolean&amp; bNeedSecurityCheck)
+   at System.RuntimeType.CreateInstanceSlow(Boolean publicOnly, Boolean skipCheckThis, Boolean fillCache, StackCrawlMark&amp; stackMark)
+   at System.Activator.CreateInstance(Type type, Boolean nonPublic)
+   at System.Activator.CreateInstance(Type type)
+   at Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector._Closure$__1-0._Lambda$__0(SeqValue`1 line) In G:\GCModeller\src\runtime\sciBASIC#\Data\DataFrame\StorageProvider\Reflection\StorageProviders\Reflection.vb:line 96
+   at System.Linq.Parallel.SelectQueryOperator`2.SelectQueryOperatorEnumerator`1.MoveNext(TOutput&amp; currentElement, TKey&amp; currentKey)
+   at System.Linq.Parallel.PipelineSpoolingTask`2.SpoolingWork()
+   at System.Linq.Parallel.SpoolingTaskBase.Work()
+)对于匿名类型，这个方法还无法正常工作
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path"></param>
+ <param name="template"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTo``1(Microsoft.VisualBasic.ComponentModel.Collection.Dictionary{``0},System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Save all of the <see cref="P:System.Collections.Generic.SortedDictionary`2.Values"/> into a csv file.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="table"></param>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTo(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Double[]}},System.String,Microsoft.VisualBasic.Text.Encodings,System.Double[])">
+ <summary>
+ Save variable value vector as data frame
+ </summary>
+ <param name="samples"></param>
+ <param name="path$"></param>
+ <param name="encoding"></param>
+ <param name="xlabels#"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.GetLocusMapName(System.String)">
+ <summary>
+
+ </summary>
+ <param name="path">Csv file path</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsLinq``1(System.String,System.Boolean)">
+ <summary>
+ As query source for the LINQ or PLINQ, this function is much save time for the large data set query!
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.DataFrame(System.Data.Common.DbDataReader)">
+ <summary>
+ Convert a database table into a dynamics dataframe in VisualBasic.(将数据库之中所读取出来的数据表转换为表格对象)
+ </summary>
+ <param name="reader"></param>
+ <returns></returns>
+ <remarks></remarks>
+
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.DataFrame(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Collections.Generic.Dictionary{System.String,System.String}}})">
+ <summary>
+ Convert the dictionary table collection as the <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.EntityObject"/> collection.
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTable(System.Collections.IEnumerable,System.String,System.Text.Encoding,System.Type,System.String,System.Boolean)">
+ <summary>
+ This extension is using for .NET scripting API.
+ (这个函数不会被申明为拓展函数了，因为这个object序列类型的函数如果为拓展函数的话，会与T泛型函数产生冲突)
+ </summary>
+ <param name="data">A generic .NET collection, using for scripting API.</param>
+ <param name="path">The file path of the csv file for saved.</param>
+ <param name="encoding">Default is utf-8 without BOM</param>
+ <param name="type">
+ If this <see cref="T:System.Type"/> information provider is nothing, then the function will peeks of the first sevral element for the type information.
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTo(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader},System.String,System.Text.Encoding)">
+ <summary>
+ Export the given data set as csv file
+ </summary>
+ <param name="data"></param>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.DataFrame(Microsoft.VisualBasic.Data.Framework.IO.File)">
+ <summary>
+ Create a dynamics data frame object from a csv document object.
+ (从Csv文件之中创建一个数据框容器)
+ </summary>
+ <param name="data"></param>
+ <returns></returns>
+ <remarks></remarks>
+
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsDataSource``1(Microsoft.VisualBasic.Data.Framework.IO.File,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean)">
+ <summary>
+ Convert the csv data file to a type specific collection.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="dataSet"></param>
+ <param name="strict">
+ If this parameter is true, which means if the property in target class <typeparamref name="T"/> is not marked
+ <see cref="M:Microsoft.VisualBasic.Data.Framework.NumericTableConversion.Column(System.Double[][],System.Int32,System.Int32)"/> attribute, then this property will be ignored.
+ </param>
+ <returns></returns>
+ <remarks>
+ (将目标Csv文件转换为特定类型的集合数据)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsDataSource``1(Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean)">
+ <summary>
+ Convert the csv data file to a type specific collection.(将目标Csv文件转换为特定类型的集合数据)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="dataframe"></param>
+ <param name="explicit"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsDataSource``1(System.String,System.String,System.Boolean,System.Boolean)">
+ <summary>
+
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="importsFile">The file path of the text doucment which will be imports as a csv document.</param>
+ <param name="Delimiter">The delimiter to parsing a row in the csv document.</param>
+ <param name="explicit"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsDataSource``1(System.Collections.Generic.IEnumerable{System.String},System.String,System.Boolean)">
+ <summary>
+ Convert the string collection as the type specific collection, please make sure the first element
+ in this collection is stands for the title row.
+ (将字符串数组转换为数据源对象，注意：请确保第一行为标题行)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="lines"></param>
+ <param name="Delimiter"></param>
+ <param name="strict"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.LoadCsv``1(System.String,System.Boolean,System.Text.Encoding,System.Boolean,Microsoft.VisualBasic.ComponentModel.NameMapping,System.Boolean,System.String,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)">
+ <summary>
+ Load a csv data file document using a specific object type.
+ </summary>
+ <typeparam name="T">The type parameter of the element in the returns collection data.</typeparam>
+ <param name="path">The csv document file path.(目标Csv数据文件的文件路径)</param>
+ <param name="explicit"></param>
+ <param name="encoding"></param>
+ <param name="maps">``Csv.Field -> <see cref="P:System.Reflection.MemberInfo.Name"/>``</param>
+ <param name="skipWhile">
+ [fieldName => test] 如果目标csv文件数据集非常大的话，可以使用这个函数来过滤掉一些数据行，以减少数据量
+ </param>
+ <returns>a collection of the <typeparamref name="T"/>.</returns>
+ <remarks>
+ (将某一个Csv数据文件加载仅一个特定类型的对象集合中，空文件的话会返回一个空集合，这是一个安全的函数，不会返回空值)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.LoadStream``1(System.Collections.Generic.IEnumerable{System.String},System.Boolean,System.Boolean,System.Boolean)">
+ <summary>
+ Load object data set from the text lines stream.(从文本行之中加载数据集)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="explicit">
+ 列名称隐式解析，即不强制要求属性上面有<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/>标记，默认是，
+ 否则只解析出带有<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/>自定义属性标记的属性作为csv的列的
+ 数据源
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveDataSet``1(System.Collections.Generic.IEnumerable{``0},System.String,Microsoft.VisualBasic.Text.Encodings,System.String,System.String,System.Int32,System.Boolean,System.Boolean)">
+ <summary>
+ 如果直接使用<see cref="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTo(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Double[]}},System.String,Microsoft.VisualBasic.Text.Encodings,System.Double[])"/>函数来保存数据集的话，可能列的顺序是被打乱的，
+ 则下次加载的时候<see cref="P:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.ID"/>列可能就不是第一列了，会出错，
+ 故而需要使用这个专门的函数来进行数据集的保存操作
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <param name="KeyMap">将<see cref="P:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.ID"/>重命名为这个参数的值，假若这个参数值不是空字符串的话</param>
+ <param name="blank"></param>
+ <param name="reorderKeys"></param>
+ <returns></returns>
+ <remarks>
+ 对于<see cref="T:Microsoft.VisualBasic.Data.Framework.IO.DataSet"/>类型的数据集，可以先使用拓展函数转化为<see cref="T:Microsoft.VisualBasic.Data.Framework.IO.EntityObject"/>之后再调用本函数进行保存操作
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.ToCsvDoc``1(System.Collections.Generic.IEnumerable{``0},System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Int32,System.String)">
+ <summary>
+ Generate a csv document from a object collection.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="strict">默认导出所有的可用属性</param>
+ <param name="metaBlank">对于字典对象之中，空缺下来的域键名的值使用什么来替代？默认使用空白字符串</param>
+ <returns></returns>
+ <remarks>
+ (从一个特定类型的数据集合之中生成一个Csv文件，非并行化的以保持数据原有的顺序)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.SaveTo(System.Collections.Generic.IEnumerable{System.Double},System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Save the data collection vector as a csv document.
+ </summary>
+ <param name="data"></param>
+ <param name="path"></param>
+ <returns></returns>
+ <remarks></remarks>
+
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Extensions.LoadDblVector(System.String)">
+ <summary>
+ Load the data from the csv document as a double data type vector.
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+ <remarks></remarks>
+
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.DataSetMath">
+ <summary>
+ Vector math extensions for <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.DataSet"/> or its collection.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.PipeStream.DataFrame(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ 将一个任意的<see cref="T:Microsoft.VisualBasic.Data.Framework.IO.RowObject"/>集合转换为一个csv表格文件模型对象
+ </summary>
+ <param name="data"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.PipeStream.AsDataSet(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Collections.Generic.Dictionary{System.String,System.Double}}})">
+ <summary>
+ 将目标字典集合转换为数据集集合
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.PipeStream.AsMatrix(Microsoft.VisualBasic.Data.Framework.IO.File,System.Boolean,System.Boolean)">
+ <summary>
+ 将所读取出来的csv文件之中的数据转化为数值矩阵
+ </summary>
+ <param name="data"></param>
+ <param name="header">csv文件之中是否含有行标题？TRUE的话则会跳过第一行</param>
+ <param name="rowNames">csv文件之中是否含有列标题？TRUE的话会跳过第一列</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.ProfileStreams">
+ <summary>
+ Provides the ``*.ini`` file like config data function
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.ProfileStreams.WriteProfiles``1(``0,System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Save target configuration model as the csv table
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="x"></param>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.ProfileStreams.LoadProfiles``1(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Load config data from the csv table into the configuration model
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StreamIOHandler.initStreamIOHandlers">
+ <summary>
+ 初始化函数指针，为``>>``语法提供csv流的支持
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.Write_csv">
+ <summary>
+ write csv file method that call in clr environment
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Write_csv.SaveTo``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Boolean,System.Text.Encoding,System.String,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Collections.Generic.Dictionary{System.String,System.Int32},System.Boolean,System.Boolean,System.Boolean)">
+ <summary>
+ Save the object collection data dump into a csv file.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source">应该是List, Array或者Collection, 不应该是一个Linq拓展表达式</param>
+ <param name="path"></param>
+ <param name="strict">
+ If true then all of the simple data type property its value will be save to the data file,
+ if not then only save the property with the <see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"></see>
+ </param>
+ <param name="encoding"></param>
+ <param name="maps">``{meta_define -> custom}``</param>
+ <param name="layout">可以通过这个参数来进行列顺序的重排，值越小表示排在越前面</param>
+ <returns></returns>
+ <remarks>
+ (将一个对象数组之中的对象保存至一个Csv文件之中，请注意:
+ + 这个方法仅仅会保存简单的基本数据类型的属性值
+ + 并且这个方法仅适用于小型数据集, 如果需要保存大型数据集, 请使用Linq版本的拓展函数)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.Write_csv.SaveTo``1(System.Collections.Generic.IEnumerable{``0},System.IO.Stream,Microsoft.VisualBasic.Data.Framework.Write_csv.Arguments)">
+ <summary>
+ Save the object collection data dump into a csv file.
+ (将一个对象数组之中的对象保存至一个Csv文件之中，请注意:
+ + 这个方法仅仅会保存简单的基本数据类型的属性值
+ + 并且这个方法仅适用于小型数据集, 如果需要保存大型数据集, 请使用Linq版本的拓展函数)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source">应该是List, Array或者Collection, 不应该是一个Linq拓展表达式</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.ArffFile.ArffReader">
+ <summary>
+ The **ARFF (Attribute-Relation File Format)** is a text-based file format designed for storing 
+ structured datasets, primarily used in machine learning and data mining tools like Weka. 
+ Here's a detailed breakdown of its structure, features, and applications:
+
+ ---
+ 
+ ### 1. **ARFF File Structure**
+ 
+ ARFF files consist of two main sections: the **header** (metadata) and the **data** (instances).
+ 
+ #### **Header Section**
+ 
+ - **`@relation`**: Declares the dataset name. Example:  
+ 
+   ```arff
+   @relation weather
+   ```
+   
+ - **`@attribute`**: Defines each attribute (column) with its name and data type. Supported types include:
+ 
+   - **Numeric**: `@attribute temperature numeric`  
+   - **Nominal/Categorical**: `@attribute outlook {sunny, overcast, rainy}`  
+   - **String**: `@attribute description string`  
+   - **Date**: `@attribute timestamp date "yyyy-MM-dd"`  
+   
+ - **Missing values** are represented by `?`.
+ 
+ #### **Data Section**
+ 
+ - Begins with `@data`, followed by rows of comma-separated values:  
+ 
+   ```arff
+   @data
+   sunny,85,85,FALSE,no
+   ?,78,90,?,yes  // Missing values
+   ```
+ 
+ ---
+ 
+ ### 2. **Key Features**
+ 
+ - **Structured Metadata**: Explicitly defines data types and categories, reducing ambiguity.
+ - **Human-Readable**: Easy to edit and interpret compared to binary formats.
+ - **Compatibility**: Native support in Weka and tools like Python's `liac-arff` library.
+ - **Flexibility**: Handles sparse data (e.g., `{1 26, 6 63}` for non-zero values).
+ 
+ ---
+ 
+ ### 3. **Use Cases**
+ 
+ - **Machine Learning**: Standard format for training models in Weka (e.g., decision trees, clustering).
+ - **Data Preprocessing**: Supports missing value imputation (`?`) and categorical encoding.
+ - **Research and Education**: Widely used in academic datasets (e.g., UCI repositories).
+ 
+ ---
+ 
+ ### 4. **Comparison with Other Formats**
+ 
+ | **Feature**        | **ARFF**                            | **CSV**                     |
+ |--------------------|-------------------------------------|-----------------------------|
+ | **Metadata**       | Explicit (types, categories)        | Implicit (no type info)     |
+ | **Readability**    | High (structured headers)           | Moderate (flat structure)   |
+ | **Missing Values** | Supported (`?`)                     | Often ad-hoc (e.g., blanks) |
+ | **Tools**          | Weka, Python (`liac-arff`, `scipy`) | Universal                   |
+ 
+ ---
+ 
+ ### 5. **Limitations**
+ 
+ - **Verbosity**: Header definitions can be lengthy for large datasets.
+ - **Limited Sparse Data Support**: Requires specific syntax for sparse entries.
+ - **Format Rigidity**: Sensitive to line breaks and spacing.
+ 
+ ---
+ 
+ ### 6. **Tools and Libraries**
+ 
+ - **Weka**: Native support for ARFF; includes visualization and preprocessing tools.
+ - **Python**:  
+   - `liac-arff`: Read/write ARFF files with Pandas integration.  
+   - `scipy.io.arff`: Basic ARFF parsing.
+ - **Conversion Tools**: Convert CSV/XLS to ARFF using Weka CLI or GUI.
+ 
+ ---
+ 
+ ### Example ARFF File
+ 
+ ```arff
+ @relation iris
+ @attribute sepal_length numeric
+ @attribute sepal_width numeric
+ @attribute class {Iris-setosa, Iris-versicolor, Iris-virginica}
+ @data
+ 5.1,3.5,Iris-setosa
+ 4.9,3.0,Iris-setosa
+ 7.0,?,Iris-versicolor  // Missing value
+ ```
+ 
+ For more details, refer to Weka's documentation or explore sample datasets 
+ like `weather.arff`.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.ArffFile.NamespaceDoc">
+ <summary>
+ ARFF (WEKA attribute-relation file format) reader and writer.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.FileLoader">
+ <summary>
+ Wrapper module for read csv/tsv file
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.FileLoader.FastLoad(System.String,System.Boolean,System.Text.Encoding,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)">
+ <summary>
+ If you are sure about your csv data document have no character such like " or, in a cell, then you can try using this fast load method to load your csv data.
+ if not, please using the <see cref="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.FileLoader.Load(System.IO.Stream,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)"></see> method to avoid of the data damages.
+ (假若你确信你的数据文件之中仅含有数字之类的数据，则可以尝试使用本方法进行快速加载，假若文件之中每一个单元格还含有引起歧义的例如双引号或者逗号，则请不要使用本方法进行加载)
+ </summary>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ <remarks>
+ 因为这个函数是直接通过利用逗号做切割，所以效率是非常高的，但是对文本的格式要求非常高
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.FileLoader.Load(System.String[],System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)">
+ <summary>
+ 排序操作在这里会不会大幅度的影响性能？
+ </summary>
+ <param name="buf"></param>
+ <param name="trimBlanks">如果这个选项为真，则会移除所有全部都是逗号分隔符``,,,,,,,,,``的空白行</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.FileLoader.LoadTableData(System.String[],System.Int32,System.Boolean,System.Func{System.String,System.Boolean})">
+ <summary>
+ 
+ </summary>
+ <param name="buf"></param>
+ <param name="headerIndex"></param>
+ <param name="isTsv"></param>
+ <param name="skipWhile"></param>
+ <returns>
+ table content data with header has already been removed
+ </returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.NamespaceDoc">
+ <summary>
+ The CSV file loader and row tokenizer: header parsing, row iteration, field tokenization and
+ streaming CSV reading.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowHelpers.Pointer(Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ 获取一个数据行对象的游标操作符对象
+ </summary>
+ <param name="row"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowHelpers.EscapeCsv(System.String,System.Char)">
+ <summary>
+ CSV 字段转义（处理逗号、引号、换行）
+ </summary>
+ <param name="field">The cell value text</param>
+ <param name="deli">The value row delimiter</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowHelpers.Distinct(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ 去除行集合中的重复的数据行
+ </summary>
+ <param name="rowList"></param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowHelpers.IsNullOrEmpty(Microsoft.VisualBasic.Data.Framework.IO.RowObject,System.Boolean)">
+ <summary>
+ Is this row object contains any data?
+ </summary>
+ <param name="countAllEmpty">
+ All of the cell value which is empty string 
+ is also count as empty if this parameter is ``TRUE``.
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowHelpers.GetColumns(System.Collections.Generic.ICollection{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ get all column data
+ </summary>
+ <param name="table"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowTokenizer">
+ <summary>
+ Parse the csv row by char scanning
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowTokenizer.openStack">
+ <summary>
+ 解析器是否是处于由双引号所产生的栈之中？
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.RowTokenizer.GetTokens(System.Char,System.Char)">
+ <summary>
+ A iterator function that parse the string line as cells content data
+ </summary>
+ <param name="delimiter"></param>
+ <param name="quot"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.StreamIO.TypeOf(Microsoft.VisualBasic.Data.Framework.IO.File,System.Type[])">
+ <summary>
+ 根据文件的头部的定义，从<paramref name="types"/>之中选取得到最合适的类型的定义
+ </summary>
+ <param name="csv"></param>
+ <param name="types"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.StreamIO.TypeOf(Microsoft.VisualBasic.Data.Framework.IO.RowObject,System.Type[])">
+ <summary>
+ 根据文件的头部的定义，从<paramref name="types"/>之中选取得到最合适的类型的定义
+ </summary>
+ <param name="header"></param>
+ <param name="types">A candidate type list</param>
+ <returns>
+ 一个也都没有匹配上, 则这个函数会返回空值
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.StreamIO.SaveDataFrame(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject},System.String,System.Text.Encoding,System.Boolean,System.Boolean)">
+ <summary>
+ Save this csv document into a specific file location <paramref name="path"/>.
+ </summary>
+ <param name="path">
+ 假若路径是指向一个已经存在的文件，则原有的文件数据将会被清空覆盖
+ </param>
+ <remarks>当目标保存路径不存在的时候，会自动创建文件夹</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.StreamIO.SaveDataFrame(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject},System.IO.Stream,System.Text.Encoding,System.Boolean,System.Boolean,System.Boolean)">
+ <summary>
+ Save this csv document into a specific <paramref name="file"/> stream
+ </summary>
+ <remarks>当目标保存路径不存在的时候，会自动创建文件夹</remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer">
+ <summary>
+ RowObject parsers
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.SplitRegxExpression">
+ <summary>
+ A regex expression string that use for split the line text.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.RegexTokenizer(System.String)">
+ <summary>
+ Parsing the row data from the input string line.(通过正则表达式来解析域)
+ </summary>
+ <param name="s"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.CharsParser(System.String,System.Char,System.Char)">
+ <summary>
+ 通过Chars枚举来解析域，分隔符默认为逗号
+ </summary>
+ <param name="s"></param>
+ <returns>this function returns empty string array for null or empty string input.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.IsEmptyRow(System.String,System.Char)">
+ <summary>
+ 是否等于``,,,,,,,,,``
+ </summary>
+ <param name="s"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.File">
+ <summary>
+ A comma character seperate table file that can be read and write in the EXCEL.
+ </summary>
+ <remarks>
+ csv object will enumerates all of the row objects in the <see cref="F:Microsoft.VisualBasic.Data.Framework.IO.File._innerTable"/>.
+ (一个能够被Excel程序所读取的表格文件)
+ </remarks>
+ 
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Headers">
+ <summary>
+ The first row in the table was using as the headers
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Rows">
+ <summary>
+ Get all rows in current table object
+ </summary>
+ <returns></returns>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.File._innerTable">
+ <summary>
+ First line in the table is the column name definition line.
+ </summary>
+ <remarks>
+ 已经去掉了首行标题行了的
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.#ctor">
+ <summary>
+ Creates an empty csv docs object.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.#ctor(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ Creates csv file object from the rows data.
+ </summary>
+ <param name="data"></param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.#ctor(System.String,Microsoft.VisualBasic.Text.Encodings,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean)">
+ <summary>
+ Load document from path
+ </summary>
+ <param name="path"></param>
+ 
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Item(System.Int32,System.Int32)">
+ <summary>
+ Gets or sets the specific cell's data
+ </summary>
+ <param name="x"></param>
+ <param name="y"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Item(System.String)">
+ <summary>
+ Get column values by column name.
+ </summary>
+ <param name="name$"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Width">
+ <summary>
+ Get the max width number of the rows in the table.(返回表中的元素最多的一列的列数目)
+ </summary>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Column(System.Int32)">
+ <summary>
+ Get all data of a column of a specific column number.
+ (获取文件中的某一列中的所有数据)
+ </summary>
+ <param name="Index"></param>
+ <value></value>
+ <returns>
+ the header title has already been excludes
+ </returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Columns">
+ <summary>
+ 将本文件之中的所有列取出来，假若有任意一个列的元素的数目不够的话，则会在相应的位置之上使用空白来替换
+ </summary>
+ <returns></returns>
+ <remarks>
+ 由于是使用<see cref="F:Microsoft.VisualBasic.Data.Framework.IO.File._innerTable"/>来作为数据源的，所以对于csv对象而言，是含有header数据的，即含有第一行数据
+ 对于<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver"/>类型而言，由于在创建对象的时候，第一行数据由于需要被用作为header，
+ 所以这个内部表对象之中是不包含有header行的，即这个属性所输出的结果只中是不包含有header行的
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Trim">
+ <summary>
+ 删除空白的列
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Project(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ 按照列进行投影操作, 这个函数仅适用于小型数据
+ </summary>
+ <param name="fieldNames"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.AppendLine">
+ <summary>
+ 添加一个空白行
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.AppendRange(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ Add a data row collection into this Csv file object instance and then return the total row number after the add operation.
+ (向CSV文件之中批量添加行记录，之后返回当前所打开的文件在添加纪录之后的总行数)
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.GetByLine(System.Int32)">
+ <summary>
+ Get a data row in the specific row number, when a row is not exists in current csv file then the function will return a empty row.
+ (当目标对象不存在的时候，会返回一个空行对象)
+ </summary>
+ <param name="line"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.FindAll(System.String)">
+ <summary>
+ 使用迭代器返回包含有目标关键词的行
+ </summary>
+ <param name="KeyWord"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.FindAtColumn(System.String,System.Int32)">
+ <summary>
+ Using the content in a specific column as the target for search using a specific keyword, and then return all of the rows that have the query keyword.
+ (以指定的列中的内容搜索关键词，并返回检索成功的行的集合)
+ </summary>
+ <param name="KeyWord"></param>
+ <param name="Column"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Cell(System.Int32,System.Int32)">
+ <summary>
+ Get and set the string content in a specific table cell.(设置或者获取某一个指定的单元格中的字符串内容)
+ </summary>
+ <param name="X"></param>
+ <param name="Y"></param>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Transpose">
+ <summary>
+ 对当前的csv矩阵进行转置之后返回新的文件
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Remove(System.Func{Microsoft.VisualBasic.Data.Framework.IO.RowObject,System.Boolean})">
+ <summary>
+ Delete all of the row that meet the delete condition.(将所有满足条件的行进行删除)
+ </summary>
+ <param name="condition"></param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.DeleteCell(System.Func{System.String,System.Boolean},System.Int32)">
+ <summary>
+ 删除目标列中的单元格中符合条件的内容
+ </summary>
+ <param name="Condition">条件测试</param>
+ <param name="index">列标号</param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.RemoveRange(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ Remove the item in a specific row collection.
+ </summary>
+ <param name="source"></param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Generate">
+ <summary>
+ Generate the csv data file document using the table data.(将表格对象转换为文本文件以进行保存)
+ </summary>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.GenerateDocument(System.Boolean)">
+ <summary>
+ 将表对象转换为文本文件之中的文本内容
+ </summary>
+ <param name="Parallel">假若是不需要顺序的大文件，请设置为True</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.InsertEmptyColumnBefore(System.Int32)">
+ <summary>
+ Insert a new empty line of row data before the specific row number.(在指定列标号的列之前插入一行空列)
+ </summary>
+ <param name="column"></param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.TokenCounts(System.Int32,System.Boolean,System.Boolean,System.Boolean)">
+ <summary>
+ 统计某一个指定的列之中的各个项目的出现次数
+ </summary>
+ <param name="ColumnIndex"></param>
+ <param name="FirstLineTitle"></param>
+ <param name="IgnoreBlanks"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.op_Addition(Microsoft.VisualBasic.Data.Framework.IO.File,System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ Add a row collection
+ </summary>
+ <param name="file"></param>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.op_Addition(Microsoft.VisualBasic.Data.Framework.IO.File,System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ Add a row
+ </summary>
+ <param name="file"></param>
+ <param name="row"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Save(System.String,System.Text.Encoding)">
+ <summary>
+ Save this csv document into a specific file location <paramref name="path"/>.
+ </summary>
+ <param name="Path"></param>
+ <remarks>当目标保存路径不存在的时候，会自动创建文件夹</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.__createTableVector">
+ <summary>
+ 这个方法是保存<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver"></see>对象之中的数据所需要的
+ </summary>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.op_Implicit(System.String)~Microsoft.VisualBasic.Data.Framework.IO.File">
+ <summary>
+ Read a Csv file, default encoding is utf8
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.__LINQ_LOAD(System.String[])">
+ <summary>
+
+ </summary>
+ <param name="data"></param>
+ <returns></returns>
+ <remarks>为了提高数据的加载效率，先使用LINQ预加载数据，之后使用Parallel LINQ进行数据的解析操作</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Load(System.String,System.Text.Encoding,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean,System.Boolean)">
+ <summary>
+ Load the csv data document from a given path.
+ </summary>
+ <param name="Path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ <remarks>(从指定的文件路径之中加载一个CSV格式的数据文件)</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.loads(System.String,System.Text.Encoding,System.Boolean,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean)">
+ <summary>
+ 同时兼容本地文件和网络文件的
+ </summary>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Parse(System.String,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)">
+ <summary>
+ 对目标文本内容字符串进行解析，得到csv文件对象数据模型
+ </summary>
+ <param name="content">这个参数是文本内容，而非是文件路径</param>
+ <param name="trimBlanks"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Join(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ cbind a column
+ </summary>
+ <param name="column">the column data</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Distinct(Microsoft.VisualBasic.Data.Framework.IO.File,System.Int32,System.Boolean)">
+ <summary>
+ 去除Csv文件之中的重复记录
+ </summary>
+ <param name="OrderBy">当为本参数指定一个非负数值的时候，程序会按照指定的列值进行排序</param>
+ <param name="Asc">当进行排序操作的时候，是否按照升序进行排序，否则按照降序排序</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.IsNullOrEmpty(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ 判断目标数据文件是否为空
+ </summary>
+ <param name="df"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.RowNumbers">
+ <summary>
+ Row Counts
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.Insert(System.Int32,Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ 在所指定的行号下面插入一行数据
+ </summary>
+ <param name="rowId"></param>
+ <param name="Row"></param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.File.InsertAt(System.Int32,Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ 使用IList接口本身的Insert方法来执行插入
+ </summary>
+ <param name="index"></param>
+ <param name="item"></param>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.File.Item(System.Int32)">
+ <summary>
+ Gets a row in the document stream object.
+ </summary>
+ <param name="index"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.RowObject">
+ <summary>
+ A line of data in the csv file.
+ </summary>
+ <remarks>(Csv表格文件之中的一行)</remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.RowObject.buffer">
+ <summary>
+ 本行对象中的所有的单元格的数据集合
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.#ctor(System.Collections.Generic.IEnumerable{System.Object})">
+ <summary>
+ safe convert the given object collection to string and create this row object
+ </summary>
+ <param name="objs">using <see cref="M:Microsoft.VisualBasic.Scripting.InputHandler.ToString(System.Object,System.String,System.Boolean)"/> to converts the objects into a string array.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.#ctor(System.String,System.Boolean)">
+ <summary>
+ 这个构造函数会使用<see cref="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.CharsParser(System.String,System.Char,System.Char)"/>解析所输入的字符串为列数据的集合
+ </summary>
+ <param name="rawString">A raw string line which read from the Csv text file.</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.DirectGet(System.Int32)">
+ <summary>
+ Unsafety method, <see cref="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Column(System.Int32)"/> method is safely.
+ (不做任何处理直接获取数据)
+ </summary>
+ <param name="index"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Column(System.Int32)">
+ <summary>
+ Get the cell data in a specific column number. if the column is not exists in this row then will return a empty string.
+ (获取某一列中的数据，若该列不存在则返回空字符串)
+ </summary>
+ <param name="Index"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Width">
+ <summary>
+ 非空白单元格的数目
+ </summary>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.GetALLNonEmptys">
+ <summary>
+ 返回本行中的非空白数据
+ </summary>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.InsertAt(System.String,System.Int32)">
+ <summary>
+ insert the data into a spercific column  
+ </summary>
+ <param name="value"></param>
+ <param name="column">
+ 假若列的位置超过了当前的行所具有的列的数量，那么这个方法还会自动补齐空格
+ </param>
+ <returns>仅为LINQ查询使用的一个无意义的值</returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.ToString">
+ <summary>
+ Displaying in IDE
+ </summary>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Takes(System.Int32)">
+ <summary>
+ Takes the data in the specific number of columns, if columns is not exists in this row object, 
+ then a part of returned data will be the empty string. 
+ </summary>
+ <param name="Count"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Takes(System.Int32[],System.Boolean)">
+ <summary>
+ Takes the data in the specific column index collection, if the column is not exists in the row object, 
+ then a part of the returned data will be the empty string.
+ </summary>
+ <param name="Cols"></param>
+ <param name="retNullable">(当不存在数据的时候是否返回空字符串，默认返回空字符串)</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.GetColumn(System.Int32,System.String@)">
+ <summary>
+ 返回一个指示：是否为空？
+ </summary>
+ <param name="Idx"></param>
+ <param name="retStr"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.LocateKeyWord(System.String,System.Boolean)">
+ <summary>
+ 查询某一个关键词在本行中的哪一个单元格，返回-1表示没有查询到本关键词
+ </summary>
+ <param name="KeyWord">进行查找的目标单元格文本的一部分字符串</param>
+ <param name="CaseSensitive">是否是大小写不敏感的</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.AsLine(System.String)">
+ <summary>
+ Generate a line of the string data in the csv document.
+ (将当前的行对象转换为文件中的一行字符串)
+ </summary>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.ToString(System.Collections.Generic.IEnumerable{System.String},System.String)">
+ <summary>
+ create content row string in a csv table file.
+ </summary>
+ <param name="content"></param>
+ <param name="delimiter"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.op_Explicit(Microsoft.VisualBasic.Data.Framework.IO.RowObject)~System.String">
+ <summary>
+ Write to file.
+ </summary>
+ <param name="row"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.op_Implicit(System.String)~Microsoft.VisualBasic.Data.Framework.IO.RowObject">
+ <summary>
+ Row parsing into column tokens
+ </summary>
+ <param name="Line"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.TryParse(System.String,System.Boolean)">
+ <summary>
+ Parse a text line as csv table row via <see cref="M:Microsoft.VisualBasic.Data.Framework.IO.CSVFile.Tokenizer.CharsParser(System.String,System.Char,System.Char)"/>
+ </summary>
+ <param name="line"></param>
+ <param name="tsv"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Contains(Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ 查看目标行是否被包含在本行之中，即是否对应元素相等
+ </summary>
+ <param name="Row"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.RowObject.NumbersOfColumn">
+ <summary>
+ 当前数据行的列的数目
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.IndexOf(System.String)">
+ <summary>
+ 查找目标在行之中的索引号，也就是列的编号
+ </summary>
+ <param name="item">如果字符串是空的话或者查找失败，则返回-1</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.Insert(System.Int32,System.String)">
+ <summary>
+ 直接使用list对象的Insert方法插入目标值，这个方法不像<see cref="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.InsertAt(System.String,System.Int32)"/>，这个方法不会自动补齐空格的
+ </summary>
+ <param name="index"></param>
+ <param name="item"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.RowObject.PopLine(System.String)">
+ <summary>
+ Pop all cells string from the internal buffer list and then returns the generated text line.
+ </summary>
+ <param name="delimiter"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.DataSet">
+ <summary>
+ The numeric dataset, <see cref="T:Microsoft.VisualBasic.ComponentModel.DataSourceModel.DynamicPropertyBase`1"/>, <see cref="T:System.Double"/>.
+ </summary>
+ <remarks>
+ (数值类型的数据集合，每一个数据实体对象都有自己的编号以及数据属性)
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.DataSet.ID">
+ <summary>
+ 当前的这条数据记录在整个数据集之中的唯一标记符
+ </summary>
+ <returns></returns>
+ <remarks>
+ 20191031
+ 重写这个属性会造成<see cref="M:Microsoft.VisualBasic.Data.Framework.IO.FileFormat.SolveDataSetIDMapping(System.String,System.String,System.Nullable{System.Boolean},System.Text.Encoding)"/>失效
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.DataSet.Vector">
+ <summary>
+ equivalent to <see cref="P:Microsoft.VisualBasic.ComponentModel.DataSourceModel.DynamicPropertyBase`1.Properties"/>.Values.ToArray
+ </summary>
+ <returns></returns>
+ <remarks>
+ 在进行序列化为csv表格文件的时候，这个属性将会被忽略掉
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.Append(Microsoft.VisualBasic.ComponentModel.DataSourceModel.Property{System.Double},System.Func{System.Double,System.Double,System.Double})">
+ <summary>
+ 将一系列数据添加进入当前的数据集对象实例之中
+ </summary>
+ <param name="data">数据系列</param>
+ <param name="duplicated"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.Copy">
+ <summary>
+ Copy prop[erty value
+ </summary>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.SubSet(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ 直接使用<paramref name="labels"/>取出<see cref="P:Microsoft.VisualBasic.ComponentModel.DataSourceModel.DynamicPropertyBase`1.Properties"/>之中的一个子集
+ 对于不存在的属性，默认值为零
+ </summary>
+ <param name="labels"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.LoadDataSet(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Text.Encoding,System.Boolean)">
+ <summary>
+ The dataset for this table loader should be in format like:
+ 
+ + First column should be a string value column for indicate the dataset row uniquely.
+ + If the first column is not the rows' unique id, then <paramref name="uidMap"/> parameter should be provided for specific the which column is your datasets' uid column
+ + Then all of the other column will be treated as the numeric property data
+ 
+ <paramref name="uidMap"/>一般情况下会自动进行判断，不需要具体的设置
+ </summary>
+ <param name="path"></param>
+ <param name="uidMap">
+ 默认是使用csv文件的第一行第一个单元格中的内容作为标识符，但是有时候可能标识符不是在第一列的，则这个时候就需要对这个参数进行赋值了
+ </param>
+ <param name="fieldNameMaps">
+ [name_in_file => name_after_load]
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.LoadDataSet``1(System.String,System.String,System.Text.Encoding,System.Boolean,System.Boolean)">
+ <summary>
+ 这个函数可以处理csv以及tsv数据格式
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="uidMap$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.DataSet.LoadMatrix(System.String,System.Boolean,System.Text.Encoding)">
+ <summary>
+ 加载一个矩阵数据：单元格全是数字类型，但是缺少第一列ID数据
+ </summary>
+ <param name="path"></param>
+ <param name="isTsv"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.EntityObject">
+ <summary>
+ The object entity, <see cref="T:Microsoft.VisualBasic.ComponentModel.DataSourceModel.DynamicPropertyBase`1"/>, <see cref="T:System.String"/>.
+ </summary>
+ <remarks>
+ (有名称属性的表抽象对象)
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.ID">
+ <summary>
+ This object identifier
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.ItemValue(System.String)">
+ <summary>
+ 这个属性构建出与javascript之中的对象的属性读取类似的效果
+ </summary>
+ <param name="name"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.Copy">
+ <summary>
+ Copy prop[erty value
+ </summary>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.LoadDataSet(System.String,System.String@,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Text.Encoding,System.Boolean)">
+ <summary>
+ 
+ </summary>
+ <param name="path$">
+ MetaScripting:
+ 
+ path: file path or directory scripting
+ 
+ filepath: file.csv or file.tsv
+ scripting: dir/* means all *.csv or *.tsv
+            dir/M* means all file match pattern M*.csv or M*.tsv
+ </param>
+ <param name="uidMap$"></param>
+ <param name="tsv"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+ <remarks>
+ 
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.GetPropertyNames(System.String,System.Boolean,System.Text.Encoding)">
+ <summary>
+ 如果文件头之中存在ID列,则返回除了ID列以外的名称集合
+ 如果文件头之中不存在ID列的话,则返回跳过第一列的名称的集合
+ </summary>
+ <param name="path$"></param>
+ <param name="tsv"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.LoadDataSet``1(System.String,System.String@,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Text.Encoding,System.Boolean)">
+ <summary>
+ 会自动查找ID列
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="path$"></param>
+ <param name="uidMap$"></param>
+ <param name="tsv"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.EntityObject.CreateFilter(Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.String})">
+ <summary>
+ 选出列的值等于目标字符串值的所有数据
+ </summary>
+ <param name="filter"><see cref="P:Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue`1.IsEmpty"/> means select all data.</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Extensions">
+ <summary>
+ Data extension for <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.DataSet"/> and <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.EntityObject"/>
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.NamedValues(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.DataSet},System.String)">
+ <summary>
+ take a column from the given matrix
+ </summary>
+ <param name="matrix">matrix object that consist with multiple rows</param>
+ <param name="propertyName">the column name</param>
+ <returns>column data with mapping of row id to value.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Transpose(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.DataSet})">
+ <summary>
+ 矩阵转置：将矩阵的行列进行颠倒
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Transpose(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject})">
+ <summary>
+ 矩阵转置：将矩阵的行列进行颠倒
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Project(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.DataSet},System.String[])">
+ <summary>
+ 可以使用这个拓展函数进行重排序
+ </summary>
+ <param name="data"></param>
+ <param name="keys$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.GroupBy(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.DataSet},System.Collections.Generic.Dictionary{System.String,System.String[]},System.String)">
+ <summary>
+ Grouping of the property value by property names
+ </summary>
+ <param name="data"></param>
+ <param name="groupKeys"></param>
+ <param name="aggregate$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Vector(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.DataSet},System.String)">
+ <summary>
+ Get feature vector column value from the given dataset via a specific feature name.
+ (取出某一个给定的属性的所有值。取出来的数据元素之间的顺序是
+ 和<paramref name="datasets"/>之中的元素的顺序是一致的。)
+ </summary>
+ <param name="datasets"></param>
+ <param name="property">字典的键名称</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Vector(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject},System.String)">
+ <summary>
+ Column value projection
+ </summary>
+ <param name="datasets"></param>
+ <param name="property$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.DataFrame``1(System.Collections.Generic.IEnumerable{``0})">
+ <summary>
+ Convert the property value collection data like <see cref="T:Microsoft.VisualBasic.ComponentModel.DataSourceModel.PropertyValue`1"/> as the csv table value.
+ (使用这个函数请确保相同编号的对象集合之中是没有相同的属性名称的，
+ 但是假若会存在重复的名称的话，这些重复的名称的值会被<see cref="M:Microsoft.VisualBasic.Extensions.JoinBy(System.Collections.Generic.IEnumerable{System.Int32},System.String)"/>操作，分隔符为``分号``)
+ </summary>
+ <param name="data"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.AsCharacter(Microsoft.VisualBasic.Data.Framework.IO.DataSet)">
+ <summary>
+ Convert a numeric dataset object as character dataset
+ </summary>
+ <param name="data"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.CreateObject``1(System.Linq.IGrouping{System.String,``0})">
+ <summary>
+ Creates a <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.EntityObject"/> from a group of the property value collection.
+ </summary>
+ <param name="g"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.Values(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject},System.String)">
+ <summary>
+ 批量的从目标对象集合之中选出目标属性值
+ </summary>
+ <param name="data"></param>
+ <param name="key$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Extensions.AsDataSet(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.EntityObject},Microsoft.VisualBasic.ComponentModel.Collection.Index{System.String},System.Double)">
+ <summary>
+ 将字符串数据集转换为数值类型的数据集
+ </summary>
+ <param name="data"></param>
+ <param name="blank">如果目标属性的值是空字符串的话，将该属性值设置为这个参数值默认的值</param>
+ <param name="ignores">在转换的时候需要忽略掉的属性值</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Table">
+ <summary>
+ 没有名称属性的表抽象对象
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.FileFormat.GetIDList(System.String,System.String,System.Boolean,System.Boolean,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 获取数据集之中的被映射为ID列的值列表
+ </summary>
+ <param name="path$"></param>
+ <param name="uidMap$"></param>
+ <param name="tsv"></param>
+ <param name="ignoreMapErrors"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.FileFormat.ContainsIDField(System.String,System.Boolean,System.Text.Encoding,System.String@)">
+ <summary>
+ 使用这个函数来判断目标文件之中是否存在ID列
+ （ID列可能不在第一列）
+ </summary>
+ <param name="path$"></param>
+ <param name="tsv"></param>
+ <param name="encoding"></param>
+ <param name="FirstColumn">
+ 函数总是会从这一个参数返回第一列的标题，如果不存在ID列的话可以用这一列来作为ID（可能会出现意想不到的错误）
+ </param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.GenericMeta.GetMetaDataRows(System.String,System.String)">
+ <summary>
+ 通用的meta元数据的解析函数
+ </summary>
+ <param name="file$"></param>
+ <param name="prefix$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Meta.TryGetMetaData(Microsoft.VisualBasic.Data.Framework.IO.File,System.Int32@)">
+ <summary>
+ 
+ </summary>
+ <param name="reader"></param>
+ <param name="i">下一行是标题行</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.NamespaceDoc">
+ <summary>
+ The tabular I/O layer: generic DataSet, Table and EntityObject models, metadata handling and
+ the shared CSV text row and file helpers.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.BatchQueue.RequestData``1(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 函数会自动处理文件或者文件夹的情况
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="handle$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.BatchQueue.RequestFiles``1(System.String,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 函数会自动处理文件或者文件夹的情况
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="handle$"></param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.BatchQueue.ReadQueue``1(System.Collections.Generic.IEnumerable{System.String},Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ {<see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.String)"/>, <typeparamref name="T"/>()}
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="files"></param>
+ <returns></returns>
+ <remarks>
+ 在服务器上面可能会出现IO很慢的情况，这个时候可以试一下这个函数进行批量数据加载
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.BatchQueue.IteratesAll``1(System.Collections.Generic.IEnumerable{System.String},Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ Reads all data in the directory as a single data source.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="files">Csv files list</param>
+ <param name="encoding"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.GetOrdinal">
+ <summary>
+ 获取列在当前的数据集之中的编号
+ </summary>
+ <param name="Column"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataLinqStream.OpenHandle(System.String,System.Text.Encoding,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean)">
+ <summary>
+ 所返回来的tuple对象之中的table字段，是跳过了第一行标题行的Linq迭代器
+ </summary>
+ <param name="fileName$"></param>
+ <param name="encoding"></param>
+ <param name="maps">
+ Change filed name mapping by:
+ 
+ ``Csv.Field -> <see cref="P:System.Reflection.MemberInfo.Name"/>``
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataLinqStream.AsLinq``1(System.ValueTuple{Microsoft.VisualBasic.Data.Framework.IO.Linq.SchemaReader,System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject}},System.Boolean)">
+ <summary>
+ Using linq stream method for load a very large csv/tsv file.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="handle"></param>
+ <param name="parallel"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream">
+ <summary>
+ Buffered large text dataset Table reader
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream._title">
+ <summary>
+ The title row, which is the mapping source of the class property name.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.SchemaOridinal">
+ <summary>
+ The columns and their index order
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.BufferProvider">
+ <summary>
+ Providers the data buffer for the <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.RowObject"/>
+ </summary>
+ <returns></returns>
+ <remarks>
+ 这个函数主要是为了处理第一行数据
+ 因为在构造函数部分已经读取了第一行来解析schema，所以在这里需要对第一个数据块做一些额外的处理
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.ForEach``1(System.Action{``0},System.Boolean)">
+ <summary>
+ For each item in the source data fram, invoke a specific task
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="callback"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.ForEachBlock``1(System.Action{``0[]},System.Int32,System.Boolean)">
+ <summary>
+ Processing large dataset in block partitions.(以分块任务的形式来处理一个非常大的数据集)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="invoke">task of this block buffer</param>
+ <param name="blockSize">Lines of the data source.(行数)</param>
+ <remarks>
+ 2016.06.19  代码已经经过测试，没有数据遗漏的bug，请放心使用
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.__taskHelper`1">
+ <summary>
+ 为了减少Lambda表达式所带来的性能损失而构建的一个任务运行帮助对象
+ </summary>
+ <typeparam name="T"></typeparam>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.__taskHelper`1.#ctor(`0[],System.Action{`0[]})">
+ <summary>
+ 赋值任务和数据源
+ </summary>
+ <param name="source"></param>
+ <param name="invoke"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.__taskHelper`1.RunTask">
+ <summary>
+ 运行当前的这个任务
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.AsLinq``1(System.Boolean,System.Boolean)">
+ <summary>
+ Csv to LINQ
+ </summary>
+ <typeparam name="T"></typeparam>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.OpenHandle(System.String,System.Text.Encoding,System.Int32,System.Boolean)">
+ <summary>
+ Open the data frame reader for the specific csv document.
+ </summary>
+ <param name="file">*.csv data file.</param>
+ <param name="encoding">The text encoding. default is using <see cref="F:Microsoft.VisualBasic.Text.Encodings.Default"/></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1">
+ <summary>
+ 主要是为了构建通过命令行的通用化查询工具
+ </summary>
+ <typeparam name="T"></typeparam>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1._operations">
+ <summary>
+ 操作符代码
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.Test(`0)">
+ <summary>
+ LINQ WHERE TEST(x) = TRUE
+ </summary>
+ <param name="x"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.Compile">
+ <summary>
+ 编译LINQ数据库查询引擎之中的条件表达式
+ OR 运算的级别是最低的
+ a and b and c or (d and e and f or (g and h))
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__compile(Microsoft.VisualBasic.Language.List{Microsoft.VisualBasic.Data.Framework.IO.Linq.ExprToken}@,System.Func{`0,System.Boolean})">
+ <summary>
+ 编译查询条件表达式
+ </summary>
+ <param name="tokens"></param>
+ <param name="stack"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__gt(System.Object,System.String,System.Type)">
+ <summary>
+ a > b
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__lt(System.Object,System.String,System.Type)">
+ <summary>
+ a &lt; b
+ </summary>
+ <param name="a"></param>
+ <param name="test"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__eq(System.Object,System.String,System.Type)">
+ <summary>
+ a = b
+ </summary>
+ <param name="a"></param>
+ <param name="test"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__neq(System.Object,System.String,System.Type)">
+ <summary>
+ a != b
+ </summary>
+ <param name="a"></param>
+ <param name="test"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__instr(System.Object,System.String,System.Type)">
+ <summary>
+ InStr(a, b) > 0
+ </summary>
+ <param name="a"></param>
+ <param name="test"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.__regex(System.Object,System.String,System.Type)">
+ <summary>
+ Regex.Match(a, b).Success
+ </summary>
+ <param name="a"></param>
+ <param name="test"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.LinqWhere`1.TryParse(System.String)">
+ <summary>
+ column &lt;opr> value
+ </summary>
+ <param name="expr"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.Linq.ExprToken.Operator">
+ <summary>
+ > (int) greater than, 
+ &lt; (int) less than, 
+ = (int, string, boolean) equals, 
+ != (int, string, boolean) not equals, 
+ % (string) InStr, 
+ @ (string) Regex Matches
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.NamespaceDoc">
+ <summary>
+ LINQ style streaming data operators over tabular data: batch queues, data streams and write
+ streams for querying and transforming row sequences.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1">
+ <summary>
+ The stream writer for the data set, you can handling the ultra large dataset 
+ serialize into a csv document by using this writer stream object.
+ (文件写入流，这个一般是在遇到非常大的文件流的时候才需要使用)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1._fileIO">
+ <summary>
+ File system object handle for write csv row data.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.rowWriter">
+ <summary>
+ Schema for creates row data from the inputs object.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.IsMetaIndexed">
+ <summary>
+ Has the meta field indexed?
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.#ctor(System.String,System.Boolean,System.String,System.String[],System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.Dictionary{System.String,System.Int32},System.Boolean,Microsoft.VisualBasic.Text.Encodings)">
+ <summary>
+ 
+ </summary>
+ <param name="path"></param>
+ <param name="strict">Schema parsing of the object strictly?</param>
+ <param name="metaKeys">预设的标题头部</param>
+ <param name="tsv">
+ Save the data frame in tsv format? By default is false means saved in csv format.
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.CacheMetaIndex(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ Run cache index for <see cref="F:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.rowWriter"/>
+ </summary>
+ <param name="meta"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.Flush(System.Collections.Generic.IEnumerable{`0})">
+ <summary>
+ Serialize the object data source into the csv document.
+ (将对象的数据源写入Csv文件之中）
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.Flush(`0)">
+ <summary>
+ Write a object into the table file.
+ </summary>
+ <param name="obj"></param>
+ <returns>
+ false will be return if the given object is nothing, else true
+ </returns>
+ <remarks>
+ this method just write data line, not invoke of the <see cref="M:System.IO.Stream.Flush"/>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.Flush">
+ <summary>
+ The base stream flush method is called automatically at dispose process
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.ToArray``1(System.Func{``0,System.Collections.Generic.IEnumerable{`0}})">
+ <summary>
+ 这个是配合<see cref="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.ForEachBlock``1(System.Action{``0[]},System.Int32,System.Boolean)"/>方法使用的
+ </summary>
+ <typeparam name="Tsrc"></typeparam>
+ <param name="[ctype]"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.WriteStream`1.Ctype``1(System.Func{``0,`0})">
+ <summary>
+ 这个是配合<see cref="M:Microsoft.VisualBasic.Data.Framework.IO.Linq.DataStream.ForEach``1(System.Action{``0},System.Boolean)"/>方法使用的
+ </summary>
+ <typeparam name="Tsrc"></typeparam>
+ <param name="_ctype"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.MappingsHelper">
+ <summary>
+ Handling the data fields mapping for make processing of
+ the csv headers.
+ </summary>
+ <remarks>
+ (在写csv的时候生成列域名的映射的一些快捷函数)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.MappingsHelper.Typeof(System.String,System.Type[])">
+ <summary>
+ Measure the best model type based on the header title row in target csv file
+ </summary>
+ <param name="file">the file path to the target csv file, this function only reads 
+ the first line for parsed as the title for do the clr type model matches.</param>
+ <param name="types">a collection of the clr types.</param>
+ <returns>这个匹配函数是安全的函数, 如果一个结果都没有被匹配上,则这个函数会
+ 返回<see cref="T:System.Void"/>类型</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.MappingsHelper.ColumnName(System.Type,System.String)">
+ <summary>
+ 这个函数只适用于只需要解析一个或者少数属性的列名称，假若需要解析的列数量很多，
+ 则出于性能方面的考虑不推荐使用这个函数来进行
+ </summary>
+ <param name="schema"></param>
+ <param name="propertyName$">
+ 推荐使用``NameOf``操作符来获取属性的名称
+ </param>
+ <returns>这个函数返回空值表名没有这个属性</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.MappingsHelper.PropertyNames``1">
+ <summary>
+ Gets property name to column name mapping table.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.MappingsHelper.CheckFieldConsistent``1(System.String)">
+ <summary>
+ 使用这个函数来判断当前的Class对象的定义之下，能否将csv文件之中的所有的列的数据都读取完全
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="csv$"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.MappingsHelper.NamedValueMapsWrite(System.String,System.String,System.String)">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue`1"/>
+ </summary>
+ <param name="name$"></param>
+ <param name="value$"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.NamespaceDoc">
+ <summary>
+ The tabular data frame framework: DataFrame and DataSet objects, stream and CSV/ARFF readers
+ and writers, and the reflection based storage providers that map .NET classes to table rows
+ and columns.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader">
+ <summary>
+ Data structure for high perfermence data loading.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.RowData">
+ <summary>
+ The row value of the specific row number <see cref="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.lineNumber"/>
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.Schema">
+ <summary>
+ The table's fields ordinal schema.(通过对csv文件的头部所解析得到的域的名称列表)
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.lineNumber">
+ <summary>
+ Row line index number in the csv data file.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.#ctor(Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver)">
+ <summary>
+ Copy the ordinal schema from the source data frame.
+ </summary>
+ <param name="df">The source data frame</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.Attribute(System.String)">
+ <summary>
+ Get or set the string value in the specific attribute name of current line.
+ </summary>
+ <param name="columnName"></param>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.Read(System.Collections.Generic.IEnumerable{System.Int32})">
+ <summary>
+ Get field values by using a collection of the column index
+ </summary>
+ <param name="idx"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.SetAttributeValue(System.String,System.String)">
+ <summary>
+ Set value by for the specific field <paramref name="Name"/>
+ </summary>
+ <param name="Name"></param>
+ <param name="Value"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetOrdinal(System.String)">
+ <summary>
+ Get order index of the specific <paramref name="Column"/> in this csv table.
+ </summary>
+ <param name="Column"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetOrdinal(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ Gets the order index collection of the specific <paramref name="Column"/> fields in this csv table.
+ </summary>
+ <param name="Column"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetValue(System.Int32)">
+ <summary>
+ Get column value by using a specific column index
+ </summary>
+ <param name="Ordinal"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetValues(System.Int32[])">
+ <summary>
+ Gets the columns' values by using a specific collection of the column index.
+ </summary>
+ <param name="ords"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.TryCast``1">
+ <summary>
+ Try cast this row data as the target type object. 
+ If the casting failure, then this function will returns nothing.
+ (函数会尝试将目标对象的属性值按照名称进行赋值，前提是目标属性值的类型应该为基本的类型。
+ 假若类型转换不成功，则会返回空对象)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+ <summary>
+ Provides the implementation for operations that get member values. Classes derived
+ from the System.Dynamic.DynamicObject class can override this method to specify
+ dynamic behavior for operations such as getting a value for a property.
+ </summary>
+ <param name="binder">
+ Provides information about the object that called the dynamic operation. The
+ binder.Name property provides the name of the member on which the dynamic operation
+ is performed. For example, for the Console.WriteLine(sampleObject.SampleProperty)
+ statement, where sampleObject is an instance of the class derived from the System.Dynamic.DynamicObject
+ class, binder.Name returns "SampleProperty". The binder.IgnoreCase property specifies
+ whether the member name is case-sensitive.
+ </param>
+ <param name="result">The result of the get operation. For example, if the method is called for a property, you can assign the property value to result.</param>
+ <returns>
+ true if the operation is successful; otherwise, false. If this method returns
+ false, the run-time binder of the language determines the behavior. (In most
+ cases, a run-time exception is thrown.)
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+ <summary>
+ Provides the implementation for operations that set member values. Classes derived
+ from the System.Dynamic.DynamicObject class can override this method to specify
+ dynamic behavior for operations such as setting a value for a property.
+ </summary>
+ <param name="binder">
+ Provides information about the object that called the dynamic operation. The
+ binder.Name property provides the name of the member to which the value is being
+ assigned. For example, for the statement sampleObject.SampleProperty = "Test",
+ where sampleObject is an instance of the class derived from the System.Dynamic.DynamicObject
+ class, binder.Name returns "SampleProperty". The binder.IgnoreCase property specifies
+ whether the member name is case-sensitive.
+ </param>
+ <param name="value">The value to set to the member. For example, for sampleObject.SampleProperty
+ = "Test", where sampleObject is an instance of the class derived from the System.Dynamic.DynamicObject
+ class, the value is "Test".</param>
+ <returns>
+ true if the operation is successful; otherwise, false. If this method returns
+ false, the run-time binder of the language determines the behavior. (In most
+ cases, a language-specific run-time exception is thrown.)
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetKey(System.String)">
+ <summary>
+ 将大小写敏感转换为大小写不敏感
+ </summary>
+ <param name="key"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.FieldCount">
+ <summary>
+ Gets the number of columns in the current row.
+ </summary>
+ <returns>
+ When not positioned in a valid recordset, 0; otherwise, the number of columns in the current record. The default is -1.
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetName(System.Int32)">
+ <summary>
+ Gets the name for the field to find.
+ </summary>
+ <param name="i"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader.GetDataTypeName(System.Int32)">
+ <summary>
+ Gets the data type information for the specified field.
+ </summary>
+ <param name="i"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.NamespaceDoc">
+ <summary>
+ The storage provider component model: the provider base, schema provider, row builder and
+ row writer, together with the reflection bridges for arrays, dictionaries, enums, fields and
+ key/value pairs.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider">
+ <summary>
+ The base type of the data I/O object schema.
+ </summary>
+ <remarks>
+ (数据读写对象的基本类型)
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.Ordinal">
+ <summary>
+ The column index of this column in the csv table.
+ (这个属性值在Csv文件的第几列？)
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.BindProperty">
+ <summary>
+ The bind property in the reflected class object.
+ (在反射的类型定义之中所绑定的属性入口定义)
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.Name">
+ <summary>
+ If the target property didn't provides the column name by 
+ using custom attribute, then this property will returns 
+ the Class propertyName from <see cref="T:System.Reflection.PropertyInfo"/>.
+ </summary>
+ <returns></returns>
+ <remarks>
+ (假若目标属性之中没有提供名称的话，则会使用属性名称来代替)
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.CanReadDataFromObject">
+ <summary>
+ 从目标类型对象之中可以读取这个属性的值将数据写入到文件之中
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.CanWriteDataToObject">
+ <summary>
+ 可以在读取Csv文件之中的数据之后将数据写入到这个属性之中从而将数据加载进入内存之中
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.LoadMethod">
+ <summary>
+ 解析字符串为.NET对象的方法
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.ToString(System.Object)">
+ <summary>
+ By using this function that save the property value as a cell value string.
+ (将.NET对象序列化为csv单元格之中的一个字符串值的方法) 
+ </summary>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.GetValue(System.Object)">
+ <summary>
+ 从目标实例之中读取属性数据然后转换为字符串
+ </summary>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.SetValue(System.Object,System.Object)">
+ <summary>
+ <see cref="M:System.Reflection.PropertyInfo.SetValue(System.Object,System.Object)"/>
+ </summary>
+ <param name="obj"></param>
+ <param name="value"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.#ctor(System.Reflection.PropertyInfo)">
+ <summary>
+ Creates the object model from target property definition.
+ </summary>
+ <param name="BindProperty"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider.ToString">
+ <summary>
+ VB style definition string
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.MetaAttribute.Dictionary">
+ <summary>
+ the metadata dictionary value type
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.Enum.Name">
+ <summary>
+ 可能会通过<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/>来取别名
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.Column.define">
+ <summary>
+ The column attribute definition.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.Column.#ctor(Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute,System.Reflection.PropertyInfo,Microsoft.VisualBasic.Scripting.Runtime.IParser)">
+ <summary>
+ With custom parser from the user code.
+ </summary>
+ <param name="attr"></param>
+ <param name="bindProperty"></param>
+ <param name="parser"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.KeyValuePair.#ctor(System.String,System.Reflection.PropertyInfo,System.Func{System.String,System.Object})">
+ <summary>
+ 
+ </summary>
+ <param name="Name">可能会通过<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/>来取别名</param>  
+ <param name="BindProperty"></param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder">
+ <summary>
+ 这个是用于将Csv文件之中的行数据转换为.NET对象的
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.Columns">
+ <summary>
+ 总的列表：出现在csv文件之中的列以及未出现在csv文件之中的列
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.IndexedFields">
+ <summary>
+ 出现在csv文件之中的列的列表
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.MissingFields">
+ <summary>
+ 未出现在csv文件之中的列的字段的集合，请注意，字典属性不会出现在这个集合之中
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.NonIndexed">
+ <summary>
+ 在csv文件之中未被索引的列的名称和其顺序索引编号
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.Defaults">
+ <summary>
+ ``{propertyName, defaultValue}``
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.IndexOf(Microsoft.VisualBasic.Data.Framework.StorageProvider.ISchema)">
+ <summary>
+ 从外部源之中获取本数据集的Schema的信息
+ </summary>
+ <param name="schema"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.SolveReadOnlyMetaConflicts(System.Boolean)">
+ <summary>
+ 对于只读属性而言，由于没有写入的过程，所以在从文件加在csv数据到.NET对象的时候会被放进字典属性里面，从而会导致输出的时候出现重复的域的BUG
+ 故而需要在这里将字典属性之中的只读属性的名称移除掉
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.FillData(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Object}},System.Object)">
+ <summary>
+ 这个函数主要是应用于例如sqlite3, netcdf, hdf5等数据文件之中的所存储的对象的批量的反序列化操作
+ </summary>
+ <param name="row">从数据文件之中所读取出来的一帧数据</param>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowBuilder.doColumnFill(Microsoft.VisualBasic.Data.Framework.IO.RowObject,System.Object)">
+ <summary>
+ Cast <see cref="T:Microsoft.VisualBasic.Data.Framework.IO.RowObject"/> to a specific .NET <see cref="T:System.Type"/> object.
+ </summary>
+ <param name="row"></param>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter">
+ <summary>
+ 从.NET对象转换为Csv文件之中的行数据
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.#ctor(Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider,System.String,System.Collections.Generic.Dictionary{System.String,System.Int32})">
+ <summary>
+ 由于集合类型的数据会比较长，所以一般是将集合类型放在最后面
+ 故而这里只对单个的column类型做原始排序
+ </summary>
+ <param name="schemaProvider"></param>
+ <param name="metaBlank"></param>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter._metaBlank">
+ <summary>
+ 填充不存在的动态属性的默认字符串
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.IRowBuilder">
+ <summary>
+ 将实体对象映射为一个数据行
+ </summary>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.__buildRowNullMeta(System.Object,System.String)">
+ <summary>
+ 这里是没有动态属性的
+ </summary>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.isMetaIndexed">
+ <summary>
+ Has the meta field indexed?
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.CacheIndex(System.Collections.Generic.IEnumerable{System.Object},System.Int32)">
+ <summary>
+ 在这个函数之中生成字典动态属性的表头
+ </summary>
+ <param name="source"></param>
+ <param name="reorderKeys">
+ options for sorts the metadata index keys?
+ 
+ + 0: 不排序
+ + 1: 升序排序
+ +-1: 降序排序
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.RowWriter.__buildRowMeta(System.Object,System.String)">
+ <summary>
+ 这里是含有动态属性的
+ </summary>
+ <param name="obj"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider">
+ <summary>
+ 从目标对象解析出来的Csv文件的结构组织数据
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.Columns">
+ <summary>
+ 基本数据类型的列
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CollectionColumns">
+ <summary>
+ 基本数据类型的数组形式的列
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.MetaAttributes">
+ <summary>
+ 一个类型之中只可以定义一个元数据存储对象
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.Raw">
+ <summary>
+ 提供当前的schema数据的原始数据
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.Remove(System.String)">
+ <summary>
+ 从Schema之中移除一个绑定的域
+ </summary>
+ <param name="name$"></param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.DeclaringType">
+ <summary>
+ The object <see cref="T:System.Type"/> that will be convert to csv row or convert from the csv row.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.GetField(System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="name">支持属性名称或者域名称</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CopyReadDataFromObject">
+ <summary>
+ For write csv data file.(从目标类型对象之中可以读取这个属性的值将数据写入到文件之中)
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CopyWriteDataToObject">
+ <summary>
+ For create object instance.
+ (可以在读取Csv文件之中的数据之后将数据写入到这个属性之中从而将数据加载进入内存之中)
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.ContainsField(System.String)">
+ <summary>
+ 从域名称来判断
+ </summary>
+ <param name="name">从csv文件的header行数据之中所得到的列名称</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CheckFieldConsistent(Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ Check of all the csv fields that could be mapped to the current clr object schema?
+ </summary>
+ <param name="headers">The csv header row.</param>
+ <returns>
+ 这个函数会输出警告信息,如果没有问题,则返回空字符串
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CheckFieldMissing(Microsoft.VisualBasic.Data.Framework.IO.RowObject)">
+ <summary>
+ Check of does any field is missing from the input csv table headers?
+ </summary>
+ <param name="headers"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.ContainsProperty(System.Reflection.PropertyInfo)">
+ <summary>
+ 从所绑定的属性来判断
+ </summary>
+ <param name="[Property]"></param>
+ <returns></returns>
+ <remarks>这个函数还需要进行一些绑定的映射</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CreateObjectInternal(System.Type,System.Boolean)">
+ <summary>
+ Creates the data frame schema for the specific object type.
+ </summary>
+ <param name="type"></param>
+ <param name="strict"></param>
+ <returns></returns>
+ <remarks>
+ 因为在这里使用了缓存,所以为了防止外部使用的时候意外修改缓存,在这里将这个函数的访问权限修改为仅内部使用
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.CreateObject``1(System.Boolean)">
+ <summary>
+ ``CreateObject(GetType(T), Explicit)``
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="strict">是否严格解析？严格的意思就是说只解析出经过自定义属性所定义的属性为列</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider.GetMetaAttributeColumn(System.Collections.Generic.Dictionary{System.Reflection.PropertyInfo,Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.StorageProvider},System.Boolean)">
+ <summary>
+ 对于<see cref="T:Microsoft.VisualBasic.ComponentModel.DataSourceModel.DynamicPropertyBase`1"/>的继承对象类型，也会自动解析出来的，假若<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.MetaAttribute"/>没有被定义的话
+ </summary>
+ <param name="Properties"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver">
+ <summary>
+ The dynamics data frame object which its first line is not contains the but using for the title property.
+ </summary>
+ <remarks>
+ (第一行总是没有的，即本对象类型适用于第一行为列标题行的数据)
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.p">
+ <summary>
+ <see cref="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.current"></see>在<see cref="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.table"></see>之中的位置
+ </summary>
+ <remarks>the initialize value of this pointer is -1</remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.table">
+ <summary>
+ table data that contains no header row
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.columnList">
+ <summary>
+ Using the first line of the csv row as the column headers in this csv file.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Nrows">
+ <summary>
+ get number of the row data
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.ChangeMapping(System.Collections.Generic.Dictionary{System.String,System.String})">
+ <summary>
+ ``Csv.Field -> <see cref="P:System.Reflection.MemberInfo.Name"/>``
+ </summary>
+ <param name="mapping">``{oldFieldName, newFieldName}``</param>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.AddAttribute(System.String)">
+ <summary>
+ 这个函数会返回目标列在schema之中的下标序列号
+ 如果已经存在了，则会直接返回下标号
+ </summary>
+ <param name="Name"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.MeasureTypeSchema">
+ <summary>
+ make measuring of the possible column data type
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.CreateDataSource">
+ <summary>
+ Get the lines data for the convinent data operation.
+ </summary>
+ <returns></returns>
+ <remarks>(为了保持一致的顺序，这个函数是非并行化的)</remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.HeadTitles">
+ <summary>
+ The column headers in the csv file first row.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Headers">
+ <summary>
+ The column headers in the csv file first row.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.csv">
+ <summary>
+ Convert this dataframe object as a csv document object
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.#ctor(Microsoft.VisualBasic.Language.ArgumentReference[])">
+ <summary>
+ Create a new dataframe with column value assigned
+ </summary>
+ <param name="columns">
+ 只支持基础类型,不支持复杂类型,因为csv文件的单元格不适用于复杂数据类型的数据文本的存储
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.ColumnRows(Microsoft.VisualBasic.Language.ArgumentReference[])">
+ <summary>
+ transpose the columns vector as rows collection
+ </summary>
+ <param name="columns"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Load(System.String,System.Text.Encoding,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean)">
+ <summary>
+ Try loading a excel csv data file as a dynamics data frame object.
+ </summary>
+ <param name="path"></param>
+ <param name="encoding"></param>
+ <param name="simpleRowIterators">
+ set this parameter to False will enable the multiple line row parser feature.
+ </param>
+ <returns></returns>
+ <remarks>(尝试加载一个Csv文件为数据框对象，请注意，第一行必须要为标题行)</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Parse``1(System.String)">
+ <summary>
+ Parse the csv document text data as a dynamics data frame object, the first line of the csv document will be used as the column headers of the data frame object.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="content"></param>
+ <returns></returns>
+ <remarks>
+ <see cref="M:Microsoft.VisualBasic.Data.Framework.IO.File.Parse(System.String,System.Boolean,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean)"/> the given <paramref name="content"/> text as table object, and then
+ <see cref="M:Microsoft.VisualBasic.Data.Framework.Extensions.AsDataSource``1(Microsoft.VisualBasic.Data.Framework.IO.File,System.Boolean,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean)"/> cast table to target object collection
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.getColumnList(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ use the first row as the column names
+ </summary>
+ <param name="table"></param>
+ <returns></returns>
+ <remarks>
+ just check for the table header and give the warning message
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.CreateObject(Microsoft.VisualBasic.Data.Framework.IO.File,System.Boolean)">
+ <summary>
+ Creates the data frame object from the csv docs.
+ </summary>
+ <param name="file"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.CreateObject(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Data.Framework.IO.RowObject})">
+ <summary>
+ 
+ </summary>
+ <param name="headers">the header text data of each columns</param>
+ <param name="rows">the table data that exlcudes the first header row.</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Initialize(Microsoft.VisualBasic.Language.List{Microsoft.VisualBasic.Data.Framework.IO.RowObject},Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver@,System.Boolean)">
+ <summary>
+ just needs to assign the table value and the column names
+ </summary>
+ <param name="table"></param>
+ <param name="dataframe"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetOrdinal(System.String)">
+ <summary>
+ Function return -1 when column not found. 
+ </summary>
+ <param name="Column"></param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetOrdinalSchema(System.String[])">
+ <summary>
+ Gets the order list of the specific column list, -1 value will be returned when it is not exists in the table.
+ (获取列集合的位置列表，不存在的列则返回-1)
+ </summary>
+ <param name="columns"></param>
+ <returns></returns>
+ <remarks>由于存在一一对应关系，这里不会再使用并行拓展</remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Read">
+ <summary>
+ The data frame object start to reading the data in this table, if the current pointer is reach 
+ the top of the lines then this function will returns FALSE to stop the reading loop.
+ </summary>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Reset">
+ <summary>
+ Reset the reading position in the data frame object.
+ </summary>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.CopyFrom(Microsoft.VisualBasic.Data.Framework.IO.File)">
+ <summary>
+ 这个方法会清除当前对象之中的原有数据
+ </summary>
+ <param name="source"></param>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetRow(System.Int32)">
+ <summary>
+ get row line by its row number
+ </summary>
+ <param name="i"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetRowData">
+ <summary>
+ get current row data vector
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetRow">
+ <summary>
+ get current row string vector
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Select(System.String[])">
+ <summary>
+ Subset of the dataframe object by given column field names
+ </summary>
+ <param name="columnList"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.Close">
+ <summary>
+ Closes the <see cref="T:System.Data.IDataReader"/>:<see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver"/> Object.  
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver.GetSchemaTable">
+ <summary>
+ Returns a System.Data.DataTable that describes the column metadata of the System.Data.IDataReader.
+ </summary>
+ <returns>A System.Data.DataTable that describes the column metadata.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema">
+ <summary>
+ Create table column schema based on the dataframe title headers
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema.AddAttribute(System.String)">
+ <summary>
+ 这个函数会返回目标列在schema之中的下标序列号
+ 如果已经存在了，则会直接返回下标号
+ </summary>
+ <param name="Name"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema.GetOrdinal(System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="name"></param>
+ <returns>
+ -1 means missing
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema.ChangeMapping(System.Collections.Generic.Dictionary{System.String,System.String})">
+ <summary>
+ ``Csv.Field -> <see cref="P:System.Reflection.MemberInfo.Name"/>``
+ </summary>
+ <param name="mapping">``{oldFieldName, newFieldName}``</param>
+ <remarks></remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema.DuplicatedKeys">
+ <summary>
+ There is an duplicated key exists in your csv table, please delete the duplicated key and try load again!
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.HeaderSchema.createSchemaOridinal(System.Collections.Generic.IEnumerable{System.String})">
+ <summary>
+ Indexing the column headers
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.ISchema.SchemaOridinal">
+ <summary>
+ 从数据源之中解析出来得到的域列表
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.NamespaceDoc">
+ <summary>
+ The storage provider abstraction for data frames: the schema interfaces, the header schema
+ and the data frame resolver used to bind tables to object models.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.CollectionAttribute">
+ <summary>
+ This property is a array data type object.
+ </summary>
+ <remarks>(并不建议使用本Csv属性来储存大量的文本字符串，极容易出错)</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.CollectionAttribute.#ctor(System.String,System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="name"></param>
+ <param name="delimiter">
+ 由于受正则表达式的解析速度的影响，因为CSV文件是使用逗号进行分隔的，假若使用逗号的话，正则表达式的解析速度会比较低，故在这里优先考虑使用分号来作为分隔符
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.CollectionAttribute.CreateObject``1(System.Collections.Generic.IEnumerable{``0})">
+ <summary>
+ Collection of object into a cell string content.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute">
+ <summary>
+ This is a column(or Field) in the csv document. The <see cref="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute.CustomParser"/> should implements the 
+ interface type of <see cref="T:Microsoft.VisualBasic.Scripting.Runtime.IParser"/>.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute.CustomParser">
+ <summary>
+ The type should implements the interface <see cref="T:Microsoft.VisualBasic.Scripting.Runtime.IParser"/>
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute.#ctor(System.String,System.Type)">
+ <summary>
+ 构建一个列的别名属性值，也可以在这个构造函数之中指定自定义的解析器用来存储非基本类型
+ </summary>
+ <param name="name"></param>
+ <param name="customParser">The type should implements the interface <see cref="T:Microsoft.VisualBasic.Scripting.Runtime.IParser"/>.
+ (对于基本类型，这个参数是可以被忽略掉的，但是对于复杂类型，这个参数是不能够被忽略的，否则会报错)
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute.ToString">
+ <summary>
+ Display name
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute.TypeInfo">
+ <summary>
+ Reflector
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Ignored">
+ <summary>
+ This property will not write into the csv document file.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ProviderIds.KeyValuePair">
+ <summary>
+ 在写入Csv文件之后是以键值对的形式出现的： Name:=value  (例如： GeneId:=XC_1184)
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttribute">
+ <summary>
+ 在执行解析操作的时候，所有的没有被序列化的属性都将会被看作为字典元素，该字典元素的数据都存储在这个属性值之中
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttribute.TypeId">
+ <summary>
+ The value type of the value slot in the meta attribute dictionary.(被序列化的对象之中的元数据的字典的值的类型)
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttribute.#ctor(System.Type)">
+ <summary>
+ 在执行解析操作的时候，所有的没有被序列化的属性都将会被看作为字典元素，该字典元素的数据都存储在这个属性值之中
+ </summary>
+ <param name="type">
+ The value type of the value slot in the meta attribute dictionary.
+ (被序列化的对象之中的元数据的字典的值的类型)
+ </param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.NamespaceDoc">
+ <summary>
+ Reflection based storage providers: the column and data attributes, metadata providers and
+ the type schema provider that map .NET types to table schemas.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.DataFlowDirections.ReadDataFromObject">
+ <summary>
+ 需要从对象之中读取数据，需要将数据写入文件的时候使用
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.DataFlowDirections.WriteDataToObject">
+ <summary>
+ 需要相对象写入数据，从文件之中加载数据的时候使用
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttributeParser">
+ <summary>
+ 解析出字典域标记信息
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttributeParser.LoadData``1(System.Collections.Generic.IEnumerable{``0},Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.DynamicObjectLoader[],Microsoft.VisualBasic.Data.Framework.StorageProvider.ComponentModels.SchemaProvider)">
+ <summary>
+ 将csv文档里面的数据加载进入对象数组的字典属性之中
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="buf"></param>
+ <param name="DataSource"></param>
+ <param name="Schema"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.MetaAttributeParser.MakeDictionaryType(System.Type)">
+ <summary>
+ Function returns type of <see cref="T:System.Collections.Generic.Dictionary`2"/>
+ </summary>
+ <param name="ValueType">Type of the value in the dictionary, and the key type is <see cref="T:System.String"/></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector">
+ <summary>
+ The dynamics reflection operations on Csv data source services.
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.GetDataFrameworkTypeSchema(System.Type,System.Boolean)">
+ <summary>
+ Returns the type schema as ``{columnName, type}``, using for the cytoscape software
+ </summary>
+ <param name="type"></param>
+ <param name="Explicit"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.LoadDataToObject(Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver,System.Type,System.Boolean,System.String,System.Boolean,System.Boolean)">
+ <summary>
+ 将Csv文件加载至一个目标集合之中以完成数据从文件之中的读取操作
+ </summary>
+ <param name="csv"></param>
+ <param name="type"></param>
+ <param name="strict"></param>
+ <returns></returns>
+ <remarks></remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.Convert``1(Microsoft.VisualBasic.Data.Framework.StorageProvider.DataFrameResolver,System.Boolean,System.String,System.Boolean)">
+ <summary>
+ 从文件之中读取数据并转换为对象数据
+ </summary>
+ <typeparam name="TClass"></typeparam>
+ <param name="df"></param>
+ <param name="strict"></param>
+ <returns></returns>
+ <remarks>在这里查找所有具有写属性的属性对象即可</remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.Load``1(System.String,System.Boolean,System.Text.Encoding,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.String,Microsoft.VisualBasic.ComponentModel.DataSourceModel.NamedValue{System.Func{System.String,System.Boolean}},System.Boolean,System.Boolean)">
+ <summary>
+ Method for load a csv data file into a specific type of object collection.
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="Explicit">
+ 当本参数值为False的时候，所有的简单属性值都将被解析出来，而忽略掉其是否带有
+ <see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"></see>自定义属性
+ </param>
+ <param name="path"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.GetsRowData(System.Collections.Generic.IEnumerable{System.Object},System.Type,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.String,System.Int32,System.Collections.Generic.Dictionary{System.String,System.Int32})">
+ <summary>
+ Save the specifc type object collection into the csv data file.(将目标对象数据的集合转换为Csv文件已进行数据保存操作)
+ </summary>
+ <param name="source"></param>
+ <param name="strict"></param>
+ <returns></returns>
+ <remarks>查找所有具备读属性的属性值</remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.doSave(System.Collections.IEnumerable,System.Type,System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Type},System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Int32,System.Collections.Generic.Dictionary{System.String,System.Int32},System.String)">
+ <summary>
+ Save the specifc type object collection into the csv data file.(将目标对象数据的集合转换为Csv文件已进行数据保存操作)
+ </summary>
+ <param name="objSource"></param>
+ <param name="strict"></param>
+ <param name="schemaOut">请注意，Key是Csv文件之中的标题，不是属性名称了</param>
+ <returns>
+ this function populate out the title row and other data rows
+ </returns>
+ <remarks>查找所有具备读属性的属性值</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.Save``1(System.Collections.Generic.IEnumerable{``0},System.Boolean,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean,System.Collections.Generic.Dictionary{System.String,System.Type}@,System.Int32,System.String)">
+ <summary>
+ Save the specifc type object collection into the csv data file.
+ (将目标对象数据的集合转换为Csv文件已进行数据保存操作，非并行化的以保持数据原有的顺序)
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="strict"></param>
+ <param name="schemaOut">``ByRef``反向输出的Schema参数</param>
+ <returns></returns>
+ <remarks>查找所有具备读属性的属性值</remarks>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.Reflector.ExportAsPropertyAttributes``1(System.Collections.Generic.IEnumerable{``0},System.Boolean)">
+ <summary>
+ 将数据集合导出为键值对，以方便其他操作
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="source"></param>
+ <param name="Explicit"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.IsDataIgnored(System.Reflection.PropertyInfo)">
+ <summary>
+ 当忽略的标志不为空的时候，说明这个属性是被忽略掉的
+ </summary>
+ <param name="[property]"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.GetProperties(System.Type,System.Boolean)">
+ <summary>
+ 返回的字典对象之中的Value部分是自定义属性
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.GetInterfaces(System.Reflection.PropertyInfo,System.Boolean,System.Boolean)">
+ <summary>
+ 当目标属性上面没有任何自定义属性数据的时候，会检查是否为简单数据类型，假若是则会自动添加一个NullMask，
+ 假若不是，则会返回空集合，则说明这个属性不会被用于序列化和反序列化。
+ 假若返回来的是空值，则说明是复杂类型
+ </summary>
+ <param name="[Property]">对于LINQ的Column属性也会接受的</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.__generateMask(System.Reflection.PropertyInfo,System.String,System.Boolean,Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute)">
+ <summary>
+ 这个函数是针对没有任何自定义属性标记的属性对象而言的
+ </summary>
+ <param name="[Property]"></param>
+ <param name="[alias]"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.IsKeyValuePair(System.Reflection.PropertyInfo)">
+ <summary>
+ 这个属性的类型可以同时允许系统的内建的键值对类型，也可以是<see cref="F:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.KeyValuePairObject"/>
+ </summary>
+ <param name="[property]"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.TypeSchemaProvider.GetThisElement(System.Type,System.Boolean)">
+ <summary>
+ 获取集合类型的元素类型，假若获取不到，则会返回类型<see cref="T:System.Void"/>
+ </summary>
+ <param name="type"></param>
+ <returns></returns>
+ <param name="forcePrimitive">当本参数为False的时候，假若不是集合类型，函数会返回Nothing</param>
+</member>
+</members>
+</doc>

@@ -1,0 +1,1240 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Data.DataPlot
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Data.Plots.BoxGroup">
+ <summary>盒须图分组</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.BoxPlot">
+ <summary>盒须图（Box Plot / Box-and-Whisker）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.BubbleSeries">
+ <summary>气泡图数据系列（X/Y 定位，Sizes 映射第三维）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubbleSeries.Sizes">
+ <summary>气泡大小（第三维数据）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.BubblePlot">
+ <summary>气泡图（三维散点，气泡半径映射第三维）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubblePlot.MinBubbleSize">
+ <summary>最小气泡半径（像素）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubblePlot.MaxBubbleSize">
+ <summary>最大气泡半径（像素）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubblePlot.FillAlpha">
+ <summary>填充透明度（0-255）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubblePlot.ShowSizeLegend">
+ <summary>显示气泡大小图例</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BubblePlot.SizeLegendCount">
+ <summary>大小图例示例值个数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.BubblePlot.SizeToRadius(System.Double,System.Double,System.Double)">
+ <summary>数值映射为气泡半径</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.BubblePlot.DrawSizeLegend(System.Double,System.Double)">
+ <summary>右下角绘制大小图例（同心圆示例）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.ChordLink">
+ <summary>和弦图连接（可选辅助结构，用于显式指定连接而非矩阵）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.ChordPlot">
+ <summary>和弦图（圆形布局，节点弧段 + 贝塞尔曲线和弦）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.NodeLabels">
+ <summary>节点标签</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.Matrix">
+ <summary>邻接矩阵 (n×n)，Matrix(i,j) 表示从 i 到 j 的流量</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.Links">
+ <summary>显式连接列表（可选，优先于 Matrix）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.NodeColors">
+ <summary>节点颜色</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.ChordAlpha">
+ <summary>和弦透明度（0-255）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.Symmetric">
+ <summary>是否对称化矩阵（i↔j 流量合并）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.ShowSelfLoops">
+ <summary>仅绘制显式连接（不画对角线自环）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.StartAngle">
+ <summary>起始角度（度，默认 -90 即 12 点方向）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.ChordPlot.GapAngle">
+ <summary>节点弧段间隙（度）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.ChordPlot.DrawArcBand(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Drawing.Color)">
+ <summary>绘制圆弧色带（外环）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.HeatmapPlot">
+ <summary>热图</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.JitterPlot">
+ <summary>Jitter 散点图（分组数据在 X 方向随机抖动以避免遮挡）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.Groups">
+ <summary>分组数据（复用 BoxGroup 结构）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.JitterWidth">
+ <summary>抖动幅度占组宽比例（0-0.5）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.RandomSeed">
+ <summary>随机种子（确保可复现，Nothing 表示随机）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.MarkerShape">
+ <summary>标记形状</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.MarkerSize">
+ <summary>标记大小</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.JitterPlot.MarkerAlpha">
+ <summary>标记透明度（0-255）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.JitterPlot.DrawMarkerAlpha(System.Single,System.Single,Microsoft.VisualBasic.Data.Plots.MarkerShape,System.Single,System.Drawing.Color,System.Int32)">
+ <summary>带透明度的标记绘制（基类 DrawMarker 不支持透明度）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.PiePlot">
+ <summary>饼图</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.RadarPlot">
+ <summary>雷达图（蛛网图，多维度多系列叠加）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RadarPlot.MultiValues">
+ <summary>多系列数据 [系列, 类别]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RadarPlot.FillAlpha">
+ <summary>填充透明度（0-255）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RadarPlot.GridLevels">
+ <summary>同心网格层数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RadarPlot.MaxValue">
+ <summary>数据值归一化最大值（Nothing 表示自动）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RadarPlot.ShowScale">
+ <summary>显示数值刻度</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.RosePlot">
+ <summary>南丁格尔玫瑰图（等角度扇区，半径与数值成比例）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RosePlot.Donut">
+ <summary>是否环形（中心挖空）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RosePlot.ShowPercentage">
+ <summary>显示百分比标签</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RosePlot.StartAngle">
+ <summary>起始角度（度，默认 -90 即 12 点方向）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.RosePlot.ShowValues">
+ <summary>显示数值标签</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.SankeyPlot">
+ <summary>桑基图（Sankey Diagram）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.TreemapNode">
+ <summary>矩形树图节点</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapNode.Group">
+ <summary>分组（用于着色，可选）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapNode.Rect">
+ <summary>运行时：布局后的矩形</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.TreemapPlot">
+ <summary>矩形树图（Squarified 布局算法，优化子矩形宽高比接近 1:1）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapPlot.ShowLabels">
+ <summary>显示标签</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapPlot.ShowValues">
+ <summary>显示数值</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapPlot.AutoFontSize">
+ <summary>标签字体大小自适应（按矩形面积缩放）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapPlot.ColorByGroup">
+ <summary>按 Group 分组着色（同一 Group 同色）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.TreemapPlot.BorderWidth">
+ <summary>边框宽度</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.TreemapPlot.AssignColors">
+ <summary>按 Group 分配颜色（同一组同色），否则按索引取调色板</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.TreemapPlot.Squarify(System.Collections.Generic.List{System.Tuple{Microsoft.VisualBasic.Data.Plots.TreemapNode,System.Single}},System.Drawing.RectangleF)">
+ <summary>Squarified 算法：沿最短边逐行切分</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.TreemapPlot.WorstAspect(System.Collections.Generic.List{System.Tuple{Microsoft.VisualBasic.Data.Plots.TreemapNode,System.Single}},System.Single)">
+ <summary>计算一行中所有矩形的最大宽高比（越接近 1 越好）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.TreemapPlot.LayoutRow(System.Collections.Generic.List{System.Tuple{Microsoft.VisualBasic.Data.Plots.TreemapNode,System.Single}},System.Drawing.RectangleF@)">
+ <summary>布局一行（沿当前最短边排列），并从 area 中扣除已用部分</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.TreemapPlot.DrawNodeLabel(Microsoft.VisualBasic.Data.Plots.TreemapNode,System.Drawing.Color)">
+ <summary>绘制节点标签（自适应字体大小，文字颜色按背景亮度反色）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.ViolinPlot">
+ <summary>小提琴图（Violin Plot）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.AreaPlot">
+ <summary>基础面积图（曲线下面积填充）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.AreaPlot.Smooth">
+ <summary>是否启用 Catmull-Rom 平滑曲线</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.AreaPlot.SmoothSegments">
+ <summary>平滑插值每段采样点数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.AreaPlot.FillAlpha">
+ <summary>填充透明度（0-255）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.AreaPlot.Baseline">
+ <summary>面积基线 Y 值（默认 0，即曲线下面积）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.AreaPlot.CatmullRom(System.Collections.Generic.List{System.Drawing.PointF},System.Int32)">
+ <summary>Catmull-Rom 样条插值，返回密集采样点列表</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.BarPlot">
+ <summary>柱状图（分类数据）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.BarPlot.MultiValues">
+ <summary>多系列时使用 [系列, 类别] 二维数组</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.HistogramPlot">
+ <summary>直方图</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.LinePlot">
+ <summary>折线图（默认无标记，可单独配置）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.LinePlot.#ctor(Microsoft.VisualBasic.Imaging.Bitmap)">
+ <summary>直接在已有的位图上绘制（用于宿主程序 PictureBox 等）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.LinePlot.#ctor(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Data.Plots.PlotTheme)">
+ <summary>
+ 直接在外部绘图设备上绘制 —— 例如 DirectX 的 GPU 画布
+ （<c>Microsoft.VisualBasic.Drawing.DirectX.DxGraphics</c>）。
+ </summary>
+ <param name="g">
+ 目标绘图设备。<c>DxCanvas</c> 控件的 <c>Graphics</c> 属性、
+ 或者它的 <c>Render</c> 事件参数 <c>e.Graphics</c> 就是可直接传入的实例 ——
+ 也就是说曲线图会<b>直接画在控件上</b>，不需要中间位图。
+ </param>
+ <param name="theme">主题（省略时用浅色主题）</param>
+ <remarks>
+ 用这种方式构造时，画布所有权仍归调用方（<see cref="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.Dispose"/> 不会释放它），
+ 因此可以放心写成 <c>Using plot ... End Using</c>。
+ 
+ 注意画布尺寸取自 <c>g.Size</c>：控件尺寸变化后要重新构造本对象，否则排版仍按旧尺寸。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.ScatterPlot">
+ <summary>散点图</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.ScatterPlot.#ctor(Microsoft.VisualBasic.Imaging.Bitmap)">
+ <summary>直接在已有的位图上绘制（用于宿主程序 PictureBox 等）。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.StackedAreaPlot">
+ <summary>堆叠面积图</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.StackedAreaPlot.MultiValues">
+ <summary>多系列数据 [系列, 类别]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.StackedAreaPlot.Smooth">
+ <summary>是否启用 Catmull-Rom 平滑曲线</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.StackedAreaPlot.CatmullRom(System.Collections.Generic.List{System.Drawing.PointF},System.Int32)">
+ <summary>Catmull-Rom 样条插值，返回密集采样点列表</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.StackedBarPlot">
+ <summary>堆叠柱状图（多系列沿 Y 轴累加堆叠）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.StackedBarPlot.MultiValues">
+ <summary>多系列数据 [系列, 类别]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.StackedBarPlot.ShowTotalLabel">
+ <summary>仅显示总计标签（堆叠顶部）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.AxisSide">
+ <summary>坐标轴</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssRule">
+ <summary>
+ Represents a single CSS rule with a selector and a set of properties.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssThemeMapper">
+ <summary>
+ The CSS theme mapping module. Provides two public functions:
+ - ParseCss: Parses a CSS string/file into a Theme object
+ - SerializeCss: Serializes a Theme object to a CSS string/file
+
+ CSS Format:
+   /* Comments are supported */
+   
+   @canvas {
+       width: 800px;
+       height: 600px;
+       ppi: 96;
+       base-font-size: 11pt;
+   }
+   
+   text {
+       family: "sans-serif";
+       size: 11pt;
+       color: #333333;
+       face: plain;
+       hjust: 0.5;
+       vjust: 0.5;
+       angle: 0;
+       lineheight: 1.2;
+       margin: 2pt 2pt 2pt 2pt;
+   }
+   
+   axis.title {
+       face: bold;
+   }
+   
+   panel.grid.minor.y {
+       blank: true;
+   }
+   
+   axis.ticks.length {
+       length: 0.25cm;
+   }
+   
+   plot.margin {
+       margin: 5pt 5pt 5pt 5pt;
+   }
+   
+   legend.position {
+       value: right;
+   }
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssThemeMapper.ParseCss(System.String)">
+ <summary>
+ Parses a CSS string into a Theme object.
+ This is one of the two main public functions of the CSS mapping module.
+ </summary>
+ <param name="css">The CSS string to parse.</param>
+ <returns>A Theme object populated from the CSS.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssThemeMapper.ParseCssFile(System.String)">
+ <summary>
+ Parses a CSS file into a Theme object.
+ </summary>
+ <param name="filePath">Path to the CSS file.</param>
+ <returns>A Theme object populated from the CSS file.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssThemeMapper.SerializeCss(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme,System.Boolean)">
+ <summary>
+ Serializes a Theme object to a CSS string.
+ This is one of the two main public functions of the CSS mapping module.
+ </summary>
+ <param name="theme">The Theme object to serialize.</param>
+ <param name="includeDefaults">If True, includes default values for root elements.</param>
+ <returns>A CSS string representing the theme.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CssThemeMapper.SerializeCssFile(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme,System.String,System.Boolean)">
+ <summary>
+ Serializes a Theme object to a CSS file.
+ </summary>
+ <param name="theme">The Theme object to serialize.</param>
+ <param name="filePath">Path to the output CSS file.</param>
+ <param name="includeDefaults">If True, includes default values for root elements.</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme">
+ <summary>
+ Provides factory methods for creating default themes equivalent to
+ ggplot2's built-in themes: theme_grey, theme_bw, theme_classic,
+ theme_minimal, theme_light, and theme_dark.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Grey">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_grey().
+ This is the default ggplot2 theme with a grey panel background.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Bw">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_bw().
+ White panel background with black border.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Classic">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_classic().
+ No grid lines, no background, only axis lines.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Minimal">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_minimal().
+ No background, no border, no axis lines, subtle grid.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Light">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_light().
+ Light grey background and grid lines.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.DefaultTheme.Dark">
+ <summary>
+ Creates a theme equivalent to ggplot2's theme_dark().
+ Dark panel background with light grid lines.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ArrowSpec">
+ <summary>
+ Arrow specification for line elements, equivalent to ggplot2's arrow().
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ArrowSpec.Angle">
+ <summary>Angle of arrow head in degrees (0-180). Default 30.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ArrowSpec.Length">
+ <summary>Length of arrow head edges.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ArrowSpec.Ends">
+ <summary>Which end(s) to draw arrows: "first", "last", or "both".</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ArrowSpec.Type">
+ <summary>Arrow head type: "open" or "closed".</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement">
+ <summary>
+ Base class for all theme elements. Each property can be Nothing/null
+ meaning "inherit from parent element". This enables property-level
+ inheritance matching ggplot2's theme inheritance system.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement.IsBlank">
+ <summary>
+ If True, this element is "blank" (element_blank) and should not be rendered.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement.IsSet">
+ <summary>True if this element has been explicitly set in the theme.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement.MergeFrom(Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement)">
+ <summary>
+ Merges unset properties from a parent element into this element.
+ Only properties that are Nothing (unset) in this element are filled
+ from the parent. This implements property-level inheritance.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement.ToCssBody">
+ <summary>Returns the CSS rule body (properties) for this element.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement.SetPropertyFromCss(System.String,System.String)">
+ <summary>
+ Sets a property by name from a CSS value string.
+ Used by the CSS parser.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine">
+ <summary>
+ Line element, equivalent to ggplot2's element_line().
+ Properties: colour, linewidth, linetype, lineend, arrow.
+ Inherits from the 'line' root element.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine.Colour">
+ <summary>Line color. Nothing=inherit, Color.Empty=NA(transparent), other=specific color.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine.Linewidth">
+ <summary>Line width as a Unit. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine.Linetype">
+ <summary>Line type: "solid", "dashed", "dotted", "dotdash", "longdash", "twodash", or "blank".</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine.Lineend">
+ <summary>Line end cap style: "butt", "round", or "square".</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementLine.Arrow">
+ <summary>Arrow specification. Nothing=no arrow.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementRect">
+ <summary>
+ Rectangle element, equivalent to ggplot2's element_rect().
+ Properties: fill, colour, linewidth, linetype.
+ Inherits from the 'rect' root element.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementRect.Fill">
+ <summary>Fill color. Nothing=inherit, Color.Empty=NA(transparent), other=specific color.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementRect.Colour">
+ <summary>Border color. Nothing=inherit, Color.Empty=NA(no border), other=specific color.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementRect.Linewidth">
+ <summary>Border width as a Unit. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementRect.Linetype">
+ <summary>Border line type.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText">
+ <summary>
+ Text element, equivalent to ggplot2's element_text().
+ Properties: family, face, size, colour, hjust, vjust, angle, lineheight, margin.
+ Inherits from the 'text' root element (via 'title' for title elements).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Family">
+ <summary>Font family name. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Face">
+ <summary>Font face: "plain", "bold", "italic", or "bold.italic".</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Size">
+ <summary>Font size as a Unit (typically points). Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Colour">
+ <summary>Text color. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Hjust">
+ <summary>Horizontal justification (0=left, 0.5=center, 1=right). Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Vjust">
+ <summary>Vertical justification (0=bottom, 0.5=middle, 1=top). Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Angle">
+ <summary>Text angle in degrees. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Lineheight">
+ <summary>Line height multiplier. Nothing=inherit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementText.Margin">
+ <summary>Margin around text. Nothing=inherit.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementPoint">
+ <summary>
+ Point element, equivalent to ggplot2's element_point().
+ Inherits from the 'point' root element.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementPolygon">
+ <summary>
+ Polygon element, equivalent to ggplot2's element_polygon().
+ Inherits from the 'polygon' root element.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementGeom">
+ <summary>
+ Geom defaults element, equivalent to ggplot2's element_geom().
+ Defines default colors and palettes for geometric objects.
+ Inherits from the 'geom' root element.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementGeom.Ink">
+ <summary>Default ink (primary) color for geoms.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementGeom.Accent">
+ <summary>Accent color for geoms.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementGeom.Paper">
+ <summary>Paper (background) color for geoms.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ColorToCss(System.Drawing.Color)">
+ <summary>Converts a Color to CSS string representation.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ParseColor(System.String)">
+ <summary>Parses a color from CSS string. Supports #RGB, #RRGGBB, #AARRGGBB, named colors, and "NA".</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ParseColorList(System.String)">
+ <summary>Parses a list of colors from a space or comma-separated string.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ColorsToCss(System.Collections.Generic.List{System.Drawing.Color})">
+ <summary>Converts a list of colors to CSS string.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ParseDouble(System.String)">
+ <summary>Parses a double from a string.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.ParseBool(System.String)">
+ <summary>Parses a boolean from a string.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.QuoteString(System.String)">
+ <summary>Quotes a string for CSS output.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ElementHelpers.UnquoteString(System.String)">
+ <summary>Removes quotes from a string.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementText">
+ <summary>
+ A text element with all properties resolved to pixel values.
+ Produced by LayoutCalculator for rendering.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementText.ToFont">
+ <summary>Creates a System.Drawing.Font from the resolved properties.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementLine">
+ <summary>
+ A line element with all properties resolved to pixel values.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementLine.ToPen">
+ <summary>Creates a System.Drawing.Pen from the resolved properties.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementRect">
+ <summary>
+ A rectangle element with all properties resolved to pixel values.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementRect.ToFillBrush">
+ <summary>Creates a System.Drawing.Brush for the fill.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ResolvedElementRect.ToBorderPen">
+ <summary>Creates a System.Drawing.Pen for the border.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout">
+ <summary>
+ Contains computed pixel positions for the main plot regions.
+ All values are in pixels relative to the canvas origin (top-left).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.CanvasRect">
+ <summary>The full canvas rectangle.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.PlotAreaRect">
+ <summary>The plot area (inside margins, where panels are drawn).</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.PanelAreaRect">
+ <summary>The panel area (inside plot area, where data is plotted).</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.MarginTopPx">
+ <summary>Top margin in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.MarginRightPx">
+ <summary>Right margin in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.MarginBottomPx">
+ <summary>Bottom margin in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.MarginLeftPx">
+ <summary>Left margin in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.TickLengthXBottomPx">
+ <summary>Tick length for x-axis (bottom) in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.TickLengthXTopPx">
+ <summary>Tick length for x-axis (top) in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.TickLengthYLeftPx">
+ <summary>Tick length for y-axis (left) in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.TickLengthYRightPx">
+ <summary>Tick length for y-axis (right) in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.PanelSpacingXPx">
+ <summary>Panel spacing in x direction (pixels).</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.PanelSpacingYPx">
+ <summary>Panel spacing in y direction (pixels).</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.LegendKeySizePx">
+ <summary>Legend key size in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.PlotLayout.LegendSpacingPx">
+ <summary>Legend spacing in pixels.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator">
+ <summary>
+ The automatic layout calculation system. Converts all theme units
+ (cm, mm, pt, lines, char, null, npc, inch, px) to pixel values
+ based on the canvas context (canvas size, PPI).
+
+ This class provides methods to:
+ - Resolve theme elements with inheritance applied
+ - Convert all units to pixels
+ - Compute layout positions for plot regions
+ - Get pixel values for line widths, font sizes, tick lengths, etc.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.#ctor(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme,Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext)">
+ <summary>
+ Creates a LayoutCalculator for the given theme and canvas context.
+ </summary>
+ <param name="theme">The theme to calculate layout for.</param>
+ <param name="canvas">The canvas context (dimensions, PPI). If Nothing, uses theme's canvas or a default 800x600@96dpi.</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.Canvas">
+ <summary>The canvas context used for calculations.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.Converter">
+ <summary>The unit converter.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.Theme">
+ <summary>The theme being calculated.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveText(System.String)">
+ <summary>
+ Resolves a text element to pixel values, applying inheritance.
+ Returns a ResolvedElementText with all properties filled in.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveLine(System.String)">
+ <summary>
+ Resolves a line element to pixel values, applying inheritance.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveRect(System.String)">
+ <summary>
+ Resolves a rect element to pixel values, applying inheritance.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveUnitToPixels(System.String,System.Double,System.Double,System.Double)">
+ <summary>
+ Resolves a unit value to pixels, applying inheritance.
+ For NPC units, uses the canvas dimensions as the parent.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveUnitToPixelsX(System.String,System.Double,System.Double)">
+ <summary>
+ Resolves a unit value to pixels using width context (for horizontal measurements).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveUnitToPixelsY(System.String,System.Double,System.Double)">
+ <summary>
+ Resolves a unit value to pixels using height context (for vertical measurements).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ResolveMarginToPixels(System.String,System.Double,System.Double,System.Double)">
+ <summary>
+ Resolves a margin to pixel values (top, right, bottom, left).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetFontSizePx(System.String)">
+ <summary>
+ Gets the font size in pixels for a text element.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetLineWidthPx(System.String)">
+ <summary>
+ Gets the line width in pixels for a line element.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetTickLengthPx(System.String)">
+ <summary>
+ Gets the tick length in pixels for the specified axis.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetPanelSpacingPx(System.String)">
+ <summary>
+ Gets the panel spacing in pixels for the specified direction.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetLegendKeySizePx">
+ <summary>
+ Gets the legend key size in pixels.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetLegendSpacingPx">
+ <summary>
+ Gets the legend spacing in pixels.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ComputePlotLayout(System.Double,System.Double)">
+ <summary>
+ Computes the full plot layout, including canvas rect, plot area
+ (inside margins), and panel area. All values are in pixels.
+ </summary>
+ <param name="canvasWidth">Canvas width in pixels. If &lt;= 0, uses canvas context width.</param>
+ <param name="canvasHeight">Canvas height in pixels. If &lt;= 0, uses canvas context height.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.ComputeLegendPosition(System.Drawing.RectangleF)">
+ <summary>
+ Computes the legend position based on the theme's legend.position
+ and legend.position.inside settings.
+ </summary>
+ <returns>A tuple of (x, y, isInside) where x,y are in pixels or NPC.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.GetAspectRatio">
+ <summary>
+ Gets the aspect ratio (plot width / plot height) from the theme.
+ Returns Nothing if not set (no constraint).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.LayoutCalculator.DumpLayout">
+ <summary>
+ Returns a string with all resolved layout values for debugging.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.NamespaceDoc">
+ <summary>
+ The ggplot style theme definitions used by the plot library.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType">
+ <summary>
+ Identifies the type of a theme element, used for CSS parsing and
+ inheritance resolution.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementLine">
+ <summary>Line element (element_line)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementRect">
+ <summary>Rectangle element (element_rect)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementText">
+ <summary>Text element (element_text)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementPoint">
+ <summary>Point element (element_point)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementPolygon">
+ <summary>Polygon element (element_polygon)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.ElementGeom">
+ <summary>Geom defaults element (element_geom)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.Unit">
+ <summary>Single Unit value (e.g., axis.ticks.length)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.Margin">
+ <summary>Margin value (e.g., plot.margin)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementType.Scalar">
+ <summary>Scalar value: string, number, or boolean</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElementNames">
+ <summary>
+ Contains string constants for all ggplot2 theme element names.
+ These match the parameter names of ggplot2's theme() function exactly.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree">
+ <summary>
+ Defines the inheritance relationships between theme elements and
+ the element type for each named element. This mirrors the
+ inheritance tree documented in ggplot2's theme() function.
+
+ Inheritance works as follows:
+ - Each element has a parent element (or is a root)
+ - When resolving an element, unset properties are filled from the parent
+ - This continues up the tree until all properties are resolved
+ - Root elements (line, rect, text, etc.) provide base defaults
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree.GetParent(System.String)">
+ <summary>Returns the parent element name for the given element, or Nothing if it's a root.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree.GetElementType(System.String)">
+ <summary>Returns the element type for the given element name.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree.IsKnownElement(System.String)">
+ <summary>Returns True if the element name is known.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree.GetAncestry(System.String)">
+ <summary>Returns the inheritance chain from root to the given element.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.InheritanceTree.GetAllElementNames">
+ <summary>Returns all known element names.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme">
+ <summary>
+ The main theme class that holds all ggplot2 theme elements and scalar
+ properties. Elements are stored in a dictionary keyed by their ggplot
+ name (e.g., "axis.title.x.bottom").
+
+ The theme supports:
+ - Root elements (line, rect, text, etc.) that provide base defaults
+ - Child elements that inherit unset properties from their parent
+ - Property-level inheritance (individual properties can be overridden)
+ - element_blank support (IsBlank = True)
+ - Scalar properties (aspect.ratio, legend.position, etc.)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Canvas">
+ <summary>Canvas context associated with this theme (optional).</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetElement(System.String)">
+ <summary>
+ Gets a theme element by name. Returns Nothing if not set.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetElement``1(System.String)">
+ <summary>
+ Gets a theme element by name, typed. Returns Nothing if not set or wrong type.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.SetElement(System.String,Microsoft.VisualBasic.Data.Plots.GgplotTheme.ThemeElement)">
+ <summary>
+ Sets a theme element by name.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.HasElement(System.String)">
+ <summary>
+ Returns True if an element with the given name has been explicitly set.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.RemoveElement(System.String)">
+ <summary>
+ Removes an element from the theme.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetElementNames">
+ <summary>Returns all element names that have been set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetUnit(System.String)">
+ <summary>Gets a Unit value by name. Returns Nothing if not set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.SetUnit(System.String,Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit)">
+ <summary>Sets a Unit value by name.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.HasUnit(System.String)">
+ <summary>Returns True if a Unit with the given name has been set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetMargin(System.String)">
+ <summary>Gets a Margin value by name. Returns Nothing if not set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.SetMargin(System.String,Microsoft.VisualBasic.Data.Plots.GgplotTheme.Margin)">
+ <summary>Sets a Margin value by name.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.HasMargin(System.String)">
+ <summary>Returns True if a Margin with the given name has been set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetScalar(System.String)">
+ <summary>Gets a scalar value by name. Returns Nothing if not set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetScalar``1(System.String)">
+ <summary>Gets a scalar value by name, typed. Returns default if not set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.SetScalar(System.String,System.Object)">
+ <summary>Sets a scalar value by name.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.HasScalar(System.String)">
+ <summary>Returns True if a scalar with the given name has been set.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.GetScalarNames">
+ <summary>Returns all scalar names that have been set.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Line">
+ <summary>Root line element. All line-type elements inherit from this.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Rect">
+ <summary>Root rect element. All rect-type elements inherit from this.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Text">
+ <summary>Root text element. All text-type elements inherit from this.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Title">
+ <summary>Title element. Inherits from text. Plot titles inherit from this.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Point">
+ <summary>Root point element.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Polygon">
+ <summary>Root polygon element.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Geom">
+ <summary>Root geom element. Defines default geom colors and palettes.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.AspectRatio">
+ <summary>Aspect ratio scalar (plot width / plot height). Null = no constraint.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.LegendPosition">
+ <summary>Legend position: "none", "left", "right", "bottom", "top", or "inside".</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.ResolveElement(System.String)">
+ <summary>
+ Resolves a theme element by applying inheritance from its ancestors.
+ Returns a new element with all properties filled in from the
+ inheritance chain. If the element is not set, returns Nothing.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.ResolveUnit(System.String)">
+ <summary>
+ Resolves a Unit value by applying inheritance.
+ If the unit is relative (rel), resolves against the parent unit.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.ResolveMargin(System.String)">
+ <summary>
+ Resolves a Margin value by applying inheritance.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.ResolveScalar(System.String)">
+ <summary>
+ Resolves a scalar value by applying inheritance.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme.Merge(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Theme)">
+ <summary>
+ Merges another theme into this one. Elements from the other theme
+ override corresponding elements in this theme.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType">
+ <summary>
+ Supported unit types for theme measurements, mirroring R's grid unit() system.
+ These correspond to the units used in ggplot2 theme specifications.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Cm">
+ <summary>Centimeters - absolute physical unit (1cm = 1/2.54 inch)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Mm">
+ <summary>Millimeters - absolute physical unit (1mm = 1/25.4 inch)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Pt">
+ <summary>Points - absolute unit (1pt = 1/72 inch)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Lines">
+ <summary>Lines of text - relative to current font size and line height</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Char">
+ <summary>Character width - relative to current font size (width of '0')</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Null">
+ <summary>Null unit - represents no value / not set</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Npc">
+ <summary>NPC - Normalized Parent Coordinates (0.0 to 1.0 relative to parent viewport)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Inch">
+ <summary>Inches - absolute physical unit</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Px">
+ <summary>Pixels - device units</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType.Rel">
+ <summary>Relative unit - multiplier of the inherited value (ggplot's rel())</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit">
+ <summary>
+ Represents a measurement with a unit, equivalent to R's grid::unit().
+ Each Unit holds a numeric value and a UnitType.
+ Units are converted to pixels by the UnitConverter based on canvas context.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.#ctor">
+ <summary>Creates a null unit (value=0, type=Null).</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.#ctor(System.Double,Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType)">
+ <summary>Creates a unit with the specified value and type.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.Value">
+ <summary>The numeric magnitude of the unit.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.Type">
+ <summary>The unit type (cm, mm, pt, lines, char, null, npc, inch, px, rel).</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.IsNull">
+ <summary>Returns True if this unit is a null (unset) unit.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.IsRelative">
+ <summary>Returns True if this unit is a relative (rel) unit.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.ResolveRelative(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit)">
+ <summary>
+ Resolves a relative (rel) unit against a parent unit value.
+ If this unit is rel, the result is (this.Value * parent.Value) with parent's type.
+ Otherwise, returns this unit unchanged.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.UnitTypeToString(Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitType)">
+ <summary>Converts a UnitType to its string representation.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.Parse(System.String)">
+ <summary>
+ Parses a unit string (e.g., "0.25cm", "11pt", "0.5npc", "null") into a Unit.
+ Supports all ggplot unit types. Bare numbers default to npc.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit.StringToUnitType(System.String)">
+ <summary>Converts a unit string to UnitType.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Margin">
+ <summary>
+ Represents a four-sided margin (top, right, bottom, left).
+ Equivalent to ggplot2's margin() function.
+ Each side is a Unit, allowing mixed units.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.Margin.Parse(System.String)">
+ <summary>
+ Parses a margin from a string like "5pt 5pt 5pt 5pt" (top right bottom left)
+ or "5pt" (all sides) or "5pt 10pt" (top/bottom left/right).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext">
+ <summary>
+ Provides canvas environment information needed for unit-to-pixel conversion.
+ Contains canvas dimensions, PPI (pixels per inch), and base font metrics.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext.WidthPx">
+ <summary>Canvas width in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext.HeightPx">
+ <summary>Canvas height in pixels.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext.Ppi">
+ <summary>Pixels per inch (DPI). Default is 96 (standard screen DPI).</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext.BaseFontSizePt">
+ <summary>Base font size in points, used for 'lines' and 'char' unit conversion.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.GgplotTheme.CanvasContext.LineHeight">
+ <summary>Line height multiplier, used for 'lines' unit conversion.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter">
+ <summary>
+ Converts Unit values to pixels based on a CanvasContext.
+ Handles all ggplot unit types: cm, mm, pt, lines, char, null, npc, inch, px.
+ For relative units (rel), resolve against parent value before calling ToPixels.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.ToPixels(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit,System.Double,System.Double,System.Double)">
+ <summary>
+ Converts a Unit to pixels. For NPC units, uses the larger of parent width/height.
+ Use ToPixelsX or ToPixelsY for axis-specific NPC conversion.
+ </summary>
+ <param name="unit">The unit to convert. If Nothing or Null, returns 0.</param>
+ <param name="fontSizePt">Font size in points for 'lines'/'char' conversion. If &lt;= 0, uses canvas base font size.</param>
+ <param name="parentWidthPx">Parent width in pixels for NPC. If &lt;= 0, uses canvas width.</param>
+ <param name="parentHeightPx">Parent height in pixels for NPC. If &lt;= 0, uses canvas height.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.ToPixelsX(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit,System.Double,System.Double)">
+ <summary>
+ Converts a Unit to pixels using width context (for horizontal measurements).
+ NPC units are resolved against parent width.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.ToPixelsY(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Unit,System.Double,System.Double)">
+ <summary>
+ Converts a Unit to pixels using height context (for vertical measurements).
+ NPC units are resolved against parent height.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.MarginToPixels(Microsoft.VisualBasic.Data.Plots.GgplotTheme.Margin,System.Double,System.Double,System.Double)">
+ <summary>Converts a Margin to pixel values (top, right, bottom, left).</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.PtToPx(System.Double)">
+ <summary>Converts points to pixels.</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.GgplotTheme.UnitConverter.PxToPt(System.Double)">
+ <summary>Converts pixels to points.</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.MarkerShape">
+ <summary>标记形状</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.SeriesPlotEngine.#ctor(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Data.Plots.PlotTheme)">
+ <summary>直接在外部提供的绘图设备上绘制（例如 DirectX 的 GPU 画布）。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.PlotEngine">
+ <summary>
+ 绘图引擎：所有图表类型的基类与公共能力。
+ 使用 GDI+ 在内存 Bitmap 上绘制，最后导出为 PNG。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.Plots.PlotEngine._ownsGraphics">
+ <summary>
+ 画布是否由本对象创建（决定 <see cref="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.Dispose"/> 时要不要把它一起释放）。
+ </summary>
+ <remarks>
+ 外部注入画布时（例如 DirectX 的 GPU 画布）必须为 False：
+ 那块画布属于宿主控件，绘图引擎把它 Dispose 掉会让宿主下一帧直接崩掉。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.#ctor(Microsoft.VisualBasic.Imaging.Bitmap)">
+ <summary>
+ 直接使用已有的 System.Drawing.Bitmap 作为绘图设备（GDI 驱动）。
+ 渲染结果即绘制在该位图上，可通过 ToBitmap() 取回。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.#ctor(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Data.Plots.PlotTheme)">
+ <summary>
+ 直接在<b>外部提供</b>的绘图设备上绘制。
+ </summary>
+ <param name="g">
+ 已经绑定到目标表面的绘图设备。除了默认的 GDI+ 位图，任何 <c>IGraphics</c> 实现都可用 ——
+ 例如 <c>Microsoft.VisualBasic.Drawing.DirectX.DxGraphics</c>（Direct2D/D3D11 GPU 画布），
+ 于是图表可以直接画在 WinForms 控件上而不需要中间位图。
+ </param>
+ <param name="theme">主题（省略时用浅色主题）</param>
+ <remarks>
+ <b>画布的所有权归调用方</b>：<see cref="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.Dispose"/> 不会释放外部注入的设备，
+ 因此可以安全地写成 <c>Using plot ... End Using</c>（宿主画布不会被连带关闭）。
+ 
+ 画布尺寸从 <c>g.Size</c> 取，控件尺寸变化后需要重新构造本对象才能按新尺寸排版。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.ToBitmap">
+ <summary>取回底层绘图位图（若由 New(bmp) 构造则有值，否则为 Nothing）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.PlotEngine.GraphicsDevice">
+ <summary>底层绘图设备（外部注入时就是宿主的画布本身）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.ComputePlotArea">
+ <summary>计算绘图区矩形（基于主题边距）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.ToPixelX(System.Double,System.Double,System.Double)">
+ <summary>数据坐标 -> 像素坐标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.NiceStep(System.Double,System.Int32)">
+ <summary>计算"漂亮"的刻度间隔（基于 nice number 算法）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.GenerateTicks(System.Double,System.Double,System.Int32)">
+ <summary>生成从 min 到 max 的刻度序列</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.AutoRange(System.Double[],System.Double@,System.Double@,System.Double)">
+ <summary>自动扩展数据范围，留 5% 余量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotEngine.GetGraphics">
+ <summary>获取内部 Graphics（高级用户自定义绘制）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Data.Plots.PlotEngine.CanvasWidth">
+ <summary>暴露给子类使用的画布尺寸</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.PlotTheme">
+ <summary>
+ 图表主题：包含颜色、字体、线宽、边距等所有视觉样式参数。
+ 可直接使用预定义主题，也可基于预定义主题派生自定义主题。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Light">
+ <summary>浅色主题（默认，适合论文白底插图）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Dark">
+ <summary>深色主题（适合演示 / 海报）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Nature">
+ <summary>Nature 期刊风格（清淡、克制）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Science">
+ <summary>Science 期刊风格（紧凑、专业）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Grayscale">
+ <summary>灰色主题（适合黑白印刷）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.Plots.PlotTheme.Clone">
+ <summary>基于当前主题派生自定义主题（链式调用）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.Series">
+ <summary>图表数据系列</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.Plots.NamespaceDoc">
+ <summary>
+ The data plot library: ggplot style themes, plot layers and the shared plotting API.
+ </summary>
+</member>
+</members>
+</doc>

@@ -1,0 +1,2439 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.MachineLearning.TensorFlow
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation">
+ <summary>
+ 批量细胞管线融合算子使用的激活函数编码。
+ </summary>
+ <remarks>
+ 融合算子（<see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.LtcRk4Batch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Int32,System.Int32)"/> / <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.GraphLayerBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)"/>）
+ 的签名一律使用 <c>Integer</c> 编码而不是委托或字符串：
+ 委托无法跨越 GPU 内核边界，字符串比较会进入每个线程的内层循环。
+ 编码取值与 <c>Kernels\cellaccel.cu</c> 中的 <c>TCX_ACT_*</c> 宏一一对应，
+ 修改任何一侧都必须同步另一侧。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation.Linear">
+ <summary>恒等（线性输出，用于回归头）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation.Tanh">
+ <summary>双曲正切（液态网络与图卷积层的默认激活）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation.Sigmoid">
+ <summary>逻辑斯蒂 S 形（门控与通量读取头）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation.ReLU">
+ <summary>整流线性单元</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.CellActivation.Apply(System.Double,System.Int32)">
+ <summary>按编码应用激活函数。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute">
+ <summary>
+ 张量计算后端契约。
+ </summary>
+ <remarks>
+ 形状校验、广播等“语义边界”仍然由 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor"/> 层负责，
+ 后端只需要实现纯粹的数值计算。后端应当是**无状态**（或线程安全）的，
+ 因为 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel"/> 是一个全局共享变量。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Name">
+ <summary>
+ 后端名称，用于诊断输出（例如 "SIMD" / "CUDA"）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Heaviside(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 阶跃函数(Heaviside): 大于 0 的元素取 1, 否则取 0。
+ </summary>
+ <remarks>
+ 后端本身没有比较/掩码算子, 而 ReLU 系激活函数的反向传播需要的正是
+ `` (x &gt; 0) ? dy : 0 `` 这样的逐元素掩码; 有了本算子之后就可以写成
+ ``Heaviside(x)`` 与上游梯度逐元素相乘, 从而让整个反向过程同样可以下放到 GPU。
+ (命名为 Heaviside 而不是 Step, 是因为 ``Step`` 是 VB 的保留字)
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏 × 稠密矩阵乘法：<c>dense[batch, Rows] · W[Rows, Columns] → [batch, Columns]</c>。
+ </summary>
+ <param name="csr">
+ CSR 稀疏连接矩阵（行 = 突触前，列 = 突触后）。SDK 后端可据此把 CSR 数组
+ 常驻显存并按 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Version"/> 判定失效。
+ </param>
+ <param name="dense">稠密张量 <c>[batch, csr.Rows]</c>（例如上一时刻的脉冲矩阵）</param>
+ <returns>稠密张量 <c>[batch, csr.Columns]</c></returns>
+ <remarks>
+ 这是脉冲神经网络加载真实突触连接组（如 FlyWire，十万级神经元 / 千万级突触）
+ 的核心算子：稠密矩阵在此规模下不可行，必须走稀疏路径。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 融合的稀疏递归 LIF 单步：一次调用完成整步脉冲动力学，并<b>就地</b>更新状态张量。
+ </summary>
+ <param name="synapses">突触连接矩阵 <c>W[Units, Units]</c>（行 = 突触前，列 = 突触后）</param>
+ <param name="sPrev">上一时间步的输出脉冲 <c>S[t−1]</c>（只读）</param>
+ <param name="externalCurrent">
+ 外部注入电流 <c>I_ext[t]</c>（只读）；<c>Nothing</c> 表示本步无外部刺激。
+ </param>
+ <param name="h">膜电位 <c>H[t−1]</c>，返回时被就地改写为 <c>H[t]</c></param>
+ <param name="s">输出参数：本步脉冲 <c>S[t]</c>（就地写入 0/1）</param>
+ <param name="counts">
+ 输出参数：脉冲计数累加器（就地累加 <c>S[t]</c>）。
+ <b>调用方必须在使用前清零</b>，且整个仿真窗内保持同一个张量即可获得
+ <c>Σ_t S[t]</c>——这消除了主机侧的 O(T·N) 累加循环。
+ </param>
+ <param name="beta">膜电位衰减系数 β ∈ (0,1)</param>
+ <param name="threshold">发放阈值 <c>U_thr</c></param>
+ <param name="subtractThreshold">
+ 复位模式：<c>True</c> 表示 <c>H[t] = U[t] − S[t]·U_thr</c>；
+ <c>False</c> 表示 <c>H[t] = U[t]·(1 − S[t])</c>（发放即清零）。
+ </param>
+ <returns>
+ <c>True</c> 表示整步已由本后端完成（调用方不得再走逐算子路径）；
+ <c>False</c> 表示本后端不提供该能力，由调用方回退。
+ </returns>
+ <remarks>
+ 语义与逐算子写法完全等价：
+ <code>
+   I[t] = W · S[t−1] + I_ext[t]
+   U[t] = β·H[t−1] + I[t]
+   S[t] = Θ(U[t] − U_thr)
+   H[t] = 复位(U[t], S[t])
+   counts += S[t]
+ </code>
+ 之所以把它做成<b>一个</b>算子而不是让调用方串起 SpMM / Add / MultiplyScalar / Heaviside，
+ 是因为逐算子写法在十万级神经元规模下会为每步分配 6 个 <c>[batch, Units]</c> 中间张量，
+ 并在 GPU 后端下产生 6~12 次显存往返（每次约 1.1 MB），
+ 往返开销会把内核的计算收益整个吃掉 —— 这是脉冲网络与稠密训练最本质的差异：
+ 它的状态张量只有 <c>[1, N]</c>，而依赖的是每步都要回灌的稀疏连接。
+ <para>
+ 就地更新意味着<b>设备为主副本</b>：后端若把状态留在显存里，主机数组会陈旧，
+ 调用方读主机内容之前必须调用 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>（或
+ <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.IsDevicePinned(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 为 <c>False</c> 时按普通张量读取）。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.LtcRk4Batch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Int32,System.Int32)">
+ <summary>
+ 融合的液态时间常数网络（LTC / LNN）批量 RK4 积分：<b>就地</b>推进状态。
+ </summary>
+ <param name="state">状态张量 <c>[B, m]</c>；返回时被就地改写为推进 <c>dt</c> 之后的状态</param>
+ <param name="input">区间内恒定的驱动输入 <c>[B, nIn]</c></param>
+ <param name="weightRecurrent">递归权重 <c>[m, m]</c></param>
+ <param name="weightInput">输入权重 <c>[nIn, m]</c></param>
+ <param name="bias">偏置 <c>[m]</c>；<c>Nothing</c> 表示无偏置</param>
+ <param name="weightGate">门控递归权重 <c>[m, m]</c>；<c>Nothing</c> 表示无门控（CT_RNN 模式）</param>
+ <param name="weightGateInput">门控输入权重 <c>[nIn, m]</c></param>
+ <param name="biasGate">门控偏置 <c>[m]</c></param>
+ <param name="tauEff">有效时间常数 <c>[m]</c>（已应用边界约束）</param>
+ <param name="dt">本次推进的总时长</param>
+ <param name="subSteps">子步数：每子步执行一次 RK4 步，子步长 = dt / subSteps</param>
+ <param name="activation">激活函数编码：0 线性 / 1 tanh / 2 sigmoid / 3 relu</param>
+ <returns><c>True</c> 表示整步已由本后端完成；<c>False</c> 表示调用方回退</returns>
+ <remarks>
+ 语义与 CPU 参考实现完全等价：
+ <code>
+   A     = act(h·Wrec + u·Win + b)
+   f     = σ(h·Wgate + u·WgateIn + bg)      （无门控时 f ≡ 0）
+   dh/dt = (1/τ_eff + f) ⊙ (A − h)
+ </code>
+ 就地更新意味着<b>设备为主副本</b>：调用方读主机数组之前必须调用
+ <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>（或该张量未被钉住时按普通张量读取）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.GraphLayerBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ 融合的图卷积批量层（GEARS 消息传递；解码器等无邻居层复用同一算子）。
+ </summary>
+ <param name="x">节点特征 <c>[B·n, inF]</c>（批内第 b 个细胞的第 i 个节点 = 行 b·n+i）</param>
+ <param name="wSelf">自身分支权重 <c>[inF, outF]</c></param>
+ <param name="wRel">邻居分支权重 <c>[inF, outF]</c>；<c>Nothing</c> 表示忽略邻居项</param>
+ <param name="selfW">逐节点自身缩放 <c>[n]</c>；<c>Nothing</c> 表示全部取 1</param>
+ <param name="bias">偏置 <c>[outF]</c>；<c>Nothing</c> 表示无偏置</param>
+ <param name="edges">
+ 入边邻接（CSR）：<c>RowPointers[i]..RowPointers[i+1]</c> 给出节点 i 的入边，
+ <c>ColumnIndices</c> = 邻居（源）节点号，<c>Values</c> = 该边的合成系数。
+ 拓扑与系数对全部细胞共享，因此同一份 CSR 可服务整个 batch。
+ <c>Nothing</c> 表示无邻居（退化为全连接层）。
+ </param>
+ <param name="output">输出张量 <c>[B·n, outF]</c>（由本算子写入，可为未初始化张量）</param>
+ <param name="activation">激活函数编码：0 线性 / 1 tanh / 2 sigmoid / 3 relu</param>
+ <returns><c>True</c> 表示整层已由本后端完成；<c>False</c> 表示调用方回退</returns>
+ <remarks>
+ 计算式（与 GEARSConvLayer.Forward 的标量实现逐项对应）：
+ <code>
+   out[row, j] = act( selfW[i]·Σ_k x[row, k]·wSelf[k, j] + bias[j]
+                      + Σ_e coeff[e]·Σ_k x[src_e, k]·wRel[k, j] )
+ </code>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.GraphFeatureBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 融合的节点特征拼装：<c>[x̄ ‖ p ‖ e_i ‖ z_pert]</c>。
+ </summary>
+ <param name="xNorm">逐节点控制表达 <c>[B·n]</c>（行优先）</param>
+ <param name="flag">逐节点扰动标记 <c>[B·n]</c></param>
+ <param name="embed">基因身份嵌入表 <c>[n, d]</c></param>
+ <param name="zPert">逐细胞的全局扰动向量 <c>[B, d]</c></param>
+ <param name="output">输出特征 <c>[B·n, 2+2d]</c></param>
+ <param name="n">节点数（基因数）</param>
+ <param name="d">嵌入维度</param>
+ <returns><c>True</c> 表示已由本后端完成；<c>False</c> 表示调用方回退</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.FluxHeadBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 融合的通量读取头批量计算：<c>v[b, j] = e[b, j] ⊙ gsat([h ‖ u][b] · Wv[:, j] + bv[j])</c>。
+ </summary>
+ <param name="h">隐藏状态 <c>[B, m]</c>（代谢物浓度）</param>
+ <param name="u">网络输入 <c>[B, nIn]</c>（前 r 项为逐反应酶水平，其后为边界浓度）</param>
+ <param name="wFlux">读取权重 <c>[m+nIn, r]</c></param>
+ <param name="fluxBias">读取偏置 <c>[r]</c>；<c>Nothing</c> 表示无偏置</param>
+ <param name="reversible">逐反应可逆标记 <c>[r]</c>（非 0 表示可逆）；<c>Nothing</c> 表示全部不可逆</param>
+ <param name="output">输出通量 <c>[B, r]</c></param>
+ <returns><c>True</c> 表示已由本后端完成；<c>False</c> 表示调用方回退</returns>
+ <remarks>
+ 不可逆反应取 <c>σ(·)</c>，可逆反应取 <c>2σ(·)−1</c>（允许负通量表示逆向流动）；
+ 预激活按 ±30 夹断以避免 <c>exp</c> 溢出（与 CPU 侧 Clamp 一致）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SystemTauBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 融合的系统时间常数批量计算：<c>τ^sys = 1 / (1/τ_eff + f)</c>，
+ <c>f = σ(h·Wgate + u·WgateIn + bg)</c>（无门控时 <c>f ≡ 0</c>，退化为 τ_eff）。
+ </summary>
+ <param name="h">隐藏状态 <c>[B, m]</c></param>
+ <param name="u">网络输入 <c>[B, nIn]</c></param>
+ <param name="weightGate">门控递归权重 <c>[m, m]</c>；<c>Nothing</c> 表示无门控</param>
+ <param name="weightGateInput">门控输入权重 <c>[nIn, m]</c></param>
+ <param name="biasGate">门控偏置 <c>[m]</c></param>
+ <param name="tauEff">有效时间常数 <c>[m]</c></param>
+ <param name="output">系统时间常数 <c>[B, m]</c></param>
+ <returns><c>True</c> 表示已由本后端完成；<c>False</c> 表示调用方回退</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Slice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 沿指定轴截取 <c>[start, start + length)</c> 区间，返回独立的张量副本。
+ </summary>
+ <param name="t">输入张量（秩 &gt;= 1）</param>
+ <param name="axis">切片轴，支持负数（-1 表示最后一维）</param>
+ <param name="start">起始下标（含）</param>
+ <param name="length">截取长度</param>
+ <returns>与 <paramref name="t"/> 同秩、仅 <paramref name="axis"/> 维变为 <paramref name="length"/> 的新张量</returns>
+ <remarks>
+ 这是纯数据搬移算子，服务于 "只读取缓存前缀" 的场景（典型例子：KV Cache 按当前
+ 序列长度取出 K/V）。它不参与梯度计算，反向由调用方用散射类算子完成。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Concat(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor[],System.Int32)">
+ <summary>
+ 沿指定轴拼接若干张量（除 <paramref name="axis"/> 外其余维度必须一致）。
+ </summary>
+ <param name="parts">待拼接的张量序列（至少一个，且秩相同）</param>
+ <param name="axis">拼接轴，支持负数</param>
+ <returns>沿 <paramref name="axis"/> 维长度为各输入该维长度之和的新张量</returns>
+ <remarks>
+ 既有的 <c>Transformer.TensorOps.ConcatLastDim</c> 只支持最后一维；本算子支持任意轴，
+ 是 KV Cache 沿 "序列维" 追加、以及多段 prompt 片段拼接的基础。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.TopK(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ 沿最后一维取最大的 <paramref name="k"/> 个元素（按值降序）。
+ </summary>
+ <param name="t">输入张量（秩 &gt;= 1）</param>
+ <param name="k">保留的元素个数，取值范围 <c>[1, t.Shape(t.Rank - 1)]</c></param>
+ <param name="indices">
+ 输出参数：与返回值同形，元素为被选中元素在原始最后一维中的下标。
+ 与 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.ArgMax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})"/> 保持一致，下标同样以 <c>Double</c> 存储。
+ </param>
+ <returns>形状与 <paramref name="t"/> 相同、仅最后一维变为 <paramref name="k"/> 的张量</returns>
+ <remarks>
+ MoE 路由器（专家打分 Top-K）与采样器（Top-k / Top-p）的共同前置步骤。
+ 纯选择算子，同样不参与梯度计算。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.MaskedCrossEntropy(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Boolean[],Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ 带损失掩码的 softmax 交叉熵（语言模型训练的核心损失）。
+ </summary>
+ <param name="logits">形状 <c>[rows, vocab]</c> 的二维 logits</param>
+ <param name="targets">长度 <c>&gt;= rows</c> 的目标 token 下标</param>
+ <param name="mask">
+ 长度 <c>&gt;= rows</c> 的损失掩码；<c>Nothing</c> 表示全部计入。
+ <c>mask(r) = False</c> 的位置既不计入损失，梯度也保持 0。
+ </param>
+ <param name="dLogits">
+ 输出参数：形状同 <paramref name="logits"/>，
+ 内容为 <c>(softmax − onehot) / count</c>（未计入的位置为 0）。
+ </param>
+ <returns>平均到每个有效位置上的负对数似然；没有任何有效位置时返回 0</returns>
+ <remarks>
+ 这是 SFT 能成立的关键：只对 assistant 自己产出的 token 计损失，
+ 用户消息与工具返回结果不计 —— 模型要学的是"该怎么回应"。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.TryAdamWStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)">
+ <summary>
+ 试做一次 AdamW 参数更新。
+ </summary>
+ <param name="param">待更新的参数（可能被就地改写）</param>
+ <param name="gradient">梯度累加器；成功后由实现负责清零</param>
+ <param name="momentum">一阶矩估计（与参数同形）</param>
+ <param name="velocity">二阶矩估计（与参数同形）</param>
+ <param name="learningRate">学习率</param>
+ <param name="beta1">一阶矩衰减率</param>
+ <param name="beta2">二阶矩衰减率</param>
+ <param name="eps">数值稳定项</param>
+ <param name="biasCorrection1"><c>1 − beta1^step</c>（由调用方算好）</param>
+ <param name="biasCorrection2"><c>1 − beta2^step</c>（由调用方算好）</param>
+ <param name="weightDecay">解耦权重衰减系数；0 表示退化为纯 Adam</param>
+ <returns>
+ <c>True</c> 表示本轮更新已由本后端完成（调用方不得再走主机循环）；
+ <c>False</c> 表示本后端不提供该能力，由调用方回退。
+ </returns>
+ <remarks>
+ 之所以设计成"试做 + 返回布尔"而不是直接实现：主机侧的 AdamW 实现包含
+ 参数张量的读写语义（<c>MarkHostModified</c> 等），把它整体搬进后端会
+ 让契约承担超出"算子"的职责。让后端只负责"能不能替你做"，边界更清晰。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SupportsDeviceResidency">
+ <summary>
+ 是否支持把张量钉成设备常驻缓冲。
+ </summary>
+ <remarks>
+ 默认实现返回 <c>False</c>（纯 CPU 后端自然不需要这个概念）。
+ 只有 <c>True</c> 时调用方才应该去调用 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>
+ 把张量钉成设备常驻缓冲，避免训练时每步重新上传。
+ </summary>
+ <param name="t">要被钉住的张量（其底层数组作为键）</param>
+ <param name="label">诊断用标签，例如 <c>layer3.moe.expert5.Wg</c></param>
+ <param name="zeroFill">
+ 是否用 0 初始化（梯度累加器与优化器状态用 <c>True</c>）。
+ </param>
+ <returns>钉住成功返回 <c>True</c>；后端不支持时返回 <c>False</c></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>
+ 把张量钉成<b>双精度</b>设备常驻缓冲。
+ </summary>
+ <remarks>
+ <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/> 钉出的是单精度缓冲（消费级显卡的 FP64 吞吐只有 FP32 的
+ 1/64，训练场景下矩阵乘占 95% 以上的浮点运算，因此设备侧统一降精度）。
+ 但脉冲网络的膜电位是<b>逐时间步累积</b>的递归状态：单精度舍入会改变阈值判定，
+ 让个别神经元在仿真窗内多发或少发一次脉冲，从而破坏「CPU / GPU 对拍」这类
+ 需要逐比特一致性的验收场景。需要这种保真度的调用方应当改用本方法，
+ 让状态张量以双精度留在显存里，同时仍然享受「零往返」。
+ <para>
+ 默认实现返回 <c>False</c>（CPU 后端不需要这个概念）；
+ 后端不支持时调用方应退回 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/> 或普通逐算子路径。
+ </para>
+ </remarks>
+ <param name="t">要被钉住的张量（其底层数组作为键）</param>
+ <param name="label">诊断用标签，例如 <c>lif.H</c></param>
+ <param name="zeroFill">是否用 0 初始化（累加器用 <c>True</c>）</param>
+ <returns>钉住成功返回 <c>True</c>；后端不支持时返回 <c>False</c></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.UnpinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>解除钉住并立即释放对应的显存（双精度 / 单精度通道一并解除）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.IsDevicePinned(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>该张量当前是否已被钉住。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinnedDeviceBytes">
+ <summary>当前钉住的显存总字节数（供显存占用报告使用）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 把设备常驻缓冲的内容回写到主机数组。
+ </summary>
+ <returns>该张量未被钉住、或后端不支持常驻时返回 <c>False</c></returns>
+ <remarks>
+ 被钉住的张量以<b>设备为主副本</b>，主机 <c>Data</c> 会逐渐陈旧。
+ 凡是需要"读主机内容"的场合（检查点落盘、主机侧统计、
+ 以及那些在主机循环里直接读权重的模块）都必须先调用本方法同步。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Conv2D(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 二维卷积（严格来说是互相关，与主流深度学习框架一致）。
+ </summary>
+ <param name="x">输入，形状 (N, H, W, C)</param>
+ <param name="filters">卷积核，形状 (KH, KW, C, OutC)</param>
+ <param name="bias">偏置，形状 (OutC)；传 Nothing 表示不加偏置</param>
+ <param name="stride">步长</param>
+ <param name="padding">四周零填充宽度</param>
+ <returns>输出，形状 (N, OH, OW, OutC)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Conv2DBackwardInput(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32,System.Int32)">
+ <summary>
+ 卷积反向：计算对输入的梯度。
+ </summary>
+ <param name="gradOutput">上游梯度，形状 (N, OH, OW, OutC)</param>
+ <param name="filters">前向使用过的卷积核，形状 (KH, KW, C, OutC)</param>
+ <param name="inputShape">前向输入的形状 (N, H, W, C)，用于确定输出形状</param>
+ <returns>对输入的梯度，形状 (N, H, W, C)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Conv2DBackwardFilter(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32,System.Int32)">
+ <summary>
+ 卷积反向：计算对卷积核的梯度。
+ </summary>
+ <param name="gradOutput">上游梯度，形状 (N, OH, OW, OutC)</param>
+ <param name="x">前向使用过的输入，形状 (N, H, W, C)</param>
+ <param name="filterShape">卷积核形状 (KH, KW, C, OutC)，用于确定输出形状</param>
+ <returns>对卷积核的梯度，形状 (KH, KW, C, OutC)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Conv2DBackwardBias(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 卷积反向：计算对偏置的梯度（沿 N / OH / OW 三个维度求和）。
+ </summary>
+ <param name="gradOutput">上游梯度，形状 (N, OH, OW, OutC)</param>
+ <returns>对偏置的梯度，形状 (OutC)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.MaxPool2D(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ 二维最大池化前向，同时输出每个输出位置所对应的<b>输入扁平下标</b>（供反向 scatter）。
+ </summary>
+ <param name="x">输入，形状 (N, H, W, C)</param>
+ <param name="size">池化窗口边长</param>
+ <param name="stride">步长</param>
+ <param name="padding">四周零填充宽度</param>
+ <param name="argMax">
+ 输出参数：形状 (N, OH, OW, C)，元素为获胜元素在<b>输入张量</b>之中的扁平下标
+ （即 <c>n*H*W*C + h*W*C + w*C + c</c>）。反向传播依赖它做梯度回填，
+ 因为每个输出位置唯一的对应一个输入位置，所以反向不需要原子操作。
+ </param>
+ <returns>输出，形状 (N, OH, OW, C)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.MaxPool2DBackward(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[])">
+ <summary>
+ 二维最大池化反向：按前向记录的 <paramref name="argMax"/> 把梯度回填到输入位置。
+ </summary>
+ <param name="gradOutput">上游梯度，形状 (N, OH, OW, C)</param>
+ <param name="argMax">前向返回的输入扁平下标，形状 (N, OH, OW, C)</param>
+ <param name="inputShape">前向输入的形状 (N, H, W, C)</param>
+ <returns>对输入的梯度，形状 (N, H, W, C)</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Sum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>沿指定轴（Nothing 表示整体）求和</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SumAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>整体求和</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.Mean(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>沿指定轴（Nothing 表示整体）求均值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.MeanAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>整体求均值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.StdDev(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>总体标准差</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.L2Norm(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>L2 范数（欧几里得范数）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF">
+ <summary>
+ 单精度张量计算后端契约。
+ </summary>
+ <remarks>
+ 形状校验、广播等"语义边界"仍然由 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF"/> 层负责，
+ 后端只需要实现纯粹的数值计算。后端应当是**无状态**（或线程安全）的，
+ 因为 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.computeKernelF"/> 是一个全局共享变量。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Name">
+ <summary>后端名称，用于诊断输出（例如 "SIMD-F32" / "CUDA-F32"）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Add(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相加</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Subtract(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相减</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相乘</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Divide(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相除</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Maximum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较大值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Minimum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Exp(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素指数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Log(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素自然对数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Sqrt(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方根</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Square(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Abs(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素绝对值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Negate(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取负</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Reciprocal(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素倒数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Tanh(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素双曲正切</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Sigmoid(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素 Sigmoid</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Relu(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素 ReLU</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.AddScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素加标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.MultiplyScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素乘标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.DivideScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素除标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Clip(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single,System.Single)">
+ <summary>把元素钳制到 [low, high] 区间</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.MatMul(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>二维矩阵乘法</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.SumAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>
+ 整体求和。累加使用双精度，避免大数组单精度累加的舍入误差。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.MeanAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>整体求均值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.MinAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.MaxAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最大值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.Laplacian7(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Byte[],System.Byte[])">
+ <summary>
+ 七点拉普拉斯 stencil：out = Σ(流体邻居) - nFluid * 中心。
+ 固体（掩膜为 0）单元的输出恒为 0；固体邻居按 Neumann 零梯度不计入，
+ 因此除数取该格的流体邻居数 <paramref name="nFluid"/>。
+ </summary>
+ <param name="src">输入场</param>
+ <param name="mask">固体掩膜，0 = 固体 / 空腔，非 0 = 流体。传 Nothing 表示全流体</param>
+ <param name="nFluid">每格的流体邻居数（0..6），长度与场一致</param>
+ <returns>拉普拉斯结果</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.JacobiStencil7(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Byte[],System.Byte[],System.Single,System.Single,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>
+ 带掩膜的七点 Jacobi 迭代。统一迭代式：
+ <c>x_new(idx) = (alpha · Σ_fluid x_old(邻居) + rhs(idx)) / denom</c>
+ 其中 <c>denom = beta</c>（当 <c>beta &gt; 0</c>），否则 <c>denom = nFluid(idx)</c>。
+ 固体单元恒为 0。两种典型用法：
+   压力泊松 ∇²p = div        → alpha = 1, beta = 0（除数取 nFluid）, rhs = -div
+   隐式扩散 (1+6a)φ = φ_old + a·Σ → alpha = a, beta = 1 + 6a, rhs = φ_old
+ </summary>
+ <param name="rhs">右端项（见上：压力泊松传 -div，扩散传 φ_old）</param>
+ <param name="mask">固体掩膜，0 = 固体。传 Nothing 表示全流体</param>
+ <param name="nFluid">每格的流体邻居数</param>
+ <param name="alpha">邻居项系数</param>
+ <param name="beta">中心项除数；&lt;= 0 表示除数改用每格流体邻居数</param>
+ <param name="iterations">迭代次数</param>
+ <param name="initial">初始猜测；传 Nothing 则全零开始</param>
+ <returns>迭代后的解</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.AdvectTrilinear(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single,System.Byte[])">
+ <summary>
+ 半拉格朗日平流：对每个格子沿速度场反向追踪 dt 时间，
+ 在回溯位置对源场做三线性插值采样。
+ 这是纯 gather（只读源场、只写目标格），无 scatter，因此可以完全并行。
+ </summary>
+ <param name="src">被平流的源场</param>
+ <param name="u">速度场 X 分量</param>
+ <param name="v">速度场 Y 分量</param>
+ <param name="w">速度场 Z 分量</param>
+ <param name="dt">时间步长</param>
+ <param name="mask">固体掩膜，0 = 固体（输出恒为 0）。传 Nothing 表示全流体</param>
+ <returns>平流后的新场</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF.ApplyMask(System.Byte[],Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF[])">
+ <summary>
+ 按掩膜把所有给定场中的固体单元置零（无滑移壁：速度 / 压力 / 密度恒为 0）。
+ </summary>
+ <param name="mask">固体掩膜，0 = 固体</param>
+ <param name="fields">需要置零的场（数量不定）</param>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.NamespaceDoc">
+ <summary>
+ The tensor computation engine.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor">
+ <summary>
+ 默认的 SIMD 加速 CPU 计算后端。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.MatrixDotThreshold">
+ <summary>
+ 矩阵乘走到 SIMD 行列点积路径的最小规模（m*k*n）。
+ 低于该规模时构建交错数组的开销会超过收益，直接退回标量实现。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Default">
+ <summary>全局默认实例（<see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel"/> 的初始值）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Register">
+ <summary>
+ 把 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel"/> 切换为 SIMD 加速的 CPU 实现。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 融合的稀疏递归 LIF 单步：递归输入用标量散射（与 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 同序，
+ 保证与逐算子路径逐比特一致），逐元素部分用 <c>System.Numerics.Vector</c> 向量化。
+ </summary>
+ <remarks>
+ 向量化只加速「泄漏积分 → 阈值触发 → 复位 → 计数累加」这一段：它对每个元素
+ 独立运算，因此与标量版本结果逐比特相同（逐元素 IEEE 运算的结合次序未变）。
+ 散射段（<c>I(bo + colIdx) += …</c>）存在跨元素的累加依赖，无法向量化，
+ 但它已经带稀疏零源跳过，在脉冲输入下远比逐元素段轻。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.LifUpdateInPlace(System.Double[],System.Double[],System.Double[],System.Double[],System.Double[],System.Double,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 向量化的逐元素阶段：泄漏积分 → 阈值触发 → 复位 → 计数累加。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.ConvParallelThreshold">
+ <summary>
+ 卷积参与并行/向量化计算所需的最少乘加次数；低于该规模时调度开销会超过收益，
+ 直接退回 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase"/> 的标量实现。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Conv2D(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 卷积前向：按输出行并行，行内沿输出通道向量化。
+ </summary>
+ <remarks>
+ <para>
+ 并行粒度取“输出行”（batch × outH）；每一行完全由某一个线程独立计算并写入，
+ 线程之间没有任何共享读写，因此结果与线程数无关，可复现。
+ </para>
+ <para>
+ 行内的循环次序改为“先按 (kh,kw,c) 取一个输入标量，再沿输出通道 oc 累加”。
+ 由于后端张量采用 channel-last 布局，卷积核与累加器沿 oc 都是连续的，
+ 这一步正好是一次 axpy 风格的向量运算。对任一输出元素而言，它仍然只沿着
+ (kh,kw,c) 递增的方向累加，求和顺序与标量实现逐项一致，所以结果逐位相同。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Conv2DBackwardFilter(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32,System.Int32)">
+ <summary>
+ 卷积反向 - 对卷积核的梯度：按 (kh, kw, c) 平面并行，平面内沿输出通道向量化。
+ </summary>
+ <remarks>
+ 一个 (kh, kw, c) 三元组恰好对应 dst 之中长度为 outC 的一段连续区间，因此各线程写入
+ 的区域互不相交。每个 dst 元素由唯一的三元组负责，线程把该元素在 (n, oh, ow) 上的
+ 全部贡献按同样的顺序累加完毕后一次写入，与标量实现逐位相同。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Conv2DBackwardInput(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32,System.Int32)">
+ <summary>
+ 卷积反向 - 对输入的梯度：按输入行并行。
+ </summary>
+ <remarks>
+ <para>
+ 每个线程独占一整行输入 (ih)，行与行之间的梯度元素互不相交，因此不存在数据竞争，
+ 结果也与线程数无关。
+ </para>
+ <para>
+ 对某个输入行有贡献的输出行 oh 满足 ``ih = oh * stride + kh - padding`` 且
+ ``kh ∈ [0, filtH)``，也就是 ``oh ∈ [(ih + padding - filtH + 1) / stride, (ih + padding) / stride]``；
+ 只遍历这个小窗口即可，总计算量与标量实现的 (oh, kh) 遍历相当。
+ </para>
+ <para>
+ 对任一输入梯度元素，贡献按 (oh, ow, oc, kw) 递增的顺序累加，其中 kh 由 (ih, oh) 唯一确定，
+ 因此与标量实现之中 (oh, ow, oc, kh, kw) 的求和顺序逐项一致，结果逐位相同。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Axpy(System.Double,System.Double[],System.Int32,System.Double[],System.Int32,System.Int32)">
+ <summary>
+ ``dst(dstOffset .. +len) += scalar * src(srcOffset .. +len)`` 的向量化实现。
+ </summary>
+ <remarks>
+ 每个元素只做一次“乘 + 加”，与标量循环的运算顺序完全一致，因此不引入任何数值差异。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.CeilDiv(System.Int32,System.Int32)">
+ <summary>``ceil(a / b)``，其中 ``b`` 为正数</summary>
+ <remarks>
+ VB 的 ``\`` 是“向零截断”而不是向下取整，因此这里按
+ ``ceil(a / b) = -floor(-a / b)`` 计算，并把负数情形下的截断偏差补回来。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF">
+ <summary>
+ 单精度张量的默认 SIMD 加速 CPU 计算后端。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.VectorWidth">
+ <summary>向量宽度（运行时决定，AVX2 下 Single 为 8）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Default">
+ <summary>全局默认实例（<see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.computeKernelF"/> 的初始值）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Name">
+ <summary>后端名称</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Register">
+ <summary>
+ 把 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.computeKernelF"/> 切换为 SIMD 加速的 CPU 实现。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.VecBinary(System.Single[],System.Single[],System.Func{System.Numerics.Vector{System.Single},System.Numerics.Vector{System.Single},System.Numerics.Vector{System.Single}},System.Func{System.Single,System.Single,System.Single})">
+ <summary>逐元素二元向量运算</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.VecUnary(System.Single[],System.Func{System.Numerics.Vector{System.Single},System.Numerics.Vector{System.Single}},System.Func{System.Single,System.Single})">
+ <summary>逐元素一元向量运算</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.VecScalar(System.Single[],System.Single,System.Func{System.Numerics.Vector{System.Single},System.Numerics.Vector{System.Single},System.Numerics.Vector{System.Single}},System.Func{System.Single,System.Single,System.Single})">
+ <summary>带标量的逐元素向量运算</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Add(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相加</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Subtract(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相减</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相乘</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Divide(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相除</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Maximum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较大值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Minimum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Sqrt(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方根</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Square(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Abs(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素绝对值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Negate(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取负</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.AddScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素加标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.MultiplyScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素乘标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.DivideScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素除标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Clip(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single,System.Single)">
+ <summary>把元素钳制到 [low, high] 区间</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.SumAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>整体求和（向量累加 + 双精度收尾，避免单精度累加误差）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.MinAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.MaxAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最大值</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr">
+ <summary>
+ CSR 稀疏矩阵载体（行 = 突触前，列 = 突触后）。
+ 承载 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 算子所需的全部稀疏结构信息。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Rows">
+ <summary>突触前神经元数量（矩阵行数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Columns">
+ <summary>突触后神经元数量（矩阵列数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.RowPointers">
+ <summary>行偏移数组（长度 Rows+1，单调非降，首元素 0、末元素 = 非零数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.ColumnIndices">
+ <summary>非零元素的列索引（长度 = 非零数，每段内非降序）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Values">
+ <summary>非零元素的权重（长度 = 非零数；就地修改后必须调用 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.MarkModified"/>)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.NonZeros">
+ <summary>非零元素（突触）数量</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Version">
+ <summary>
+ 数据版本号。任何就地修改 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Values"/> 之后都应调用
+ <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.MarkModified"/> 使其自增，供设备端缓存判断失效。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.#ctor(System.Int32,System.Int32,System.Int32[],System.Int32[],System.Double[])">
+ <summary>
+ 构造 CSR 载体（不做数据拷贝，直接持有传入数组）。
+ </summary>
+ <param name="rows">行数（突触前神经元数）</param>
+ <param name="columns">列数（突触后神经元数）</param>
+ <param name="rowPointers">行偏移数组，长度必须为 rows+1，单调非降</param>
+ <param name="columnIndices">列索引数组，取值 [0, columns)</param>
+ <param name="values">权重数组，与 columnIndices 等长</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.MarkModified">
+ <summary>
+ 声明 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.Values"/> 已被就地修改，使设备端缓存副本失效。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.ToDense">
+ <summary>
+ 展开为稠密张量 [Rows, Columns]（仅供小规模校验 / 调试，大规模连接组下请勿调用）。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute"/> 的标量兜底实现。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.RequireSameShape(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String)">
+ <summary>要求两个张量形状一致</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.Wrap(System.Double[],System.Int32[])">
+ <summary>由计算结果的一维数组与形状包装出新的张量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.MapUnary(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Func{System.Double,System.Double})">
+ <summary>逐元素一元运算的通用标量实现</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.MapBinary(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Func{System.Double,System.Double,System.Double})">
+ <summary>逐元素二元运算的通用标量实现</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.Heaviside(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 阶跃函数(Heaviside): 大于 0 的元素取 1, 否则取 0
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏 × 稠密的主机（标量）实现：dense[batch, Rows] · W[Rows, Columns] → [batch, Columns]。
+ </summary>
+ <remarks>
+ 热路径直接操作底层数组，并对 0/1 脉冲输入跳过零源以利用稀疏性。
+ 有 CUDA 内核的后端（CudaTensor）会覆盖本方法。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 融合的稀疏递归 LIF 单步（主机标量实现，就地更新状态张量）。
+ </summary>
+ <remarks>
+ 与「SpMM + Add + MultiplyScalar + Heaviside + ElementwiseMultiply」这条逐算子路径
+ <b>逐比特等价</b>（相同的循环次序、相同的运算结合次序、相同的 β/θ 单精度舍入），
+ 但把每步 6 个 <c>[batch, Units]</c> 中间张量的分配与 5 次全量遍历压缩为
+ 1 个累加缓冲 + 1 次融合遍历：
+ <list type="bullet">
+   <item>递归输入按 CSR 行并行累加到 <c>I</c>（跳过零源，与 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 同序）；</item>
+   <item>泄漏积分 / 阈值触发 / 复位 / 计数累加在同一个循环内完成，全部就地写回。</item>
+ </list>
+ 这正是十万级神经元规模下主机侧的主要开销来源，GPU 后端覆写本方法后可进一步
+ 把状态留在显存中（见 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.LifRecurrentInput(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,System.Double[],System.Int32,System.Double[])">
+ <summary>
+ 融合单步的第一阶段：<c>I[b, c] = Σ_r W[r, c]·S_prev[b, r]</c>。
+ </summary>
+ <param name="synapses">CSR 连接矩阵（行 = 突触前，列 = 突触后）</param>
+ <param name="sPrev">上一时刻脉冲的主机数组 <c>[batch, Rows]</c></param>
+ <param name="batch">批大小</param>
+ <param name="synapticInput">输出缓冲 <c>[batch, columns]</c>，调用前必须为零</param>
+ <remarks>
+ 累加次序与 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 完全一致（batch → 行 → 非零元），
+ 因此在 CPU 后端下本方法的输出与 <c>SpMM</c> 逐比特相同；
+ 外部电流由 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.LifUpdateInPlace(System.Double[],System.Double[],System.Double[],System.Double[],System.Double[],System.Double,System.Double,System.Double,System.Boolean)"/> 在同样的运算次序下叠加。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.LifUpdateInPlace(System.Double[],System.Double[],System.Double[],System.Double[],System.Double[],System.Double,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 融合单步的第二阶段（逐元素，可就地更新）：泄漏积分 → 阈值触发 → 复位 → 计数累加。
+ </summary>
+ <param name="synapticInput">突触输入 <c>[batch, columns]</c>（只读）</param>
+ <param name="externalCurrent">外部电流主机数组，可为 <c>Nothing</c></param>
+ <param name="h">膜电位，就地更新为 <c>H[t]</c></param>
+ <param name="s">输出脉冲，就地写入 0/1</param>
+ <param name="counts">计数累加器，就地累加</param>
+ <param name="beta32">已按单精度舍入的 β（与 <c>Tensor * CSng(β)</c> 一致）</param>
+ <param name="threshold">发放阈值（判定用，全精度）</param>
+ <param name="thr32">已按单精度舍入的阈值（复位减法用）</param>
+ <param name="subtractThreshold">复位模式，见 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)"/></param>
+ <remarks>
+ 逐元素运算彼此独立，因此本方法是<b>可安全向量化</b>的扩展点
+ （<see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor"/> 用 <c>System.Numerics.Vector</c> 覆写了它）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.LtcRk4Batch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Int32,System.Int32)">
+ <summary>
+ 液态时间常数网络批量 RK4 积分（CPU 参考实现，就地推进状态）。
+ </summary>
+ <remarks>
+ 运算次序与 <c>LiquidCell.ComputeDerivative</c> + <c>ODESolver.RK4Step</c> 的
+ 逐样本写法完全一致（自身递归项 → 输入项 → 门控项 → 激活 → 斜率合成），
+ 因此 CPU 后端下的结果与逐细胞路径逐比特相同；
+ GPU 后端的差异只来自浮点归约顺序（见 <c>cellaccel.cu</c>）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.GraphLayerBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ 图卷积批量层（CPU 参考实现）：自身分支 + CSR 邻居聚合 + 偏置 + 激活。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.GraphFeatureBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 节点特征拼装（CPU 参考实现）：<c>[x̄ ‖ p ‖ e_i ‖ z_pert]</c>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.FluxHeadBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 通量读取头批量计算（CPU 参考实现）：<c>v = e ⊙ gsat([h ‖ u]·Wv + bv)</c>。
+ </summary>
+ <remarks>
+ 逐项对应 <c>MetabolicLiquidNetwork.ComputeFlux</c>：同样的夹断 ±30、
+ 同样的可逆开关（可逆取 2σ−1，不可逆取 σ）、同样的酶水平乘子 <c>u(j)</c>。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SystemTauBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 系统时间常数批量计算（CPU 参考实现）：<c>τ^sys = 1/(1/τ_eff + f)</c>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.NormalizeAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.String)">
+ <summary>把可能为负的轴编号规范到 <c>[0, Rank)</c>，并做越界校验</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.AxisLayout(System.Int32[],System.Int32,System.Int32@,System.Int32@,System.Int32@)">
+ <summary>
+ 把某根轴上的索引分解成「外层个数 / 轴长度 / 内层连续长度」三元组。
+ </summary>
+ <remarks>
+ 行主序下第 <paramref name="axis"/> 维的步长是 <c>innerSize = Π shape(axis+1..)</c>，
+ 而 <c>outerSize = Π shape(0..axis-1)</c> 是前面各维的元素总数。
+ 因此 "沿该轴取第 k 段" 就是一次长度为 <c>innerSize</c> 的连续块搬移。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.MaskedCrossEntropy(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Boolean[],Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ 带损失掩码的 softmax 交叉熵（CPU 参考实现）。
+ </summary>
+ <remarks>
+ CPU 后端保持"逐行三趟循环"的朴素写法：求行最大值 → 求 exp 和 → 归一化。
+ GPU 后端（<c>CudaTensor</c>）会用"每行一个 block + 共享内存树形归约"的
+ 融合内核覆盖它，把 3300 万次 <c>exp</c> 从主机搬到设备。
+ 两条路径的损失定义与梯度定义必须严格一致，否则 CPU/GPU 结果不可比。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.TryAdamWStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)">
+ <summary>
+ 默认后端不提供设备端 AdamW，返回 <c>False</c> 让调用方走主机循环。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SupportsDeviceResidency">
+ <summary>默认后端没有"设备常驻"概念。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>默认后端不支持钉住，直接返回 <c>False</c>。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>默认后端没有双精度常驻缓冲，返回 <c>False</c>。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.UnpinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>默认后端没有常驻缓冲，返回 <c>False</c>。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.IsDevicePinned(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>默认后端没有任何张量被钉住。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.PinnedDeviceBytes">
+ <summary>默认后端不占用显存。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>默认后端没有设备副本，因此无需同步。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.ConvOutSize(System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>卷积/池化的输出边长: (input + 2*padding - kernel) / stride + 1</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.RequireRank4(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String)">
+ <summary>卷积/池化的入参形状校验</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.ReduceAlongAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Boolean,System.Double,System.Func{System.Double,System.Double,System.Double})">
+ <summary>沿指定轴执行规约操作（通用实现）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.ReduceArgAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Boolean)">
+ <summary>沿指定轴找到极值的索引（argmax / argmin）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorComputeF"/> 的标量兜底实现（CPU 参考实现）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Name">
+ <summary>后端名称</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.RequireSameShape(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.String)">
+ <summary>校验两个张量形状一致，不一致则抛出。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Wrap(System.Single[],System.Int32[])">
+ <summary>把裸数组包装成同形张量。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MapBinary(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Func{System.Single,System.Single,System.Single})">
+ <summary>逐元素二元映射。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MapUnary(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Func{System.Single,System.Single})">
+ <summary>逐元素一元映射。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Add(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相加</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Subtract(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相减</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相乘</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Divide(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素相除</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Maximum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较大值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Minimum(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取较小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Exp(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素指数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Log(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素自然对数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Sqrt(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方根</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Square(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素平方</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Abs(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素绝对值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Negate(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素取负</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Reciprocal(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素倒数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Tanh(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素双曲正切</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Sigmoid(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素 Sigmoid</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Relu(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>逐元素 ReLU</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.AddScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素加标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MultiplyScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素乘标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.DivideScalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single)">
+ <summary>逐元素除标量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Clip(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single,System.Single)">
+ <summary>把元素钳制到 [low, high] 区间</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MatMul(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>二维矩阵乘法</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.SumAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>整体求和（双精度累加，避免单精度大数组累加的舍入误差）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MeanAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>整体求均值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MinAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最小值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.MaxAll(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>最大值</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.Laplacian7(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Byte[],System.Byte[])">
+ <summary>
+ 七点拉普拉斯：out = Σ(流体邻居) - nFluid·中心。固体单元输出 0。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.JacobiStencil7(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Byte[],System.Byte[],System.Single,System.Single,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>
+ 带掩膜的七点 Jacobi 迭代：x_new = (alpha·Σ_fluid x_old + rhs) / denom，
+ 其中 denom = beta（beta &gt; 0 时）或该格流体邻居数 nFluid（beta &lt;= 0 时）。
+ 固体单元恒为 0。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.AdvectTrilinear(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF,System.Single,System.Byte[])">
+ <summary>
+ 半拉格朗日平流：逐格反向追踪 dt 时间后在源场做三线性采样。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.TrilinearAt(System.Single[],System.Double,System.Double,System.Double,System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>在连续坐标处对场做三线性插值采样。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeFBase.ApplyMask(System.Byte[],Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF[])">
+ <summary>按掩膜把所有给定场的固体单元置零。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math">
+ <summary>
+ TensorFlow 风格的数学运算模块
+ 提供逐元素运算、规约操作和裁剪功能，全部基于 Tensor 实现
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.exp(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素指数函数 e^x
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.log(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素自然对数 ln(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.sqrt(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素平方根 sqrt(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.square(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素平方 x^2
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.abs(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素绝对值 |x|
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.sin(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素正弦 sin(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.cos(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素余弦 cos(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.tanh(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素双曲正切 tanh(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.sigmoid(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素 Sigmoid 函数 1/(1+e^(-x))
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.pow(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 逐元素幂运算 x^exponent
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.negative(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素取负 -x
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reciprocal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素取倒数 1/x
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.add(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素加法 a + b
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.subtract(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素减法 a - b
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素乘法 a * b（Hadamard 积）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.divide(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素除法 a / b
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.maximum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素最大值 max(a, b)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.minimum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素最小值 min(a, b)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.add_scalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 张量与标量相加 t + scalar
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.multiply_scalar(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 张量与标量相乘 t * scalar
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_sum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 计算所有元素的和
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_mean(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 计算所有元素的平均值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_max(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 计算所有元素的最大值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_min(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 计算所有元素的最小值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_prod(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 计算所有元素的乘积
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_std(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 计算所有元素的标准差（总体）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.argmax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 沿指定轴找到最大值的索引（返回 Double 类型以兼容 Tensor）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.argmin(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 沿指定轴找到最小值的索引（返回 Double 类型以兼容 Tensor）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.ReduceAlongAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Boolean,System.Double,System.Func{System.Double,System.Double,System.Double})">
+ <summary>
+ 沿指定轴执行规约操作（通用实现）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.ReduceArgAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Boolean)">
+ <summary>
+ 沿指定轴找到极值的索引（argmax / argmin）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.clip_by_value(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double)">
+ <summary>
+ 将张量值裁剪到 [minValue, maxValue] 范围内
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.clip_by_norm(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 将张量按 L2 范数裁剪，确保整体范数不超过 clipNorm
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.greater(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较 a > b，返回 1.0/0.0 的 Tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.greater_equal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较 a >= b，返回 1.0/0.0 的 Tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.less(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较：若 a 小于 b 则返回 1.0，否则返回 0.0
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.less_equal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较：若 a 小于等于 b 则返回 1.0，否则返回 0.0
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.equal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较 a == b，返回 1.0/0.0 的 Tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_all(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 所有元素都为非零（> 0）时返回 True（以 1.0/0.0 标量 Tensor 表示）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.reduce_any(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32},System.Boolean)">
+ <summary>
+ 任一元素为非零（> 0）时返回 True（以 1.0/0.0 标量 Tensor 表示）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Math.matmul(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 矩阵乘法（二维张量），等价于 MatMul
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.NamespaceDoc">
+ <summary>
+ The TensorFlow style tensor computation library: tensors, numerical operations and the neural
+ network helper API.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NamespaceDoc">
+ <summary>
+ NumPy compatible array helpers.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule">
+ <summary>
+ NumPy 兼容 API 模块
+ 提供类 NumPy 的静态方法，全部基于 Tensor 实现
+ </summary>
+ <remarks>
+ 典型用法:
+ Imports np = Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy
+ Dim a = np.zeros(3, 4)
+ Dim b = np.dot(a, a.transpose())
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.RandomState">
+ <summary>
+ NumPy 风格的随机数子模块
+ np.random.rand(...) 和 np.random.randn(...) 对应 NumPy.RandomState.rand(...)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.RandomState.rand(System.Int32[])">
+ <summary>
+ 生成均匀分布 [0, 1) 的随机张量 (np.random.rand)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.RandomState.randn(System.Int32[])">
+ <summary>
+ 生成标准正态分布 N(0,1) 的随机张量 (np.random.randn)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.RandomState.randint(System.Int32,System.Int32,System.Int32[])">
+ <summary>
+ 生成 [low, high) 均匀分布的随机整数张量 (np.random.randint)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.array(System.Double[],System.Int32[])">
+ <summary>
+ 从数据和形状创建张量 (np.array)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.zeros(System.Int32[])">
+ <summary>
+ 创建全零张量 (np.zeros)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.ones(System.Int32[])">
+ <summary>
+ 创建全一张量 (np.ones)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.full(System.Int32[],System.Double)">
+ <summary>
+ 创建填充指定值的张量 (np.full)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.eye(System.Int32,System.Nullable{System.Int32})">
+ <summary>
+ 创建单位矩阵 (np.eye)
+ </summary>
+ <param name="n">行数</param>
+ <param name="m">列数（可选，默认为 n）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.identity(System.Int32)">
+ <summary>
+ 创建单位矩阵 (np.identity)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.arange(System.Double,System.Nullable{System.Double},System.Double)">
+ <summary>
+ 创建等差数列张量 (np.arange)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.linspace(System.Double,System.Double,System.Int32)">
+ <summary>
+ 创建等间距张量 (np.linspace)
+ </summary>
+ <param name="start">起始值</param>
+ <param name="[stop]">终止值（包含）</param>
+ <param name="num">元素个数，默认 50</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.logspace(System.Double,System.Double,System.Int32,System.Double)">
+ <summary>
+ 创建对数等间距张量 (np.logspace)
+ </summary>
+ <param name="start">10^start 起始</param>
+ <param name="[stop]">10^stop 终止</param>
+ <param name="num">元素个数，默认 50</param>
+ <param name="base">对数底数，默认 10.0</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.reshape(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[])">
+ <summary>
+ 重塑张量形状 (np.reshape)
+ 返回新的张量，不修改原张量
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.transpose(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 转置张量 (np.transpose)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.expand_dims(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ 在指定位置插入一个大小为 1 的维度 (np.expand_dims)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.squeeze(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 移除大小为 1 的维度 (np.squeeze)
+ </summary>
+ <param name="t">输入张量</param>
+ <param name="axis">指定要移除的轴，若不指定则移除所有大小为 1 的维度</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.flatten(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 展平张量为一维 (np.flatten / np.ravel)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.dot(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 矩阵乘法 (np.dot / np.matmul)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.matmul(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 矩阵乘法 (np.matmul)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.concatenate(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor[],System.Int32)">
+ <summary>
+ 沿指定轴拼接多个张量 (np.concatenate)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.stack(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor[],System.Int32)">
+ <summary>
+ 沿新轴堆叠多个张量 (np.stack)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.vstack(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor[])">
+ <summary>
+ 垂直堆叠 (np.vstack) - 相当于 axis=0 的 concatenate
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.hstack(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor[])">
+ <summary>
+ 水平堆叠 (np.hstack) - 对于 1D 相当于 axis=0 的 concatenate，对于 2D+ 相当于 axis=1
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.split(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 将张量沿指定轴分割为多个子张量 (np.split)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.slice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 沿指定轴截取连续区间 (np.slice / 基本切片的等价形式)。
+ </summary>
+ <param name="t">输入张量</param>
+ <param name="start">起始下标（含）</param>
+ <param name="length">截取长度</param>
+ <param name="axis">切片轴，支持负数</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.topk(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ 沿最后一维取最大的 k 个元素及其下标。
+ </summary>
+ <remarks>
+ 与 <c>argmax</c> 一样，下标以 <c>Double</c> 存储。该算子没有 NumPy 的一一对应
+ 函数（np.argsort 只给下标），因此同时返回 "值" 与 "下标" 两个张量。
+ </remarks>
+ <param name="t">输入张量</param>
+ <param name="k">保留的元素个数</param>
+ <param name="indices">输出参数：被选中元素在原始最后一维中的下标</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.sum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 计算所有元素或沿指定轴的和 (np.sum)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.mean(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 计算所有元素或沿指定轴的均值 (np.mean)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.max(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 计算所有元素或沿指定轴的最大值 (np.max)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.min(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 计算所有元素或沿指定轴的最小值 (np.min)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.argmax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 找到最大值索引 (np.argmax)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.argmin(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 找到最小值索引 (np.argmin)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.std(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 计算标准差 (np.std)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.prod(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 所有元素的乘积 (np.prod)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.exp(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素指数 (np.exp)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.log(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素自然对数 (np.log)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.sqrt(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素平方根 (np.sqrt)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.square(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素平方 (np.square)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.abs(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素绝对值 (np.abs)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.power(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 逐元素幂运算 (np.power)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.clip(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double)">
+ <summary>
+ 逐元素裁剪 (np.clip)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.maximum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素最大值 (np.maximum)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.minimum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素最小值 (np.minimum)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.sin(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素正弦 (np.sin)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.cos(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素余弦 (np.cos)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.tanh(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素双曲正切 (np.tanh)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.where(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 条件选择 (np.where)
+ condition 中非零位置取 x 值，零位置取 y 值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.greater(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较大于 (np.greater)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.less(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较小于 (np.less)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.equal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素比较相等 (np.equal)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.shape(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 获取张量的形状 (np.shape)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.ndim(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 获取张量的维度数 (np.ndim)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.size(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 获取张量中元素的总数 (np.size)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.NumPy.NumPyModule.as_double_array(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 将张量转换为 Double 数组 (np.asarray)
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn">
+ <summary>
+ TensorFlow 风格的神经网络模块
+ 提供激活函数、损失函数和正则化操作，全部基于 Tensor 实现
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.relu(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ ReLU 激活函数: max(0, x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.leaky_relu(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ Leaky ReLU: max(alpha * x, x)
+ 负值部分使用 alpha 斜率，默认 0.01
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.elu(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ ELU 激活函数: x if x > 0 else alpha * (exp(x) - 1)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.sigmoid(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ Sigmoid 激活函数: 1 / (1 + e^(-x))
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.tanh(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ Tanh 激活函数: (e^x - e^(-x)) / (e^x + e^(-x))
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.gelu(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ GELU 激活函数（高斯误差线性单元）: x * Phi(x)
+ 使用近似公式: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.swish(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ Swish / SiLU 激活函数: x * sigmoid(x)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.softmax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ Softmax 函数: exp(x_i) / sum(exp(x_j))
+ 使用 max-shift 技巧保证数值稳定性
+ </summary>
+ <param name="logits">输入张量</param>
+ <param name="axis">沿指定轴计算 softmax，默认为最后一维 (-1)</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.log_softmax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ Log Softmax: log(softmax(x))
+ 使用数值稳定的 log-sum-exp 技巧
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.sigmoid_cross_entropy_with_logits(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ Sigmoid 交叉熵损失（数值稳定版本）
+ 对每个元素独立计算: max(x,0) - x*z + log(1 + exp(-|x|))
+ </summary>
+ <param name="labels">真实标签 (0 或 1)</param>
+ <param name="logits">模型输出的 logits</param>
+ <returns>逐元素损失，形状与输入相同</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.softmax_cross_entropy_with_logits(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ Softmax 交叉熵损失
+ loss = -sum(labels * log(softmax(logits)))
+ </summary>
+ <param name="labels">真实标签（one-hot 或 概率分布），形状与 logits 相同</param>
+ <param name="logits">模型输出 logits</param>
+ <param name="axis">类别所在的轴，默认为最后一维</param>
+ <returns>每个样本的损失，形状为去除 axis 维度的张量</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.sparse_softmax_cross_entropy_with_logits(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏 Softmax 交叉熵损失
+ labels 是整数索引（非 one-hot），每个元素表示正确的类别索引
+ </summary>
+ <param name="labels">真实标签索引，形状与 logits 去掉类别轴相同</param>
+ <param name="logits">模型输出 logits</param>
+ <returns>每个样本的损失</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.mse_loss(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 均方误差损失: mean((predictions - targets)^2)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.l2_loss(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ L2 损失: sum(x^2) / 2
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.huber_loss(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ Huber 损失（Smooth L1 Loss）
+ 当 |x| 不超过 delta 时为平方损失，否则为线性损失
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.nn.dropout(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Nullable{System.Int32})">
+ <summary>
+ Dropout 正则化
+ 以概率 keepProb 保留每个神经元，其余置零
+ 训练时将保留的神经元值放大 1/keepProb 以保持期望不变
+ </summary>
+ <param name="t">输入张量</param>
+ <param name="keepProb">保留概率 (0~1)</param>
+ <param name="seed">随机种子（可选）</param>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor">
+ <summary>
+ 张量类 - GNN中所有数值计算的基础数据结构
+ 支持多维数组的存储和基本数学运算
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._Data">
+ <summary>
+ 底层数据数组
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._Shape">
+ <summary>
+ 张量的形状（各维度大小）
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._DimProds">
+ <summary>
+ 维度乘积数组，用于快速计算多维索引
+ dimProds(i) = dims(0) * dims(1) * ... * dims(i-1)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._disposed">
+ <summary>
+ 是否已释放资源
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._version">
+ <summary>
+ 数据版本号：任何原地写入（索引器 setter / SetValue）都会自增，
+ 供设备端后端判断其缓存的显存副本是否已经失效。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel">
+ <summary>
+ 当前生效的张量计算后端（策略模式）。
+ </summary>
+ <remarks>
+ 默认是 SIMD 加速的 CPU 实现（<see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensor.Default"/>）。
+ 通过 <c>SIMDTensor.Register()</c> 或 <c>ILCuda.GPUTensor.CudaTensor.Register()</c>
+ 可以在运行时切换到其它后端（例如 CUDA GPU），下游调用方无需任何改动。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.SyncRoot">
+ <summary>切换计算后端时使用的同步根对象</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor._deviceEpoch">
+ <summary>
+ 全局的设备端缓存纪元号。
+ </summary>
+ <remarks>
+ 后端（例如 CUDA）会把张量的主机数据上传到显存并做 LRU 缓存，缓存键是
+ "主机数组引用 + <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Version"/>"。当调用方<b>绕过</b> Tensor 的索引器 /
+ <c>SetValue</c>，直接就地修改了底层 <c>Double()</c> 数组（典型例子是 CNN 的
+ 训练器直接改写权重数组）时，张量自身无从感知，显存副本会一直停留在旧值上，
+ 导致后续计算静默使用过期数据。
+
+ 这类调用方在修改完成之后必须调用一次 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.InvalidateAllDeviceCaches"/>，
+ 让所有张量的缓存副本失效（<see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Version"/> 会随之改变）。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.DeviceEpoch">
+ <summary>当前的全局设备端缓存纪元号</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.InvalidateAllDeviceCaches">
+ <summary>
+ 让所有张量的设备端缓存副本失效。
+ </summary>
+ <remarks>
+ 仅在"绕过 Tensor 的索引器直接就地修改底层数组"之后需要调用；
+ 通过索引器 / <c>SetValue</c> 的写入会自动使该张量自身的缓存失效，无需调用本方法。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Shape">
+ <summary>
+ 张量的形状（各维度大小）
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Data">
+ <summary>
+ 底层数据数组
+ Underlying data array
+ </summary>
+ <remarks>
+ 存储张量数据的一维数组（行优先顺序）
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Rank">
+ <summary>
+ 张量的维度数
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Length">
+ <summary>
+ 张量中元素的总数
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.TotalLength">
+ <summary>
+ 张量中元素的总数（兼容旧版本）
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Dimensions">
+ <summary>
+ 张量的维度数组（兼容旧版本）
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.IsVariable">
+ <summary>
+ 是否为变量（可训练）
+ Whether this is a variable (trainable)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Gradient">
+ <summary>
+ 梯度（用于反向传播）
+ Gradient for backpropagation
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Version">
+ <summary>
+ 数据版本号（只读）。任何原地写入都会使其自增，供设备端缓存判断失效。
+ </summary>
+ <remarks>
+ 返回值 = 本实例自身的写入计数 + <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.DeviceEpoch"/>。
+ 加上全局纪元是为了覆盖"绕过 Tensor 直接就地修改底层数组"的场景
+ （见 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.InvalidateAllDeviceCaches"/>）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.MarkHostModified">
+ <summary>
+ 声明本张量的主机数据已被**绕过索引器**就地修改过，从而让设备端缓存副本失效。
+ </summary>
+ <remarks>
+ 适用于"零拷贝视图 + 外部直接改写底层 <c>Double()</c>"的场景。
+ 与全局的 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.InvalidateAllDeviceCaches"/> 相比，本方法只失效<b>当前这一个</b>张量，
+ 粒度更细，也不会把其它张量的缓存一并冲掉。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Item(System.Int32)">
+ <summary>
+ 获取或设置指定索引处的元素值（一维访问）
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Item(System.Int32,System.Int32)">
+ <summary>
+ 获取或设置指定位置处的元素值（二维访问）
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Item(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 获取或设置指定位置处的元素值（三维访问）
+ </summary>
+ <param name="row">第0维索引（通常对应行/高）</param>
+ <param name="col">第1维索引（通常对应列/宽）</param>
+ <param name="depth">第2维索引（通常对应深度/通道）</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Item(System.Int32[])">
+ <summary>
+ 获取或设置指定位置处的元素值（多维数组索引访问）
+ 支持任意维度的索引访问
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.#ctor">
+ <summary>
+ 创建一个空的张量（形状为 {0}、不含数据）。
+ </summary>
+ <remarks>
+ 该重载的唯一用途是给反射式反序列化（<c>Activator.CreateInstance</c>，见
+ <c>Microsoft.VisualBasic.Serialization.BinaryDumping</c> 的 <c>ObjectInputStream</c>）
+ 提供一个真正的无参构造函数：实例化之后由反序列化流程直接填充字段，
+ 因此这里只做能够安全通过 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.UpdateDimProds"/> 的最小初始化。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.#ctor(System.Int32[])">
+ <summary>
+ 创建指定形状的张量，并用零初始化
+ </summary>
+ <param name="shape">张量的形状</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.#ctor(System.Double[],System.Int32[])">
+ <summary>
+ 使用指定数据创建张量
+ </summary>
+ <param name="data">初始数据</param>
+ <param name="shape">张量形状</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.#ctor(System.Single[],System.Int32[])">
+ <summary>
+ 使用指定数据创建张量（Single版本，兼容旧代码）
+ </summary>
+ <param name="data">初始数据</param>
+ <param name="shape">张量形状</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.#ctor(System.Double[0:,0:])">
+ <summary>
+ 从二维数组创建张量
+ Create tensor from 2D array
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.UpdateDimProds">
+ <summary>
+ 更新维度乘积数组
+ 用于快速计算多维索引到一维索引的转换
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Get1DInd(System.Int32[])">
+ <summary>
+ 将多维索引转换为一维索引（来自旧版本）
+ </summary>
+ <param name="indexes">多维索引数组</param>
+ <returns>一维数组索引</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.MultAll(System.Int32[])">
+ <summary>
+ 计算数组所有元素的乘积（来自旧版本）
+ </summary>
+ <param name="array">整数数组</param>
+ <returns>所有元素的乘积</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.DimsEqual(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 比较两个张量的维度是否相等（来自旧版本）
+ </summary>
+ <param name="t1">第一个张量</param>
+ <param name="t2">第二个张量</param>
+ <returns>如果维度相等返回True，否则返回False</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.BroadcastedAddition(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 广播加法（来自旧版本）
+ 当两个向量进行加法时，生成一个矩阵，其中每个元素是两个向量对应元素的和
+ </summary>
+ <param name="t1">第一个张量（行向量）</param>
+ <param name="t2">第二个张量（列向量）</param>
+ <returns>广播加法结果矩阵</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Wrap(System.Double[],System.Int32[])">
+ <summary>
+ 直接使用给定的数据数组创建张量（<b>不做数据拷贝</b>）。
+ </summary>
+ <remarks>
+ 与 <c>New(data, shape)</c> 的区别在于本方法<b>不会克隆</b> <paramref name="data"/>：
+ 张量与调用方共享同一份底层存储，任一侧的就地修改都会立刻反映到另一侧，
+ 因此它适合"把已有的 <c>Double()</c> 缓冲区包装成张量视图"的场景
+ （例如 CNN 把 <c>DataBlock</c> 的权重数组交给张量算子参与计算）。
+ 需要独立副本时请使用构造函数。
+ </remarks>
+ <param name="data">底层数据数组，长度必须与 <paramref name="shape"/> 的乘积一致</param>
+ <param name="shape">张量形状</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Wrap(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[])">
+ <summary>
+ 用已有张量的底层存储与指定形状再创建一个张量视图（零拷贝 reshape）。
+ </summary>
+ <remarks>
+ 元素总数必须保持不变，否则抛 <see cref="T:System.ArgumentException"/>。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.From2DArray(System.Single[0:,0:])">
+ <summary>
+ 从二维数组创建张量
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Filled(System.Int32[],System.Single)">
+ <summary>
+ 创建填充指定值的张量
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Identity(System.Int32)">
+ <summary>
+ 创建单位矩阵
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Random(System.Int32[],System.Single,System.Single,System.Nullable{System.Int32})">
+ <summary>
+ 创建随机张量（均匀分布）
+ </summary>
+ <remarks>
+ RandomUniform
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.RandomNormal(System.Int32[],System.Single,System.Single,System.Nullable{System.Int32})">
+ <summary>
+ 创建随机张量（正态分布，Xavier初始化）
+ 用于神经网络权重初始化，有助于梯度流动
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Range(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 创建整数范围张量
+ Create integer range tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.XavierInit(System.Int32,System.Int32,System.Nullable{System.Int32})">
+ <summary>
+ Xavier初始化 - 适用于sigmoid/tanh激活函数
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.HeInit(System.Int32,System.Int32,System.Nullable{System.Int32})">
+ <summary>
+ He初始化 - 适用于ReLU激活函数
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Scalar(System.Double)">
+ <summary>
+ 创建标量张量
+ Create scalar tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Zeros(System.Int32[])">
+ <summary>
+ 创建全零张量
+ Create zero tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Ones(System.Int32[])">
+ <summary>
+ 创建全一张量
+ Create ones tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Clone">
+ <summary>
+ 克隆张量
+ Clone tensor
+ </summary>
+ <remarks>
+ <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor"/>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.ToTensorF">
+ <summary>
+ 转换为单精度张量 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF"/>。数据会被复制并逐元素窄化为 Single，
+ 用于把双精度生态的结果交给 CFD 求解 / 三维可视化这类内存带宽受限的下游环节。
+ </summary>
+ <returns>同形状的单精度张量</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Reshape(System.Int32[])">
+ <summary>
+ 重塑张量形状（来自旧版本）
+ 改变张量的维度结构，但不改变数据
+ </summary>
+ <param name="newDims">新的维度数组</param>
+ <returns>如果重塑成功返回True，否则返回False</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.GetValue(System.Int32[])">
+ <summary>
+ 获取指定索引的值
+ Get value at specified indices
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.SetValue(System.Double,System.Int32[])">
+ <summary>
+ 设置指定索引的值
+ Set value at specified indices
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Variable(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 创建变量张量
+ Create variable tensor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.GetFlatIndex(System.Int32[])">
+ <summary>
+ 将多维索引转换为扁平索引
+ Convert multi-dimensional indices to flat index
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.GetIndices(System.Int32)">
+ <summary>
+ 将扁平索引转换为多维索引
+ Convert flat index to multi-dimensional indices
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Addition(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 张量加法（逐元素）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Addition(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Single)">
+ <summary>
+ 张量加标量（来自旧版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Subtraction(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 张量减法（逐元素）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Subtraction(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Single)">
+ <summary>
+ 张量减标量（来自旧版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Single)">
+ <summary>
+ 张量与标量相乘
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Division(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Single)">
+ <summary>
+ 张量与标量相除
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.op_Multiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 矩阵乘法运算符（来自旧版本）
+ 两个二维张量进行矩阵乘法
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.ElementwiseMultiply(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐元素乘法（Hadamard积）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.MatMul(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 矩阵乘法（二维张量）
+ 这是GNN消息传递的核心运算
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Transpose">
+ <summary>
+ 转置
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Sum(System.Int32)">
+ <summary>
+ 沿指定轴求和
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.TotalSum">
+ <summary>
+ 计算所有元素的和
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Mean">
+ <summary>
+ 计算所有元素的平均值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Mean(System.Int32)">
+ <summary>
+ 沿指定轴计算平均值
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.L2Norm">
+ <summary>
+ 计算L2范数（欧几里得范数）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Apply(System.Func{System.Single,System.Single})">
+ <summary>
+ 对每个元素应用函数
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Apply(System.Func{System.Double,System.Double})">
+ <summary>
+ 对每个元素应用函数（Double版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.ToArray">
+ <summary>
+ 获取原始数据数组的副本（Single版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.ToDoubleArray">
+ <summary>
+ 获取原始数据数组的副本（Double版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.To2DArray">
+ <summary>
+ 转换为二维数组
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.To2DArrayDouble">
+ <summary>
+ 转换为二维数组（Double版本）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.GetRow(System.Int32)">
+ <summary>
+ 获取指定行
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.GetColumn(System.Int32)">
+ <summary>
+ 获取指定列
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Print(System.String)">
+ <summary>
+ 打印张量内容（用于调试）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.ToString">
+ <summary>
+ 转换为字符串表示
+ Convert to string representation
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Dispose">
+ <summary>
+ 释放资源
+ Dispose resources
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.Finalize">
+ <summary>
+ 析构函数
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF">
+ <summary>
+ 单精度（Single / float32）多维张量。与双精度 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor"/> 并列，
+ 通过 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.ToTensor"/> / <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.FromTensor(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 双向互转。
+ </summary>
+ <remarks>
+ 索引器被刻意设计为"纯数组读写"，不包含版本计数或任何原子操作，
+ 以便 CFD 这类每秒上亿次随机访问的热循环可以直接使用。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF._Data">
+ <summary>底层数据数组（单精度）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF._Shape">
+ <summary>张量形状（各维度大小）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF._DimProds">
+ <summary>各维度步长（用于多维索引 -> 一维下标）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.SyncRoot">
+ <summary>切换计算后端时使用的同步根对象</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.computeKernelF">
+ <summary>
+ 单精度张量当前生效的计算后端。默认是 SIMD 加速的 CPU 实现
+ （<see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SIMDTensorF.Default"/>）；后续可切换为 GPU 后端。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Data">
+ <summary>
+ 存储张量数据的一维数组（行优先顺序）。热循环可直接使用以避免索引器开销。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Shape">
+ <summary>张量的形状（各维度大小）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Length">
+ <summary>元素总数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.TotalLength">
+ <summary>元素总数（与 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Length"/> 相同，为与 Double 版保持命名一致而提供）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Rank">
+ <summary>张量的维度数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.IsDisposed">
+ <summary>是否已被释放</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.#ctor">
+ <summary>创建空张量。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.#ctor(System.Int32[])">
+ <summary>
+ 创建指定形状的零张量。
+ </summary>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.#ctor(System.Single[],System.Int32[])">
+ <summary>
+ 用已有数据创建张量（数据会被复制）。
+ </summary>
+ <param name="data">源数据（行优先）</param>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Zeros(System.Int32[])">
+ <summary>创建指定形状的零张量。</summary>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Ones(System.Int32[])">
+ <summary>创建指定形状、元素全为 1 的张量。</summary>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Filled(System.Int32[],System.Single)">
+ <summary>创建指定形状、元素全为给定值的张量。</summary>
+ <param name="shape">各维度大小</param>
+ <param name="value">填充值</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Scalar(System.Single)">
+ <summary>创建只含一个元素的标量张量。</summary>
+ <param name="value">标量值</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Wrap(System.Single[],System.Int32[])">
+ <summary>
+ 零拷贝包装一个已有的单精度数组。底层数组由调用方持有，
+ 张量直接引用它（不复制），适用于把 CFD 场缓冲暴露成张量的场景。
+ </summary>
+ <param name="data">底层数组（不被复制）</param>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Item(System.Int32)">
+ <summary>一维索引访问。</summary>
+ <param name="index">扁平下标</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Item(System.Int32,System.Int32)">
+ <summary>二维索引访问 (row, col)。</summary>
+ <param name="row">行下标</param>
+ <param name="col">列下标</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Item(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 三维索引访问 (row, col, depth)，对应 CFD 的 (i, j, k)。
+ 注意：本索引器不含任何原子操作，可安全用于高频热循环。
+ </summary>
+ <param name="row">X / i 方向下标</param>
+ <param name="col">Y / j 方向下标</param>
+ <param name="depth">Z / k 方向下标</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Item(System.Int32[])">
+ <summary>任意维度的索引访问。</summary>
+ <param name="indexes">各维度下标</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Get1DInd(System.Int32[])">
+ <summary>把多维下标换算为一维扁平下标。</summary>
+ <param name="indexes">各维度下标</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.UpdateDimProds">
+ <summary>重算各维度步长（形状变化后必须调用）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Clear">
+ <summary>把所有元素清零。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Fill(System.Single)">
+ <summary>用同一个值填满整个张量。</summary>
+ <param name="value">填充值</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Clone">
+ <summary>创建深拷贝。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.CloneT">
+ <summary>
+ 创建深拷贝（强类型版本，避免调用方反复 CType）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.CopyFrom(Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF)">
+ <summary>把另一个同形张量的数据复制到本张量。</summary>
+ <param name="other">源张量</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.ToTensor">
+ <summary>
+ 转换为双精度 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor"/>（数据会被复制并逐元素拓宽）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.FromTensor(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>从双精度 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor"/> 转换而来（数据会被复制并逐元素窄化）。</summary>
+ <param name="t">源张量</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.FromDoubles(System.Double[],System.Int32[])">
+ <summary>从双精度数组转换而来。</summary>
+ <param name="data">源数据</param>
+ <param name="shape">各维度大小</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.ToDoubles">
+ <summary>导出为双精度数组的副本。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Dispose">
+ <summary>
+ 释放底层数组。注意：释放后 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.Data"/> 变为 Nothing，
+ 仍处于使用中的场缓冲不应调用本方法。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.TensorF.ToString">
+ <summary>返回形状与元素总数的简要描述。</summary>
+</member>
+</members>
+</doc>

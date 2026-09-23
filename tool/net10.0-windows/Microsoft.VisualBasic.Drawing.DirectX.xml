@@ -1,0 +1,3418 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Drawing.DirectX
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Dx2DDriver">
+ <summary>
+ The device interop driver of the directx 2d graphics engine.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Dx2DDriver.RegisterDx2D">
+ <summary>
+ Replace the gdi raster image drawing driver with the directx api based
+ gpu accelerated canvas.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Dx2DDriver.DxDriver.GetData(Microsoft.VisualBasic.Imaging.IGraphics,System.Int32[])">
+ <summary>
+ extract the raster image data of the directx canvas
+ </summary>
+ <remarks>
+ the gdi image data model (<c>ImageData</c>) is defined in the
+ imaging driver assembly which is not a dependency of this project,
+ the raster image of the canvas can be read through
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.GetRasterImage"/> instead.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache">
+ <summary>
+ The direct2d resource cache of a render target.
+ </summary>
+ <remarks>
+ Creating a direct2d brush / text format / stroke style object is a
+ relatively expensive com operation, drawing a large amount of the
+ polygon primitives with the same color should reuse the same brush
+ object instead of creating a new one for each primitive.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.GetBrush(System.Drawing.Color)">
+ <summary>
+ get or create a solid color brush of the given color
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.GetBrush(Microsoft.VisualBasic.Imaging.Brush)">
+ <summary>
+ convert a gdi+ style brush object into a direct2d brush
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.IsDefaultStroke(Microsoft.VisualBasic.Imaging.Pen)">
+ <summary>
+ does the pen describe a plain solid stroke line?
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.GetStrokeStyle(Microsoft.VisualBasic.Imaging.Pen)">
+ <summary>
+ get or create the direct2d stroke style of the given pen object
+ </summary>
+ <remarks>
+ a default pen (solid line, butt cap and miter join) does not require a
+ stroke style object at all, so that the fastest path is taken for the
+ most common case.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.GetTextFormat(Microsoft.VisualBasic.Imaging.Font)">
+ <summary>
+ get or create the directwrite text format of the given font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.SLOT_GET_METRICS">
+ <summary>
+ the vtable slot of <c>IDWriteTextLayout::GetMetrics</c>: the 25 methods of
+ <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.IDWriteTextFormat"/> occupy slot 3 to slot 27, and the layout
+ adds 32 more methods before its metrics getter
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxBrushCache.MeasureText(System.String,Microsoft.VisualBasic.Imaging.Font,System.Single)">
+ <summary>
+ measure the text size through the directwrite text layout api
+ </summary>
+ <remarks>
+ The text layout object can not be wrapped into a typed runtime callable
+ wrapper (the cast of <see cref="M:System.Runtime.InteropServices.Marshal.GetTypedObjectForIUnknown(System.IntPtr,System.Type)"/>
+ fails for it), so its metrics are read through the raw vtable slot instead.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxDevice">
+ <summary>
+ The gpu device wrapper of the directx engine: a d3d11 device with the
+ BGRA support flag, its immediate context, the direct2d factory and the
+ directwrite factory.
+ </summary>
+ <remarks>
+ The device object is an expensive resource, so it is shared inside the
+ current process: every <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics"/> canvas just creates its
+ own off-screen render target on top of the shared device.
+
+ All of the native api here is imported via p/invoke, this module is
+ 100% pure managed code.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxDevice.Description">
+ <summary>
+ a short description of the current gpu device, for debug and benchmark
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxDevice.Default">
+ <summary>
+ get the process wide shared directx device, the hardware driver is
+ preferred and the WARP software rasterizer is used as the fallback
+ when there is no gpu device available.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics">
+ <summary>
+ A gpu accelerated 2d drawing canvas that is implemented on top of the
+ Direct2D / D3D11 / DXGI / DirectWrite api.
+ </summary>
+ <remarks>
+ This graphics object talks to the directx api completely through
+ p/invoke: there is no unmanaged helper library, no c++/cli bridge and
+ no unsafe code block in this project, the whole interop layer is pure
+ managed vb.net code.
+
+ The drawing commands are submitted to the gpu device through a direct2d
+ render target which is created on top of a d3d11 texture, and the final
+ raster image is read back from the gpu texture when the image output is
+ required.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.renderTarget">
+ <summary>
+ the gpu canvas that receives the drawing commands, this is either a
+ fixed size off screen texture or a window swap chain.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.brushes">
+ <summary>
+ the brush, stroke style and text format cache of the render target
+ </summary>
+ <remarks>
+ a direct2d brush is owned by the render target that has created it, so
+ both of these caches are rebuilt whenever the render target is
+ recreated (on a resize or on a removed gpu device).
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.clips">
+ <summary>
+ the axis aligned clip rectangles that are pushed on the render target
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.transform">
+ <summary>
+ the current world transform of the render target
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.m_ownsSurface">
+ <summary>
+ is the render surface created and owned by this canvas?
+ </summary>
+ <remarks>
+ a canvas that is created from an existing surface (the window swap
+ chain canvas) never disposes the surface that is given by the caller.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.BatchFill">
+ <summary>
+ Merge the consecutive polygon primitives that share the same brush
+ into one single geometry object and rasterize them through one draw
+ call. This switch is the key of the performance improvement on a
+ scene that contains a large amount of polygons.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.Size">
+ <summary>
+ the canvas size in pixels
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.Driver">
+ <summary>
+ DirectX graphics engine always generates the raster image output
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.DeviceDescription">
+ <summary>
+ a short description of the underlying gpu device
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.#ctor(System.Int32,System.Int32,System.Drawing.Color,System.Int32)">
+ <summary>
+ create a gpu accelerated canvas of the given size
+ </summary>
+ <param name="fill">
+ the background color of the canvas, use <see cref="P:System.Drawing.Color.Transparent"/>
+ for a transparent canvas.
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.#ctor(Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface,System.Drawing.Color,System.Int32)">
+ <summary>
+ create a gpu accelerated drawing canvas on top of the given render
+ surface, this is how the winforms control hosts its swap chain canvas.
+ </summary>
+ <remarks>
+ the surface is owned by the caller: disposing this graphics object
+ releases the device dependent drawing resources only.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.BeginFrame">
+ <summary>
+ open a new drawing frame
+ </summary>
+ <remarks>
+ A window swap chain canvas draws one frame per paint request, so the
+ transform and the clip stack are reset here and the frame is submitted
+ through <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.EndFrame"/>.
+
+ When the previous frame was lost (a removed gpu device), the swap chain
+ and every device dependent resource is rebuilt before the new frame
+ starts, so that the caller does not have to handle the device loss at
+ all.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.EndFrame">
+ <summary>
+ finish the current drawing frame and present it onto the screen
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.ResizeCanvas(System.Int32,System.Int32)">
+ <summary>
+ resize the gpu canvas, every device dependent resource is rebuilt on
+ the new size.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.RefreshTarget">
+ <summary>
+ rebuild the device dependent drawing resources of the current render
+ target: the brush cache and the polygon batch submitter.
+ </summary>
+ <remarks>
+ every direct2d brush, stroke style and text format is bound to the
+ render target that has created it, so all of them are dropped and
+ rebuilt when the render target is recreated.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.ReleaseDrawingResources">
+ <summary>
+ release the device dependent drawing resources of the current render
+ target: the brush cache and the polygon batch submitter
+ </summary>
+ <remarks>
+ A direct2d brush, stroke style, text format or path geometry is owned by
+ the render target that has created it and holds that render target alive.
+ The back buffer of a swap chain is therefore still referenced until these
+ resources are released, and dxgi rejects both the resize of the back
+ buffers and the creation of a new swap chain for the same window while
+ that is the case.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.CreateDrawingResources">
+ <summary>
+ create the device dependent drawing resources of the current render target
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.#ctor(System.Int32,System.Int32,System.String,System.Int32)">
+ <summary>
+ create a gpu accelerated canvas of the given size, the background
+ color is given as a html color string, example as "#ffffff"
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.EndBatch">
+ <summary>
+ submit the pending polygon batch, this is required before any other
+ drawing operation so that the drawing order is preserved.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.PolygonPrimitive(System.Drawing.PointF[],System.Boolean,Microsoft.VisualBasic.Drawing.DirectX.ID2D1Brush,System.Int32,System.Single,Microsoft.VisualBasic.Drawing.DirectX.ID2D1StrokeStyle)">
+ <summary>
+ append a polygon primitive into the batch submitter
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.PenKey(Microsoft.VisualBasic.Imaging.Pen)">
+ <summary>
+ build a cheap hash key of the pen object, the key is used by the
+ polygon batch submitter to detect a brush change
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.MixHash(System.Int32,System.Int32)">
+ <summary>
+ mix a hash value without any checked arithmetic overflow
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.ImageResource">
+ <summary>
+ read back the gpu texture and generate the raster image output
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.GetRasterImage">
+ <summary>
+ read back the rendered pixels from the gpu device to the managed memory
+ </summary>
+ <returns>
+ a raster image object of the current canvas content
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.FlushBatch">
+ <summary>
+ submit all of the pending polygon primitives of the batch submitter
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.DisposeSafe(System.IDisposable)">
+ <summary>
+ dispose a managed disposable object in a safe manner
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.FillPolygon(Microsoft.VisualBasic.Imaging.Brush,System.Drawing.PointF[])">
+ <summary>
+ fill a polygon primitive, the polygon is appended into the batch
+ submitter when <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.BatchFill"/> is enabled
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.DrawPolygon(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.PointF[])">
+ <summary>
+ stroke a polygon primitive, the polygon is appended into the batch
+ submitter when <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.BatchFill"/> is enabled
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.ExcludeClip(System.Drawing.Rectangle)">
+ <summary>
+ Direct2D only supports an axis aligned rectangle clip, the exclude
+ clip operation is not available in this backend.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics.GetStringPath(System.String,System.Drawing.RectangleF,Microsoft.VisualBasic.Imaging.Font)">
+ <summary>
+ get the outline path of a text string
+ </summary>
+ <remarks>
+ the directwrite glyph outline streaming requires a IDWriteFontFace
+ geometry sink implementation, this backend returns the bounding box
+ rectangle of the text layout as the approximated path.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder">
+ <summary>
+ The direct2d geometry constructor: converts the gdi+ style drawing
+ primitive into a ID2D1Geometry object so that it can be rasterized
+ by the gpu device.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.AddLines(Microsoft.VisualBasic.Drawing.DirectX.ID2D1GeometrySink,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[],System.Int32)">
+ <summary>
+ append the polygon vertex buffer into the geometry sink, the vertex
+ buffer is pinned during the call so that no extra copy is required.
+ </summary>
+ <param name="offset">
+ the index of the first vertex that should be appended, the vertex
+ before the offset is consumed by the BeginFigure call
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.AddTail(Microsoft.VisualBasic.Drawing.DirectX.ID2D1GeometrySink,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[])">
+ <summary>
+ AddLines of the polygon, the first point is consumed by the BeginFigure
+ call so that only the remaining points are appended here.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Polygon(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[],System.Boolean)">
+ <summary>
+ build a polygon (or a polyline when <paramref name="closed"/> is false)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Bezier(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F)">
+ <summary>
+ build a cubic bezier spline
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Beziers(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[])">
+ <summary>
+ build a bezier spline sequence from a point array of 3n+1 points
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.GetArc(System.Drawing.RectangleF,System.Single,System.Single,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F@,Microsoft.VisualBasic.Drawing.DirectX.D2D1_ARC_SEGMENT@)">
+ <summary>
+ compute the arc segment of a gdi+ style arc: the angle unit is degree
+ and the positive sweep angle goes clockwise on the screen.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Arc(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,System.Drawing.RectangleF,System.Single,System.Single)">
+ <summary>
+ build an open arc
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Pie(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,System.Drawing.RectangleF,System.Single,System.Single)">
+ <summary>
+ build a pie shape: the center point, the arc and the closed outline
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.AddEllipseFigure(Microsoft.VisualBasic.Drawing.DirectX.ID2D1GeometrySink,System.Drawing.RectangleF)">
+ <summary>
+ build an ellipse figure through two half arc segments
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.AddRectangleFigure(Microsoft.VisualBasic.Drawing.DirectX.ID2D1GeometrySink,System.Drawing.RectangleF)">
+ <summary>
+ build a rectangle figure
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.CardinalSegments(Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[],System.Single,System.Boolean)">
+ <summary>
+ convert the cardinal spline control points into a cubic bezier
+ segment sequence
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.Curve(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F[],System.Single,System.Boolean)">
+ <summary>
+ build a cardinal spline curve
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPathBuilder.FromGraphicsPath(Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory,Microsoft.VisualBasic.Imaging.GraphicsPath)">
+ <summary>
+ replay the drawing operation sequence of a <see cref="T:Microsoft.VisualBasic.Imaging.GraphicsPath"/>
+ object into a direct2d path geometry.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxPixelFormat">
+ <summary>
+ The pixel buffer converter between the direct2d gpu texture and the
+ managed raster image model.
+ </summary>
+ <remarks>
+ The pixel buffer that is read back from the gpu texture is a BGRA
+ ordered buffer with the premultiplied alpha value, and the raster image
+ buffer of <see cref="T:Microsoft.VisualBasic.Imaging.Bitmap"/> is also a BGRA ordered buffer, so the
+ only conversion that is required here is the alpha un-premultiply.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPixelFormat.Unpremultiply(System.Byte[])">
+ <summary>
+ convert the premultiplied BGRA pixel buffer into a straight BGRA buffer
+ </summary>
+ <param name="bgra">
+ the raw pixel buffer that is read back from the gpu texture, the
+ channel order of each pixel is [blue, green, red, alpha]
+ </param>
+ <remarks>
+ premultiplied = straight * alpha / 255, so that
+ straight = premultiplied * 255 / alpha
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPixelFormat.Premultiply(System.Byte[])">
+ <summary>
+ convert a straight BGRA pixel buffer into the premultiplied BGRA
+ buffer that is required by the direct2d bitmap object
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPixelFormat.CreateBitmap(System.Byte[],System.Int32,System.Int32)">
+ <summary>
+ wrap the raw BGRA pixel buffer as a managed raster image object
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPixelFormat.GetPixelBuffer(Microsoft.VisualBasic.Imaging.Image)">
+ <summary>
+ extract the raw BGRA pixel buffer from a raster image object,
+ returns nothing when the image model is not supported.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch">
+ <summary>
+ The polygon batch submitter.
+ </summary>
+ <remarks>
+ Submitting one draw call per polygon primitive is the main bottleneck of
+ a large polygon scene: every FillGeometry / DrawGeometry call goes through
+ a com interop boundary and forces direct2d to build a new geometry object.
+
+ This batch submitter appends every polygon of the same brush as an
+ independent figure of one single ID2D1PathGeometry object, and then all
+ of the accumulated polygons are rasterized by the gpu device through just
+ one draw call, so the per primitive overhead is reduced from O(n) to
+ O(n / batch_size).
+
+ The vertex buffer of the figure is written into a pinned scratch buffer
+ that is owned by this submitter, so that no managed array has to be
+ allocated and marshalled for each polygon primitive.
+
+ The fill mode of the batch geometry is D2D1_FILL_MODE_WINDING, so that
+ the overlapped area of two polygons is still filled, which keeps the same
+ visual result as drawing the polygons one by one.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.MAX_FIGURES">
+ <summary>
+ flush the geometry after this amount of figures so that the memory
+ cost of a single batch is bounded.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.MAX_SCRATCH_POINTS">
+ <summary>
+ the vertex capacity of the pinned scratch buffer
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.scratch">
+ <summary>
+ a pinned managed vertex buffer, it is reused by every polygon so that
+ no per primitive allocation is required
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.PendingFigures">
+ <summary>
+ the amount of the polygon primitives that are accumulated in the
+ current batch
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.AddPolygon(System.Drawing.PointF[],System.Boolean,System.Int32,Microsoft.VisualBasic.Drawing.DirectX.ID2D1Brush,System.Single,Microsoft.VisualBasic.Drawing.DirectX.ID2D1StrokeStyle)">
+ <summary>
+ append a closed polygon primitive into the current batch
+ </summary>
+ <param name="points">the vertex buffer of the polygon</param>
+ <param name="stroke">
+ true for a stroke (outline) drawing and false for a fill drawing
+ </param>
+ <param name="key">
+ the brush cache key, a new batch is required when the key is changed
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.Flush">
+ <summary>
+ submit all of the accumulated polygon primitives to the gpu device
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.Discard">
+ <summary>
+ drop the accumulated polygon primitives without submitting them
+ </summary>
+ <remarks>
+ This is required when the render target that owns the pending geometry
+ is not usable any more (a removed gpu device for example): the pending
+ figures can not be rasterized any more, so they are released directly
+ instead of being drawn.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.CurrentKey">
+ <summary>
+ the brush key of the current pending batch, -1 means nothing pending
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxPolygonBatch.CurrentIsStroke">
+ <summary>
+ is the pending batch a stroke batch?
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface">
+ <summary>
+ The abstract gpu render surface that the <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics"/> canvas
+ draws on.
+ </summary>
+ <remarks>
+ Two render surfaces are implemented in this project:
+
+ 1. <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget"/> - an off screen d3d11 texture, the rendered
+    pixels can be read back into the managed memory for generating the
+    raster image output
+ 2. <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget"/> - a dxgi flip model swap chain that is
+    bound to a window handle, every finished frame is presented onto the
+    window
+
+ The whole drawing implementation of <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics"/> only depends
+ on this contract, so that exactly the same drawing code runs on both of
+ the surfaces.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Width">
+ <summary>
+ the size of this surface in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Device">
+ <summary>
+ the direct2d / d3d11 device that owns this surface
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Target">
+ <summary>
+ the direct2d render target which receives the drawing commands
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.NeedsRecreate">
+ <summary>
+ does this surface have to be rebuilt before the next frame?
+ </summary>
+ <remarks>
+ a window swap chain sets this flag when the gpu device was removed or
+ reset during the previous frame submission. the drawing canvas checks
+ this flag at the beginning of a frame and calls <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Recreate"/>
+ when it is set.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.RenderTargetTexture">
+ <summary>
+ the native d3d11 texture that is behind the direct2d render target of
+ this surface, or zero when the surface can not be used as a direct3d
+ output.
+ </summary>
+ <remarks>
+ The 3d pipeline of the scene3d namespace renders into the very same
+ texture that direct2d draws on, so the gpu accelerated 3d scene and the
+ 2d overlay of the canvas end up on one surface without a copy in
+ between.
+
+ The returned pointer is owned by this surface: it must not be released
+ by the caller, and it is only valid until the surface is rebuilt.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.SupportsReadback">
+ <summary>
+ can the rendered pixels be read back into the managed memory?
+ </summary>
+ <remarks>
+ the back buffer of a flip model swap chain can not be mapped directly,
+ so such a surface reports false here and its pixels can only be
+ captured through a staging texture copy.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.VSync">
+ <summary>
+ should the frame submission wait for the vertical blank?
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Resize(System.Int32,System.Int32)">
+ <summary>
+ update the size of this surface, the native resources of the new size
+ must be recreated by the implementation.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.BeginDraw">
+ <summary>
+ open a new drawing batch on the render target
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.EndDraw">
+ <summary>
+ finish the current drawing batch, for a window surface the frame is
+ presented onto the screen here.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Recreate">
+ <summary>
+ rebuild the native resources after <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.NeedsRecreate"/> is set
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Flush">
+ <summary>
+ submit all of the pending drawing commands to the gpu device
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.ReadPixels(System.Boolean@)">
+ <summary>
+ read back the rendered pixels from the gpu device
+ </summary>
+ <param name="deferred">
+ The back buffer of a flip model swap chain only holds valid pixels
+ while the frame is submitted: right after the presentation its content
+ is undefined again. Such a surface returns this flag as True and no
+ pixels at all, the caller has to finish the current frame through
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.EndDraw"/> instead and then read the pixels from
+ <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.CapturedPixels"/>.
+ </param>
+ <returns>
+ a BGRA (blue, green, red, alpha) ordered pixel buffer with the
+ premultiplied alpha value
+ </returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.CapturedPixels">
+ <summary>
+ the pixels that were captured while the last frame was submitted
+ </summary>
+ <remarks>see the <c>deferred</c> parameter of <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.ReadPixels(System.Boolean@)"/></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.SetSize(System.Int32,System.Int32)">
+ <summary>
+ update the canvas size, this is only called by the implementation of
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.Resize(System.Int32,System.Int32)"/>
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface.ReleaseHandle">
+ <summary>
+ release every native resource that is owned by this surface
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget">
+ <summary>
+ An off screen gpu canvas: a d3d11 texture that is shared with direct2d
+ through a dxgi surface.
+ </summary>
+ <remarks>
+ The drawing pipeline of this class is:
+
+ 1. create a d3d11 texture2d with the RENDER_TARGET bind flag
+ 2. QueryInterface the IDXGISurface of the texture
+ 3. ID2D1Factory::CreateDxgiSurfaceRenderTarget on the dxgi surface
+ 4. draw the 2d primitives through the direct2d render target
+ 5. copy the texture into a staging texture and map it back to the
+    managed memory for generating the raster image output
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.texture">
+ <summary>
+ the gpu side render target texture
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.textureHandle">
+ <summary>
+ the raw pointer of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.texture"/>, it is handed out to the 3d
+ pipeline which renders into the very same texture
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.staging">
+ <summary>
+ the cpu readable mirror of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.texture"/>, used for the pixel read back
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.surface">
+ <summary>
+ the raw IDXGISurface pointer of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.texture"/>
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.RenderTargetTexture">
+ <summary>
+ the d3d11 texture that both direct2d and the 3d pipeline draw on
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.CreateResources">
+ <summary>
+ create the d3d11 textures and the direct2d render target of the
+ current canvas size
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.ReleaseResources">
+ <summary>
+ release the native resources of the current canvas size
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.Flush">
+ <summary>
+ submit all of the pending draw commands to the gpu device
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.EndDraw">
+ <summary>
+ finish the current drawing batch, this is required before the pixel
+ read back operation.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.Resize(System.Int32,System.Int32)">
+ <summary>
+ resize the off screen canvas, the d3d11 textures and the direct2d
+ render target are recreated on the new size.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxRenderTarget.ReadPixels(System.Boolean@)">
+ <summary>
+ read back the rendered pixels from the gpu texture
+ </summary>
+ <remarks>
+ this off screen surface reads its pixels back immediately, so the
+ deferred flag of the base class is never set here.
+ </remarks>
+ <returns>
+ a BGRA (blue, green, red, alpha) ordered pixel buffer with the
+ premultiplied alpha value
+ </returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxSinkWriter">
+ <summary>
+ A allocation free writer of the ID2D1GeometrySink object.
+ </summary>
+ <remarks>
+ Appending a figure into a path geometry is done once per polygon
+ primitive, and such a hot loop should not pay for the runtime callable
+ wrapper dispatch of the clr for every single call.
+
+ This writer resolves the vtable entries of the sink object once and
+ invokes them through a function pointer, which removes the interface
+ pointer resolution of the clr from the per polygon code path.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget">
+ <summary>
+ A gpu render surface that presents its frames onto a window: a dxgi flip
+ model swap chain whose back buffer is used as the direct2d render target.
+ </summary>
+ <remarks>
+ The frame pipeline of this class is:
+
+ 1. create a dxgi factory through <c>CreateDXGIFactory1</c>
+ 2. create a flip model swap chain on the given window handle
+ 3. QueryInterface the <c>IDXGISurface</c> of the back buffer
+ 4. <c>ID2D1Factory::CreateDxgiSurfaceRenderTarget</c> on that surface
+ 5. draw the frame through the direct2d render target
+ 6. <c>ID2D1RenderTarget::EndDraw</c>, then <c>IDXGISwapChain::Present</c>
+
+ The swap chain is dispatched <b>by raw vtable slot</b> instead of a typed
+ com interface: the factory hands out an <c>IDXGISwapChain1</c> (or newer)
+ object, and resolving it through <see cref="M:System.Runtime.InteropServices.Marshal.GetTypedObjectForIUnknown(System.IntPtr,System.Type)"/>
+ would tie this code to one exact swap chain interface id. Reading the three
+ needed slots directly - the same technique that the geometry sink writer
+ of this project uses - keeps this class independent of the swap chain
+ version.
+
+ A flip model back buffer only holds valid pixels while the frame is being
+ submitted, so the optional frame capture is taken between the end of the
+ direct2d frame and the presentation.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.SLOT_PRESENT">
+ <summary>
+ IDXGIObject(3) + IDXGIDeviceSubObject(4) + IDXGISwapChain slot position
+ of <c>Present</c>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.SLOT_GET_BUFFER">
+ <summary>the slot of <c>IDXGISwapChain::GetBuffer</c></summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.SLOT_RESIZE_BUFFERS">
+ <summary>the slot of <c>IDXGISwapChain::ResizeBuffers</c></summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.BACK_BUFFER_COUNT">
+ <summary>
+ the amount of the back buffers of the swap chain, a flip model swap
+ chain requires at least two of them.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.swapChain">
+ <summary>
+ the raw <c>IDXGISwapChain</c> pointer, one interface reference is owned
+ by this class
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.presentApi">
+ <summary>
+ the vtable entries of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.swapChain"/>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.surface">
+ <summary>
+ the raw IDXGISurface pointer of the current back buffer
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.targetTexture">
+ <summary>
+ the raw ID3D11Texture2D pointer of the very same back buffer: the 3d
+ pipeline renders into the back buffer through its own render target view
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.staging">
+ <summary>
+ the cpu readable mirror of the back buffer, it is only created when a
+ frame capture is requested
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.RenderTargetTexture">
+ <summary>
+ the d3d11 texture of the current back buffer, it is shared by the
+ direct2d overlay and by the 3d pipeline
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.CapturedPixels">
+ <summary>
+ the pixels that were captured while the last frame was submitted
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.Handle">
+ <summary>
+ the window handle that receives the presented frames
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.ResolveVtable``1(System.IntPtr,System.Int32)">
+ <summary>
+ resolve one vtable slot of a raw com interface pointer as a delegate
+ </summary>
+ <remarks>the delegate must be kept alive as long as it is used</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.CreateSwapChain">
+ <summary>
+ create the flip model swap chain on the target window
+ </summary>
+ <remarks>
+ the window must already be visible here: dxgi rejects the creation on a
+ window that is still being created, so the hosting control creates the
+ canvas on its first paint request instead of inside its handle creation.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.CreateTarget">
+ <summary>
+ create the direct2d render target on the current back buffer
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.EndDraw">
+ <summary>
+ finish the direct2d frame, capture the back buffer when it was
+ requested and present the frame onto the window
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.ReadPixels(System.Boolean@)">
+ <summary>
+ the pixel read back of a window canvas can only be taken while the
+ frame is submitted, so it is deferred to the end of the current frame
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.Resize(System.Int32,System.Int32)">
+ <summary>
+ resize the swap chain back buffers
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.TryResizeBuffers(System.Int32,System.Int32)">
+ <summary>
+ resize the back buffers of the swap chain, a failure is reported instead
+ of being thrown so that the caller can rebuild the whole chain
+ </summary>
+ <remarks>
+ A flip model swap chain rejects <c>IDXGISwapChain::ResizeBuffers</c> with
+ ``DXGI_ERROR_INVALID_CALL`` while any direct or indirect reference to one
+ of its back buffers is still alive. The references that the direct2d and
+ d3d11 device context keep are not fully under the control of this class,
+ so the resize is only attempted here and the caller rebuilds the whole
+ swap chain when it does not succeed.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.Recreate">
+ <summary>
+ rebuild the whole swap chain after the gpu device was removed or reset
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.HandleFailure(System.Int32,System.String)">
+ <summary>
+ translate a failed frame submission: a removed device only marks this
+ surface for the rebuild that happens at the beginning of the next
+ frame, every other failure is reported to the caller.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.CaptureBackBuffer">
+ <summary>
+ copy the current back buffer into a staging texture and map it back
+ into the managed memory
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.CreateStaging">
+ <summary>
+ create the staging texture that receives the captured frame
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxSwapChainTarget.ReleaseTargetResources">
+ <summary>
+ release the direct2d render target and the back buffer of the current
+ size, the swap chain itself stays alive
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas">
+ <summary>
+ A gpu accelerated 2d drawing canvas that presents its frames onto a window.
+ </summary>
+ <remarks>
+ This class is the hosting object of the winform <c>DxCanvas</c> control, and
+ it is the public entry point of the directx drawing backend for every window
+ based host:
+
+ 1. a dxgi flip model swap chain is created on the given window handle
+ 2. the back buffer of the swap chain is used as the direct2d render target
+ 3. the drawing goes through exactly the same <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxGraphics"/> object
+    that the off screen canvas uses
+ 4. every finished frame is presented onto the window
+
+ The frame boundary is explicit here: <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.BeginDraw"/> opens a frame,
+ the caller draws through <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.Graphics"/>, and <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.EndDraw"/>
+ submits the frame and presents it.
+
+ A removed gpu device is handled transparently: the swap chain and the
+ device dependent drawing resources are rebuilt at the beginning of the next
+ frame, so the caller does not have to deal with the device loss at all.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.#ctor(System.IntPtr,System.Int32,System.Int32,System.Single,System.Boolean)">
+ <summary>
+ create a gpu accelerated canvas on top of the given window handle
+ </summary>
+ <param name="hwnd">
+ the window handle that receives the presented frames
+ </param>
+ <param name="width">the canvas size in pixels</param>
+ <param name="height">the canvas size in pixels</param>
+ <param name="dpi">the device dpi of the hosting window</param>
+ <param name="vsync">
+ true to wait for the vertical blank on every frame submission
+ </param>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.Graphics">
+ <summary>
+ the drawing canvas of this window, every drawing command goes here
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.DeviceDescription">
+ <summary>
+ a short description of the gpu device that is in use, for example as
+ "HARDWARE(feature_level=0xB100)" or "WARP(feature_level=0xB100)"
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.VSync">
+ <summary>
+ should every frame submission wait for the vertical blank?
+ </summary>
+ <remarks>
+ waiting for the vertical blank keeps the presentation smooth, but it
+ blocks the calling thread for up to one screen refresh interval.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.IsDeviceLost">
+ <summary>
+ is the gpu device lost? the swap chain is rebuilt at the next frame.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.BeginDraw">
+ <summary>
+ open a new drawing frame
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.EndDraw">
+ <summary>
+ finish the current drawing frame and present it onto the window
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.Resize(System.Int32,System.Int32)">
+ <summary>
+ resize the swap chain canvas
+ </summary>
+ <remarks>
+ every device dependent drawing resource is rebuilt on the new size, so
+ this must not be called while a frame is opened.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.GetRasterImage">
+ <summary>
+ export the current canvas content as a raster image
+ </summary>
+ <remarks>
+ the back buffer of a window canvas is only readable while the frame is
+ being submitted, so the current frame is finished (and presented) here
+ when it is still open.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.SaveImage(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)">
+ <summary>
+ save the current canvas content into a image file
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxWindowCanvas.SaveImage(System.IO.Stream,Microsoft.VisualBasic.Imaging.ImageFormats)">
+ <summary>
+ save the current canvas content into a stream
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ComBase">
+ <summary>
+ The common helper api for the directx com interop layer
+ </summary>
+ <remarks>
+ All of the native resource wrapper in this project is pure managed code:
+ the directx api is imported via <see cref="T:System.Runtime.InteropServices.DllImportAttribute"/> and the
+ com interface is declared via <see cref="T:System.Runtime.InteropServices.ComImportAttribute"/>, there is
+ no any unmanaged code or c++/cli bridge required.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.ComBase.D2DERR_RECREATE_TARGET">
+ <summary>the direct2d render target has to be recreated (0x8899000C)</summary>
+ <remarks>
+ ``D2DERR_RECREATE_TARGET`` is ``0x8899000C``: the render target has
+ lost its device. ``0x88990012`` is ``D2DERR_WRONG_FACTORY`` instead,
+ which is a caller bug and not a device loss.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.ComBase.DXGI_ERROR_DEVICE_REMOVED">
+ <summary>the gpu device has been removed, the whole device has to be recreated</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.ComBase.DXGI_ERROR_DEVICE_RESET">
+ <summary>the gpu device has been reset</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.ComBase.DXGI_ERROR_WAS_STILL_DRAWING">
+ <summary>the gpu is still busy with the previous frame</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.IsDeviceLost(System.Int32)">
+ <summary>
+ does the hresult mean that the rendering device or the render target
+ is not usable any more?
+ </summary>
+ <remarks>
+ when this is the case, the swap chain and the direct2d render target
+ must be recreated before the next drawing command is submitted.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.ThrowIfFailed(System.Int32,System.String)">
+ <summary>
+ check the HRESULT value of a directx api call
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.SafeRelease(System.Object@)">
+ <summary>
+ release a com runtime callable wrapper object in a safe manner
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.ComQuery(System.Object,System.Guid,System.String)">
+ <summary>
+ QueryInterface on a com object, the returned raw interface pointer
+ holds one reference which is owned by the caller.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.ComObject``1(System.IntPtr)">
+ <summary>
+ Wrap a raw com interface pointer as a strongly typed runtime callable
+ wrapper object.
+ </summary>
+ <remarks>
+ A com object that is created through the out parameter of another com
+ method is wrapped by the clr as an untyped System.__ComObject, and
+ such an object can not be dispatched through the interface method
+ stub (QueryInterface on an untyped rcw always fails). creating the
+ runtime callable wrapper explicitly with the target interface type
+ here makes the interface pointer cacheable so that the interface
+ method can be dispatched correctly.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.ResolveVtable``1(System.IntPtr,System.Int32)">
+ <summary>
+ Resolve one vtable slot of a raw com interface pointer as a delegate.
+ </summary>
+ <remarks>
+ Some api hand out an object whose interface can not be wrapped by
+ <see cref="M:System.Runtime.InteropServices.Marshal.GetTypedObjectForIUnknown(System.IntPtr,System.Type)"/> - a
+ directwrite text layout for example - so such a call is dispatched
+ through the raw vtable slot instead.
+
+ The returned delegate must be kept alive as long as it is used: it is
+ only valid while the interface pointer is alive.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.Pack64(System.Int32,System.Int32)">
+ <summary>
+ pack two 32 bit values into one 64 bit argument slot
+ </summary>
+ <remarks>
+ A com interface method that takes a small struct (8 bytes or less)
+ by value can not be declared correctly in the vb.net interop layer,
+ such a parameter is declared as a 64 bit integer here and the two
+ structure members are packed into it.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.Pack64(Microsoft.VisualBasic.Drawing.DirectX.D2D1_POINT_2F)">
+ <summary>
+ pack a D2D1_POINT_2F structure into one 64 bit argument slot
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.Multiply(Microsoft.VisualBasic.Drawing.DirectX.D2D1_MATRIX_3X2_F,Microsoft.VisualBasic.Drawing.DirectX.D2D1_MATRIX_3X2_F)">
+ <summary>
+ a * b, the result is applied on the render target after the
+ <paramref name="a"/> matrix
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ComBase.RotationMatrix(System.Single,System.Single,System.Single)">
+ <summary>
+ make a rotation transform matrix around the given center point
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.D2D1_MATRIX_3X2_F">
+ <summary>
+ D2D1_MATRIX_3X2_F, the field order is _11, _12, _21, _22, _31, _32
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.D2D1">
+ <summary>
+ The Direct2D (d2d1.dll) interop declarations.
+ </summary>
+ <remarks>
+ Direct2D is the real 2d drawing engine in this project: the polygon,
+ rectangle, ellipse, arc, bezier, text and image drawing are all
+ rasterized on the gpu through the ID2D1RenderTarget interface.
+
+ NOTE: every com interface here is declared as a flat interface, the
+ methods of the native base interface are repeated in the derived
+ interface declaration. the clr resolves the interface pointer of a
+ derived interface through QueryInterface, and a com interface that
+ inherits another com interface can not be resolved correctly in the
+ interop stub, so the vtable of each interface is written out in full
+ here to keep the slot layout explicit and safe.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.D2D1.D2D1CreateFactory(System.UInt32,System.Guid@,Microsoft.VisualBasic.Drawing.DirectX.D2D1_FACTORY_OPTIONS@,Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory@)">
+ <summary>
+ create the direct2d factory object
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID2D1Resource">
+ <summary>
+ ID2D1Resource: the base object of all of the direct2d resources
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID2D1Brush">
+ <summary>
+ ID2D1Brush, all of the brush objects in this project are created as
+ this interface type so that no extra QueryInterface is required when
+ the brush is applied on the render target.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID2D1GradientStopCollection">
+ <summary>
+ ID2D1GradientStopCollection, an opaque handle that is required by the
+ linear gradient brush creation api
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID2D1Bitmap">
+ <summary>
+ ID2D1Bitmap, created from the raw pixel buffer for the image drawing
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID2D1StrokeStyle">
+ <summary>
+ ID2D1StrokeStyle, the dash style of the stroke pen
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.D3D11">
+ <summary>
+ The D3D11 (d3d11.dll) interop declarations.
+ </summary>
+ <remarks>
+ D3D11 is used here as the gpu device host: it creates the off-screen
+ texture which is shared with Direct2D through a dxgi surface, and it
+ also performs the pixel read back through a staging texture.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_CREATE_DEVICE_FLAG.BGRA_SUPPORT">
+ <summary>
+ required for the interop between d3d11 and direct2d
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_RESOURCE_MISC_FLAG.SHARED">
+ <summary>the visual basic ``Shared`` keyword forces the brackets</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_STANDARD_MULTISAMPLE_PATTERN">
+ <summary>
+ the quality level that asks the driver to use the standard multi
+ sample pattern, accepted by the ``Quality`` field of
+ <c>CreateTexture2D</c> when the sample count is greater than one.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11CreateDevice(System.IntPtr,Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D_DRIVER_TYPE,System.IntPtr,System.UInt32,System.UInt32[],System.UInt32,System.UInt32,Microsoft.VisualBasic.Drawing.DirectX.ID3D11Device@,System.UInt32@,Microsoft.VisualBasic.Drawing.DirectX.ID3D11DeviceContext@)">
+ <summary>
+ create the d3d11 device and its immediate device context
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC">
+ <summary>
+ one element of the input layout of a vertex shader
+ </summary>
+ <remarks>
+ the semantic name is a raw ansi string pointer instead of a managed
+ string so that this structure stays blittable: an array of a blittable
+ structure can be pinned and passed straight to the api, while an array of
+ a structure with a managed string field would make the com marshaler look
+ for a registered type library (which the inline com declarations of this
+ project do not have).
+ The memory of the name is owned by whoever fills this structure.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC.SemanticName">
+ <summary>a pointer to a null terminated ansi string</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC.Format">
+ <summary>a DXGI_FORMAT value</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC.InputSlotClass">
+ <summary>a D3D11_INPUT_CLASSIFICATION value</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID3D11Texture2D">
+ <summary>
+ ID3D11Texture2D, no method is required by this project
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID3D11Device">
+ <summary>
+ ID3D11Device, the resource factory of the gpu device.
+ </summary>
+ <remarks>
+ The slots are declared in the exact order of the native d3d11.h header
+ file: the methods that are not used by this project keep a compact
+ signature, but no slot may be skipped or the whole vtable of this
+ interface silently shifts (vb.net com interfaces are dispatched by the
+ declaration order, not by a name).
+
+ The native resources that are created by this factory are kept as raw
+ interface pointers: such a pointer is only handed back to the device
+ context or to another factory call, so the raw form avoids both the
+ extra query interface of the com marshaler and a wrong interface cast
+ at the call site.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ID3D11Device.CreateInputLayout(Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC[],System.UInt32,System.IntPtr,System.UInt32,System.IntPtr@)">
+ <remarks>
+ the element array is declared as a plain c array (``LPArray``) on
+ purpose: the default marshalling of an array parameter of a com
+ interface is a safearray, which drags the whole type library of the
+ marshaller in for no reason here. the elements are blittable, so the
+ runtime only pins the managed array for the duration of the call.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID3D11DeviceContext">
+ <summary>
+ ID3D11DeviceContext, the pixel read back is implemented via
+ CopyResource (vtable slot 47) + Map/Unmap (vtable slot 14/15)
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ID3D11DeviceContext.UpdateSubresource(System.IntPtr,System.UInt32,System.IntPtr,System.IntPtr,System.UInt32,System.UInt32)">
+ <remarks>
+ the destination resource is a raw pointer so that this method also
+ accepts a buffer (for example the per frame constant buffer), not
+ only a texture2d.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler">
+ <summary>
+ The d3dcompiler (d3dcompiler_47.dll) interop declarations: the hlsl
+ compiler that turns the shader source of the 3d pipeline into byte code.
+ </summary>
+ <remarks>
+ d3dcompiler_47.dll is a system component of windows 8.1 and higher, it is
+ present in the system directory of every supported windows installation.
+ The library is loaded lazily by the p/invoke runtime, so a system without
+ the compiler only fails at the very moment when a shader is compiled: the
+ caller catches that failure and falls back to the direct2d rendering back
+ end, the viewer keeps working.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCompile(System.IntPtr,System.IntPtr,System.String,System.IntPtr,System.IntPtr,System.String,System.String,System.UInt32,System.UInt32,System.IntPtr@,System.IntPtr@)">
+ <summary>
+ compile a hlsl shader into byte code
+ </summary>
+ <param name="srcData">the pointer of the ansi shader source text</param>
+ <param name="srcDataSize">the length of the shader source text in bytes</param>
+ <param name="sourceName">the name of the source, only used in error messages</param>
+ <param name="defines">a <c>D3D_SHADER_MACRO</c> array, or zero</param>
+ <param name="include">the include handler interface, or zero</param>
+ <param name="entryPoint">the name of the entry point function</param>
+ <param name="target">the shader profile, for example ``vs_4_0`` or ``ps_4_0``</param>
+ <param name="flags1">a combination of <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCOMPILE_FLAG"/></param>
+ <param name="flags2">the effect compiler flags, zero for a plain shader</param>
+ <param name="code">the compiled byte code blob</param>
+ <param name="errorMessages">the error blob, it must be released even on success</param>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCOMPILE_FLAG.DEBUG">
+ <summary>the debug information is generated</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCOMPILE_FLAG.PACK_MATRIX_ROW_MAJOR">
+ <summary>the matrix constants are packed in row major order</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCOMPILE_FLAG.PACK_MATRIX_COLUMN_MAJOR">
+ <summary>the matrix constants are packed in column major order, this is the default of the hlsl compiler</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.D3DCompiler.D3DCOMPILE_FLAG.ENABLE_STRICTNESS">
+ <summary>the compiler rejects the code that is not strictly conforming</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.ID3DBlob">
+ <summary>
+ ID3DBlob, the memory block that carries the compiled shader byte code or
+ the compiler error message.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ID3DBlob.GetBufferPointer">
+ <summary>
+ the pointer of the data block, it is only valid while the blob is alive
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.ID3DBlob.GetBufferSize">
+ <summary>
+ the size of the data block in bytes
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DWrite">
+ <summary>
+ The DirectWrite (dwrite.dll) interop declarations, used for the text
+ layout and the text metrics calculation.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DWrite.DWriteCreateFactory(Microsoft.VisualBasic.Drawing.DirectX.DWrite.DWRITE_FACTORY_TYPE,System.Guid@,Microsoft.VisualBasic.Drawing.DirectX.IDWriteFactory@)">
+ <summary>
+ create the directwrite factory object
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DWRITE_TEXT_METRICS">
+ <summary>
+ the metrics of a text layout, the field order follows ``DWRITE_TEXT_METRICS``
+ </summary>
+ <remarks>
+ the binary layout of this structure must match the native declaration
+ exactly: the metrics are read as a whole block through the raw com vtable
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DXGI">
+ <summary>
+ The DXGI (dxgi.dll) interop declarations.
+ </summary>
+ <remarks>
+ This project uses DXGI for two tasks:
+
+ 1. <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.IDXGISurface"/> - sharing a d3d11 texture with direct2d
+ 2. the swap chain (<see cref="T:Microsoft.VisualBasic.Drawing.DirectX.IDXGIFactory2"/> + "IDXGISwapChain")
+    - presenting the gpu canvas onto a winforms control window
+
+ Every com interface in this project is declared as a <b>flat vtable</b>: the
+ methods of the base interfaces are written into the derived interface on
+ their exact slot position, an interface inheritance (<c>Inherits</c>) is
+ never used here because it shifts the vtable layout of the derived
+ interface. Only the slots that are actually called are kept, the trailing
+ slots can be omitted safely.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DXGI.CreateDXGIFactory1(System.Guid@,System.IntPtr@)">
+ <summary>
+ create a dxgi factory, the directx 11.1 (or above) factory is requested
+ through <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.DxConstants.IID_IDXGIFactory2"/>.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DXGI.DXGI_FORMAT">
+ <summary>
+ DXGI_FORMAT enumeration (subset)
+ </summary>
+ <remarks>
+ the formats of the 3d pipeline are included here: the vertex attribute
+ formats (the float vectors and the normalized byte color) and the depth
+ buffer format.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DXGI.DXGI_FORMAT.D32_FLOAT">
+ <summary>the depth buffer format of the 3d pipeline</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DXGI.DXGI_SWAP_EFFECT">
+ <summary>
+ how the swap chain presents the back buffer
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DXGI_SWAP_CHAIN_DESC1">
+ <summary>
+ DXGI_SWAP_CHAIN_DESC1, the 48 bytes sequential layout matches dxgi1_2.h
+ </summary>
+ <remarks>
+ the field order and the field size here must never be changed, a wrong
+ layout is silently accepted by the clr and only blows up inside the
+ native call.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DXGI_SWAP_CHAIN_DESC1.Stereo">
+ <summary>BOOL, stereo rendering is not supported here and is always zero</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.IDXGISurface">
+ <summary>
+ IDXGISurface: the dxgi surface object that is queried from the
+ d3d11 texture2d resource, Direct2D renders on top of this surface.
+ </summary>
+ <remarks>
+ this project never calls any method of this interface, it only
+ needs the interface pointer for <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.ID2D1Factory.CreateDxgiSurfaceRenderTarget(System.IntPtr,Microsoft.VisualBasic.Drawing.DirectX.D2D1_RENDER_TARGET_PROPERTIES@,System.IntPtr@)"/>
+ so the vtable declaration is kept empty on purpose.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.IDXGIFactory2">
+ <summary>
+ IDXGIFactory2: used for creating a flip model swap chain on a window.
+ </summary>
+ <remarks>
+ the slots 3 ~ 14 are the methods of IDXGIObject, IDXGIFactory and
+ IDXGIFactory1, they are declared here on purpose so that the slot of
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.IDXGIFactory2.CreateSwapChainForHwnd(System.IntPtr,System.IntPtr,Microsoft.VisualBasic.Drawing.DirectX.DXGI_SWAP_CHAIN_DESC1@,System.IntPtr,System.IntPtr,System.IntPtr@)"/> lands on 15, but none of them is
+ ever called.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.IDXGIFactory2.CreateSwapChainForHwnd(System.IntPtr,System.IntPtr,Microsoft.VisualBasic.Drawing.DirectX.DXGI_SWAP_CHAIN_DESC1@,System.IntPtr,System.IntPtr,System.IntPtr@)">
+ <summary>
+ create a swap chain that is bound to a window handle
+ </summary>
+ <param name="pDevice">
+ the d3d11 device that renders the swap chain back buffer
+ </param>
+ <param name="hwnd">the target window handle</param>
+ <param name="desc">the swap chain description</param>
+ <param name="fullscreenDesc">
+ the fullscreen description, a null pointer is passed here because the
+ canvas is always windowed
+ </param>
+ <param name="restrictToOutput">a null pointer, no output restriction</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline">
+ <summary>
+ The gpu state and the draw batches of the direct3d 11 back end of the 3d
+ scene pipeline.
+ </summary>
+ <remarks>
+ The pipeline owns everything that is independent of the render target: the
+ shaders, the input layouts, the rasterizer / depth / blend states, the
+ constant buffer of the frame and the cached gpu geometry of the scene.
+
+ A frame is one call of <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.BeginFrame(System.Drawing.Size)"/>, a handful of draw
+ batches and the final <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.EndFrame(System.Drawing.Size)"/>. The per frame work of the
+ cpu is therefore a constant: one constant buffer update per batch and the
+ draw calls themselves, no projection, no polygon path and no sorting.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.SampleProbe">
+ <summary>
+ the outcome of the multi sample probe of the gpu device, for
+ diagnostics
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.Device">
+ <summary>
+ the gpu device that this pipeline belongs to
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.GeometryOf(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ the gpu geometry of the scene, it is rebuilt only when the revision of
+ the scene, the scene itself or the coloring options change
+ </summary>
+ <remarks>
+ the scene object is part of the identity as well: a shared back end
+ instance that serves two canvases must not rebuild the geometry of one
+ canvas with the model of the other one
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.ResolveSampleCount(System.Int32)">
+ <summary>
+ the number of the samples that the gpu device supports for the color
+ buffer of the 3d pipeline
+ </summary>
+ <param name="requested">the requested sample count</param>
+ <returns>the granted sample count, one when the request can not be met</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.BeginFrame(System.Drawing.Size)">
+ <summary>
+ open one frame: the viewport and the constant buffer are bound to the
+ pipeline, the geometry is prepared
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.EndFrame(System.Drawing.Size)">
+ <summary>
+ finish the frame: every stage is unbound again so that the direct2d
+ overlay that follows is not affected by the 3d state
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.SetScene(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions,System.Numerics.Vector2)">
+ <summary>
+ fill the constant buffer with the values of the current frame
+ </summary>
+ <param name="geometry">the geometry that is about to be drawn</param>
+ <param name="transform">the camera matrices of the frame</param>
+ <param name="camera">the camera of the frame</param>
+ <param name="options">the presentation options of the frame</param>
+ <param name="heatRange">
+ the lowest heat value and the inverse of the heat range, the lit point
+ mode of a model normalizes its lambert factor with it
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.DrawWireframe(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,System.Drawing.Color)">
+ <summary>
+ draw the faces of the model as a wire frame
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.DrawGround(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,System.Drawing.Color)">
+ <summary>
+ draw the square ground grid below the model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.DrawLines(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry)">
+ <summary>
+ draw the connection lines of the scene, every line keeps its own color
+ </summary>
+ <remarks>
+ The lines are one line list that is drawn with depth writing, so they
+ are occluded by the model exactly like the ground grid is. The width of
+ a line is one pixel (``AntialiasedLineEnable`` is off in every
+ rasterizer state), which keeps a connectome of millions of lines cheap
+ to draw and matches the line width of the direct2d back end.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.DrawSurfaces(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ draw the shaded faces of the model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.DrawPoints(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ draw the points of the point cloud, every point is expanded into a
+ square of the requested pixel size by the geometry shader free
+ instancing of the gpu
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.BlitColor(System.IntPtr,System.IntPtr,System.Drawing.Size)">
+ <summary>
+ copy the rendered color buffer onto the render target of the canvas
+ through one full screen triangle
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.UnbindShaderResource">
+ <summary>
+ release the texture of the pixel stage
+ </summary>
+ <remarks>
+ the pointer of a null view is passed instead of a null array pointer,
+ so that no driver has to guess what an empty array means. The color
+ buffer of the 3d pipeline is also a render target of the next frame,
+ so it must not stay bound to the pixel stage.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateRenderTargetView(System.IntPtr)">
+ <summary>
+ create a render target view on a native texture, the caller owns the
+ returned view
+ </summary>
+ <param name="texture">
+ the d3d11 texture, for example the texture that direct2d draws on
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateDepthStencilView(System.IntPtr)">
+ <summary>
+ create a depth stencil view on a native texture, the caller owns the
+ returned view
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateTexture(System.Int32,System.Int32,System.Int32,System.UInt32,Microsoft.VisualBasic.Drawing.DirectX.DXGI.DXGI_FORMAT)">
+ <summary>
+ create a texture that can be used as a color or depth buffer of the
+ given size and sample count
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.SetRenderTarget(System.IntPtr,System.IntPtr)">
+ <summary>
+ bind a color buffer and an optional depth buffer as the output of the
+ pipeline
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.Clear(System.IntPtr,System.IntPtr,System.Drawing.Color)">
+ <summary>
+ clear the color buffer and the depth buffer of the current frame
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.ResolveColor(System.IntPtr,System.IntPtr)">
+ <summary>
+ resolve a multi sampled color buffer into the single sampled texture
+ that can be sampled afterwards
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.UploadConstants">
+ <summary>
+ upload the current constant buffer content to the gpu
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateBlendState">
+ <summary>
+ the source alpha blending of the painter: it is a no operation for the
+ opaque colors and it reproduces the alpha of a semi transparent face
+ or of a wire frame pen
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateDepthStencilState(System.Boolean)">
+ <summary>
+ the depth test of the faces, the nearest face wins which is what the
+ painter's algorithm of the cpu approximates by sorting the faces
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline.CreateRasterizerState(Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_FILL_MODE,Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_CULL_MODE)">
+ <remarks>
+ the lines stay one pixel wide (``AntialiasedLineEnable`` is off),
+ exactly like the one pixel gdi pen of the cpu painter draws them
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget">
+ <summary>
+ The off screen color and depth buffers of the multi sampled 3d canvas.
+ </summary>
+ <remarks>
+ The multi sampled color buffer can not be sampled, so a resolve texture
+ is created as well: the frame is rendered into the multi sampled buffer
+ and copied into the resolve texture in one gpu operation, and the resolve
+ texture is then sampled by the blit pass that puts the picture onto the
+ canvas of the host.
+
+ With a sample count of one the color buffer itself is sampleable and no
+ resolve step is taken at all.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget.SampleCount">
+ <summary>
+ the granted sample count of the color buffer, one when the anti
+ aliasing is disabled
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget.RenderTargetView">
+ <summary>
+ the color buffer that receives the 3d rendering
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget.DepthStencilView">
+ <summary>
+ the depth buffer of the 3d rendering
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget.ColorShaderResource">
+ <summary>
+ the single sampled texture that carries the finished picture
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11OffscreenTarget.Resolve(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11ScenePipeline)">
+ <summary>
+ copy the multi sampled color buffer into the resolvable texture
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer">
+ <summary>
+ The default scene render back end: it renders the 3d scene through the
+ shared ``IGraphics`` api, so it runs on the gpu accelerated direct2d
+ canvas of this library.
+ </summary>
+ <remarks>
+ The imaging of this back end is exactly the imaging of the well known
+ painter's algorithm renderer of the imaging framework:
+
+ 1. the faces are rotated by the camera
+ 2. the rotated faces are projected and shaded (lambert diffuse + ambient)
+ 3. the faces are sorted by their average depth, the farthest face first
+ 4. the sorted faces are filled in that order, so near faces overpaint the
+    far ones
+
+ The default back end therefore produces the same picture as the cpu based
+ viewer that this pipeline replaces, while the polygon submission itself
+ is executed by the gpu device.
+
+ Two differences to the original helper of the imaging framework are made
+ on purpose: the shading brushes are cached per color instead of allocating
+ a brush for every face of every frame, and the ground grid and the frame
+ are drawn through the same canvas object.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.Default">
+ <summary>
+ a shared default instance of this back end
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.MeshEdgeColor">
+ <summary>
+ the color of the wire frame edges of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.Mesh"/>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.BrushCacheLimit">
+ <summary>
+ the number of the cached shading brushes
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.MaxProjectedLines">
+ <summary>
+ the highest number of connection lines that this cpu based back end
+ projects per frame, a denser graph is subsampled
+ </summary>
+ <remarks>
+ every line of this back end costs one <c>DrawLine</c> call plus two point
+ projections, a connectome of a whole brain provides millions of them.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.Palette">
+ <summary>
+ the heat map color palette cache of this back end
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.Clear">
+ <summary>
+ drop all of the cached brushes and color tables, call this when the
+ scene has been replaced completely
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.BrushCacheCount">
+ <summary>
+ the number of the cached shading brushes
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawGround(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ draw the square ground grid below the model, it is drawn before the
+ model so that the opaque faces occlude the grid lines behind them
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawSurfaces(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ filled faces with the painter's algorithm and the per face lambert
+ shading
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawMesh(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ the triangle wire frame of the model, every face is only outlined
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawModelAsPointCloud(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ present a solid model as a point cloud: every vertex is drawn as a
+ point and the heat map color is driven by the light intensity of the
+ face that the vertex belongs to
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawPointCloud(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ the point cloud of the scene, every point is drawn as a heat map
+ colored square
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.AverageZ(Microsoft.VisualBasic.Imaging.Drawing3D.Surface)">
+ <summary>
+ the average Z coordinate of the vertices of a face, this is the depth
+ key of the painter's algorithm
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.FaceLightFactor(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Imaging.Drawing3D.Surface)">
+ <summary>
+ the light intensity factor of a face, this is the very same formula
+ that the shading of the faces uses: the face normal is oriented
+ towards the viewer and the diffuse term is the dot product with the
+ light direction
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.DrawConnections(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ draw the connection lines of the scene
+ </summary>
+ <remarks>
+ This is the slow path by nature: one ``DrawLine`` call and two point
+ projections per connection, while the gpu back end draws the whole graph
+ with a single line list draw call. The lines are therefore subsampled
+ when there are more than <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.MaxProjectedLines"/> of them, so a
+ connectome of millions of connections cannot freeze the user interface
+ while the fallback is active (the shape of the graph stays readable, the
+ density is only reduced). The pens are cached per color: a graph colors
+ its connections by kind, so the number of distinct colors stays small.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.ToScreen(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D)">
+ <summary>
+ rotate and project a single point onto the screen coordinates
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer.GetShadingBrush(System.Drawing.Color)">
+ <summary>
+ get the cached shading brush of the given color
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11DepthBuffer">
+ <summary>
+ the depth buffer that the direct back end uses for its own rendering
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.D3D11DepthBuffer.View">
+ <summary>
+ the depth stencil view of this depth buffer
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer">
+ <summary>
+ The direct gpu scene render back end: the 3d scene is rendered by the real
+ direct3d 11 pipeline straight into the texture that the canvas draws on,
+ without any intermediate buffer or copy.
+ </summary>
+ <remarks>
+ This back end is the shortest possible path from the scene to the screen:
+ the per frame cost is one constant buffer update, the draw calls and the
+ clear, and the 2d overlay of the host is drawn after the 3d scene by
+ direct2d, exactly like in the default back end.
+
+ The price of the zero copy path is that the multi sampled anti aliasing is
+ not available: a swap chain back buffer can not be created multi sampled,
+ so <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.MultisampleCount"/> is ignored here. The
+ default back end (<see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer"/>) renders into an
+ off screen buffer and supports the anti aliasing.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.Default">
+ <summary>
+ a shared default instance of this back end
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.MeshEdgeColor">
+ <summary>
+ the color of the wire frame edges of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.Mesh"/>
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.IsGpuAvailable">
+ <summary>
+ is the gpu pipeline usable?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.LastError">
+ <summary>
+ the reason of the last fall back to the polygon painter
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.LastErrorDetail">
+ <summary>
+ the full detail (including the stack trace) of the last failure of
+ the gpu pipeline, for diagnostics
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.FallbackRenderer">
+ <summary>
+ the back end that renders the frame when the gpu pipeline can not be
+ used
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer.Reset">
+ <summary>
+ release every gpu resource and clear the unavailable flag
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer">
+ <summary>
+ The gpu scene render back end: the 3d scene is rendered by a real
+ direct3d 11 pipeline (vertex buffers, depth buffer, hlsl shaders) into an
+ off screen color buffer and is then copied onto the canvas of the host.
+ </summary>
+ <remarks>
+ This is the default back end of the 3d scene pipeline. Compared with the
+ polygon painter back end the per frame cpu work disappears: the geometry
+ is uploaded once and every frame only updates one constant buffer and
+ submits a handful of draw calls.
+
+ The frame of this back end is:
+
+ 1. render the whole scene into the multi sampled off screen color buffer
+    with the depth test enabled
+ 2. resolve the multi sampled buffer into a sampleable texture
+ 3. blit that texture onto the texture that direct2d draws on, through one
+    full screen triangle
+ 4. the host draws its 2d overlay on top of the result
+
+ The 2d overlay is therefore always above the 3d scene, and the multi
+ sampled buffer gives the model edges the smooth look that a gdi painter
+ can not provide.
+
+ The back end degrades gracefully: a canvas that is not a directx canvas, a
+ missing hlsl compiler, a shader that does not compile or a render target
+ that can not be created all make this back end hand the frame over to the
+ polygon painter of <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer"/> instead, and the
+ reason of the fall back is reported through <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.LastError"/>.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.Default">
+ <summary>
+ a shared default instance of this back end
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.MeshEdgeColor">
+ <summary>
+ the color of the wire frame edges of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.Mesh"/>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.m_fallback">
+ <summary>
+ the back end that takes over when the gpu pipeline is not available
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.MultisampleCount">
+ <summary>
+ the sample count that the gpu device granted, one when the anti
+ aliasing is disabled or not supported
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.IsGpuAvailable">
+ <summary>
+ is the gpu pipeline usable?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.LastError">
+ <summary>
+ the reason of the last fall back to the polygon painter, an empty
+ text means that the gpu pipeline is used
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.LastErrorDetail">
+ <summary>
+ the full detail (including the stack trace) of the last failure of
+ the gpu pipeline, for diagnostics
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.DeviceDiagnostics">
+ <summary>
+ the gpu device of the canvas and the anti aliasing state that the
+ device granted, for the status bar
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.FallbackRenderer">
+ <summary>
+ the back end that renders the frame when the gpu pipeline can not be
+ used
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.Reset">
+ <summary>
+ release every gpu resource and clear the unavailable flag, the next
+ frame tries the gpu pipeline again
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.RenderGpu(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ render one frame of the scene through the direct3d 11 pipeline
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.DrawScene(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ the content of one frame, it follows the order of the polygon painter
+ back end
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer.EnsureCanvasTarget(Microsoft.VisualBasic.Drawing.DirectX.DxRenderSurface)">
+ <summary>
+ the render target view of the texture that direct2d uses, it is
+ created once per canvas texture
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SurfaceVertex">
+ <summary>
+ one corner of a face on the gpu: the position, the normal of the face and
+ the color of the face.
+ </summary>
+ <remarks>
+ The three corners of a triangle repeat the very same normal and color
+ value, so the flat shading of the cpu painter is reproduced by the
+ interpolator of the gpu for free. The size of this structure is the
+ stride of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.SurfaceStride"/>.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointInstance">
+ <summary>
+ one point of a point cloud on the gpu.
+ </summary>
+ <remarks>
+ The structure is shared by both point modes: the heat map mode fills the
+ heat value and the optional embedded color, the lambert mode fills the
+ normal of the face that the point belongs to and leaves the color empty
+ (an alpha of zero means that the point has no color of its own).
+ The size of this structure is the stride of
+ <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PointInstanceStride"/>.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.QuadCorner">
+ <summary>
+ the raw buffer and the texture handles of a blittable structure array
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineVertex">
+ <summary>
+ one end point of a connection line on the gpu: the position plus the color
+ of the line itself.
+ </summary>
+ <remarks>
+ Both end points of one line carry the same color, so a line list of these
+ vertices draws a solid colored line. The size of this structure is the
+ stride of <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.LineStride"/>.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry">
+ <summary>
+ The gpu mirror of the geometry of one <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene"/>.
+ </summary>
+ <remarks>
+ The geometry is uploaded once and is reused by every frame afterwards:
+ the per frame work of the gpu back end is limited to the constant buffer
+ and to a handful of draw calls, which is the whole point of the 3d
+ pipeline. The object is rebuilt whenever the scene revision, the heat map
+ scheme or the point cloud coloring changes (see the signature that the
+ owner computes through
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.GeometrySignature"/>).
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.m_faceNormals">
+ <summary>
+ the unit normals of the faces, they are kept in the managed memory
+ because the lambert point mode evaluates them again for every frame
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.Signature">
+ <summary>
+ the identity of the scene data that this geometry was built from
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.InstanceCount">
+ <summary>
+ how many points are drawn by this geometry
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.PointMode">
+ <summary>
+ the point mode that belongs to the content of the scene: a model is
+ drawn as a lit point cloud, a point cloud keeps its own heat values
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.PaletteLevels">
+ <summary>
+ the number of the sampled colors of the palette texture
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.SurfaceBuffer">
+ <summary>
+ the vertex buffer of the faces of the model, three corners per
+ triangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.SurfaceVertexCount">
+ <summary>
+ the number of the vertices in <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.SurfaceBuffer"/>
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.GroundBuffer">
+ <summary>
+ the line list of the ground grid
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.GroundVertexCount">
+ <summary>
+ the number of the vertices in <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.GroundBuffer"/>
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.LineBuffer">
+ <summary>
+ the line list of the connection lines of the scene, two vertices per
+ line
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.LineVertexCount">
+ <summary>
+ the number of the vertices in <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.LineBuffer"/>
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.QuadBuffer">
+ <summary>
+ the six corners of the unit quad of one point
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.PaletteView">
+ <summary>
+ the shader resource view of the palette texture
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.EnsureInstances(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ the instance buffer of the points, it is created on demand
+ </summary>
+ <remarks>
+ a model is drawn as a point cloud by instancing its own vertices, so
+ this buffer duplicates the vertex buffer of the model: building it
+ lazily keeps the memory of the common surface mode small.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.ComputeLitHeatRange(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ the lowest and the highest lambert factor of the faces of the model
+ for the current camera.
+ </summary>
+ <remarks>
+ The cpu painter normalizes the heat values of the lit point mode over
+ the actual factor range of the faces, and that range moves with the
+ camera, so it has to be evaluated again for every frame of that mode.
+ The pass only walks over the small normal array of the faces, it does
+ not build any geometry.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.FaceColor(Microsoft.VisualBasic.Imaging.Drawing3D.Surface)">
+ <summary>
+ the base color of a face, this is the very same rule that the cpu
+ painter applies: only a solid brush has a color, everything else is
+ black
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.FaceNormal(Microsoft.VisualBasic.Imaging.Drawing3D.Point3D[])">
+ <summary>
+ the unit normal of a face, it is computed from the first three
+ vertices exactly as the lambert shading of the cpu pipeline does.
+ A degenerate face keeps a zero normal, the shader then keeps the base
+ color of the face.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildSurfaces(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ build the triangle list of the faces of the model, every polygon is
+ fanned out into triangles
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildGround(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ build the square ground grid below the model, it is the very same
+ grid that the cpu painter draws
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildLines(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ build the vertex buffer of the connection lines of the scene
+ </summary>
+ <remarks>
+ One line becomes two vertices of a line list and both vertices repeat
+ the color of the line (see <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment"/>). The array is
+ allocated with its final size instead of being collected into a list
+ first: a connectome of a whole brain provides millions of lines, so the
+ doubling of the peak memory of a list plus a ToArray copy is worth
+ avoiding here.
+ The buffer is immutable like every other buffer of this class: the scene
+ revision changes whenever the caller loads another set of lines, which
+ rebuilds the whole geometry (see D3D11ScenePipeline.GeometryOf).
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildQuad">
+ <summary>
+ build the unit quad that every point is expanded into
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildCloudInstances(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ build the point instances of a point cloud, the heat value is the
+ normalized intensity exactly as the cpu painter computes it
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildModelInstances(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ build the point instances of a model: every corner of every face
+ becomes one point, the lambert factor of its face is the heat value
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.BuildPalette(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ build the one row palette texture of the heat map scheme
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.GpuSceneGeometry.CreateImmutableBuffer``1(``0[],Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_BIND_FLAG)">
+ <summary>
+ create an immutable gpu buffer that is initialized with the given
+ blittable array
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.ISceneRenderBackend">
+ <summary>
+ The rendering back end of the 3D scene pipeline.
+ </summary>
+ <remarks>
+ The contract is intentionally small: the back end receives the canvas,
+ the scene, the camera and the presentation options of one frame.
+
+ The default implementation renders the projected polygons of the scene
+ through the shared ``IGraphics`` api, so it can run on top of the gpu
+ accelerated direct2d canvas of this library as well as on any other
+ ``IGraphics`` implementation (for example the skia raster or the svg
+ canvas). A future implementation may render the very same scene through
+ a real 3d pipeline (vertex and index buffers, depth buffer, shaders) and
+ replace the default back end by implementing this interface.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.ISceneRenderBackend.Name">
+ <summary>
+ a short display name of this back end
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.ISceneRenderBackend.Description">
+ <summary>
+ a readable description of this back end
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.ISceneRenderBackend.Render(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions)">
+ <summary>
+ render one frame of the given scene
+ </summary>
+ <param name="canvas">
+ the drawing canvas of the frame, the canvas size defines the viewport
+ </param>
+ <param name="scene">the geometry of the scene</param>
+ <param name="camera">
+ the camera of the frame, the back end is allowed to update
+ <see cref="P:Microsoft.VisualBasic.Imaging.Drawing3D.Camera.Screen"/>
+ </param>
+ <param name="options">the presentation options of the frame</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment">
+ <summary>
+ One connection line of a <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene"/>: the two end points of the
+ line and the color that is used to draw it.
+ </summary>
+ <remarks>
+ The record is format agnostic exactly like <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint"/>:
+ the scene stores whatever the caller provides and the back ends decide how
+ to draw it.
+ 
+ * the gpu back end expands one record into two <c>LineVertex</c> items of a
+   line list (see <c>GpuSceneGeometry.BuildLines</c>);
+ * the direct2d back end projects the two end points and draws one
+   <c>IGraphics</c> line.
+ 
+ A color with an alpha of zero means "the caller did not assign a color",
+ the back ends replace it with their default line color.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.DefaultColor">
+ <summary>
+ the color that is used for the lines that did not assign a color of
+ their own (an alpha of zero)
+ </summary>
+ <remarks>
+ A half transparent gray: a connection graph of a whole brain has
+ hundreds of thousands of lines, a fully opaque color turns the dense
+ parts of the graph into a solid block.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.#ctor(Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,System.Drawing.Color)">
+ <summary>
+ create one connection line from its two end points
+ </summary>
+ <param name="a">the start point of the line</param>
+ <param name="b">the end point of the line</param>
+ <param name="color">
+ the color of the line, a color with an alpha of zero means that the
+ caller wants the default line color of the back end
+ </param>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.A">
+ <summary>
+ the start point of the line
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.B">
+ <summary>
+ the end point of the line
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.Color">
+ <summary>
+ the color of the line
+ </summary>
+ <remarks>
+ an alpha of zero means that the line has no color of its own
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment.Center">
+ <summary>
+ the mid point of the line
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneMouseButton">
+ <summary>
+ The mouse button of a scene input event.
+ </summary>
+ <remarks>
+ This enum exists so that the controller stays free of any ui framework
+ dependency: a host translates its platform specific mouse events into
+ this neutral form.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController">
+ <summary>
+ A ui framework independent orbit camera controller.
+ </summary>
+ <remarks>
+ The controller owns the camera of the scene and maintains the view state
+ from the input deltas:
+
+ * dragging with the left button orbits the camera (yaw and pitch)
+ * dragging with the right button translates the view in screen space
+ * the mouse wheel changes the view distance (zoom)
+
+ The wheel may be hard to use without a status feedback, so the view
+ changed event is raised on every state change and the host may use it to
+ refresh its status bar and to request a repaint.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.RotateSensitivity">
+ <summary>
+ the rotation speed in degrees per pixel of the mouse movement
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.ZoomInFactor">
+ <summary>
+ the view distance factor of zooming towards the model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.ZoomOutFactor">
+ <summary>
+ the view distance factor of zooming away from the model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MinViewDistance">
+ <summary>
+ the smallest allowed view distance
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.DefaultViewDistance">
+ <summary>
+ the view distance that a fresh camera of this controller starts with,
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.FitView(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Drawing.Size)"/> recomputes it for a loaded model
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.ViewChanged">
+ <summary>
+ raised when the view state has been changed, the host should repaint
+ its canvas when this event is raised
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.#ctor(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ create a controller that operates on the given camera, a new camera
+ is created when nothing is given
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.Camera">
+ <summary>
+ the camera that this controller drives
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.IsDragging">
+ <summary>
+ is a mouse button currently held down?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.Buttons">
+ <summary>
+ the currently held mouse buttons
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MouseDown(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneMouseButton,System.Int32,System.Int32)">
+ <summary>
+ begin a drag operation
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MouseMove(System.Int32,System.Int32)">
+ <summary>
+ continue a drag operation
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MouseUp(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneMouseButton)">
+ <summary>
+ end a drag operation
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MouseUp">
+ <summary>
+ end all of the drag operations
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.MouseWheel(System.Int32)">
+ <summary>
+ zoom with the mouse wheel: a positive delta moves the camera towards
+ the model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.ZoomBy(System.Single)">
+ <summary>
+ multiply the view distance with the given factor
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.Reset">
+ <summary>
+ restore the default rotation angles and the screen space offset, the
+ view distance is not touched here
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController.ApplyTo(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ apply the camera state onto another camera object
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint">
+ <summary>
+ A format independent point of a 3D point cloud.
+ </summary>
+ <remarks>
+ The point cloud loaders of the different file formats (for example the
+ PLY reader of the Landscape library) are mapped into this structure so
+ that the scene pipeline does not depend on any specific file format.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.#ctor(System.Double,System.Double,System.Double,System.Double,System.String,System.Double)">
+ <summary>
+ create a new point of a 3D point cloud
+ </summary>
+ <param name="x">X coordinate in the model space</param>
+ <param name="y">Y coordinate in the model space</param>
+ <param name="z">Z coordinate in the model space</param>
+ <param name="intensity">
+ the scalar field value that drives the heat map coloring, zero means
+ that the Z coordinate is used as the scalar value instead
+ </param>
+ <param name="color">optional per point color as an html color string</param>
+ <param name="sizeScale">
+ optional per point size factor (1 = the global point size); it is only
+ honoured while the embedded per point colors are in use
+ </param>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.X">
+ <summary>X coordinate in the model space.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.Y">
+ <summary>Y coordinate in the model space.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.Z">
+ <summary>Z coordinate in the model space.</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.Intensity">
+ <summary>
+ the scalar field value that drives the heat map coloring
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.Color">
+ <summary>
+ optional per point color as an html color string, for example ``#ff0000``
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.SizeScale">
+ <summary>
+ optional per point size factor, ``&lt;= 0`` means "use the global point size".
+ </summary>
+ <remarks>
+ Per point sizes are for highlighting a subset of the cloud — for example
+ the neurons that fired in the current frame of an activity replay, which
+ should stand out from the resting cloud of a whole brain model.
+ 
+ The factor multiplies the global <c>options.PointSize</c> in the vertex
+ shader. It is carried in the otherwise unused scalar slot of the point
+ instance and therefore costs no extra vertex memory, but it is only
+ readable while the point cloud is drawn with the embedded per point colors
+ (that scalar slot doubles as the heat map value otherwise, which is what
+ the palette lookup needs).
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene">
+ <summary>
+ A renderable 3D scene: a set of faces and a set of point cloud points.
+ </summary>
+ <remarks>
+ The scene owns the model data only, the camera and the lighting are
+ separate objects (<see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController"/>, <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting"/>).
+
+ Every model that is loaded into the scene is translated so that its
+ centroid becomes the origin of the model space: the model therefore
+ rotates around its own centre. The bounding sphere radius and the lowest
+ Z coordinate (the height of the ground grid) are computed as well.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.DefaultAngleX">
+ <summary>the default pitch angle of the camera, in degrees</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.DefaultAngleY">
+ <summary>the default yaw angle of the camera, in degrees</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.DefaultAngleZ">
+ <summary>the default roll angle of the camera, in degrees</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Surfaces">
+ <summary>
+ the faces of the model, an empty array means that the scene holds a
+ point cloud only
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Points">
+ <summary>
+ the points of the point cloud, an empty array means that the scene
+ holds faces only
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Lines">
+ <summary>
+ the connection lines of the scene, an empty array means that the scene
+ has no connections to draw
+ </summary>
+ <remarks>
+ the lines are an overlay: they are stored next to the faces and the
+ points instead of replacing them, so a network graph can be drawn on
+ top of the point cloud of its neurons
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Center">
+ <summary>
+ the centroid of the loaded model, the model is always translated so
+ that this centroid becomes the origin
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Radius">
+ <summary>
+ the radius of the bounding sphere around the model centroid
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.GroundZ">
+ <summary>
+ the Z coordinate of the lowest model point, the ground grid is drawn
+ at this height so that it supports the model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.IntensityMin">
+ <summary>
+ the lowest scalar value of the point cloud
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.IntensityMax">
+ <summary>
+ the highest scalar value of the point cloud
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.SurfaceCount">
+ <summary>
+ the number of the faces in this scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.PointCount">
+ <summary>
+ the number of the points in this scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.LineCount">
+ <summary>
+ the number of the connection lines in this scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.HasData">
+ <summary>
+ does the scene hold any geometry at all?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Version">
+ <summary>
+ the revision number of the geometry of this scene.
+ </summary>
+ <remarks>
+ The counter is raised every time the geometry is replaced, so a
+ rendering back end that keeps a copy of the geometry on the gpu can
+ detect that its copy became stale without comparing the whole model.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Clear">
+ <summary>
+ drop all of the geometry of the scene
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.LoadSurfaces(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Imaging.Drawing3D.Surface})">
+ <summary>
+ load a set of faces into this scene, the faces are translated so that
+ the model centroid becomes the origin
+ </summary>
+ <param name="faces">
+ the faces of the model, degenerate faces (less than three vertices)
+ are ignored
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.LoadPointCloud(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint})">
+ <summary>
+ load a point cloud into this scene, the points are translated so that
+ the model centroid becomes the origin
+ </summary>
+ <param name="points">the points of the cloud</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.LoadLineSegments(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment})">
+ <summary>
+ load the connection lines of this scene, they are drawn on top of the
+ faces and of the point cloud
+ </summary>
+ <remarks>
+ The lines share the model space of the primary geometry: they are
+ translated by the centre of the point cloud (or of the faces) that was
+ loaded before them, so the natural order "load the cloud, then load its
+ connections" puts both into the same space. Loading the primary geometry
+ afterwards re-translates the lines, so the reverse order works as well.
+ The bounding sphere grows with the lines: without that FitView would clip
+ the end points of the connections that stick out of the point cloud.
+ </remarks>
+ <param name="lines">
+ the lines of the graph, <c>Nothing</c> or an empty sequence drops the
+ lines of the scene
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.ClearLines">
+ <summary>
+ drop the connection lines of the scene and keep the faces and the point
+ cloud
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.ApplyDefaultAngles(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ restore the default rotation angles and the screen space offset of the
+ given camera
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.FitView(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Drawing.Size)">
+ <summary>
+ compute the view distance that makes the whole model visible on the
+ given canvas size
+ </summary>
+ <remarks>
+ The projection of this engine is ``factor = fov / (viewDistance + z)``,
+ so the ratio ``radius * fov / viewDistance`` decides how much of the
+ screen the model covers. Scaling both the field of view and the view
+ distance by the same perspective factor keeps the coverage unchanged
+ while the perspective distortion is weakened.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.CentroidOf(System.Collections.Generic.IReadOnlyList{Microsoft.VisualBasic.Imaging.Drawing3D.Point3D})">
+ <summary>
+ the mean location of the given points, or the origin when there is no
+ point at all
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.RadiusOf(System.Collections.Generic.IReadOnlyList{Microsoft.VisualBasic.Imaging.Drawing3D.Point3D},Microsoft.VisualBasic.Imaging.Drawing3D.Point3D)">
+ <summary>
+ the maximum distance of the given points from the given centre, at
+ least one
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.TranslateLines(Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D)">
+ <summary>
+ translate the connection lines so that they stay in the same model space
+ when the centre of the primary geometry moves
+ </summary>
+ <remarks>
+ the model space is "world - centre", so a line that is already expressed
+ in the previous space has to be shifted by the change of the centre
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.RadiusWithLines(System.Double,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D)">
+ <summary>
+ grow the bounding radius so that it covers the end points of the
+ connection lines as well
+ </summary>
+ <remarks>
+ The radius is computed without allocating a point list: a connectome
+ provides millions of lines, so the end points are walked in place.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.LowestZ(Microsoft.VisualBasic.Imaging.Drawing3D.Surface[],Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint[],Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment[])">
+ <summary>
+ the lowest Z coordinate of all of the loaded geometry
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants">
+ <summary>
+ The per frame constants of the 3d pipeline, the layout of this structure
+ is the layout of the ``SceneConstants`` constant buffer of the hlsl code.
+ </summary>
+ <remarks>
+ The two matrices are uploaded exactly as the managed ``System.Numerics``
+ row vector matrices are stored (the translation of a matrix lives in its
+ fourth row, like ``Vector4.Transform`` expects it). A constant buffer of
+ a ``float4x4`` is packed column major by default, which reads such a row
+ vector matrix correctly through the ``mul(matrix, vector)`` form of the
+ shader: the two conventions cancel out. Do not transpose the matrices on
+ the way in, that would only swap the w row with the depth row.
+ The size of this structure is 224 bytes, a multiple of the 16 byte
+ alignment that a constant buffer requires.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.WorldViewProjection">
+ <summary>``rotation * projection``</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.WorldRotation">
+ <summary>the rotation of the camera</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.LightDirection">
+ <summary>xyz = the unit vector that points towards the light source</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.LightColor">
+ <summary>rgb = the light color, a = the ambient strength</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.ShadingParams">
+ <summary>x = the point size in pixels, y = the point mode, z = the palette levels, w = use the embedded point colors</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.ViewportScale">
+ <summary>x = 2 / width, y = -2 / height (the screen y axis points downwards)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.UnlitColor">
+ <summary>the color of the wire frame lines and of the ground grid</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneConstants.HeatParams">
+ <summary>x = the lowest heat value, y = 1 / (the highest heat value - the lowest one)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders">
+ <summary>
+ The hlsl source of the 3d pipeline and its run time compiler.
+ </summary>
+ <remarks>
+ The hlsl source itself is the ``Scene3DShaders.hlsl`` embedded resource of
+ this assembly, it is read back through <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.Source"/>.
+ The shaders are compiled on the fly by ``d3dcompiler_47.dll``, so this
+ library has no build time dependency on the windows sdk and a missing
+ compiler only makes the gpu back end unavailable: the caller catches the
+ exception of <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.Compile(System.String,System.String)"/> and falls back to the polygon painter
+ of the direct2d back end.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.PointModeHeat">
+ <summary>
+ the point mode of <c>ShadingParams.y</c>: the heat value comes from the instance data
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.PointModeLit">
+ <summary>
+ the point mode of <c>ShadingParams.y</c>: the heat value is the lambert factor of the face normal
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.VertexProfile">
+ <summary>
+ the shader profile of the vertex shaders
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.PixelProfile">
+ <summary>
+ the shader profile of the pixel shaders
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.EntryLineVertex">
+ <summary>the vertex shader of the connection lines (position + per vertex color)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.EntryLinePixel">
+ <summary>the pixel shader of the connection lines (returns the interpolated vertex color)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.SourceFile">
+ <summary>
+ the file name of the hlsl source that is embedded into this assembly
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.Source">
+ <summary>
+ the shader source of the whole 3d pipeline
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.BuildSource">
+ <summary>
+ read the hlsl source of the 3d pipeline out of the resources of this
+ assembly
+ </summary>
+ <remarks>
+ The source lives in ``Scene3DShaders.hlsl`` and is packed as an
+ embedded resource by the project file, so that a hlsl editor can be
+ used while writing it and no build time tool chain is involved.
+ </remarks>
+ <exception cref="T:System.InvalidOperationException">
+ the ``Scene3DShaders.hlsl`` resource is missing, which means that the
+ build did not pack <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.SourceFile"/>
+ </exception>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.Compile(System.String,System.String)">
+ <summary>
+ compile one shader entry point into byte code
+ </summary>
+ <param name="entryPoint">the name of the entry point function</param>
+ <param name="profile">the shader profile, <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.VertexProfile"/> or <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.PixelProfile"/></param>
+ <exception cref="T:System.InvalidOperationException">
+ the hlsl compiler is not available or the shader does not compile,
+ the message carries the compiler output
+ </exception>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.BlobGetBufferPointer">
+ <summary>
+ the slot of <c>ID3DBlob::GetBufferPointer</c>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.BlobGetBufferSize">
+ <summary>
+ the slot of <c>ID3DBlob::GetBufferSize</c>
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.ReadBytes(System.IntPtr)">
+ <summary>
+ copy the data block of a blob into the managed memory
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DShaders.ReadBlob(System.IntPtr)">
+ <summary>
+ read the text of a compiler message blob
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout">
+ <summary>
+ The vertex layouts of the 3d pipeline and the strides that belong to
+ them.
+ </summary>
+ <remarks>
+ One face is stored as three corners that repeat the face normal and the
+ face color, so the flat shading of the cpu painter is reproduced by the
+ interpolator of the gpu without any additional work.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.SurfaceStride">
+ <summary>the stride of one surface (and wire frame) vertex</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PositionStride">
+ <summary>the stride of one ground grid vertex</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PointInstanceStride">
+ <summary>the stride of one point cloud instance</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PointQuadStride">
+ <summary>the stride of one corner of the unit quad of a point</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.LineStride">
+ <summary>the stride of one end point of a connection line</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.SurfaceElements">
+ <summary>
+ one face corner: position, face normal and face color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PositionElements">
+ <summary>
+ the position only layout, it is shared by the wire frame pass and by
+ the ground grid
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.PointElements">
+ <summary>
+ one point: the per instance centre and heat value of slot one, plus
+ the per vertex corner of the unit quad of slot zero
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.LineElements">
+ <summary>
+ one end point of a connection line: the position plus the color of the
+ line itself
+ </summary>
+ <remarks>
+ Both end points of one line repeat the same color, so the interpolator
+ of the gpu cannot introduce a color gradient along the line. The layout
+ is a line list (two vertices per line), the gpu draws one pixel wide
+ lines exactly like the direct2d back end does.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene3DInputLayout.Element(System.String,System.UInt32,Microsoft.VisualBasic.Drawing.DirectX.DXGI.DXGI_FORMAT,System.UInt32,System.UInt32,Microsoft.VisualBasic.Drawing.DirectX.D3D11.D3D11_INPUT_CLASSIFICATION,System.UInt32)">
+ <summary>
+ build one element of an input layout
+ </summary>
+ <remarks>
+ the semantic name is copied into an unmanaged ansi block because the
+ element structure stays blittable (see
+ <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.D3D11_INPUT_ELEMENT_DESC"/>). The names of the layout
+ tables above are allocated once for the whole process, which is the
+ very purpose of a static input layout table.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette">
+ <summary>
+ A small cache of the heat map color tables and the point brush tables.
+ </summary>
+ <remarks>
+ The color table of a scheme is generated by the color designer and is
+ cached here because the sampling of the scheme is relative expensive
+ while the rendered frame only needs another index of the very same
+ table. The embedded point colors that come from the source file are
+ cached as well.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.Levels">
+ <summary>
+ the number of sampled colors of a heat map scheme
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.GetTable(System.String,System.Int32)">
+ <summary>
+ get the color table of the given heat map scheme
+ </summary>
+ <param name="scheme">the scheme name that the color designer understands</param>
+ <param name="alpha">the alpha channel of the generated colors</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.GetBrushes(System.String,System.Int32)">
+ <summary>
+ get the point brushes of the given heat map scheme, index zero is the
+ coldest color and the last index is the hottest color
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.GetHeatBrush(System.Double,System.String,System.Int32)">
+ <summary>
+ map a normalized value in [0, 1] onto the heat map of the given scheme
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.GetEmbeddedBrush(System.String)">
+ <summary>
+ get the brush of a per point color that is stored as an html color
+ string, the brush is created once and reused afterwards
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.Clear">
+ <summary>
+ drop all of the cached tables and brushes
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneColorPalette.EmbeddedColorCount">
+ <summary>
+ the number of the cached per point colors
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitKind">
+ <summary>
+ the kind of the element that a hit test found
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitKind.None">
+ <summary>the pick found nothing within the pick radius</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitKind.Point">
+ <summary>a point of the point cloud</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitKind.Line">
+ <summary>a connection line</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest">
+ <summary>
+ the result of a hit test: the kind of the element, its index in the scene
+ and its distance to the query position in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest.Kind">
+ <summary>
+ what was hit
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest.Index">
+ <summary>
+ the index of the element in <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Points"/> or in
+ <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Lines"/>, or -1 when nothing was hit
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest.Distance">
+ <summary>
+ the distance of the element to the query position, in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest.HasHit">
+ <summary>
+ did the pick hit an element?
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTest.Miss">
+ <summary>
+ the result of a miss
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester">
+ <summary>
+ Picking of the elements of a scene on the screen space of a canvas.
+ </summary>
+ <remarks>
+ The elements are projected with the very same camera formulas that the
+ polygon painter back end uses (<c>camera.Rotate</c> + <c>camera.Project</c>),
+ so a pick matches the element that the user actually sees on the canvas.
+ 
+ The test is a linear scan over the projected elements. The point cloud of a
+ whole brain holds about 140,000 points, which takes a few milliseconds and
+ is fine for a mouse click, while the connection graph of such a brain holds
+ millions of lines: the lines are therefore subsampled (see
+ <see cref="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.MaxTestedLines"/>) so that a click can never block the host
+ application. A caller that needs an exact pick of the lines can walk
+ <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene.Lines"/> itself with <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.ScreenOf(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,System.Drawing.PointF@)"/>.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.MaxTestedLines">
+ <summary>
+ the highest number of connection lines that one hit test walks
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.DefaultRadius">
+ <summary>
+ the default pick radius, in pixels
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.HitTest(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Single,System.Single,System.Int32)">
+ <summary>
+ pick the element that is closest to the given canvas position
+ </summary>
+ <remarks>
+ a point of the point cloud wins over a line when both are within the
+ pick radius: the neurons are the primary object of interest and a dense
+ graph would otherwise make the points unpickable
+ </remarks>
+ <param name="scene">the scene to pick from</param>
+ <param name="camera">the camera that projects the scene</param>
+ <param name="x">the horizontal position on the canvas, in pixels</param>
+ <param name="y">the vertical position on the canvas, in pixels</param>
+ <param name="radius">the pick radius, in pixels</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.HitTestPoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Single,System.Single,System.Int32)">
+ <summary>
+ pick the point of the point cloud that is closest to the given canvas
+ position, or -1 when there is none within the pick radius
+ </summary>
+ <remarks>
+ The cloud is rotated in one batch through <c>Camera.Rotate(points)</c>:
+ that overload builds the rotation matrix once for the whole cloud and
+ runs the hardware accelerated transform in parallel, while rotating the
+ points one by one would evaluate six trigonometric functions per point —
+ with a whole brain cloud of 139,255 points that difference is the
+ latency of a mouse click (tens of milliseconds against a few).
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.projectNearest(Microsoft.VisualBasic.Imaging.Drawing3D.Point3D[],Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Single,System.Single,System.Int32)">
+ <summary>
+ the index of the rotated point that projects closest to the given canvas
+ position within the pick radius
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.HitTestLine(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Single,System.Single,System.Int32)">
+ <summary>
+ pick the connection line that is closest to the given canvas position,
+ or -1 when there is none within the pick radius
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.ScreenOf(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,System.Drawing.PointF@)">
+ <summary>
+ project one world point of the scene onto the canvas
+ </summary>
+ <returns>false when the point is behind the camera</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.DistancePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Int32,System.Single,System.Single)">
+ <summary>
+ the distance of a point of the cloud to a canvas position, in pixels
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.DistanceLine(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera,System.Int32,System.Single,System.Single)">
+ <summary>
+ the distance of a connection line to a canvas position, in pixels
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneHitTester.DistanceToSegment(System.Single,System.Single,System.Drawing.PointF,System.Drawing.PointF)">
+ <summary>
+ the distance of a canvas position to the segment between two projected
+ end points
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting">
+ <summary>
+ The lighting parameters of a 3D scene, expressed as the values of the user
+ interface so that they can be bound to sliders directly.
+ </summary>
+ <remarks>
+ The parameters are applied onto the camera because the light setup of the
+ painter algorithm lives on the camera object.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.DefaultAzimuth">
+ <summary>the default azimuth angle of the light source, in degrees</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.DefaultElevation">
+ <summary>the default elevation angle of the light source, in degrees</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.DefaultAmbient">
+ <summary>the default ambient strength, in percent</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.DefaultIntensity">
+ <summary>the default light intensity, in percent</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Azimuth">
+ <summary>
+ the azimuth angle of the light source, in degrees
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Elevation">
+ <summary>
+ the elevation angle of the light source, in degrees
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Ambient">
+ <summary>
+ the ambient light strength, in percent
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Intensity">
+ <summary>
+ the light intensity, in percent, it scales the light color
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.LightColor">
+ <summary>
+ the color of the light source
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Reset">
+ <summary>
+ restore all of the parameters to their default value
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.ApplyTo(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ apply the lighting parameters onto the given camera
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Clone">
+ <summary>
+ create a copy of the current lighting parameters
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode">
+ <summary>
+ The presentation mode of a 3D scene.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.Surface">
+ <summary>
+ filled faces with the per face lambert shading (default)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.Mesh">
+ <summary>
+ triangle wire frame, outlines every face without any fill
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderMode.PointCloud">
+ <summary>
+ every vertex is drawn as a heat map colored square point
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions">
+ <summary>
+ The presentation options of a 3D scene.
+ </summary>
+ <remarks>
+ The options are separated from the scene data so that the same scene can
+ be rendered by different back ends with different presentation settings.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.Mode">
+ <summary>
+ the presentation mode of the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.ColorScheme">
+ <summary>
+ the heat map color scheme name that is passed to the color designer,
+ for example ``viridis`` or ``magma``
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.PointSize">
+ <summary>
+ the edge length in pixels of a point cloud point
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.PointAlpha">
+ <summary>
+ the alpha channel of the heat map colors, in the range [0, 255]
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.UseEmbeddedColor">
+ <summary>
+ use the per point color of the point cloud instead of the heat map
+ coloring when the source file provides one
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.ShowGround">
+ <summary>
+ draw the ground grid below the model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.GroundColor">
+ <summary>
+ the color of the ground grid lines
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.ShowConnections">
+ <summary>
+ draw the connection lines of the scene
+ </summary>
+ <remarks>
+ The lines are an overlay: the point cloud of the neurons and the network
+ graph of the connections are two views of the same data, so both can be
+ shown at the same time.
+ Toggling this option does not rebuild the gpu geometry (see
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.GeometrySignature"/>): a connectome of a whole brain uploads
+ hundreds of megabytes of line vertices, a visibility switch must not pay
+ that price again.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.BackgroundColor">
+ <summary>
+ the background color of the canvas
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.MultisampleCount">
+ <summary>
+ the number of the samples of the multi sample anti aliasing of the
+ gpu rendering back end, one disables the anti aliasing.
+ </summary>
+ <remarks>
+ The default is one: the strict mode renders exactly the same picture
+ as the polygon painter back end does. A value of four or eight
+ smooths the model edges, and the back end silently falls back to one
+ when the gpu device does not support the requested sample count.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.CullBackFaces">
+ <summary>
+ discard the faces that point away from the viewer
+ </summary>
+ <remarks>
+ The default is false because the winding of the faces of a scanned
+ model is not always consistent: with the culling enabled such a model
+ shows holes.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.Clone">
+ <summary>
+ create a copy of the current options
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneRenderOptions.GeometrySignature">
+ <summary>
+ the part of the options that the gpu geometry cache has to observe:
+ when this text changes the cached geometry has to be rebuilt.
+ </summary>
+ <remarks>
+ the camera and the lighting are not part of this signature because
+ they do not change the vertex data, they are uniform values only.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform">
+ <summary>
+ The 4x4 transform matrices of one frame of the 3d scene.
+ </summary>
+ <remarks>
+ The matrices are an exact replica of the cpu pipeline of the
+ ``Microsoft.VisualBasic.Imaging.Drawing3D`` library, so the gpu pipeline
+ generates the very same image as the polygon painter of the direct2d
+ rendering back end:
+
+ 1. the rotation is the same euler x -&gt; y -&gt; z rotation that
+    ``Camera.RotationMatrix`` applies, the angles are given in degrees
+ 2. the projection is the same pseudo perspective of ``Point3D.Project``:
+    ``factor = fov / (viewDistance + z)``, the screen centre and the
+    screen space camera offset are added after that projection
+
+ The .net matrix convention is the row vector one (``result = v * M``),
+ so the world view projection matrix is ``rotation * projection``.
+
+ The matrices of this class are uploaded into the constant buffer as they
+ are, and the shader applies them through ``mul(m, v)`` with the default
+ column major packing, which matches the row vector transform exactly.
+ Note that the opposite - transposing the matrix before the upload - is
+ the classic trap here: the transpose would move the w row of the pseudo
+ perspective into the depth row and the image would only look "almost"
+ right while every depth value is wrong.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.Rotation">
+ <summary>
+ the rotation of the camera, ready for the constant buffer
+ </summary>
+ <remarks>
+ the shader rotates the face normal of a model with this matrix, this
+ is exactly what the cpu pipeline does: the lighting is evaluated on
+ the rotated vertices, the face normal is oriented towards the viewer
+ in the rotated (camera) space.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.Projection">
+ <summary>
+ the projection of the camera, in the row vector convention.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.WorldViewProjection">
+ <summary>
+ ``rotation * projection``, ready for the constant buffer
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.NearPlane">
+ <summary>
+ the distance of the near clip plane from the camera
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.ScreenSize">
+ <summary>
+ the size of the viewport in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.PixelScaleX">
+ <summary>
+ the scale that converts one pixel into the clip space of the x axis,
+ that is ``2 / width``
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.PixelScaleY">
+ <summary>
+ the scale that converts one pixel into the clip space of the y axis,
+ that is ``2 / height``
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.Create(Microsoft.VisualBasic.Imaging.Drawing3D.Camera,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,System.Drawing.Size)">
+ <summary>
+ build the transform matrices of one frame
+ </summary>
+ <param name="camera">the camera of the frame</param>
+ <param name="scene">
+ the scene that is rendered, it is only used for choosing the near
+ clip plane
+ </param>
+ <param name="screenSize">the size of the viewport in pixels</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneTransform.RotationMatrix(Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>
+ the euler rotation matrix of the camera angles.
+ </summary>
+ <remarks>
+ This is a line by line replica of the private ``Camera.RotationMatrix``
+ function of the shared imaging library, in the row vector convention
+ of ``System.Numerics`` (``result.j = sum over i of v.i * M.i.j``):
+ the function is private, so it can not be called from here, but the
+ element formulas and their smoke tests - ``(0,0,1)`` rotated by x 90
+ becomes ``(0,-1,0)``, ``(1,0,0)`` rotated by y 90 becomes ``(0,0,-1)`` -
+ are verified against the cpu pipeline.
+ </remarks>
+</member>
+</members>
+</doc>

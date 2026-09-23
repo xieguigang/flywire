@@ -13,6 +13,12 @@ docs/Download Data_files
 *.sln.docstates
 *.env
 
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.snupkg
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

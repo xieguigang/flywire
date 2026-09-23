@@ -1,14 +1,8 @@
 Imports System.Collections.Concurrent
-Imports System.Diagnostics
-Imports System.Drawing
 Imports System.IO
-Imports System.Linq
 Imports System.Text
 Imports System.Threading
-Imports System.Threading.Tasks
-Imports System.Windows.Forms
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
-Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Neuropils.Data
 Imports Neuropils.Rendering
@@ -651,7 +645,7 @@ Partial Public Class FormMain
     Private m_snapshotStimulus As SnapshotStimulus?
 
     ''' <summary>
-    ''' 解析 ``stim=<neuron>:<radiusUm>:<current>:<step>`` 形式的出图参数。
+    ''' 解析 ``stim=&lt;neuron>:&lt;radiusUm>:&lt;current>:&lt;step>`` 形式的出图参数。
     ''' </summary>
     ''' <remarks>
     ''' ``neuron`` 为 -1 时取"出度最大的神经元"，``step`` 为 -1 时取"最活跃的那一步"。
@@ -774,7 +768,7 @@ Partial Public Class FormMain
     ''' 
     ''' 1. <b>标定强度映射</b>：全脑的权重经过结构归一化，单个神经元的持续放电能扩散多远
     '''    只能实测 —— 这里对同一神经元扫一串强度，把"注入强度 → 逐步激活规模"打出来，
-    '''    界面上的按住时长映射区间（<see cref="StrengthFloor"/> ~ <see cref="StrengthCeiling"/>）
+    '''    界面上的按住时长映射区间（"StrengthFloor" ~ "StrengthCeiling"）
     '''    就是据此定的；
     ''' 2. <b>验证回放数据链路</b>：运行、取逐步激活、落盘、并断言逐步清单与统计一致。
     ''' </remarks>

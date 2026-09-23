@@ -456,7 +456,7 @@ Namespace Analysis
         ''' <summary>
         ''' 读取"逐步激活神经元清单"（<c>step,neuron_index,root_id</c>）。
         ''' </summary>
-        ''' <returns>脉冲矩阵（行 = <see cref="Neurons"/> 的顺序）与神经元清单、步数。</returns>
+        ''' <returns>脉冲矩阵（行 = path.Neurons 的顺序）与神经元清单、步数。</returns>
         Private Shared Function readActiveNeurons(path As String) As (Pulses As Double()(), Neurons As Integer(), Steps As Integer)
             If Not File.Exists(path) Then Return (Nothing, Nothing, 0)
 

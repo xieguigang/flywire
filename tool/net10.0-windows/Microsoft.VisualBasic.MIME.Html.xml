@@ -1,0 +1,3208 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.MIME.Html
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.MIME.Html.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.baseFont">
+ <summary>
+ the base font style of the canvas
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.baseLine">
+ <summary>
+ the base stroke line style of the canvas
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.dpi">
+ <summary>
+ bugs fixed for config dpi value on unix mono platform 
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.canvas">
+ <summary>
+ the canvas size [width,height].
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.SetBaseStyles(Microsoft.VisualBasic.Imaging.Font,Microsoft.VisualBasic.Imaging.Pen)">
+ <summary>
+ set css base styles
+ </summary>
+ <param name="font"></param>
+ <param name="stroke"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetWidth(System.String)">
+ <summary>
+ get css length value, usually be padding/margin width calculation
+ </summary>
+ <param name="len"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetHeight(System.String)">
+ <summary>
+ get css length value, usually be padding/margin width calculation
+ </summary>
+ <param name="len"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetPen(Microsoft.VisualBasic.MIME.Html.CSS.Stroke,System.Boolean)">
+ <summary>
+ 
+ </summary>
+ <param name="stroke"></param>
+ <param name="allowNull">
+ unlike the function <see cref="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetPen(Microsoft.VisualBasic.MIME.Html.CSS.Stroke)"/> may returns the value of <see cref="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.baseLine"/> 
+ if the given stroke value is nothing, this function will returns nothing directly if 
+ this parameter value set to TRUE.
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetPen(Microsoft.VisualBasic.MIME.Html.CSS.Stroke)">
+ <summary>
+ 
+ </summary>
+ <param name="stroke"></param>
+ <returns>
+ this function may handling of the <paramref name="stroke"/> null value 
+ as the default <see cref="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.baseLine"/> style.
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment.GetFont(Microsoft.VisualBasic.MIME.Html.CSS.CSSFont,System.Single)">
+ <summary>
+ Initializes a new <see cref="T:Microsoft.VisualBasic.Imaging.Font"/> using a specified size and style.
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.CSSLayer">
+ <summary>
+ 进行样式渲染的图层对象
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSLayer.zIndex">
+ <summary>
+ Drawing order, if this index value is greater, then it will be draw on the top most.
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit">
+ <summary>
+ Represents the possible units of the CSS lengths
+ </summary>
+ <remarks>
+ http://www.w3.org/TR/CSS21/syndata.html#length-units
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.None">
+ <summary>
+ Unknown
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Ems">
+ <summary>
+ em: the 'font-size' of the relevant font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Ex">
+ <summary>
+ ex: the 'x-height' of the relevant font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Pixels">
+ <summary>
+ px: pixel units — 1px is equal to 0.75pt.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Inches">
+ <summary>
+ in: inches — 1in is equal to 2.54cm.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Centimeters">
+ <summary>
+ cm: centimeters
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Milimeters">
+ <summary>
+ mm: millimeters
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Points">
+ <summary>
+ pt: points — the points used by CSS are equal to 1/72nd of 1in.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Picas">
+ <summary>
+ pc: picas — 1pc is equal to 12pt.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.CSS.CssUnit.Percent">
+ <summary>
+ The format of a percentage value (denoted by &lt;percentage> in this specification) is a &lt;number> immediately followed by '%'.
+ 
+ Percentage values are always relative to another value, for example a length. Each property 
+ that allows percentages also defines the value to which the percentage refers. The value may 
+ be that of another property for the same element, a property for an ancestor element, or a 
+ value of the formatting context (e.g., the width of a containing block). When a percentage 
+ value is set for a property of the root element and the percentage is defined as referring 
+ to the inherited value of some property, the resultant value is the percentage times the 
+ initial value of that property.
+ 
+ Since child elements (generally) inherit the computed values of their parent, in the following 
+ example, the children of the P element will inherit a value of 12px for 'line-height', not 
+ the percentage value (120%):
+ 
+ ```css
+ p { font-size: 10px }
+ p { line-height: 120% }  /* 120% of 'font-size' */
+ ```
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.Fill">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.Imaging.Brush"/>: <see cref="T:Microsoft.VisualBasic.Imaging.SolidBrush"/> and <see cref="T:Microsoft.VisualBasic.Imaging.TextureBrush"/>
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont">
+ <summary>
+ ```CSS
+ font-style: style; font-size: size; font-family: Name;
+ ```
+ 
+ 这个简写属性用于一次设置元素字体的两个或更多方面。使用 ``icon`` 等关键字可以适当地设置元素的字体，使之与用户计算机环境中的某个方面一致。
+ 注意，如果没有使用这些关键词，至少要指定字体大小和字体系列。
+ 可以按顺序设置如下属性：
+
+ + font-style
+ + font-variant
+ + font-weight
+ + font-size/line-height
+ + font-family
+
+ 可以不设置其中的某个值，比如 ``font:100% verdana;`` 也是允许的。未设置的属性会使用其默认值。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.style">
+ <summary>
+ The <see cref="T:Microsoft.VisualBasic.Imaging.FontStyle"/> of the new font.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.size">
+ <summary>
+ 该属性设置元素的字体大小。注意，实际上它设置的是字体中字符框的高度；实际的字符字形可能比这些框高或矮（通常会矮）。
+ 各关键字对应的字体必须比一个最小关键字相应字体要高，并且要小于下一个最大关键字对应的字体。
+ 
+ + ``xx-small``: 把字体的尺寸设置为不同的尺寸，从 xx-small 到 xx-large。
+ + ``x-small``
+ + ``small``
+ + ``medium``:  默认值：medium。
+ + ``large``
+ + ``x-large``
+ + ``xx-large``
+ + ``smaller``: 把 font-size 设置为比父元素更小的尺寸。
+ + ``larger``:  把 font-size 设置为比父元素更大的尺寸。
+ + ``length``:  把 font-size 设置为一个固定的值。
+ + ``%``:       把 font-size 设置为基于父元素的一个百分比值。
+ + ``inherit``: 规定应该从父元素继承字体尺寸。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.family">
+ <summary>
+ A string representation of the ``FontFamily`` for the new System.Drawing.Font.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.weight">
+ <summary>
+ 该属性用于设置显示元素的文本中所用的字体加粗。数字值 400 相当于 关键字 normal，700 等价于 bold。
+ 每个数字值对应的字体加粗必须至少与下一个最小数字一样细，而且至少与下一个最大数字一样粗。
+ 
+ + ``normal``:  默认值。定义标准的字符。
+ + ``bold``:    定义粗体字符。
+ + ``bolder``:  定义更粗的字符。
+ + ``lighter``: 定义更细的字符。
+ + ``100``: 定义由粗到细的字符。400 等同于 normal，而 700 等同于 bold。
+ + ``200``: 同上
+ + ``300``: 同上
+ + ``400``: 同上
+ + ``500``: 同上
+ + ``600``: 同上
+ + ``700``: 同上
+ + ``800``: 同上
+ + ``900``: 同上
+ + ``inherit``: 规定应该从父元素继承字体的粗细。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.variant">
+ <summary>
+ ``font-variant``属性设置小型大写字母的字体显示文本，这意味着所有的小写字母均会被转换为大写，
+ 但是所有使用小型大写字体的字母与其余文本相比，其字体尺寸更小。
+ 
+ + ``normal``:     默认值。浏览器会显示一个标准的字体。
+ + ``small-caps``: 浏览器会显示小型大写字母的字体。
+ + ``inherit``:    规定应该从父元素继承 font-variant 属性的值。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.CSSValue">
+ <summary>
+ Css string for set font style
+ </summary>
+ <returns><see cref="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.ToString"/> value.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.TryParse(System.String,Microsoft.VisualBasic.MIME.Html.CSS.CSSFont,System.Boolean@)">
+ <summary>
+ Parsing font style data from the css expression string.
+ (假若你在使用这个函数在Linux环境之中无缘无故的出现空引用错误，需要考虑一下
+ 是不是因为Linux服务器之中没有按照所指定的字体文件？)
+ </summary>
+ <param name="css"></param>
+ <param name="[default]">On failure return this default value</param>
+ <param name="hasValue">
+ 所输入到这个函数进行解析的<paramref name="css"/>样式字符串之中是否包含有字体的定义?
+ </param>
+ <returns>this function returns default nothing if the input <paramref name="css"/> string is nothing or empty.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.CSSFont.ToString">
+ <summary>
+ To CSS style text
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout">
+ <summary>
+ A fix numeric layout data 
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout.op_Addition(Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout,Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout)">
+ <summary>
+ Performs vector addition on the two specified System.Windows.Forms.Padding objects,
+ resulting in a new System.Windows.Forms.Padding.
+ </summary>
+ <param name="p1">The first System.Windows.Forms.Padding to add.</param>
+ <param name="p2">The second System.Windows.Forms.Padding to add.</param>
+ <returns>A new System.Windows.Forms.Padding that results from adding p1 and p2.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout.op_Subtraction(Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout,Microsoft.VisualBasic.MIME.Html.CSS.PaddingLayout)">
+ <summary>
+ Performs vector subtraction on the two specified System.Windows.Forms.Padding
+ objects, resulting in a new System.Windows.Forms.Padding.
+ </summary>
+ <param name="p1">The System.Windows.Forms.Padding to subtract from (the minuend).</param>
+ <param name="p2">The System.Windows.Forms.Padding to subtract from (the subtrahend).</param>
+ <returns>The System.Windows.Forms.Padding result of subtracting p2 from p1.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.Padding">
+ <summary>
+ Represents padding or margin information associated with a gdi+ element. 
+ (padding: top, right, bottom, left)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Zero">
+ <summary>
+ A empty padding layout css data
+ </summary>
+ <returns>
+ zero padding layout element, but not empty
+ </returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Top">
+ <summary>
+ Gets or sets the padding value for the top edge.
+ </summary>
+ <returns>The padding, in pixels, for the top edge.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Right">
+ <summary>
+ Gets or sets the padding value for the right edge.
+ </summary>
+ <returns>The padding, in pixels, for the right edge.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Left">
+ <summary>
+ Gets or sets the padding value for the left edge.
+ </summary>
+ <returns>The padding, in pixels, for the left edge.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Bottom">
+ <summary>
+ Gets or sets the padding value for the bottom edge.
+ </summary>
+ <returns>The padding, in pixels, for the bottom edge.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Padding.IsEmpty">
+ <summary>
+ all padding value is ZERO then it means empty
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.#ctor(System.Int32)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.MIME.Html.CSS.Padding"/> class using the
+ supplied padding size for all edges.
+ </summary>
+ <param name="all">The number of pixels to be used for padding for all edges.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ Initializes a new instance of the <see cref="T:Microsoft.VisualBasic.MIME.Html.CSS.Padding"/> class using a
+ separate padding size for each edge.
+ </summary>
+ <param name="left">The padding size, in pixels, for the left edge.</param>
+ <param name="top">The padding size, in pixels, for the top edge.</param>
+ <param name="right">The padding size, in pixels, for the right edge.</param>
+ <param name="bottom">The padding size, in pixels, for the bottom edge.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.#ctor(System.Int32[])">
+ <summary>
+ create padding object with a given layout pixels vector: top, right, bottom, left
+ </summary>
+ <param name="layoutVector"><see cref="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.LayoutVector(Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment)"/></param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Horizontal(Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment)">
+ <summary>
+ Gets the combined padding for the right and left edges.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Vertical(Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment)">
+ <summary>
+ Gets the combined padding for the top and bottom edges.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.ToString">
+ <summary>
+ padding: top, right, bottom, left
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.LayoutVector(Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment)">
+ <summary>
+ padding: top, right, bottom, left
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.op_Explicit(Microsoft.VisualBasic.MIME.Html.CSS.Padding)~System.String">
+ <summary>
+ 转换为css字符串
+ </summary>
+ <param name="padding"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.op_Implicit(System.String)~Microsoft.VisualBasic.MIME.Html.CSS.Padding">
+ <summary>
+ 同时兼容padding css，以及使用size表达式统一赋值
+ </summary>
+ <param name="css$"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.Equals(System.Object)">
+ <summary>
+ Determines whether the value of the specified object is equivalent to the current
+ System.Windows.Forms.Padding.
+ </summary>
+ <param name="other">The object to compare to the current System.Windows.Forms.Padding.</param>
+ <returns>true if the System.Windows.Forms.Padding objects are equivalent; otherwise, false.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.op_Equality(Microsoft.VisualBasic.MIME.Html.CSS.Padding,Microsoft.VisualBasic.MIME.Html.CSS.Padding)">
+ <summary>
+ Tests whether two specified System.Windows.Forms.Padding objects are equivalent.
+ </summary>
+ <param name="p1">A System.Windows.Forms.Padding to test.</param>
+ <param name="p2">A System.Windows.Forms.Padding to test.</param>
+ <returns>true if the two System.Windows.Forms.Padding objects are equal; otherwise, false.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Padding.op_Inequality(Microsoft.VisualBasic.MIME.Html.CSS.Padding,Microsoft.VisualBasic.MIME.Html.CSS.Padding)">
+ <summary>
+ Tests whether two specified System.Windows.Forms.Padding objects are not equivalent.
+ </summary>
+ <param name="p1">A System.Windows.Forms.Padding to test.</param>
+ <param name="p2">A System.Windows.Forms.Padding to test.</param>
+ <returns>true if the two System.Windows.Forms.Padding objects are different; otherwise,
+ false.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.CSSsize">
+ <summary>
+ parse the width and height data from the css style string
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.Stroke">
+ <summary>
+ ```css
+ stroke: color/image; stroke-width: width(px); stroke-dash: dash_style;
+ ```
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.fill">
+ <summary>
+ the line fill color brush description
+ </summary>
+ <returns></returns>
+ <remarks>
+ default fill is black color if this value is omit from the css style string
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.width">
+ <summary>
+ the line drawing width
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.dash">
+ <summary>
+ the line drawing style
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.#ctor(System.Single)">
+ <summary>
+ create a default style css stroke object with 
+ specific line width is given.
+ </summary>
+ <param name="width"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.#ctor(Microsoft.VisualBasic.MIME.Html.CSS.Stroke)">
+ <summary>
+ do value copy
+ </summary>
+ <param name="clone"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.ToString">
+ <summary>
+ 生成CSS字符串值
+ </summary>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.GetDashStyle(System.String)">
+ <summary>
+ parse the <see cref="T:Microsoft.VisualBasic.Imaging.DashStyle"/> enum value from a given term string
+ </summary>
+ <param name="css">
+ should be one of the member name in enum value: <see cref="T:Microsoft.VisualBasic.Imaging.DashStyle"/>
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.TryParse(System.String,Microsoft.VisualBasic.MIME.Html.CSS.Stroke)">
+ <summary>
+ this css parser function returns nothing if the given <paramref name="css"/> string value is null or empty
+ </summary>
+ <param name="css$"></param>
+ <param name="[default]"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.CSS.Stroke.ParserImpl(System.String)">
+ <summary>
+ parse from a given css string
+ </summary>
+ <param name="css"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.ICSSValue">
+ <summary>
+ an abstract object model for get <see cref="P:Microsoft.VisualBasic.MIME.Html.CSS.ICSSValue.CSSValue"/> 
+ string from current object.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.CSS.ICSSValue.CSSValue">
+ <summary>
+ the css string generator based on current object model
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.CSS.NamespaceDoc">
+ <summary>
+ The CSS style environment: CSS layers, length units and typed CSS values, together with
+ the element style models (font style, fill, stroke, padding and size) used to resolve
+ styles.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.DocumentFormatter">
+ <summary>
+ Module provides some method for text document
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.DocumentFormatter.HighlightLinks(System.String)">
+ <summary>
+ High light all of the links in the text document automatically.
+ </summary>
+ <param name="s">Assuming that the input text is plant text.</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.DocumentFormatter.HighlightURL(System.String)">
+ <summary>
+ Highligh links in the text.(将文档里面的url使用html标记出来)
+ </summary>
+ <param name="s">假设这里面没有任何html标记</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.DocumentFormatter.HighlightEMail(System.String)">
+ <summary>
+ Highlights the email address in the text.(将文档里面的电子邮件地址使用html标记出来)
+ </summary>
+ <param name="s"></param>
+ <returns></returns>
+ 
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.Anchor.text">
+ <summary>
+ the inner plant/html text of current anchor
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement">
+ <summary>
+ 一个标签所标记的元素以及内部文本
+ </summary>
+ <remarks>
+ 在选择器里：
+
+ + ID 和 类 选择器 区分 大小写
+ + 标签选择器、属性选择器不区分大小写
+ 
+ > 类选择器和 ID 选择器可能是区分大小写的。这取决于文档的语言。
+ > HTML 和 XHTML 将类和 ID 值定义为区分大小写，所以类和 ID 
+ > 值的大小写必须与文档中的相应值匹配。
+ > 
+ > —— W3C
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.TagName">
+ <summary>
+ 标签名
+ </summary>
+ <value></value>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.Attributes">
+ <summary>
+ 标签的属性列表
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.Element(System.String)">
+ <summary>
+ get attribute value by attribute name
+ </summary>
+ <param name="name">case insensitive</param>
+ <returns>
+ this property returns nothing if the attribute is not found from the current element node
+ </returns>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.elementNodes">
+ <summary>
+ 当前的这个节点下面所拥有的子节点
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.id">
+ <summary>
+ 唯一编号是区分大小写的
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.class">
+ <summary>
+ 
+ </summary>
+ <returns></returns>
+ <remarks>
+ multiple class could be assigned to a html node
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.tagIndex">
+ <summary>
+ 大小写不敏感
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.classIndex">
+ <summary>
+ ** 大小写敏感
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.nameIndex">
+ <summary>
+ ** 大小写敏感
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.idIndex">
+ <summary>
+ ** 大小写敏感
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.Add(System.String,System.String)">
+ <summary>
+ add tagged attribute value.
+ </summary>
+ <param name="name">the attribute name</param>
+ <param name="value">the attribute value string.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.GetDirectChilds(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.MIME.Html.Document.InnerPlantText})">
+ <summary>
+ 这个函数是应用于判断<see cref="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByClassName(System.String)"/>或者<see cref="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByName(System.String)"/>或者<see cref="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByTagName(System.String)"/>
+ 函数所返回来的结果，所以不会对<see cref="T:Microsoft.VisualBasic.MIME.Html.Document.InnerPlantText"/>节点产生误判
+ </summary>
+ <param name="query"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementById(System.String)">
+ <summary>
+ Get the element with the specified ID
+ </summary>
+ <param name="id">Required. The ID attribute's value of the element you want to get</param>
+ <returns>An Element Object, representing an element with the specified ID. Returns null if no elements with the specified ID exists</returns>
+ <remarks>
+ The getElementById() method returns the element that has the ID attribute with the specified value.
+ This method Is one Of the most common methods In the HTML DOM, And Is used almost every time you want To manipulate, Or Get info from, an element On your document.
+ Returns null If no elements With the specified ID exists.
+ An ID should be unique within a page. However, If more than one element With the specified ID exists, the getElementById() method returns the first element In the source code.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByClassName(System.String)">
+ <summary>
+ Get all elements with the specified class name
+ </summary>
+ <param name="classname">
+ Required. The class name of the elements you want to get.
+ To search for multiple class names, separate them with spaces, Like "test demo".
+ </param>
+ <returns>
+ An HTMLCollection object, representing a collection of elements with the specified class name. The elements in the returned collection are sorted as they appear in the source code.
+ </returns>
+ <remarks>
+ The getElementsByClassName() method returns a collection of all elements in the document with the specified class name, as an HTMLCollection object.
+ The HTMLCollection Object represents a collection Of nodes. The nodes can be accessed by index numbers. The index starts at 0.
+ Tip: You can use the length Property Of the HTMLCollection Object To determine the number Of elements With a specified Class name, Then you can Loop through all elements And extract the info you want.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByName(System.String)">
+ <summary>
+ Get all elements with the specified name
+ </summary>
+ <param name="name">Required. The name attribute value of the element you want to access/manipulate</param>
+ <returns>
+ An HTMLCollection object, representing a collection of elements with the specified name. The elements in the returned collection are sorted as they appear in the source code.
+ </returns>
+ <remarks>
+ The getElementsByName() method returns a collection of all elements in the document with the specified name (the value of the name attribute), as an HTMLCollection object.
+ The HTMLCollection Object represents a collection Of nodes. The nodes can be accessed by index numbers. The index starts at 0.
+ Tip: You can use the length Property Of the HTMLCollection Object To determine the number Of elements With the specified name, Then you can Loop through all elements And extract the info you want.
+ Note: In HTML5, the "name" attribute Is deprecated And has been replaced by the "id" attribute for many elements. Use the document.getElementById() method where it Is appropriate. Also look at the getElementsByClassName() And getElementsByTagName() methods.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement.getElementsByTagName(System.String)">
+ <summary>
+ Get all elements in the document with the specified tag name
+ </summary>
+ <param name="tagname">Required. The tagname of the elements you want to get</param>
+ <returns>
+ An HTMLCollection object, representing a collection of elements with the specified tag name. The elements in the returned collection are sorted as they appear in the source code.
+ </returns>
+ <remarks>
+ The getElementsByTagName() method returns a collection of all elements in the document with the specified tag name, as an HTMLCollection object.
+ The HTMLCollection Object represents a collection Of nodes. The nodes can be accessed by index numbers. The index starts at 0.
+ Tip: The parametervalue "*" returns all elements In the document.
+ Tip: You can use the length Property Of the HTMLCollection Object To determine the number Of elements With the specified tag name, Then you can Loop through all elements And extract the info you want.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.Image.Text">
+ <summary>
+ 这个Image对象的原始的html字符串
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.Image.ResParser(System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="img">&lt;img> html标签</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.InnerPlantText">
+ <summary>
+ Plant text inner the html.(HTML文档内的纯文本对象)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.InnerPlantText.nodeName">
+ <summary>
+ 纯文本节点没有标签名称
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.InnerPlantText.GetPlantText">
+ <summary>
+ only use the ``&lt;br />`` tag as the new line in html text
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute">
+ <summary>
+ A key-value pair of the html attribute, includes the attribute name and attribute value
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute.Values">
+ <summary>
+ A collection of the attribute values, apply for the multiple value attribute data, example as class attribute
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute.Value">
+ <summary>
+ get the first attribute value string
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute.Equals(System.String)">
+ <summary>
+ equals to any value
+ </summary>
+ <param name="value"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute.op_Explicit(Microsoft.VisualBasic.MIME.Html.Document.ValueAttribute)~System.String">
+ <summary>
+ get attribute value
+ </summary>
+ <param name="attr"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.Extensions.Pagebreak">
+ <summary>
+ Since Markdown accepts plain HTML and CSS, simply add this line 
+ wherever you want to force page break.
+
+ ```html
+ &lt;div style="page-break-after: always;">&lt;/div>
+ ```
+ 
+ If your Markdown editor have trouble exporting PDF correctly, 
+ first Try To export As HTML, Then open With your browser And 
+ print As PDF.
+ 
+ > https://stackoverflow.com/questions/22601053/pagebreak-in-markdown-while-creating-pdf#29642392
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.Extensions.StripHTMLSafely(System.String)">
+ <summary>
+ Strip out HTML tags while preserving the basic formatting
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.Extensions.StripHTMLDirectly(System.String)">
+ <summary>
+ Strip out HTML tags while preserving the basic formatting
+ </summary>
+ <param name="source"></param>
+ <returns></returns>
+ <remarks>http://www.codeproject.com/Articles/11902/Convert-HTML-to-Plain-Text</remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.HtmlCompress">
+ <summary>
+ html compress
+ </summary>
+ <remarks>
+ https://github.com/lizzy0118/HtmlCompress
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.HtmlDocument">
+ <summary>
+ A root document that is a kind of subclass of <see cref="T:Microsoft.VisualBasic.MIME.Html.Document.HtmlElement"/>
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Document.HtmlDocument.LoadDocument(System.String,System.Boolean)">
+ <summary>
+ 假设所加载的html文档是完好的格式的，即没有不匹配的标签的
+ </summary>
+ <param name="handle">document text or url or file path</param>
+ <param name="strip">
+ do html document text cleanup at first? includes removes javascript block, 
+ css block and html comments. 
+ </param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Document.NamespaceDoc">
+ <summary>
+ The HTML document object model: the HtmlDocument model with HTML element types, anchors,
+ images, plain text and attributes that can be built, queried and serialized.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.HTML.Head.NamespaceDoc">
+ <summary>
+ The HTML document head metadata model, covering the meta tag elements of a document.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.HTML.jQuery.Extensions.TagName``1(``0)">
+ <summary>
+ 如果定义了<see cref="T:System.Xml.Serialization.XmlTypeAttribute"/>，则优先使用这个属性之中的<see cref="P:System.Xml.Serialization.XmlTypeAttribute.TypeName"/>
+ 作为文档元素标签的名字，没有找到的话，则直接使用``Class Name``来作为文档元素标签的名字
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="element"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.HTML.jQuery.NamespaceDoc">
+ <summary>
+ A jQuery style fluent query and manipulation API over the HTML document object model.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.NamespaceDoc">
+ <summary>
+ Common HTML helpers shared by the parser, DOM and CSS rendering namespaces of the HTML
+ toolkit, including document formatting and extension utilities.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty">
+ <summary>
+ Css properties list.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_weight">
+ <summary>
+ font-weight
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_radius">
+ <summary>
+ border-radius
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.color_stop">
+ <summary>
+ color-stop
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.alignment_adjust">
+ <summary>
+ alignment-adjust
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.alignment_baseline">
+ <summary>
+ alignment-baseline
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation">
+ <summary>
+ animation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_delay">
+ <summary>
+ animation-delay
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_direction">
+ <summary>
+ animation-direction
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_duration">
+ <summary>
+ animation-duration
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_iteration_count">
+ <summary>
+ animation-iteration-count
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_name">
+ <summary>
+ animation-name
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_play_state">
+ <summary>
+ animation-play-state
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.animation_timing_function">
+ <summary>
+ animation-timing-function
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.appearance">
+ <summary>
+ appearance
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.azimuth">
+ <summary>
+ azimuth
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.backface_visibility">
+ <summary>
+ backface-visibility
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background">
+ <summary>
+ background
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_attachment">
+ <summary>
+ background-attachment
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_break">
+ <summary>
+ background-break
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_clip">
+ <summary>
+ background-clip
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_color">
+ <summary>
+ background-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_image">
+ <summary>
+ background-image
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_origin">
+ <summary>
+ background-origin
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_position">
+ <summary>
+ background-position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_repeat">
+ <summary>
+ background-repeat
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.background_size">
+ <summary>
+ background-size
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.baseline_shift">
+ <summary>
+ baseline-shift
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.binding">
+ <summary>
+ binding
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bleed">
+ <summary>
+ bleed
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bookmark_label">
+ <summary>
+ bookmark-label
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bookmark_level">
+ <summary>
+ bookmark-level
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bookmark_state">
+ <summary>
+ bookmark-state
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bookmark_target">
+ <summary>
+ bookmark-target
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border">
+ <summary>
+ border
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom">
+ <summary>
+ border-bottom
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom_color">
+ <summary>
+ border-bottom-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom_left_radius">
+ <summary>
+ border-bottom-left-radius
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom_right_radius">
+ <summary>
+ border-bottom-right-radius
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom_style">
+ <summary>
+ border-bottom-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_bottom_width">
+ <summary>
+ border-bottom-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_collapse">
+ <summary>
+ border-collapse
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_color">
+ <summary>
+ border-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image">
+ <summary>
+ border-image
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image_outset">
+ <summary>
+ border-image-outset
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image_repeat">
+ <summary>
+ border-image-repeat
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image_slice">
+ <summary>
+ border-image-slice
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image_source">
+ <summary>
+ border-image-source
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_image_width">
+ <summary>
+ border-image-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_left">
+ <summary>
+ border-left
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_left_color">
+ <summary>
+ border-left-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_left_style">
+ <summary>
+ border-left-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_left_width">
+ <summary>
+ border-left-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_right">
+ <summary>
+ border-right
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_right_color">
+ <summary>
+ border-right-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_right_style">
+ <summary>
+ border-right-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_right_width">
+ <summary>
+ border-right-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_spacing">
+ <summary>
+ border-spacing
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_style">
+ <summary>
+ border-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top">
+ <summary>
+ border-top
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top_color">
+ <summary>
+ border-top-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top_left_radius">
+ <summary>
+ border-top-left-radius
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top_right_radius">
+ <summary>
+ border-top-right-radius
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top_style">
+ <summary>
+ border-top-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_top_width">
+ <summary>
+ border-top-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.border_width">
+ <summary>
+ border-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.bottom">
+ <summary>
+ bottom
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_align">
+ <summary>
+ box-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_decoration_break">
+ <summary>
+ box-decoration-break
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_direction">
+ <summary>
+ box-direction
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_flex">
+ <summary>
+ box-flex
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_flex_group">
+ <summary>
+ box-flex-group
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_lines">
+ <summary>
+ box-lines
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_ordinal_group">
+ <summary>
+ box-ordinal-group
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_orient">
+ <summary>
+ box-orient
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_pack">
+ <summary>
+ box-pack
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_shadow">
+ <summary>
+ box-shadow
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.box_sizing">
+ <summary>
+ box-sizing
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.break_after">
+ <summary>
+ break-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.break_before">
+ <summary>
+ break-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.break_inside">
+ <summary>
+ break-inside
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.caption_side">
+ <summary>
+ caption-side
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.clear">
+ <summary>
+ clear
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.clip">
+ <summary>
+ clip
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.color">
+ <summary>
+ color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.color_profile">
+ <summary>
+ color-profile
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_count">
+ <summary>
+ column-count
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_fill">
+ <summary>
+ column-fill
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_gap">
+ <summary>
+ column-gap
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_rule">
+ <summary>
+ column-rule
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_rule_color">
+ <summary>
+ column-rule-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_rule_style">
+ <summary>
+ column-rule-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_rule_width">
+ <summary>
+ column-rule-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_span">
+ <summary>
+ column-span
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.column_width">
+ <summary>
+ column-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.columns">
+ <summary>
+ columns
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.content">
+ <summary>
+ content
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.counter_increment">
+ <summary>
+ counter-increment
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.counter_reset">
+ <summary>
+ counter-reset
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.crop">
+ <summary>
+ crop
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.cue">
+ <summary>
+ cue
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.cue_after">
+ <summary>
+ cue-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.cue_before">
+ <summary>
+ cue-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.cursor">
+ <summary>
+ cursor
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.direction">
+ <summary>
+ direction
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.display">
+ <summary>
+ display
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.dominant_baseline">
+ <summary>
+ dominant-baseline
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_after_adjust">
+ <summary>
+ drop-initial-after-adjust
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_after_align">
+ <summary>
+ drop-initial-after-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_before_adjust">
+ <summary>
+ drop-initial-before-adjust
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_before_align">
+ <summary>
+ drop-initial-before-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_size">
+ <summary>
+ drop-initial-size
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.drop_initial_value">
+ <summary>
+ drop-initial-value
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.elevation">
+ <summary>
+ elevation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.empty_cells">
+ <summary>
+ empty-cells
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.filter">
+ <summary>
+ filter
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.fit">
+ <summary>
+ fit
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.fit_position">
+ <summary>
+ fit-position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.float_offset">
+ <summary>
+ float-offset
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font">
+ <summary>
+ font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_effect">
+ <summary>
+ font-effect
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_emphasize">
+ <summary>
+ font-emphasize
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_family">
+ <summary>
+ font-family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_size">
+ <summary>
+ font-size
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_size_adjust">
+ <summary>
+ font-size-adjust
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_stretch">
+ <summary>
+ font-stretch
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_style">
+ <summary>
+ font-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.font_variant">
+ <summary>
+ font-variant
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.grid_columns">
+ <summary>
+ grid-columns
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.grid_rows">
+ <summary>
+ grid-rows
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hanging_punctuation">
+ <summary>
+ hanging-punctuation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.height">
+ <summary>
+ height
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphenate_after">
+ <summary>
+ hyphenate-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphenate_before">
+ <summary>
+ hyphenate-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphenate_character">
+ <summary>
+ hyphenate-character
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphenate_lines">
+ <summary>
+ hyphenate-lines
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphenate_resource">
+ <summary>
+ hyphenate-resource
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.hyphens">
+ <summary>
+ hyphens
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.icon">
+ <summary>
+ icon
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.image_orientation">
+ <summary>
+ image-orientation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.image_rendering">
+ <summary>
+ image-rendering
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.image_resolution">
+ <summary>
+ image-resolution
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.inline_box_align">
+ <summary>
+ inline-box-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.left">
+ <summary>
+ left
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.letter_spacing">
+ <summary>
+ letter-spacing
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_height">
+ <summary>
+ line-height
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_stacking">
+ <summary>
+ line-stacking
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_stacking_ruby">
+ <summary>
+ line-stacking-ruby
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_stacking_shift">
+ <summary>
+ line-stacking-shift
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_stacking_strategy">
+ <summary>
+ line-stacking-strategy
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.list_style">
+ <summary>
+ list-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.list_style_image">
+ <summary>
+ list-style-image
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.list_style_position">
+ <summary>
+ list-style-position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.list_style_type">
+ <summary>
+ list-style-type
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.margin">
+ <summary>
+ margin
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.margin_bottom">
+ <summary>
+ margin-bottom
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.margin_left">
+ <summary>
+ margin-left
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.margin_right">
+ <summary>
+ margin-right
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.margin_top">
+ <summary>
+ margin-top
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.mark">
+ <summary>
+ mark
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.mark_after">
+ <summary>
+ mark-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.mark_before">
+ <summary>
+ mark-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marker_offset">
+ <summary>
+ marker-offset
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marks">
+ <summary>
+ marks
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marquee_direction">
+ <summary>
+ marquee-direction
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marquee_play_count">
+ <summary>
+ marquee-play-count
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marquee_speed">
+ <summary>
+ marquee-speed
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.marquee_style">
+ <summary>
+ marquee-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.max_height">
+ <summary>
+ max-height
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.max_width">
+ <summary>
+ max-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.min_height">
+ <summary>
+ min-height
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.min_width">
+ <summary>
+ min-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.move_to">
+ <summary>
+ move-to
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nav_down">
+ <summary>
+ nav-down
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nav_index">
+ <summary>
+ nav-index
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nav_left">
+ <summary>
+ nav-left
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nav_right">
+ <summary>
+ nav-right
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nav_up">
+ <summary>
+ nav-up
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.opacity">
+ <summary>
+ opacity
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.orphans">
+ <summary>
+ orphans
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.outline">
+ <summary>
+ outline
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.outline_color">
+ <summary>
+ outline-color
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.outline_offset">
+ <summary>
+ outline-offset
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.outline_style">
+ <summary>
+ outline-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.outline_width">
+ <summary>
+ outline-width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.overflow">
+ <summary>
+ overflow
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.overflow_style">
+ <summary>
+ overflow-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.overflow_x">
+ <summary>
+ overflow-x
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.overflow_y">
+ <summary>
+ overflow-y
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.padding">
+ <summary>
+ padding
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.padding_bottom">
+ <summary>
+ padding-bottom
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.padding_left">
+ <summary>
+ padding-left
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.padding_right">
+ <summary>
+ padding-right
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.padding_top">
+ <summary>
+ padding-top
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.page">
+ <summary>
+ page
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.page_break_after">
+ <summary>
+ page-break-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.page_break_before">
+ <summary>
+ page-break-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.page_break_inside">
+ <summary>
+ page-break-inside
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.page_policy">
+ <summary>
+ page-policy
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.pause">
+ <summary>
+ pause
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.pause_after">
+ <summary>
+ pause-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.pause_before">
+ <summary>
+ pause-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.perspective">
+ <summary>
+ perspective
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.perspective_origin">
+ <summary>
+ perspective-origin
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.phonemes">
+ <summary>
+ phonemes
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.pitch">
+ <summary>
+ pitch
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.pitch_range">
+ <summary>
+ pitch-range
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.play_during">
+ <summary>
+ play-during
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.position">
+ <summary>
+ position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.presentation_level">
+ <summary>
+ presentation-level
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.punctuation_trim">
+ <summary>
+ punctuation-trim
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.quotes">
+ <summary>
+ quotes
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rendering_intent">
+ <summary>
+ rendering-intent
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.resize">
+ <summary>
+ resize
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rest">
+ <summary>
+ rest
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rest_after">
+ <summary>
+ rest-after
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rest_before">
+ <summary>
+ rest-before
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.richness">
+ <summary>
+ richness
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.right">
+ <summary>
+ right
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rotation">
+ <summary>
+ rotation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.rotation_point">
+ <summary>
+ rotation-point
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.ruby_align">
+ <summary>
+ ruby-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.ruby_overhang">
+ <summary>
+ ruby-overhang
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.ruby_position">
+ <summary>
+ ruby-position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.ruby_span">
+ <summary>
+ ruby-span
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.size">
+ <summary>
+ size
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.speak">
+ <summary>
+ speak
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.speak_header">
+ <summary>
+ speak-header
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.speak_numeral">
+ <summary>
+ speak-numeral
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.speak_punctuation">
+ <summary>
+ speak-punctuation
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.speech_rate">
+ <summary>
+ speech-rate
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.stress">
+ <summary>
+ stress
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.string_set">
+ <summary>
+ string-set
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.table_layout">
+ <summary>
+ table-layout
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.target">
+ <summary>
+ target
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.target_name">
+ <summary>
+ target-name
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.target_new">
+ <summary>
+ target-new
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.target_position">
+ <summary>
+ target-position
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_align">
+ <summary>
+ text-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_align_last">
+ <summary>
+ text-align-last
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_decoration">
+ <summary>
+ text-decoration
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_emphasis">
+ <summary>
+ text-emphasis
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_height">
+ <summary>
+ text-height
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_indent">
+ <summary>
+ text-indent
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_justify">
+ <summary>
+ text-justify
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_outline">
+ <summary>
+ text-outline
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_overflow">
+ <summary>
+ text-overflow
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_shadow">
+ <summary>
+ text-shadow
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_transform">
+ <summary>
+ text-transform
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.text_wrap">
+ <summary>
+ text-wrap
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.top">
+ <summary>
+ top
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transform">
+ <summary>
+ transform
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transform_origin">
+ <summary>
+ transform-origin
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transform_style">
+ <summary>
+ transform-style
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transition">
+ <summary>
+ transition
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transition_delay">
+ <summary>
+ transition-delay
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transition_duration">
+ <summary>
+ transition-duration
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transition_property">
+ <summary>
+ transition-property
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.transition_timing_function">
+ <summary>
+ transition-timing-function
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.unicode_bidi">
+ <summary>
+ unicode-bidi
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.vertical_align">
+ <summary>
+ vertical-align
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.visibility">
+ <summary>
+ visibility
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_balance">
+ <summary>
+ voice-balance
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_duration">
+ <summary>
+ voice-duration
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_family">
+ <summary>
+ voice-family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_pitch">
+ <summary>
+ voice-pitch
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_pitch_range">
+ <summary>
+ voice-pitch-range
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_rate">
+ <summary>
+ voice-rate
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_stress">
+ <summary>
+ voice-stress
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.voice_volume">
+ <summary>
+ voice-volume
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.volume">
+ <summary>
+ volume
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.white_space">
+ <summary>
+ white-space
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.white_space_collapse">
+ <summary>
+ white-space-collapse
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.widows">
+ <summary>
+ widows
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.width">
+ <summary>
+ width
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.word_break">
+ <summary>
+ word-break
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.word_spacing">
+ <summary>
+ word-spacing
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.word_wrap">
+ <summary>
+ word-wrap
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.fixed">
+ <summary>
+ fixed
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.linear_gradient">
+ <summary>
+ linear-gradient
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.color_dodge">
+ <summary>
+ color-dodge
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.center">
+ <summary>
+ center
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.content_box">
+ <summary>
+ content-box
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty._webkit_flex">
+ <summary>
+ -webkit-flex
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.flex">
+ <summary>
+ flex
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.row_reverse">
+ <summary>
+ row-reverse
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.space_around">
+ <summary>
+ space-around
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.first">
+ <summary>
+ first
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.justify">
+ <summary>
+ justify
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.inter_word">
+ <summary>
+ inter-word
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.uppercase">
+ <summary>
+ uppercase
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.lowercase">
+ <summary>
+ lowercase
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.capitalize">
+ <summary>
+ capitalize
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.nowrap">
+ <summary>
+ nowrap
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.break_all">
+ <summary>
+ break-all
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.break_word">
+ <summary>
+ break-word
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.overline">
+ <summary>
+ overline
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.line_through">
+ <summary>
+ line-through
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.wavy">
+ <summary>
+ wavy
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.myFirstFont">
+ <summary>
+ myFirstFont
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssProperty.sensation">
+ <summary>
+ sensation
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes">
+ <summary>
+ Define Tag type. 
+ </summary>
+ <remarks>
+ |CSS version|选择器              |例子                  |例子描述                                          |         
+ |-----------|--------------------|---------------------|-------------------------------------------------|
+ | 1         |.class              |.intro               |选择 class="intro" 的所有元素。                   |
+ | 1         |#id                 |#firstname           |选择 id="firstname" 的所有元素。                  |
+ | 2         |*                   |*                    |选择所有元素。	                                 |
+ | 1         |element             |p                    |选择所有 &lt;p> 元素。	                         |
+ | 1         |element,element     |div,p	               |选择所有 &lt;div> 元素和所有 &lt;p> 元素。         |
+ | 1         |element element     |div p	               |选择 &lt;div> 元素内部的所有 &lt;p> 元素。         |
+ | 2         |element>element     |div>p                |选择父元素为 &lt;div> 元素的所有 &lt;p> 元素。      |
+ | 2         |element+element     |div+p                |选择紧接在 &lt;div> 元素之后的所有 &lt;p> 元素。    |
+ | 2         |[attribute]         |[target]             |选择带有 target 属性所有元素。                     |
+ | 2         |[attribute=value]   |[target=_blank]      |选择 target="_blank" 的所有元素。	                 |
+ | 2         |[attribute~=value]  |[title~=flower]      |选择 title 属性包含单词 "flower" 的所有元素。       |
+ | 2         |[attribute\|=value] |[lang|=en]	       |选择 lang 属性值以 "en" 开头的所有元素。            |
+ | 1         |:link               |a:link	           |选择所有未被访问的链接。                            |
+ | 1         |:visited            |a:visited	           |选择所有已被访问的链接。                            |
+ | 1         |:active             |a:active	           |选择活动链接。                                     |
+ | 1         |:hover              |a:hover	           |选择鼠标指针位于其上的链接。                        |
+ | 2         |:focus              |input:focus          |选择获得焦点的 input 元素。	                      |
+ | 1         |:first-letter       |p:first-letter       |选择每个 &lt;p> 元素的首字母。                      |
+ | 1         |:first-line         |p:first-line	       |选择每个 &lt;p> 元素的首行。                        |
+ | 2         |:first-child        |p:first-child        |选择属于父元素的第一个子元素的每个 &lt;p> 元素。      |
+ | 2         |:before             |p:before	           |在每个 &lt;p> 元素的内容之前插入内容。               |
+ | 2         |:after              |p:after              |在每个 &lt;p> 元素的内容之后插入内容。               |
+ | 2         |:lang(language)     |p:lang(it)	       |选择带有以 "it" 开头的 lang 属性值的每个 &lt;p> 元素。|
+ | 3         |element1~element2   |p~ul	               |选择前面有 &lt;p> 元素的每个 &lt;ul> 元素。	       |
+ | 3         |[attribute^=value]  |a[src^="https"]      |选择其 src 属性值以 "https" 开头的每个 &lt;a> 元素。 |
+ | 3         |[attribute$=value]  |a[src$=".pdf"]       |选择其 src 属性以 ".pdf" 结尾的所有 &lt;a> 元素。    |
+ | 3         |[attribute*=value]  |a[src*="abc"]	       |选择其 src 属性中包含 "abc" 子串的每个 &lt;a> 元素。 |
+ | 3         |:first-of-type      |p:first-of-type      |选择属于其父元素的首个 &lt;p> 元素的每个 &lt;p> 元素。|
+ | 3         |:last-of-type       |p:last-of-type       |选择属于其父元素的最后 &lt;p> 元素的每个 &lt;p> 元素。|
+ | 3         |:only-of-type       |p:only-of-type       |选择属于其父元素唯一的 &lt;p> 元素的每个 &lt;p> 元素。|
+ | 3         |:only-child         |p:only-child	       |选择属于其父元素的唯一子元素的每个 &lt;p> 元素。	   |
+ | 3         |:nth-child(n)       |p:nth-child(2)       |选择属于其父元素的第二个子元素的每个 &lt;p> 元素。	   |
+ | 3         |:nth-last-child(n)  |p:nth-last-child(2)  |同上，从最后一个子元素开始计数。	                   |
+ | 3         |:nth-of-type(n)     |p:nth-of-type(2)     |选择属于其父元素第二个 &lt;p> 元素的每个 &lt;p> 元素。|
+ | 3         |:nth-last-of-type(n)|p:nth-last-of-type(2)|同上，但是从最后一个子元素开始计数。	               |
+ | 3         |:last-child         |p:last-child	       |选择属于其父元素最后一个子元素每个 &lt;p> 元素。	   |
+ | 3         |:root               |:root                |选择文档的根元素。	                               |
+ | 3         |:empty              |p:empty	           |选择没有子元素的每个 &lt;p> 元素（包括文本节点）。	   |
+ | 3         |:target             |#news:target         |选择当前活动的 #news 元素。	                       |
+ | 3         |:enabled            |input:enabled	       |选择每个启用的 &lt;input> 元素。                     |
+ | 3         |:disabled           |input:disabled       |选择每个禁用的 &lt;input> 元素	                   |
+ | 3         |:checked            |input:checked	       |选择每个被选中的 &lt;input> 元素。	               |
+ | 3         |:Not(selector)      |:Not(p)	           |选择非 &lt;p> 元素的每个元素。	                   |
+ | 3         |:selection          |:selection	       |选择被用户选取的元素部分。                           |
+ 
+ > "CSS version" 列指示该属性是在哪个 CSS 版本中定义的。（CSS1、CSS2 还是 CSS3。）
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes.expression">
+ <summary>
+ 表达式作为选择器
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes.tag">
+ <summary>
+ Normal HTMl Tag.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes.class">
+ <summary>
+ Class in HTML Code.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes.id">
+ <summary>
+ Tag in HTML Code.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.HtmlTags">
+ <summary>
+ HTML Tags. 
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.HtmlTags.NA">
+ <summary>
+ Invalid tag name
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile">
+ <summary>
+ CSS文件的对象模型，一个CSS文件是由若干个selector节点选择器所构成的，以及每一个选择器都是由若干样式属性定义所构成
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.Selectors">
+ <summary>
+ a collection of the html element node selector expression
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.ByID">
+ <summary>
+ GetElementByID
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.ByClass">
+ <summary>
+ GetElementsByClass
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.ByTag">
+ <summary>
+ By html tags
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.GetAllStylesByType(Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes)">
+ <summary>
+ 获取某一种类型之下的所有的该类型的CSS的样式定义
+ </summary>
+ <param name="type"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSFile.FindStyle(System.String,Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes)">
+ <summary>
+ 根据类型来获取得到相应的选择器的样式
+ </summary>
+ <param name="name$">没有class或者ID的符号前缀的名称</param>
+ <param name="type">class还是ID或者还是html的标签名称？</param>
+ <returns></returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.NamespaceDoc">
+ <summary>
+ The CSS parser: selector, rule file and URL evaluation models together with the CSS
+ property value parsers.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser">
+ <summary>
+ Parser css code to add/remove or manage it.
+ </summary>
+ <remarks>
+ #### Jo-CSS-Parser
+ 
+ https://github.com/rizwan3d/Jo-CSS-Parser
+ 
+ > Complete Css Parser Writen in C#
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.BuildSelector(System.String,Microsoft.VisualBasic.MIME.Html.Language.CSS.CSSSelectorTypes)">
+ <summary>
+ 创建元素选择器表达式
+ </summary>
+ <param name="name"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.GetTagWithCSS(System.String,System.String)">
+ <summary>
+ 主要的CSS解析函数
+ </summary>
+ <param name="CSS">CSS文本内容</param>
+ <returns></returns>
+ <remarks>
+ 对于从html标签的style属性中解析出来的样式字符串，会被直接赋值命名为``*``。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.ParseStyle(System.String)">
+ <summary>
+ Parse the css style string for a given selector, example as: ``background-color: lightblue;``
+ </summary>
+ <param name="style">the style text inside an element node selector</param>
+ <returns></returns>
+ <remarks>
+ all of the css property name is in lower case.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.CommentBlock">
+ <summary>
+ CSS的注释总是以/*起始，以*/结束的
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.IndivisualTags(System.String)">
+ <summary>
+ ###### 2017-10-1
+ 
+ 原来的这个解析函数还没有考虑到注释的问题
+ 当CSS之中存在注释的时候就无法正常工作了
+ </summary>
+ <param name="input"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.CssParser.GetProperty(System.String)">
+ <summary>
+ 将CSS字符串解析为键值对集合
+ </summary>
+ <param name="input"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.CSS.Selector">
+ <summary>
+ CSS之中的样式选择器
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.Selector.Selector">
+ <summary>
+ 选择器的名称
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.Selector.CSSValue">
+ <summary>
+ CSS style value without selector name.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Language.CSS.Selector.Name">
+ <summary>
+ Get the selector text name
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.UrlEvaluator.IsURLPattern(System.String)">
+ <summary>
+ ``url(xxxxx)``
+ </summary>
+ <param name="expression"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Language.CSS.UrlEvaluator.EvaluateAsImage(System.String)">
+ <summary>
+ 暂时还不支持SVG图像
+ </summary>
+ <param name="expression">
+ + url('filepath') 图片文件路径
+ + url('data:xxx') base64编码的data uri图像数据
+ </param>
+ <returns></returns>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.Escaping.scriptOpen">
+ <summary>
+ the html script tag is a special tag 
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.HtmlTokens.openTag">
+ <summary>
+ &lt;
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.HtmlTokens.closeTag">
+ <summary>
+ >
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.HtmlTokens.equalsSymbol">
+ <summary>
+ =
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Language.HtmlTokens.splash">
+ <summary>
+ /
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Language.NamespaceDoc">
+ <summary>
+ The HTML parser: the tokenizer, token types, escaping rules and the parser that builds the
+ document object model from HTML source text.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants">
+ <summary>
+ String constants to avoid typing errors.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Cm">
+ <summary>
+ Centimeters
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Mm">
+ <summary>
+ Milimeters
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Px">
+ <summary>
+ Pixels
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.In">
+ <summary>
+ Inches
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Em">
+ <summary>
+ Em - The font size of the relevant font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Ex">
+ <summary>
+ The 'x-height' of the relevan font
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Pt">
+ <summary>
+ Points
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssConstants.Pc">
+ <summary>
+ Picas
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.DefaultStyleSheet">
+ <summary>
+ CSS Specification's Default Style Sheet for HTML 4
+ </summary>
+ <remarks>
+ http://www.w3.org/TR/CSS21/sample.html
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.ErrorOnImageIcon">
+ <summary>
+ Html Fragment used to draw the icon that shows an error on an IMG HTML element
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.ErrorOnObjectIcon">
+ <summary>
+ Html Fragment used to draw the icon that shows an error on an OBJECT HTML element
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontSize">
+ <summary>
+ Default font size in points. Change this value to modify the default font size.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontSerif">
+ <summary>
+ Default font used for the generic 'serif' family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontSansSerif">
+ <summary>
+ Default font used for the generic 'sans-serif' family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontCursive">
+ <summary>
+ Default font used for the generic 'cursive' family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontFantasy">
+ <summary>
+ Default font used for the generic 'fantasy' family
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssDefaults.FontMonospace">
+ <summary>
+ Default font used for the generic 'monospace' family
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength">
+ <summary>
+ Represents and gets info about a CSS Length
+ </summary>
+ <remarks>
+ http://www.w3.org/TR/CSS21/syndata.html#length-units
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.Number">
+ <summary>
+ Gets the number in the length
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.HasError">
+ <summary>
+ Gets if the length has some parsing error
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.IsPercentage">
+ <summary>
+ Gets if the length represents a precentage (not actually a length)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.IsRelative">
+ <summary>
+ Gets if the length is specified in relative units
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.Unit">
+ <summary>
+ Gets the unit of the length
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.Length">
+ <summary>
+ Gets the length as specified in the string
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.#ctor(System.String)">
+ <summary>
+ Creates a new CssLength from a length specified on a CSS style sheet or fragment
+ </summary>
+ <param name="length">Length as specified in the Style Sheet or style fragment</param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.ConvertEmToPoints(System.Single)">
+ <summary>
+ If length is in Ems, returns its value in points
+ </summary>
+ <param name="emSize">Em size factor to multiply</param>
+ <returns>Points size of this em</returns>
+ <exception cref="T:System.InvalidOperationException">If length has an error or isn't in ems</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.ConvertEmToPixels(System.Single)">
+ <summary>
+ If length is in Ems, returns its value in pixels
+ </summary>
+ <param name="pixelFactor">Pixel size factor to multiply</param>
+ <returns>Pixels size of this em</returns>
+ <exception cref="T:System.InvalidOperationException">If length has an error or isn't in ems</exception>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssLength.ToString">
+ <summary>
+ Returns the length formatted ready for CSS interpreting.
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssPropertyAttribute">
+ <summary>
+ Used to mark a property as a Css property.
+ The <see cref="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssPropertyAttribute.Name"/> property is used to specify the oficial CSS name
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssPropertyAttribute.Name">
+ <summary>
+ Gets or sets the name of the CSS property
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssPropertyAttribute.#ctor(System.String)">
+ <summary>
+ Creates a new CssPropertyAttribute
+ </summary>
+ <param name="name">Name of the Css property</param>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Left">
+ <summary>
+ Left of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Top">
+ <summary>
+ Top of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Width">
+ <summary>
+ Width of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Height">
+ <summary>
+ Height of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Right">
+ <summary>
+ Gets or sets the right of the rectangle. When setting, it only affects the Width of the rectangle.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Bottom">
+ <summary>
+ Gets or sets the bottom of the rectangle. When setting, it only affects the Height of the rectangle.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Bounds">
+ <summary>
+ Gets or sets the bounds of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Location">
+ <summary>
+ Gets or sets the location of the rectangle
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssRectangle.Size">
+ <summary>
+ Gets or sets the size of the rectangle
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.ParseNumber(System.String,System.Single)">
+ <summary>
+ Evals a number and returns it. If number is a percentage, it will be multiplied by <paramref name="hundredPercent"/>
+ </summary>
+ <param name="number">Number to be parsed</param>
+ <param name="hundredPercent">Number that represents the 100% if parsed number is a percentage</param>
+ <returns>Parsed number. Zero if error while parsing.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.GetActualColor(System.String)">
+ <summary>
+ Parses a color value in CSS style; e.g. #ff0000, red, rgb(255,0,0), rgb(100%, 0, 0)
+ </summary>
+ <param name="colorValue">Specified color value; e.g. #ff0000, red, rgb(255,0,0), rgb(100%, 0, 0)</param>
+ <returns>System.Drawing.Color value</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.SplitValues(System.String)">
+ <summary>
+ Split the value by spaces; e.g. Useful in values like 'padding:5 4 3 inherit'
+ </summary>
+ <param name="value">Value to be splitted</param>
+ <returns>Splitted and trimmed values</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.SplitValues(System.String,System.Char)">
+ <summary>
+ Split the value by the specified separator; e.g. Useful in values like 'padding:5 4 3 inherit'
+ </summary>
+ <param name="value">Value to be splitted</param>
+ <returns>Splitted and trimmed values</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.GetTypeInfo(System.String,System.String@)">
+ <summary>
+ Detects the type name in a path. 
+ E.g. Gets System.Drawing.Graphics from a path like System.Drawing.Graphics.Clear
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.DetectSource(System.String)">
+ <summary>
+ Returns the object specific to the path
+ </summary>
+ <param name="path"></param>
+ <returns>One of the following possible objects: FileInfo, MethodInfo, PropertyInfo</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.GetStyleSheet(System.String)">
+ <summary>
+ Gets the content of the stylesheet specified in the path
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.CSS.CssValue.GoLink(System.String)">
+ <summary>
+ Executes the desired action when the user clicks a link
+ </summary>
+ <param name="href"></param>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.CSS.NamespaceDoc">
+ <summary>
+ The CSS layout engine: the box model, block and line boxes, layout, text splitting and
+ drawing helpers that lay out CSS styled HTML content.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.HtmlConstants">
+ <summary>
+ Defines HTML strings
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.HtmlRenderer">
+ <summary>
+ A Professional HTML Renderer You Will Use
+ 
+ > https://www.codeproject.com/Articles/32376/A-Professional-HTML-Renderer-You-Will-Use
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.Render.HtmlRenderer.References">
+ <summary>
+ Gets a list of Assembly references used to search for external references
+ </summary>
+ <remarks>
+ This references are used when loading images and other content, when
+ rendering a piece of HTML/CSS
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.HtmlRenderer.AddReference(System.Reflection.Assembly)">
+ <summary>
+ Adds a reference to the References list if not yet listed
+ </summary>
+ <param name="assembly"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.HtmlRenderer.LoadEnvironment(Microsoft.VisualBasic.Imaging.IGraphics)">
+ <summary>
+ load the css styling environment from the given graphics canvas object.
+ </summary>
+ <param name="g"></param>
+ <returns></returns>
+ <remarks>
+ set the <see cref="P:Microsoft.VisualBasic.Imaging.IGraphics.Stroke"/> to nothing if no needs of the default line stroke value
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.NamespaceDoc">
+ <summary>
+ The lightweight HTML renderer: the render tree model (tags, text strings and containers)
+ and the renderer that draws an HTML document.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.Parser">
+ <summary>
+ Collection of regular expressions used when parsing
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssProperties">
+ <summary>
+ Extracts properties and values from a Css property block; e.g. property:value;
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssComments">
+ <summary>
+ Extracts CSS style comments; e.g. /* comment */
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssAtRules">
+ <summary>
+ Extracts CSS at-rules; e.g. @media print { block1{} block2{} }
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssMediaTypes">
+ <summary>
+ Extracts the media types from a media at-rule; e.g. @media print, 3d, screen {
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssBlocks">
+ <summary>
+ Extracts defined blocks in CSS. 
+ WARNING: Blocks will include blocks inside at-rules.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssNumber">
+ <summary>
+ Extracts a number; e.g.  5, 6, 7.5, 0.9
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssPercentage">
+ <summary>
+ Extracts css percentages from the string; e.g. 100% .5% 5.4%
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssLength">
+ <summary>
+ Extracts CSS lengths; e.g. 9px 3pt .89em
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssColors">
+ <summary>
+ Extracts CSS colors; e.g. black white #fff #fe98cd rgb(5,5,5) rgb(45%, 0, 0)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssLineHeight">
+ <summary>
+ Extracts line-height values (normal, numbers, lengths, percentages)
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssBorderStyle">
+ <summary>
+ Extracts CSS border styles; e.g. solid none dotted
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssBorderWidth">
+ <summary>
+ Extracts CSS border widthe; e.g. 1px thin 3em
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontFamily">
+ <summary>
+ Extracts font-family values
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontStyle">
+ <summary>
+ Extracts CSS font-styles; e.g. normal italic oblique
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontVariant">
+ <summary>
+ Extracts CSS font-variant values; e.g. normal, small-caps
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontWeight">
+ <summary>
+ Extracts font-weight values; e.g. normal, bold, bolder...
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontSize">
+ <summary>
+ Exracts font sizes: xx-small, larger, small, 34pt, 30%, 2em
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.CssFontSizeAndLineHeight">
+ <summary>
+ Gets the font-size[/line-height]? on the font shorthand property.
+ Check http://www.w3.org/TR/CSS21/fonts.html#font-shorthand
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.HtmlTag">
+ <summary>
+ Extracts HTML tags
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.Parser.HmlTagAttributes">
+ <summary>
+ Extracts attributes from a HTML tag; e.g. att=value, att="value"
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.Parser.Match(System.String,System.String)">
+ <summary>
+ Extracts matches from the specified source
+ </summary>
+ <param name="regex">Regular expression to extract matches</param>
+ <param name="source">Source to extract matches</param>
+ <returns>Collection of matches</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.Parser.Search(System.String,System.String)">
+ <summary>
+ Searches the specified regex on the source
+ </summary>
+ <param name="regex"></param>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.Parser.Search(System.String,System.String,System.Int32@)">
+ <summary>
+ Searches the specified regex on the source
+ </summary>
+ <param name="regex"></param>
+ <param name="source"></param>
+ <returns></returns>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.TextString.WeightStyles.sup">
+ <summary>
+ 上标
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.MIME.Html.Render.TextString.WeightStyles.sub">
+ <summary>
+ 下标
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.Render.TextAPI">
+ <summary>
+ 用于简单的HTML文档渲染
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.TextAPI.GetCssFont(Microsoft.VisualBasic.MIME.Html.Document.HtmlElement,Microsoft.VisualBasic.MIME.Html.CSS.CSSEnvirnment)">
+ <summary>
+ 从当前的这个html节点之中的style属性获取得到字体样式的定义数据
+ </summary>
+ <param name="node"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.TextAPI.TryParse(System.String,System.String,System.String,System.Int32)">
+ <summary>
+ 执行html栈空间解析
+ 
+ > 在这里假设所有的文本之中的``&lt;``符号已经被转义为``&amp;lt;``
+ </summary>
+ <param name="html">假设所传递进入这个函数参数的html文本字符串都是完全正确的格式的</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.MIME.Html.Render.TextAPI.popTagName(Microsoft.VisualBasic.Emit.Marshal.Pointer{System.Char})">
+ <summary>
+ 当遇到空格或者>符号的时候, 说明得到了一个html标签
+ </summary>
+ <param name="buffer"></param>
+ <returns></returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.XmlMeta.CSS">
+ <summary>
+ Html之中的CSS样式
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.XmlMeta.CSS.type">
+ <summary>
+ ``text/css``
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.XmlMeta.CSS.style">
+ <summary>
+ 具体的CSS内容
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.XmlMeta.NamespaceDoc">
+ <summary>
+ XML node models (generic nodes, meta nodes and CSS nodes) shared by the HTML tooling.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.MIME.Html.XmlMeta.Node">
+ <summary>
+ The base of the html node
+ </summary>
+ <remarks>
+ this object class model has these basically html element attributes:
+ 
+ 1. id
+ 2. class
+ 3. style
+ 
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.XmlMeta.Node.class">
+ <summary>
+ node class id, just like the id in HTML, you can also using this attribute to tweaks on the style by CSS.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.MIME.Html.XmlMeta.Node.style">
+ <summary>
+ CSS style definition <see cref="T:Microsoft.VisualBasic.MIME.Html.CSS.ICSSValue"/>.(请注意，假若是SVG对象则赋值这个属性无效)
+ </summary>
+ <returns></returns>
+</member>
+</members>
+</doc>

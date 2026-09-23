@@ -1,0 +1,911 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+FlywireSnake
+</name>
+</assembly>
+<members>
+<member name="T:FlywireSnake.SnakeBrain">
+ <summary>
+ 果蝇大脑的"游戏模式"：把感觉通道的电流注入<b>感觉神经元</b>，逐 tick 推进一步，
+ 再从<b>运动神经元</b>读出活动。
+ </summary>
+ <remarks>
+ <b>神经通路</b>（全部来自这一份真实连接组）：
+ <code>
+   游戏状态 → 16 个感觉通道 → 注入 afferent（感觉输入）神经元
+            → 递归脉冲网络（sparse LIF，每 tick 一步）
+            → 读出 efferent（运动 / 下行输出）神经元的放电率
+ </code>
+ 
+ 这两类神经元不是随便挑的：<c>classification.csv</c> 的 ``flow`` 列把全脑 139,255 个神经元
+ 分成 ``afferent``（5,536 个感觉输入）/ ``efferent``（441 个运动输出）/ ``intrinsic``，
+ 正好对应"刺激哪里"与"从哪里读出"。
+ 
+ <b>与刺激实验的区别</b>：刺激实验是"跑固定步数然后看结果"，这里需要"每 tick 推进一步、
+ 每步都读数" —— 因此直接调用 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>，
+ 状态在整局游戏里持续累积，只在开局时 <see cref="M:FlywireSnake.SnakeBrain.ResetEpisode"/> 一次。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeBrain.m_external">
+ <summary>外部电流张量 [1, N]（跨 tick 复用同一个缓冲）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.SensorNeurons">
+ <summary>每个感觉通道对应的神经元索引。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.MotorGroups">
+ <summary>运动读出分组（默认 4 组，对应 4 个动作方向）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.ActiveNeurons">
+ <summary>本 tick 发放过的全部神经元（供三维可视化）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.MotorFeatures">
+ <summary>每个运动神经元的滑动窗放电率（解码器的特征向量，长度 = 运动神经元数）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.MotorGroupSpikes">
+ <summary>每个运动读出组的本 tick 脉冲数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.TickCount">
+ <summary>已推进的 tick 数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.SensorCurrent">
+ <summary>感觉通道的注入电流标定值（通道强度 1.0 时注入的电流）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.FeatureWindow">
+ <summary>放电率特征的滑动窗宽（tick）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.Units">
+ <summary>神经元总数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.FlowSummary">
+ <summary>神经元功能分层统计（诊断）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.ActiveCount">
+ <summary>最近一个 tick 的总发放神经元数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.MotorActiveCount">
+ <summary>最近一个 tick 发放的运动神经元数（读出通路是否"活着"的指标）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.LastStepPath">
+ <summary>最近一个 tick 实际走的单步实现路径（Fused = 融合内核，OpByOp = 逐算子回退）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeBrain.MotorActiveSpikes">
+ <summary>最近一个 tick 里运动神经元的总脉冲数。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.#ctor(FlywireAI.Connectome.ConnectomeIndex,FlywireAI.Connectome.BrainNetwork,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 在已装配好的网络之上构造"游戏模式"的大脑。
+ </summary>
+ <param name="index">连接组索引（提供 flow 注释）</param>
+ <param name="network">已装配的稀疏递归网络（<c>BrainNetworkBuilder.Assemble</c>）</param>
+ <param name="sensorsPerChannel">
+ 每个感觉通道使用多少个感觉神经元。
+ </param>
+ <param name="groupCount">运动读出分组数（= 动作数）</param>
+ <param name="seed">挑选神经元的随机种子（保证可复现）</param>
+ <remarks>
+ 装配与增益标定（读连接表、建 CSR）是一次性的工作，由 <see cref="T:FlywireSnake.SnakePlayground"/> 完成；
+ 本类只负责"选神经元 + 逐步推进"。
+ 
+ <b>为什么默认 256 个感觉神经元/通道，而不是几十个</b>：这份连接组做过结构归一化，
+ 少量神经元的输入只会激起局部响应 —— 实测 16 通道 × 32 个（512 个注入）时，
+ 运动神经元的放电几乎为零，解码器学不到任何东西。256 个/通道（全脑 4,096 个注入）
+ 才能让响应扩散到全脑，运动神经元才有可读出的信号
+ （对应刺激实验里"电极足够大"的情形）。
+ 
+ 另外：形参名是 <c>groupCount</c> 而不是"motorGroups" —— VB 不区分大小写，
+ 后者会遮蔽 <see cref="P:FlywireSnake.SnakeBrain.MotorGroups"/> 属性，于是所有
+ <c>MotorGroups.Length</c> 都会变成对整数取 Length。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.ResetEpisode">
+ <summary>开局复位（膜电位 / 脉冲 / 计数清零）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.Advance(System.Double[])">
+ <summary>
+ 推进一个 tick：注入感觉电流 → 网络走一步 → 读出发放活动。
+ </summary>
+ <param name="sensorValues">16 个感觉通道的强度 [0,1]</param>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.readSpikes(System.Double[])">
+ <summary>从本 tick 的脉冲向量里读出运动神经元活动与全体活跃神经元。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.GroupSpikes(System.Int32)">
+ <summary>取某个运动读出组的本 tick 脉冲数。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.Dispose">
+ <summary>
+ 释放这份大脑占用的显存：常驻的膜电位 / 脉冲缓冲 + 外部电流张量。
+ </summary>
+ <remarks>
+ 每开一次观战窗口都会装配一份<b>新</b>的大脑（<see cref="M:FlywireSnake.SnakePlayground.CreateBrain(System.Int32)"/>），
+ 而常驻缓冲不参与后端 LRU 淘汰 —— 不释放的话反复开关窗口会一点点吃掉显存。
+ 关窗即停机、重开即重新装配，因此这里释放是安全的。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.splitChannels(System.Int32[],System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 把神经元池均分到各个感觉通道（每通道固定数量，池内按种子打乱后切片）。
+ </summary>
+ <remarks>
+ 用打乱切片而不是"按索引取前 N 个"：这份数据集的索引顺序与解剖位置无关，
+ 直接取前 N 个会让所有感觉通道共用同一小片神经元（毫无空间分布）。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeBrain.splitGroups(System.Int32[],System.Int32)">
+ <summary>把运动神经元均分成若干读出组（按索引升序切片，保证可复现）。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeDecisionFilter">
+ <summary>
+ 读出层之后的决策平滑器：把"逐 tick 各自取最大值"变成"带惯性的一串决策"。
+ </summary>
+ <remarks>
+ <b>为什么需要它</b>：运动神经元的放电率本身带噪声，而且大脑对感觉输入有响应延迟，
+ 于是每一 tick 独立取 argmax 会让蛇在相邻 tick 之间左右横跳 ——
+ 从观战窗口看就是"没有目标地乱转"（随机游走）。这里做两件事：
+ 
+ <list type="bullet">
+   <item><b>平滑</b>：对各动作的打分做指数滑动平均（顺带把大脑的响应延迟压平）；</item>
+   <item><b>迟滞</b>：换方向要有代价 —— 新方向的平滑打分必须比"保持当前方向"
+         高出 <see cref="P:FlywireSnake.SnakeDecisionFilter.Margin"/> 才会转，否则继续走。</item>
+ </list>
+ 
+ 另外留了一个安全阀：当前方向如果<b>已经走不通</b>（该方向的危险通道亮着），
+ 就忽略迟滞立刻重新决策 —— 迟滞不该让蛇径直撞上去。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakeDecisionFilter.Smoothing">
+ <summary>滑动平均系数：越大越相信当前这一 tick 的打分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeDecisionFilter.Margin">
+ <summary>
+ 转向迟滞的<b>相对</b>余量：占"当前各动作打分跨度"的比例（0 = 不迟滞，永远取最高分方向）。
+ </summary>
+ <remarks>
+ 必须相对而不能绝对：打分的绝对量级取决于读出层权重与放电率，
+ 一个固定的绝对余量要么小到形同虚设，要么大到把蛇钉死在直线上（实测过后者）。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakeDecisionFilter.Smoothed">
+ <summary>平滑后的各动作打分（诊断用；还没决策过时为 Nothing）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeDecisionFilter.HoldTicks">
+ <summary>
+ 决策保持的 tick 数：&gt;1 表示一次决策至少生效这么多 tick（转向冷却）。
+ </summary>
+ <remarks>
+ 读出层逐 tick 的一致率只有 74% 上下，而贪吃蛇里一次错误的转向就可能是致命的：
+ 让每个决策"至少稳住几 tick"，误差累积的速度就按同样的倍数降下来，
+ 蛇的走向也会明显更果断（配合迟滞一起用）。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeDecisionFilter.Reset">
+ <summary>开新一局时清空历史：上一局的走向不该带进这一局。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecisionFilter.Decide(System.Double[],System.Int32,System.Boolean)">
+ <summary>
+ 在读出层的原始打分上做平滑与迟滞，给出本 tick 的动作。
+ </summary>
+ <param name="scores">读出层对各动作的打分（禁止的动作是 <c>-∞</c>）</param>
+ <param name="incumbent">当前朝向对应的动作编号（"继续保持"的候选）</param>
+ <param name="mustTurn">当前方向是否已经走不通（被挡住 / 是禁止的反向）</param>
+</member>
+<member name="M:FlywireSnake.SnakeDecisionFilter.commit(System.Int32)">
+ <summary>记下这次决策，并开始它的"保持期"。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecisionFilter.smooth(System.Double[])">
+ <remarks>
+ 被禁止的动作（<c>-∞</c>）既不参与平滑，也不能被平滑"记住"：
+ 否则蛇转向之后，原本被禁的方向会因为 <c>-∞ × (1 - rate)</c> 的余毒而长时间抬不起头。
+ </remarks>
+</member>
+<member name="T:FlywireSnake.SnakeSample">
+ <summary>一条训练样本：运动神经元特征 + 示范动作。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSample.Features">
+ <summary>特征向量（运动神经元的滑动窗放电率，末尾通常是偏置项）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSample.Action">
+ <summary>示范动作编号（0=上 1=下 2=左 3=右）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSample.Episode">
+ <summary>当前回合编号（用于把样本按回合切分做验证）。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeDecoder">
+ <summary>
+ 运动解码器：把果蝇大脑运动神经元的放电率线性映射到 4 个动作。
+ </summary>
+ <remarks>
+ <b>为什么需要一个"解码器"</b>：这份连接组没有标注过任何"往左走"的运动语义，
+ 运动神经元的活动是一团高维信号。解码器在这里扮演的是<b>脑机接口</b>的角色 ——
+ 用一个线性读出把大脑状态翻译成设备指令（这正是神经假体里的标准做法）。
+ 
+ 训练方式是<b>模仿学习</b>：先用一个贪心追食物的教师策略玩若干回合，
+ 记录每个 tick 的（运动神经元活动 → 教师动作），再用 softmax 交叉熵训练权重。
+ 训练完成后由大脑的实时活动决定蛇的走向，教师不再参与。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakeDecoder.FeatureCount">
+ <summary>特征维度。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeDecoder.ActionCount">
+ <summary>动作数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeDecoder.TrainedSamples">
+ <summary>训练样本数（诊断）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeDecoder.TrainAccuracy">
+ <summary>训练集上的准确率（诊断）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.#ctor(System.Int32,System.Int32)">
+ <remarks>
+ 形参名避开 <c>featureCount</c>：VB 不区分大小写，与 <see cref="P:FlywireSnake.SnakeDecoder.FeatureCount"/> 属性
+ 同名会让"赋值"变成自赋值，特征维度永远是 0。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Weights">
+ <summary>取权重（诊断 / 保存）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Scores(System.Double[],System.Int32)">
+ <summary>各动作的打分。</summary>
+ <param name="features">特征向量（长度必须等于 <see cref="P:FlywireSnake.SnakeDecoder.FeatureCount"/>）</param>
+ <param name="forbidden">禁止的动作（蛇不能反向），设为 -∞</param>
+ <remarks>
+ 局部变量不能叫 <c>scores</c>：与函数同名（VB 不区分大小写）。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Decide(System.Double[],System.Int32)">
+ <summary>按打分挑一个动作。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Train(System.Collections.Generic.IList{FlywireSnake.SnakeSample},System.Int32,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 用样本训练（softmax 交叉熵 + 小步长 SGD）。
+ </summary>
+ <param name="samples">训练样本</param>
+ <param name="epochs">迭代轮数</param>
+ <param name="rate">学习率</param>
+ <param name="l2">L2 正则（防止权重发散）</param>
+ <param name="balance">
+ 是否按类别频率加权（默认开）。示范动作里"直行"占压倒性多数，
+ 不加权的话交叉熵最省事的解法就是"永远猜直行"，
+ 准确率看起来很高（因为基线本来就高），但转向学不到 —— 蛇就会一直往前撞。
+ </param>
+ <returns>训练集准确率</returns>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Accuracy(System.Collections.Generic.IList{FlywireSnake.SnakeSample})">
+ <summary>样本上的准确率（与教师动作的一致率）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Diagnose(System.Collections.Generic.IList{FlywireSnake.SnakeSample})">
+ <summary>
+ 训练集诊断：示范动作的类别分布、各类召回率、以及"永远猜最多那一类"的基线。
+ </summary>
+ <remarks>
+ <b>为什么必须看这个</b>：示范动作里"直行"占比很高，所以"一致率 70%"完全可能
+ 只是一个只会直行的读出层（基线本来就有 60%+），转向一个都没学会。
+ 只有召回率才说明读出层是不是真的在"看"大脑。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.classWeights(System.Collections.Generic.IList{FlywireSnake.SnakeSample},System.Boolean)">
+ <summary>
+ 每类的样本权重（<paramref name="balance"/> 为 False 时全部为 1）。
+ </summary>
+ <remarks>
+ 反频率加权：样本少的动作拿到更大的权重，把"永远猜多数类"这条捷径堵掉。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Save(System.String)">
+ <summary>把权重写成 csv（首行为 ""action,feature_count""，其后每行一个动作）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeDecoder.Load(System.String,System.Int32)">
+ <summary>从 csv 读回权重（特征维度必须一致）。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeTrainingReport">
+ <summary>训练 / 评估报告。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.Samples">
+ <summary>采集到的训练样本数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.Accuracy">
+ <summary>训练集上与教师动作的一致率。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.UntrainedScore">
+ <summary>未训练解码器（随机读出）的均分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.TeacherScore">
+ <summary>教师（贪心）策略的均分 —— 操作逻辑的上限参考。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.TrainedScore">
+ <summary>训练后由果蝇大脑驱动的均分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.Episodes">
+ <summary>评估局数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.MaxTicks">
+ <summary>每局最大 tick 数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.ElapsedMs">
+ <summary>本阶段耗时 (毫秒)。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeTrainingReport.TrainedDecoder">
+ <summary>
+ 训练好的解码器（界面可以拿它替换正在游玩的解码器，让"训练后的大脑"立刻上场）。
+ </summary>
+</member>
+<member name="T:FlywireSnake.SnakePlayground">
+ <summary>
+ 果蝇大脑玩贪吃蛇的一站式装配：连接组 → CSR → 网络 → 大脑 → 会话 / 训练 / 评估。
+ </summary>
+ <remarks>
+ <b>为什么要单独有一层</b>：装配（读 261 MB 连接表、建 CSR、标定增益）是一次性、
+ 且与"玩哪一局"无关的工作；<see cref="T:FlywireSnake.SnakeBrain"/> 只负责逐 tick 推进，
+ <see cref="T:FlywireSnake.SnakeSession"/> 只负责推进游戏。把装配收在这里，界面与命令行
+ 就都能"装一次、玩多局、训练多轮"。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.Index">
+ <summary>连接组索引（提供 flow / 注释信息）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.Matrix">
+ <summary>CSR 权重矩阵（行 = 突触前，列 = 突触后）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.Gain">
+ <summary>标定得到的全局权重增益。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.DataDir">
+ <summary>数据目录。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.ElapsedMs">
+ <summary>装配耗时 (毫秒)。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.SensorsPerChannel">
+ <summary>
+ 每个感觉通道使用多少个感觉神经元（"电极铺多大"）。
+ </summary>
+ <remarks>
+ 这份连接组做过结构归一化，注入的神经元太少时响应扩散不到运动神经元 ——
+ 实测每个通道 256 个（共 4,096 个注入）时，运动神经元平均每个 tick 只有 1.1 个脉冲，
+ 读出层拿到的特征几乎是空的（与示范动作的一致率只有 45.7%），
+ 蛇看起来就是"没有目标地乱走"。
+ 
+ 实测对照（8 局 × 300 tick）：
+ <code>
+ 每通道神经元   运动神经元脉冲/tick   与教师一致率
+    256              1.1                45.7%
+   1024              8.9                73.3%
+ </code>
+ 因此默认取 1024（afferent 池 19,300 个，每通道 1,024 个时共铺开 16,384 个）。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.SensorCurrent">
+ <summary>感觉通道强度为 1.0 时，每个感觉神经元注入的电流。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.FeatureWindow">
+ <summary>运动读出特征（滑动窗放电率）的窗宽（tick）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.DecisionMargin">
+ <summary>决策迟滞的相对余量（占打分跨度的比例；0 = 不迟滞）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.DecisionSmoothing">
+ <summary>决策打分的滑动平均系数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.DecisionHoldTicks">
+ <summary>
+ 决策保持的 tick 数（转向冷却；1 = 每个 tick 都可以改主意）。
+ </summary>
+ <remarks>
+ 实测（8 局训练 + <b>40 局</b>评估，越低方差越可信）：
+ <code>
+ 保持 tick   闭环均分
+    1          5.65
+    3          9.20
+    5          7.62
+ </code>
+ 读出层逐 tick 有 ~30% 的概率与示范动作不一致，而贪吃蛇里一次错误转向就可能致命；
+ "保持 3 tick"把误差累积速度直接降到三分之一，是这一轮里提升最明显的一个旋钮。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.DaggerRounds">
+ <summary>
+ DAgger 聚合轮数（0 = 只做一次教师示范就训练，不做误差累积修正）。
+ </summary>
+ <remarks>
+ 只用教师示范的样本训练，读出层上场后会偏离到教师没走过的状态上（covariate shift）：
+ 实测与教师的一致率 73%，但真正上场只有 5.6 分。DAgger 让读出层自己走、
+ 教师在路上继续标注，把这些"自己走出来的状态"聚合进训练集重新训练。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.RlEpisodes">
+ <summary>
+ 强化学习微调的局数（0 = 不做）。
+ </summary>
+ <remarks>
+ 默认关闭：实测这一层在当前规模下没能稳定地把闭环得分抬起来
+ （同一版权重在两次 8 局评估里分别是 15.6 与 6.3，游戏本身单局方差太大，
+ 40 局评估下模仿学习本身只有 3.75 分）。代码留着，
+ 等读出层的信息量上来（或把评估局数做大）再开。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.RlBlockSize">
+ <summary>强化学习每练几局评一次分（并只保留最好的一版）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.RlEvaluationEpisodes">
+ <summary>
+ 强化学习期间每次评分的局数。
+ </summary>
+ <remarks>
+ 这个游戏单局得分的方差很大（同一版策略实测在 0~12 分之间跳），
+ 局数太少的话"保留最好的一版"基本等于掷骰子。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePlayground.RlLearningRate">
+ <summary>强化学习的学习率（按决策步数平摊后的每步步长）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.#ctor(FlywireAI.Connectome.SnnConfig,FlywireAI.Connectome.ConnectomeIndex,FlywireAI.Connectome.ConnectomeMatrix,System.Double,System.Int64)">
+ <remarks>
+ 形参名刻意避开 <c>index</c> / <c>matrix</c> / <c>gain</c>：VB 不区分大小写，
+ 与同名属性（<see cref="P:FlywireSnake.SnakePlayground.Index"/> / <see cref="P:FlywireSnake.SnakePlayground.Matrix"/> / <see cref="P:FlywireSnake.SnakePlayground.Gain"/>）
+ 撞上之后 <c>Index = index</c> 会退化成"参数给自己赋值"，
+ 属性永远是 Nothing（第一次用到就炸）。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String})">
+ <summary>
+ 装配连接组并标定一次增益（耗时数十秒：主要是读连接表与建 CSR）。
+ </summary>
+ <param name="config">SNN 配置（提供数据文件路径、增益标定参数、后端开关）</param>
+ <param name="reporter">进度回调</param>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.CreateBrain(System.Int32)">
+ <summary>
+ 装配一个"游戏模式"的果蝇大脑（每次调用都是一份独立的状态，可以并行跑多局）。
+ </summary>
+ <param name="seed">挑选神经元的随机种子</param>
+ <remarks>
+ 网络装配本身很轻（<c>AddSparseLayer</c> 只持有 CSR 引用），
+ 因此"每局一份大脑"的代价可以忽略；真正的重活是连接组装配（见 <see cref="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String})"/>）。
+ 
+ "电极铺多大 / 注入多强 / 读出窗多宽"这三件事的口径统一由
+ <see cref="P:FlywireSnake.SnakePlayground.SensorsPerChannel"/> / <see cref="P:FlywireSnake.SnakePlayground.SensorCurrent"/> / <see cref="P:FlywireSnake.SnakePlayground.FeatureWindow"/>
+ 决定：训练（<see cref="M:FlywireSnake.SnakePlayground.Train(System.Int32,System.Int32,System.Action{System.String},System.Int32)"/>）、评估（<see cref="M:FlywireSnake.SnakePlayground.Evaluate(FlywireSnake.SnakeDecoder,FlywireSnake.SnakeBrain,System.Int32,System.Int32,System.Boolean)"/>）与观战窗口
+ 都走这一个入口，免得"训练时一套标定、玩的时候另一套"。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.CreateSession(FlywireSnake.SnakeBrain,FlywireSnake.SnakeDecoder,System.Windows.Forms.Form)">
+ <summary>
+ 构造一次游戏会话。
+ </summary>
+ <param name="brain">果蝇大脑</param>
+ <param name="decoder">运动解码器</param>
+ <param name="host">
+ 承载游戏画面尺寸的窗体（游戏的食物生成依赖相机可视范围）。
+ 界面里传自己的观战窗口；命令行 / 训练时传 Nothing，内部会用一个隐藏窗体代替。
+ </param>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.Train(System.Int32,System.Int32,System.Action{System.String},System.Int32)">
+ <summary>
+ 训练一个能驱动贪吃蛇的解码器：先记录教师策略的演示，再训练线性读出。
+ </summary>
+ <param name="episodes">采集用的局数（同时用于三组评估）</param>
+ <param name="maxTicks">每局最大 tick 数</param>
+ <param name="reporter">进度回调</param>
+ <param name="seed">解码器初始化种子</param>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.Evaluate(FlywireSnake.SnakeDecoder,FlywireSnake.SnakeBrain,System.Int32,System.Int32,System.Boolean)">
+ <summary>跑若干局并返回平均得分。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.averageScore(FlywireSnake.SnakeDecoder,FlywireSnake.SnakeBrain,System.Int32,System.Int32,System.Boolean)">
+ <remarks>
+ 名字不能叫 <c>evaluate</c>：VB 不区分大小写，那样就与公开的
+ <see cref="M:FlywireSnake.SnakePlayground.Evaluate(FlywireSnake.SnakeDecoder,FlywireSnake.SnakeBrain,System.Int32,System.Int32,System.Boolean)"/> 只差"可选参数"了，编译器不允许这种重载。
+ </remarks>
+</member>
+<member name="T:FlywireSnake.SnakePolicyGradient">
+ <summary>
+ 在"模仿学习 + DAgger"之上再补一层强化学习：<b>直接用游戏得分</b>微调运动读出层。
+ </summary>
+ <remarks>
+ <b>为什么模仿学习不够</b>：读出层与示范动作的逐 tick 一致率能到 74%~78%，
+ 但真正上场只有 8 分左右（同一个示范教师是 95 分）。原因是<b>误差累积</b>：
+ 一旦读出层走偏，蛇就进入了训练集从没覆盖过的状态，之后只会越偏越远。
+ DAgger 能把"自己走到的状态"补进训练集，但仍然是在拟合教师的动作，
+ 而教师动作本身在噪声特征上就学不准（一致率上不去了）。
+ 
+ 这一层换个目标：不再"像教师"，而是"把分数拿回来"。方法是策略梯度
+ （REINFORCE + 滑动基线），在读出层自己走出来的轨迹上学。
+ 
+ <b>reward 怎么给</b>：
+ <list type="bullet">
+   <item><b>吃到食物</b>：按游戏真实得分增量（常规 1 / 活动 5 / 超级 30）—— 这是最终目标；</item>
+   <item><b>靠近猎物</b>：按"折算代价"（距离 − 价值折分）的下降量给密集奖励
+         （<see cref="P:FlywireSnake.SnakePolicyGradient.ShapingScale"/>），否则整局只有几次稀疏奖励，梯度噪声会压过信号；</item>
+   <item><b>每走一步</b>：小额罚分，鼓励尽快吃到；</item>
+   <item><b>撞死</b>：一次性罚分。</item>
+ </list>
+ 
+ <b>安全网</b>：强化学习过程中策略可能一时变差，因此每练完一块就评一次分，
+ 只保留分数最高的那一版权重（<see cref="M:FlywireSnake.SnakePolicyGradient.Train(FlywireSnake.SnakeSession,System.Int32,System.Int32,System.Int32,System.Func{System.Double},System.Action{System.String})"/> 结束时会恢复它）。
+ 最坏情况下结果与"不做强化学习"持平。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakePolicyGradient.m_baseline">
+ <summary>每局的平均回报（滑动），诊断用。</summary>
+</member>
+<member name="F:FlywireSnake.SnakePolicyGradient.m_advantageScale">
+ <summary>回报尺度的滑动标准差（用作优势的归一化因子）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakePolicyGradient.m_logitScale">
+ <summary>
+ 对数几率(softmax logits)在动作之间的滑动标准差 —— 温度的分母。
+ </summary>
+ <remarks>
+ 读出层的 logits 量级很小（权重 ~1e-2 × 放电率 ~0.25，动作之间的差异只有 1e-2 量级），
+ 直接 softmax 会得到一个近似均匀的策略：既没有利用（等于乱选），也没有梯度尺度。
+ 因此把它按"动作之间的标准差"归一化：整局都在同一个尺度上比较，
+ 但"哪一步更果断"（差异更大）依然会被保留下来。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.LearningRate">
+ <summary>学习率（按决策步数平摊后的每步步长）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.Discount">
+ <summary>折扣因子。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.Gain">
+ <summary>logit 锐化增益：归一化之后"最好 / 最差动作"的概率比大约就是它。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.ShapingScale">
+ <summary>密集奖励（靠近猎物）的权重。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.StepPenalty">
+ <summary>每步的小额罚分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.DeathPenalty">
+ <summary>撞死的一次性罚分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.MaxWeightStep">
+ <summary>
+ 单个权重的单步变化上限（防止某一局把权重带飞）。
+ </summary>
+ <remarks>
+ 读出层权重的量级只有 1e-2，所以这个上限必须比它小一个量级 ——
+ 实测给到 2e-3 时，一局就能把权重改成另一副样子，策略当场崩掉。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.MaxSharpness">
+ <summary>采样时的锐化系数上限（logit 尺度极小时不至于退化成"只取最大"）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.Episodes">
+ <summary>已练的局数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakePolicyGradient.LastReturn">
+ <summary>最近一局的"每步平均回报"。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.Train(FlywireSnake.SnakeSession,System.Int32,System.Int32,System.Int32,System.Func{System.Double},System.Action{System.String})">
+ <summary>
+ 跑若干局策略梯度（<b>就地</b>更新解码器权重），返回评估到的最好分数。
+ </summary>
+ <param name="session">用来跑游戏的会话（本方法会临时占用它的动作选择器）</param>
+ <param name="episodes">总训练局数（会按 <paramref name="blockSize"/> 分块评估）</param>
+ <param name="blockSize">每练几局评一次分</param>
+ <param name="maxTicks">单局 tick 上限</param>
+ <param name="evaluate">给定"当前权重"的闭环评分函数（见 <see cref="M:FlywireSnake.SnakePlayground.Evaluate(FlywireSnake.SnakeDecoder,FlywireSnake.SnakeBrain,System.Int32,System.Int32,System.Boolean)"/>）</param>
+ <param name="reporter">进度回调</param>
+ <remarks>
+ 需要 <paramref name="evaluate"/> 而不是自己去评：只有装配方（<see cref="T:FlywireSnake.SnakePlayground"/>）
+ 知道该怎么开一局干净的评估会话。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.runEpisode(FlywireSnake.SnakeSession,System.Int32,System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Double})">
+ <summary>跑一局并把梯度就地写回权重。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.update(System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Double},System.Collections.Generic.List{System.Double})">
+ <summary>折扣回报 → 优势 → 就地更新权重。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.sample(System.Double[],System.Int32,System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Double[]},System.Collections.Generic.List{System.Double})">
+ <remarks>
+ 采样时把 (特征, 动作, 概率, 锐化系数) 记进轨迹 —— 梯度要用它们回放。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.preyCost(FlywireSnake.SnakeSession)">
+ <summary>离"最划算的猎物"的折算代价（移动前后的差值就是这一小步的密集奖励）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.Snapshot">
+ <summary>当前权重的深拷贝（"只留最好的一版"用）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakePolicyGradient.Restore(System.Double[][])">
+ <summary>把权重恢复成某个快照。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeSensorEncoder">
+ <summary>
+ 从游戏的真实状态编码感觉通道，并给出一个"示范动作"（用于训练读出层）。
+ </summary>
+ <remarks>
+ 本类只读游戏状态，不改动游戏：它把"蛇看到的世界"翻译成 16 个通道的强度。
+ 运动的接管在 <see cref="T:FlywireSnake.SnakeSession"/> 里完成。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeSensorEncoder.ActionCount">
+ <summary>动作编号 → 绝对方向。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.Encode(Snake2.Game)">
+ <summary>编码当前游戏状态。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.relativeSector(System.Drawing.Point,System.Drawing.Point,System.Int32)">
+ <summary>把绝对位移折算成"以朝向为参考系"的扇区编号。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.IsBlocked(Snake2.Game,System.Drawing.Point,Snake2.Snake)">
+ <summary>某格是否不可进入（越界 / 障碍物 / 蛇身）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.TeacherAction(Snake2.Game)">
+ <summary>
+ 示范动作：在各条可行方向里挑"最靠近最优猎物"的那一条。
+ </summary>
+ <remarks>
+ 这只是一个供训练用的<b>教师</b>（贪心策略），不是游戏的操作逻辑本身 ——
+ 果蝇大脑的运动由读出层解码得到，教师只提供训练样本。
+ 若所有方向都被堵住，则保持原方向（反正怎么走都要撞）。
+ 
+ <b>猎物不限于常规食物</b>：常规食物 1 分，活动食物 5 分，超级食物 30 分。
+ 全图上常驻几百只活动食物，而常规食物只有 3 只 —— 教师如果只盯着常规食物，
+ 就会带着蛇横穿整张地图去追一份 1 分的食物（实测最近的那份常规食物在 142 格开外），
+ 期间对身边一堆 5 分的猎物视而不见。因此这里按"价值折算成距离折扣"来选目标：
+ 代价 = 曼哈顿距离 − 价值，代价最小的猎物就是目标，再朝它走一步。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.PreyCost(Snake2.Game,System.Drawing.Point)">
+ <summary>从某个格子看，"最划算的猎物"的折算代价（越小越好）。</summary>
+ <remarks>
+ 对每份食物各算一次"折算代价" = 曼哈顿距离 − 价值折分（越贵的越值得多走几步），
+ 取其中最小的那个。全图没有食物时返回 0（四处找吃的都一样）。
+ 
+ 强化学习那边也用它做密集奖励（<see cref="T:FlywireSnake.SnakePolicyGradient"/>）：
+ "这一步让代价降了多少"就是这一小步的即时奖励。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.valueOf(Snake2.FoodType)">
+ <summary>猎物分值（与游戏内的计分一致：常规 1 / 活动 5 / 超级 30）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.actionOf(System.Drawing.Point,System.Nullable{System.Drawing.Point})">
+ <summary>方向 → 动作编号（找不到时返回 <paramref name="fallback"/>，再找不到就返回"向右"）。</summary>
+ <remarks>
+ 备用参数用 <c>Point?</c>：<see cref="T:System.Drawing.Point"/> 是值类型，
+ 值类型不能与 <c>Nothing</c> 比较（"IsNot 操作数必须是引用类型"）。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeSensorEncoder.RegularFoodKinds">
+ <summary>通道 0..7 关心的食物类型（常规食物）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensorEncoder.SpecialFoodKinds">
+ <summary>通道 12..15 关心的食物类型（活动 / 超级食物）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensorEncoder.nearestFood(Snake2.Game,System.Drawing.Point,Snake2.FoodType[])">
+ <summary>在指定的几类食物里找最近的一个（欧氏距离），没有则返回 Nothing。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeSensors">
+ <summary>
+ 感觉通道：把贪吃蛇的游戏画面折算成一组"外界刺激强度"。
+ </summary>
+ <remarks>
+ <b>为什么是这 16 个通道</b>：一条只知道往前走的蛇，决策只需要两类信息 ——
+ "食物在哪个方位"（要追）与"往哪走会死"（要躲）。因此：
+ <list type="bullet">
+   <item>0..7：<b>食物方位</b>，以蛇的<b>当前朝向</b>为参考系的 8 个扇区
+         （前进方向是扇区 0，左右各 3 个，正后方 7）。用相对朝向而不是绝对方向，
+         是因为蛇不能反向移动，"前方 / 左侧 / 右侧"才是可学习的刺激量；</item>
+   <item>8..11：<b>碰撞危险</b>，上 / 下 / 左 / 右四个绝对方向
+         （墙体、障碍物、自己与 AI 蛇的身体）；</item>
+   <item>12..15：<b>特殊食物方位</b>（活动食物 / 超级食物），同样以朝向为参考系的
+         4 个粗扇区。它们的分值远高于常规食物（活动 5 分 / 超级 30 分，常规 1 分），
+         因此必须让大脑看得见，否则"不该追的东西看得见、该追的看不见"。</item>
+ </list>
+ 
+ 强度约定：食物通道取"最近的那份食物"的距离衰减 <c>1 - d / R</c>（R = 可视半径），
+ 危险通道取 0 / 1。这些强度最终会乘上注入电流标定值变成感觉神经元的电流。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.FoodSectors">
+ <summary>食物方位扇区数。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.DangerChannels">
+ <summary>碰撞危险通道数（上 / 下 / 左 / 右）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.SpecialFoodSectors">
+ <summary>特殊食物（活动食物 / 超级食物）方位扇区数。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.ChannelCount">
+ <summary>感觉通道总数。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.SenseRadius">
+ <summary>
+ 食物感知半径（格）：超出这个距离的食物不再产生任何刺激。
+ </summary>
+ <remarks>
+ 取<b>地图对角线</b> = 全图可见。原来取 45 格会留下大片盲区：食物一旦远于 45 格，
+ 8 个食物方位通道就全为零 —— 此时大脑"看不见"食物，而示范教师仍然知道食物在哪，
+ 训练标签与大脑的感知口径不一致，学出来的读出层只能原地兜圈（表现为随机游走）。
+ 距离衰减仍然保留（<c>1 - d / R</c> 单调递减），因此"近处的食物更抢眼"这一点没变。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeSensors.Directions">
+ <summary>四个绝对方向（上 / 下 / 左 / 右），与危险通道 8..11 一一对应。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensors.ChannelName(System.Int32)">
+ <summary>某个通道的名字（用于可视化与报告）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSensors.Relative(System.Drawing.Point,System.Drawing.Point)">
+ <summary>据蛇的朝向把相对方位（前方 / 左 / 右 / 后）折算成绝对偏移。</summary>
+ <remarks>
+ 蛇的朝向只可能是四个轴向之一，因此"左转 / 右转"用简单的轴向旋转即可：
+ 屏幕坐标 Y 轴向下，左转 = 把 (x, y) 变成 (y, -x)。
+ </remarks>
+</member>
+<member name="T:FlywireSnake.SnakeSensorFrame">
+ <summary>
+ 一次感觉采样的结果：通道强度 + 用于训练解码器的"示范动作"。
+ </summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensorFrame.Values">
+ <summary>16 个通道的强度（[0,1]）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensorFrame.BlockedCells">
+ <summary>被蛇身体 / 障碍物 / 墙占据的格子数（诊断用）。</summary>
+</member>
+<member name="F:FlywireSnake.SnakeSensorFrame.FoodDistance">
+ <summary>距离最近食物的曼哈顿距离（没有食物时为 -1）。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeStep">
+ <summary>一个 tick 的完整结果（供界面实时显示）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.Sensors">
+ <summary>本 tick 的 16 个感觉通道强度。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.ActiveNeurons">
+ <summary>果蝇大脑本 tick 发放的神经元（供三维可视化）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.MotorSpikes">
+ <summary>各运动读出组的本 tick 脉冲数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.Action">
+ <summary>解码出的动作编号（0=上 1=下 2=左 3=右）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.Direction">
+ <summary>该动作对应的绝对方向。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.Died">
+ <summary>本 tick 之后是否死亡。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.Score">
+ <summary>本 tick 之后的得分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.FoodDistance">
+ <summary>距离最近食物的曼哈顿距离（-1 = 视野里没有食物）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeStep.TeacherAction">
+ <summary>教师（示范）动作，仅用于训练数据采集时的诊断。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeEpisodeResult">
+ <summary>一局的统计。</summary>
+</member>
+<member name="T:FlywireSnake.SnakeSession">
+ <summary>
+ 果蝇大脑驾驶贪吃蛇的一次"会话"：把游戏、大脑与解码器绑在一起，逐 tick 推进。
+ </summary>
+ <remarks>
+ <b>一个 tick 做什么</b>（与游戏自带的 <c>GameForm.GameTimer_Tick</c> 一一对应）：
+ <code>
+   1. 读游戏状态 → 编码成 16 个感觉通道强度
+   2. 感觉电流注入 afferent 神经元 → 果蝇大脑走一步
+   3. 读出 efferent 运动神经元放电率 → 解码器给出动作
+   4. 设置蛇的朝向 → 移动 → 判定碰撞 → 游戏世界推进（AI 蛇 / 食物 / 相机）
+ </code>
+ 
+ 本类不创建窗口、不绘制画面：它只推进状态，界面（Neuropils 的观战窗口）订阅
+ <see cref="E:FlywireSnake.SnakeSession.Stepped"/> 事件来取画面与读数。
+ </remarks>
+</member>
+<member name="F:FlywireSnake.SnakeSession.m_filter">
+ <summary>读出层之后的决策平滑器（抑制逐 tick 左右横跳）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Game">
+ <summary>游戏实例（界面用它绘制画面）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Render">
+ <summary>游戏的相机 / 绘制器（界面用它画同一套画面）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Brain">
+ <summary>果蝇大脑。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Decoder">
+ <summary>
+ 运动解码器。
+ </summary>
+ <remarks>
+ 可写：训练完成后把新解码器换上，大脑立刻用学到的读出继续玩
+ （训练本身在别的线程 / 别的脑实例上跑，不打断当前这一局）。
+ </remarks>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Steps">
+ <summary>本局的 tick 数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Episodes">
+ <summary>已经玩过的局数。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.FoodEaten">
+ <summary>累计吃到的食物（按得分增量统计）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.BestScore">
+ <summary>历史最高分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.LastStep">
+ <summary>最近一个 tick 的结果。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.DecisionFilter">
+ <summary>决策平滑器（调参 / 诊断用）。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Sampler">
+ <summary>
+ 外部动作选择器：设了它就不再走"读出层 + 决策平滑器"，而是由它直接给出动作。
+ </summary>
+ <remarks>
+ 强化学习训练用（见 <see cref="T:FlywireSnake.SnakePolicyGradient"/>）：它需要自己按策略分布采样动作、
+ 并记住当时的特征与概率，才能回头算梯度。传 <c>Nothing</c> 就恢复成读出层决策。
+ 
+ 形参语义：<c>(运动神经元特征, 禁止的动作编号)</c> → <c>动作编号</c>。
+ 注意特征数组是<b>复用</b>的缓冲，需要留存时请自行拷贝。
+ </remarks>
+</member>
+<member name="E:FlywireSnake.SnakeSession.Stepped">
+ <summary>
+ 每个 tick 之后触发（界面重绘 + 三维活动可视化的数据源）。
+ </summary>
+ <remarks>形参不能叫 <c>step</c>：那是 VB 的保留字（For ... Step）。</remarks>
+</member>
+<member name="P:FlywireSnake.SnakeSession.Score">
+ <summary>当前得分。</summary>
+</member>
+<member name="P:FlywireSnake.SnakeSession.GameOver">
+ <summary>游戏是否已经结束。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSession.NewEpisode">
+ <summary>开新的一局（重置游戏世界与大脑状态）。</summary>
+</member>
+<member name="M:FlywireSnake.SnakeSession.Tick(System.Collections.Generic.List{FlywireSnake.SnakeSample},System.Int32)">
+ <summary>
+ 推进一个 tick。
+ </summary>
+ <param name="collect">
+ 不为空时，把本 tick 的（运动神经元特征 → 教师动作）追加进去（用于训练解码器）。
+ </param>
+ <param name="forcedAction">
+ 大于等于 0 时强制使用该动作（不看解码器输出）：
+ 用于跑"教师策略"对照组，以及调试时手工指定方向。
+ </param>
+ <remarks>
+ 训练样本必须在<b>移动之前</b>采集：特征与教师动作都对应同一个游戏状态，
+ 否则学到的是"下一步的状态"对"这一步的动作"，训练出的解码器会整体滞后一拍。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeSession.RunEpisode(System.Int32,System.Collections.Generic.List{FlywireSnake.SnakeSample},System.Boolean)">
+ <summary>
+ 跑完整的一局（直到死亡或达到 tick 上限），返回本局统计。
+ </summary>
+ <param name="markTeacher">
+ 用教师（贪心）策略推进而不是解码器：作为"操作逻辑的上限"对照组。
+ </param>
+</member>
+<member name="M:FlywireSnake.SnakeSession.isBlockedAhead(System.Double[],System.Drawing.Point)">
+ <summary>
+ 当前朝向是否已经走不通（前 / 后 / 左 / 右里"该方向"的危险通道亮着）。
+ </summary>
+ <remarks>
+ 危险通道 8..11 是<b>绝对方向</b>，顺序与 <see cref="F:FlywireSnake.SnakeSensors.Directions"/> 一致；
+ 这个判断只用来给决策平滑器留一个安全阀（走不通时立刻改道），
+ 用的信息与大脑拿到的是同一组 16 通道，没有额外作弊。
+ </remarks>
+</member>
+<member name="M:FlywireSnake.SnakeSession.reverseAction(System.Drawing.Point)">
+ <summary>反向动作编号（用于禁止蛇掉头）。</summary>
+</member>
+</members>
+</doc>

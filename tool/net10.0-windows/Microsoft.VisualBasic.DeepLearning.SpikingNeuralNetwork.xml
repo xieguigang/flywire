@@ -1,0 +1,1115 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders">
+ <summary>脉冲序列 → 连续值的解码工具</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.SpikeCounts(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>
+ 方案 B：时间窗内脉冲计数 Σ_t S[t]（形状 [batch, Units]）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.SpikeCounts(Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer)">
+ <summary>
+ 方案 B（推荐）：直接使用 <see cref="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer"/> 内部维护的计数累加器。
+ </summary>
+ <remarks>
+ 与 <c>SpikeCounts(sHistory)</c> 的结果完全一致，但既不需要保留 T 个脉冲张量，
+ 也不需要 O(T·N) 的主机求和 —— 融合算子路径下计数是在设备端逐步累加出来的
+ （GPU 后端下本函数会隐式同步一次设备副本）。
+ <para>
+ 全脑规模（十万级神经元 / T=30）下这是唯一推荐的解码入口。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.FiringRate(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>
+ 方案 B：平均发放率 (Σ_t S[t]) / T（形状 [batch, Units]，取值 [0,1]）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.TotalSpikeCount(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>整个仿真窗内的脉冲总数（诊断用标量）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.ActiveNeurons(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>曾被激活（至少发放一次）的神经元索引</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.MembranePotential(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 方案 A：膜电位读取。返回末步膜电位的独立副本（梯度路径平滑，回归首选）。
+ </summary>
+ <param name="uLast">末步膜电位（<c>ULast</c> 或 <c>HLast</c>）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.ConcatRateAndPotential(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 方案 C：把发放率与末步膜电位沿特征维拼接为 [batch, 2·Units]。
+ 供 LinearReadout 做"发放统计 + 瞬时状态"的联合回归。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeDecoders.RasterText(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor},System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 把脉冲轨迹渲染成 ASCII 栅格图（行 = 神经元分组，列 = 时间步，█ = 本步有发放），
+ 便于在控制台快速判断"静默 / 持续发放 / 稀疏传播"等动力学形态。
+ </summary>
+ <param name="sHistory">脉冲轨迹 S[t]</param>
+ <param name="neuronsPerRow">每行折叠的神经元数量</param>
+ <param name="maxRows">最多输出的行数</param>
+ <param name="sampleIndex">批量中的样本下标</param>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoding">
+ <summary>输入脉冲编码方式</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoding.RateCoding">
+ <summary>频率编码：强度 → 发放频率（泊松近似）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoding.LatencyCoding">
+ <summary>时延编码：强度 → 首脉冲时间（TTFS，确定性）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoding.DirectCurrent">
+ <summary>
+ 直接电流注入：强度 → 持续输入电流（不做脉冲采样）。
+ 适合回归任务与稳态输入（如基因表达状态量）。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoders">
+ <summary>脉冲编码器库</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoders.RateEncode(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Random,System.Double)">
+ <summary>
+ 频率编码（泊松近似）。
+ </summary>
+ <param name="x">连续输入 [batch, features]，取值范围建议 [0,1]</param>
+ <param name="T">仿真时间步数</param>
+ <param name="rng">伯努利采样随机源</param>
+ <param name="dt">单步时长（缩放发放概率），默认 1.0</param>
+ <returns>T 个时间步的脉冲张量序列，每个 [batch, features]</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoders.LatencyEncode(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Double,System.Double)">
+ <summary>
+ 时延编码（TTFS, time-to-first-spike）。
+ t_first = −τ·ln(max(x, eps))：x→1 早发放，x→0 晚发放或不发放。
+ 确定性编码——数值梯度自检依赖这一性质。
+ </summary>
+ <param name="tau">编码时间常数（步）</param>
+ <param name="eps">下限截断，防止 ln(0)</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoders.DirectCurrentEncode(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Double,System.Boolean)">
+ <summary>
+ 直接电流编码：把连续输入逐元素线性缩放到 [0, iMax] 后，作为整个时间窗的
+ <b>持续输入电流</b>注入（每个时间步都注入同一电流，而不是采样成脉冲）。
+
+ 与频率/时延编码的区别：输出<b>不是</b> 0/1 脉冲序列，而是 t 步的连续电流序列，
+ 语义上等价于"模拟恒流注入"。对回归任务（例如以表达状态量驱动脉冲网络）
+ 这是最简洁、最稳定的驱动方式，也是 readme 中 <c>mode = "current"</c> 的实现。
+
+ 注意：本函数不做 MinMax 归一化，调用方需保证 x 已落在 [0,1]（输出与编码器约定一致）。
+ </summary>
+ <param name="x">连续输入 [batch, features]，取值范围建议 [0,1]</param>
+ <param name="T">仿真时间步数</param>
+ <param name="iMax">电流上限（缩放系数），默认 1.0 表示直接使用输入值</param>
+ <param name="shareBuffer">
+ 是否让所有时间步共享同一份电流缓冲（默认 <c>False</c>，保持"每步独立副本"的既有语义）。
+ <para>
+ 置为 <c>True</c> 可省掉 T 份 <c>[batch, features]</c> 的分配与拷贝
+ （T=30 时为 30 次分配），代价是调用方<b>不得再对返回的张量就地写入</b>
+ （恒流注入场景下每步内容本就完全相同，且融合算子只读该输入）。
+ </para>
+ </param>
+ <returns>T 个时间步的输入电流张量序列（每个形状与 x 相同，内容为 x·iMax）</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikeEncoders.MapScale(System.Double[],System.Double)">
+ <summary>逐元素缩放（与 <c>LINQ Select</c> 等价，但避免中间迭代器与装箱开销）。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode">
+ <summary>膜电位复位模式</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode.ZeroOnSpike">
+ <summary>H = U·(1−S)：发放后膜电位清零（硬复位）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode.SubtractThreshold">
+ <summary>H = U − U_thr·S：发放后减去阈值（软复位）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.Weight">
+ <summary>突触权重矩阵 [InputSize, Units]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.WeightGrad">
+ <summary>权重梯度（BackwardTime 中累积）[InputSize, Units]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.Beta">
+ <summary>膜电位衰减系数 β ∈ (0,1)，越小遗忘越快</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.Threshold">
+ <summary>发放阈值 U_thr</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.ResetMode">
+ <summary>复位模式</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.SurrogateType">
+ <summary>替代梯度函数类型</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.Alpha">
+ <summary>替代梯度陡度参数 α（fast sigmoid: σ' = 1/(α|u|+1)²）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.SmoothForward">
+ <summary>
+ 梯度自检开关：前向用光滑函数 f(u) 代替 Heaviside 阶跃。
+ f'(u) 恰好等于对应的替代导数，因此"解析梯度 == 数值差分梯度"
+ 可用来验证 BPTT 实现的正确性。正常训练/推理必须为 False。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer._H">
+ <summary>膜电位 H（跨时间步持续）[batch, Units]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.UHistory">
+ <summary>最近一次前向仿真的膜电位轨迹（可视化用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.SHistory">
+ <summary>最近一次前向仿真的脉冲轨迹（可视化用）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.ResetState(System.Int32)">
+ <summary>
+ 重置膜电位与时间缓存。每个样本批次开始前必须调用！
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 单时间步前向：X[t] → S[t]
+ 积分 → 泄漏 → 触发 → 复位，并缓存中间量供 BPTT 使用。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFLayer.BackwardTime(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>
+ 沿时间反向传播。
+
+ 前向依赖链（ZeroOnSpike 为例）：
+   U[t] = β·H[t−1] + X[t]·W
+   S[t] = Θ(U[t] − θ)
+   H[t] = U[t]·(1 − S[t])
+
+ 反向递推（从 T−1 到 0）：
+   dH[t]  = β·dU[t+1]                              ← H[t] 只经 U[t+1] 影响损失
+   dS[t]  = dS_ext[t] − dH[t]⊙U[t]                 ← ∂H/∂S = −U
+   dU[t]  = dS[t]⊙σ'(U[t]−θ) + dH[t]⊙(1−S[t])     ← 替代梯度 + ∂H/∂U = 1−S
+   dW    += X[t]ᵀ·dU[t]                            ← dL/dI[t] = dL/dU[t]
+   dX[t]  = dU[t]·Wᵀ
+
+ SubtractThreshold 模式把复位导数换为 ∂H/∂S = −θ、∂H/∂U = 1。
+ </summary>
+ <param name="dS_ext">上游对每步脉冲的梯度 dL/dS[t]（[batch, Units] × T）</param>
+ <returns>各时间步的 dL/dX[t]（传给更早的层）</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout">
+ <summary>
+ 线性回归解码头：把脉冲网络状态（膜电位 / 发放率）线性映射为连续预测值。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.InputSize">
+ <summary>解码输入维度（如神经元数量 N，或拼接解码时的 2·N）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.Units">
+ <summary>输出维度（回归目标维度，通常等于基因数量 N）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.Weight">
+ <summary>权重 [InputSize, Units]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.Bias">
+ <summary>偏置 [Units]（一维张量）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.WeightGrad">
+ <summary>权重梯度（<see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.BackwardTime(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 中累积）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.BiasGrad">
+ <summary>偏置梯度（<see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.BackwardTime(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 中累积）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.Trainable">
+ <summary>参数是否参与梯度累积</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.#ctor(System.String,System.Int32,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Nullable{System.Int32})">
+ <summary>
+ 构建线性回归解码头。
+ </summary>
+ <param name="name">层名称（用于优化器区分动量状态）</param>
+ <param name="inputSize">解码输入维度</param>
+ <param name="units">输出维度</param>
+ <param name="initialWeight">
+ 初始权重 [InputSize, Units]；为 Nothing 时使用 He 初始化。
+ 当解码目标与网络状态同维且希望"恒等起步"时，可传入单位阵。
+ </param>
+ <param name="initialBias">初始偏置 [Units]（一维）；为 Nothing 时初始化为全 0</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.IdentityReadout(System.String,System.Int32)">
+ <summary>
+ 以单位阵初始化权重、零偏置构造解码头（当解码目标与输入同维、
+ 且希望训练从"直通"映射开始时的推荐用法）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.ZeroGrad">
+ <summary>清空梯度累积（每个训练步开始前调用）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.Forward(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 前向：y = u·Wout + b。
+ </summary>
+ <param name="u">解码输入 [batch, InputSize]（膜电位或发放率）</param>
+ <returns>预测值 [batch, Units]</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LinearReadout.BackwardTime(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 反向：给定上游梯度 dL/dy，累积 dWout / db 并返回 dL/du。
+ </summary>
+ <param name="dY">上游梯度 [batch, Units]</param>
+ <returns>dL/du [batch, InputSize]（回传给 LIF 层作为膜电位梯度）</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.NamespaceDoc">
+ <summary>
+ Spiking neural networks: LIF layers, encoders and decoders, STDP learning, surrogate gradients
+ and the spiking network model.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LossGradient">
+ <summary>Softmax 交叉熵的返回结构</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LossGradient.Loss">
+ <summary>平均交叉熵损失</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LossGradient.Grad">
+ <summary>dL/dlogits（logits = 脉冲计数）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Losses">
+ <summary>损失函数库</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Losses.SoftmaxCrossEntropy(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[])">
+ <summary>
+ Softmax + 交叉熵（数值稳定：先减去行最大值）。
+ dL/dz_j = softmax(z)_j − onehot(y)_j
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.AdamOptimizer">
+ <summary>
+ Adam 优化器（含梯度 L2 范数裁剪）。
+ key 用于区分不同参数的动量状态（例如各层权重）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.AdamOptimizer.ClipNorm">
+ <summary>梯度 L2 范数裁剪上限（≤0 表示不裁剪）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork">
+ <summary>
+ 脉冲神经网络：编码器 + 多个 LIF 层 + 时间展开 + 计数解码。
+
+ 支持两种连接拓扑（互斥）：
+   1. 全连接多层（<see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddLayer(System.Int32,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double,System.Nullable{System.Int32})"/>）：前馈 LIF 层栈，支持 BPTT 训练。
+   2. 稀疏自定义连接（<see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddSparseLayer(System.Int32[],System.Int32[],System.Double[],System.Int32,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,System.Int32[])"/>）：
+      单个大稀疏矩阵，含层内递归（循环连接与自反馈），仅支持前向仿真。
+ 后者用于加载 FlyWire 等真实突触连接组（十万级神经元/千万级突触）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Layers">
+ <summary>
+ 全连接 LIF 层栈（前馈/可训练）。与 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.SparseLayer"/> 互斥：
+ 使用稀疏自定义连接时本集合为空。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.SparseLayer">
+ <summary>
+ 稀疏自定义连接层（单个大稀疏矩阵，含循环连接与自反馈）。
+ 与 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Layers"/> 互斥；仅支持前向仿真，不参与训练。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.SparseInputMap">
+ <summary>
+ 稀疏模式的输入注入映射：第 f 个输入特征注入到神经元 SparseInputMap(f)。
+ 为 Nothing 时表示特征与神经元 1:1 对应（要求 inputSize = SparseLayer.Units）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.TimeSteps">
+ <summary>仿真时间步数 T</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Encoding">
+ <summary>输入脉冲编码方式</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Rng">
+ <summary>频率编码随机源（推理时同样有编码噪声，加长 T 可降低方差）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddLayer(System.Int32,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double,System.Nullable{System.Int32})">
+ <summary>追加一个 LIF 层（输入维度自动衔接上一层输出）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddSparseLayer(Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,System.Int32[])">
+ <summary>
+ 由预构建的稀疏连接矩阵配置本网络的稀疏递归层（单个大稀疏层）。
+ 稀疏层仅支持前向仿真，构造后不能再 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddLayer(System.Int32,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double,System.Nullable{System.Int32})"/> 全连接层。
+ </summary>
+ <param name="synapses">方阵稀疏突触连接 W[N, N]（行=突触前，列=突触后）</param>
+ <param name="inputMap">
+ 输入特征 → 神经元索引 的注入映射；为 Nothing 时要求 inputSize = N（1:1）。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.AddSparseLayer(System.Int32[],System.Int32[],System.Double[],System.Int32,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,System.Int32[])">
+ <summary>
+ 由 FlyWire 风格三元组 (pre, post, weight) 构建稀疏连接并配置稀疏递归层。
+ 相同 (pre, post) 的重复边按权重累加合并。
+ </summary>
+ <param name="units">神经元总数 N（pre/post 索引范围 [0, N)）</param>
+ <param name="normalization">权重归一化方式，默认按扇入（列）归一化</param>
+ <param name="inputMap">输入特征 → 神经元索引 的注入映射（可选）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Encode(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>把连续输入编码为 T 个时间步的脉冲序列</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.IsConstantSequence(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>
+ 编码序列的每一步是否都是同一个张量（恒流编码的特征）。
+ </summary>
+ <remarks>
+ 用于判断"可以只散射一次然后复用"：恒流下各步的外部电流逐元素相同，
+ 复用同一个张量既省分配，也让设备端缓存能按引用命中（只上传一次）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.ForwardSpikes(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 前向仿真 T 个时间步，返回输出层脉冲计数（计数解码的 logits）[batch, n_out]。
+ 开始前自动重置所有层的膜电位。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.ForwardSparse(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏自定义连接前向仿真：编码 → 按 inputMap 散射注入外部电流 → 逐时间步
+ 稀疏递归 LIF 传播（I = I_ext + W·S[t−1]）→ 累加各神经元脉冲计数。
+ 返回 [batch, N] 的脉冲计数（N = 神经元总数）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.ScatterInput(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 把编码后的脉冲特征 [batch, inputSize] 散射为神经元注入电流 [batch, Units]。
+ 无 inputMap 时要求 inputSize = Units，直接 1:1 返回。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Predict(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>前向推理：返回各样本的预测类别（计数解码 argmax）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.ComputeGradients(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[])">
+ <summary>
+ 前向 + 反向传播，计算并缓存所有层的权重梯度（不更新参数）。
+ 返回本批次平均损失。梯度自检依赖"不更新"这一性质。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.TrainStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.AdamOptimizer)">
+ <summary>
+ 单次训练步：前向 → softmax 交叉熵 → BPTT → Adam 更新。
+ 返回本批次平均损失。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SpikingNetwork.Accuracy(System.Int32[],System.Int32[])">
+ <summary>分类准确率</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentGradients">
+ <summary>
+ 递归 LIF 层 BPTT 的梯度结果。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentGradients.WeightGrad">
+ <summary>
+ 突触权重梯度 dL/dW [N, N]（<b>未乘</b>结构掩码）。
+ 上层如需冻结先验拓扑之外的突触，请调用
+ <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.MaskedWeightGrad"/> 或在优化前自行乘掩码。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentGradients.InputGrad">
+ <summary>
+ 外部注入电流的梯度 dL/dI_ext[t]，长度 = 仿真步数。
+ 当输入电流直接来自数据（无需回传梯度）时可以忽略。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentGradients.SpikeGrad">
+ <summary>
+ 各时间步输出脉冲的梯度 dL/dS[t]，长度 = 仿真步数。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer">
+ <summary>
+ 可训练的递归 LIF 层：同一神经元群内部的稠密稀疏化突触连接，
+ 支持结构掩码冻结、硬/软复位与代理梯度 BPTT。
+ </summary>
+ <remarks>
+ <para>
+ 本层是"脉冲递归网络"（SRNN）的基本构件，可直接用于基因调控网络建模
+ （每个基因一个神经元、TF→Target 为有向突触）、连接组仿真等场景。
+ </para>
+ <para>
+ 时间步之间的膜电位 H 与上一时刻脉冲 S[t−1] 都是状态：每个样本批次开始前
+ 必须调用 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ResetState(System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>，否则上一批的"记忆"会污染本批结果。
+ </para>
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.DenseNeuronLimit">
+ <summary>
+ 稠密递归层的推荐神经元数上限。超过该规模时 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Diagnose"/> 给出告警，
+ 提示改用 CSR 稀疏实现（<see cref="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer"/>）或先做子网络筛选。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Units">
+ <summary>神经元数量 N（= Weight 的行列数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Weight">
+ <summary>
+ 突触权重矩阵 W[N, N]（行 = 突触前，列 = 突触后）。
+ 先验拓扑之外的突触应保持为 0（由 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Mask"/> 约束）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Mask">
+ <summary>
+ 结构掩码 [N, N]：1 = 该突触允许参与梯度更新，0 = 冻结（先验拓扑之外）。
+ 为 Nothing 时视为全 1（全连接、全部可训练）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Beta">
+ <summary>膜电位衰减系数 β ∈ (0,1)，越小遗忘越快（β = exp(−Δt/τ_m)）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Threshold">
+ <summary>发放阈值 U_thr</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ResetMode">
+ <summary>复位模式</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.SurrogateType">
+ <summary>替代梯度函数类型</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Alpha">
+ <summary>
+ 替代梯度陡度参数 α。
+ 该值可按训练轮次退火（逐步增大陡度）以缓解"梯度不匹配"随时间的累积。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Trainable">
+ <summary>
+ 权重是否参与梯度累积。设为 False 时 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.BackwardTime(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor},Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 跳过 O(N²) 的
+ 权重梯度累加（此时本层退化为固定权重的递归层，类似 SparseLIFLayer 的语义）。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.SmoothForward">
+ <summary>
+ 梯度自检开关：前向用光滑函数 f(u) 代替 Heaviside 阶跃（f′ 恰为替代导数），
+ 使"解析梯度 == 数值差分梯度"。正常训练/推理必须为 False。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer._H">
+ <summary>膜电位 H（跨时间步持续）[batch, Units]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer._Sprev">
+ <summary>各步开始时用到的"上一时刻脉冲" S[t−1]（t=0 时为全 0）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer._U">
+ <summary>各步触发前膜电位 U[t]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer._S">
+ <summary>各步输出脉冲 S[t]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer._X">
+ <summary>各步外部注入电流 I_ext[t]（可为 Nothing）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.SHistory">
+ <summary>最近一次仿真的脉冲轨迹 S[t]（可视化/解码用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.UHistory">
+ <summary>最近一次仿真的膜电位轨迹 U[t]（触发前，可视化/解码用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.SprevHistory">
+ <summary>最近一次仿真中作为递归输入的上一时刻脉冲轨迹 S[t−1]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.MembraneState">
+ <summary>当前膜电位状态 H[t]（仿真结束后即为最后一步的复位结果）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ULast">
+ <summary>最近一次仿真最后一步的触发前膜电位 U[T−1]（膜电位读取解码用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.HLast">
+ <summary>最近一次仿真最后一步的复位后膜电位 H[T−1]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.TimeSteps">
+ <summary>仿真步数（最近一次前向的时间步数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.WeightGrad">
+ <summary>权重梯度（由 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.BackwardTime(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor},Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 填充）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.#ctor(System.String,System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double,System.Nullable{System.Int32})">
+ <summary>
+ 构建可训练的递归 LIF 层。
+ </summary>
+ <param name="name">层名称（用于优化器区分动量状态）</param>
+ <param name="units">神经元数量 N</param>
+ <param name="initialWeight">
+ 初始突触权重 W[N, N]（行 = 突触前，列 = 突触后）。为 Nothing 时使用 He 初始化。
+ 基因调控网络场景下应传入由先验网络构造的 W_init。
+ </param>
+ <param name="mask">
+ 结构掩码 [N, N]（1 = 可训练，0 = 冻结）。为 Nothing 时视为全部可训练。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ResetState(System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 重置膜电位、递归脉冲状态与时间缓存。每个样本批次开始前必须调用！
+ </summary>
+ <param name="batchSize">批量大小</param>
+ <param name="u0">
+ 初始膜电位 [batch, Units]；为 Nothing 时初始化为全 0。
+ 基因调控网络中可由 t 时刻的表达状态映射得到（u0 = gain · U_seq[t]）。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ApplyMaskToWeight">
+ <summary>把当前位置的突触权重裁剪回掩码约束（掩码为 0 的位置置零）</summary>
+ <remarks>
+ 就地写入底层数组后按既有设备端缓存契约调用 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.MarkHostModified"/>。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 单时间步前向：外部注入电流 → 递归突触输入 → 泄漏积分 → 阈值触发 → 复位。
+ </summary>
+ <param name="externalCurrent">
+ 外部注入电流 I_ext[t] [batch, Units]；为 Nothing 表示本步无外部刺激。
+ </param>
+ <returns>本时间步的输出脉冲 S[t] [batch, Units]</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ForwardSequence(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor},Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 按给定电流序列连续前向若干时间步（内部逐帧调用 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>）。
+ </summary>
+ <param name="externalCurrents">外部注入电流序列；为 Nothing 表示全时段无外部刺激</param>
+ <param name="u0">初始膜电位 [batch, Units]，见 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.ResetState(System.Int32,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/></param>
+ <returns>输出脉冲序列 S[0..T−1]</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.BackwardTime(System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor},Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 沿时间反向传播，计算突触权重梯度与外部电流梯度。
+ </summary>
+ <param name="dS_ext">上游对每步脉冲的梯度 dL/dS[t]（长度必须等于前向步数）</param>
+ <param name="dH_last">直接作用在末步复位后膜电位 H[T−1] 上的梯度（如解码头回传）</param>
+ <param name="dU_last">直接作用在末步触发前膜电位 U[T−1] 上的梯度（膜电位读取解码）</param>
+ <returns>权重梯度、外部电流梯度与脉冲梯度</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.MaskedWeightGrad">
+ <summary>
+ 返回已乘结构掩码的权重梯度（掩码为 0 的突触梯度归零），
+ 可直接交给 <see cref="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.AdamOptimizer"/> 更新，从而保证先验拓扑之外
+ 的突触权重始终为 0。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.EmptySpikeGradients(System.Int32)">
+ <summary>构造一个全零的脉冲梯度序列（当上游不需要对脉冲求导时使用）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.AddTensor(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>可空张量加法（任一为空时返回另一个的副本）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.Diagnose">
+ <summary>
+ 对最近一次前向仿真做健康检查（全静默 / 过度发放 / 规模超限），
+ 返回人类可读的告警列表；空列表表示未见异常。
+ </summary>
+ <remarks>
+ readme 明确指出的两类失败模式：整体静默（Dropout 式虚假零值导致无脉冲）
+ 与全体持续发放（权重尺度过大）。这里是廉价的前置体检。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RecurrentLIFLayer.HasFrozenSynapses">
+ <summary>是否真正启用了掩码约束（掩码非空且存在 0 元素）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses">
+ <summary>回归损失与结构正则原语</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.MeanSquaredError(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 均方误差 MSE。
+   L = Σ w⊙(ŷ − y)² / Σ w        （无权重时即元素平均）
+   dL/dŷ = 2·w⊙(ŷ − y) / Σ w
+ </summary>
+ <param name="prediction">预测值 ŷ（任意形状，按展平元素计算）</param>
+ <param name="target">目标值 y，形状必须与预测值一致</param>
+ <param name="weights">
+ 可选的逐元素权重（形状一致）：用于强调重要基因/时间步，为 Nothing 时全部为 1。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.MeanAbsoluteError(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 平均绝对误差（L1 损失）。
+   L = Σ w⊙|ŷ − y| / Σ w
+   dL/dŷ = w⊙sign(ŷ − y) / Σ w    （在 ŷ = y 处取 0 次梯度）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.L1Sum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>权重的 L1 和 Σ|w|（脉冲冗余 / 突触稀疏的惩罚项标量）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.L2Sum(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>权重的 L2 平方和 Σw²</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.L1Gradient(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>L1 稀疏正则的梯度 scale·sign(w)（在 w = 0 处取 0 次梯度）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.L2Gradient(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>L2 正则的梯度 2·scale·w</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.MaskedDeviationPenalty(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Boolean)">
+ <summary>
+ 结构先验偏差惩罚：约束可训练权重不要漂离先验初始值。
+   L = Σ (mask⊙conf⊙(W − W₀)²) / norm
+ 其中 mask 标记"存在先验证据的突触"（1 = 有边），conf 为该边的证据置信度，
+ 因此高置信度的 TF→Target 调控关系会被更强地钉在初始权重附近。
+ </summary>
+ <param name="current">当前可训练权重 W</param>
+ <param name="reference">先验初始权重 W₀（形状一致）</param>
+ <param name="mask">结构掩码（1 = 有先验证据的突触，形状一致）</param>
+ <param name="confidence">逐边置信度（形状一致）；为 Nothing 时全部按 1 处理</param>
+ <param name="normalizeByAllElements">
+ True = 除以元素总数（readme 中的 MEAN 语义）；
+ False（默认）= 除以 Σ(mask⊙conf)，即"按有证据的边取平均"，
+ 在稀疏先验下量级更稳定。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.AddScaledGradientInPlace(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 把正则项梯度按权重就地累加进主梯度：grad ← grad + scale · delta
+ 用于把结构先验正则与稀疏正则的梯度并入主梯度后再交给优化器。
+ </summary>
+ <param name="target">主梯度（就地累加；调用前请确保它是本步新建的副本）</param>
+ <param name="delta">正则项梯度张量（形状/长度必须与主梯度一致）</param>
+ <param name="scale">正则项权重（α 或 β）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.Sign(System.Double)">
+ <summary>符号函数（0 → 0，用于 L1 的次梯度）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.RegressionLosses.Normalizer(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>加权损失的归一化因子：Σw（权重为 Nothing / 全零时回退元素总数）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision">
+ <summary>
+ 融合 LIF 状态在设备上的精度档位。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision.Double64">
+ <summary>
+ 双精度常驻（默认）：膜电位与计数累加器都以 Double 留在显存。
+ </summary>
+ <remarks>
+ 递归状态是逐时间步累积的，单精度舍入会让个别神经元恰好跨过阈值，
+ 从而在脉冲计数上产生整数差异 —— 需要「CPU / GPU 对拍逐位一致」时必须用本档位。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision.Single32">
+ <summary>
+ 单精度常驻（最快档）：膜电位与计数用 Single，脉冲仍用 Double。
+ </summary>
+ <remarks>
+ 显存与带宽占用减半。脉冲保持双精度是有意的：下一步的稀疏乘法要复用它，
+ 而 0/1 在两种精度下都是精确值，所以只有膜电位会引入舍入。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifStepPath">
+ <summary>
+ 某个时间步实际走的那条前向路径（诊断 / 报告用）。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifStepPath.None">
+ <summary>尚未执行任何时间步</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifStepPath.OpByOp">
+ <summary>逐算子路径（SpMM + Add + MultiplyScalar + Heaviside + 复位）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifStepPath.Fused">
+ <summary>融合算子路径（后端用一次调用完成整步，可配合设备常驻状态）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.InputSize">
+ <summary>输入特征维度（外部注入电流的原始特征数，经 inputMap 散射到神经元）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Units">
+ <summary>神经元数量 N（= Synapses 的行列数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Synapses">
+ <summary>稀疏突触连接矩阵 W[N, N]：行 = 突触前，列 = 突触后</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Beta">
+ <summary>膜电位衰减系数 β ∈ (0,1)，越小遗忘越快</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Threshold">
+ <summary>发放阈值 U_thr</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResetMode">
+ <summary>复位模式</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._H">
+ <summary>膜电位 H（跨时间步持续）[batch, Units]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._Sprev">
+ <summary>上一时间步的输出脉冲 S[t−1]，作为本步递归输入来源 [batch, Units]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._Sout">
+ <summary>
+ 本步脉冲的写入目标 <c>S[t]</c> [batch, Units]。
+ </summary>
+ <remarks>
+ 与 <see cref="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._Sprev"/> 构成双缓冲：每步结束后两者交换引用，
+ 于是「本步的输出」天然成为「下一步的输入」，全程零拷贝。
+ 这也是融合算子能跨步复用同一片显存缓冲的前提。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._counts">
+ <summary>
+ 脉冲计数累加器 <c>Σ_t S[t]</c> [batch, Units]。
+ </summary>
+ <remarks>
+ 由融合算子在<b>设备端</b>累加，整个仿真窗只需最终回读一次 ——
+ 这正是它取代 <c>Decoder.SpikeCounts</c> 的 O(T·N) 主机循环的关键。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._fusedReady">
+ <summary>本层是否曾成功走过融合算子路径（诊断用）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer._fallbackSteps">
+ <summary>回退到逐算子路径的次数（一个仿真窗内最多发生一次状态切换）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UseFusedStep">
+ <summary>
+ 是否优先使用融合单步算子（默认 <c>True</c>）。
+ </summary>
+ <remarks>
+ 融合路径与逐算子路径<b>数值等价</b>（相同的循环次序与结合次序），
+ 但把每步 6 个 <c>[batch, Units]</c> 中间张量压成 1 个，并在 GPU 后端下消除
+ 每步 6~12 次显存往返。置为 <c>False</c> 可强制走逐算子路径
+ （唯一区别是能拿到 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UHistory"/>，见 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.KeepHistory"/>）。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.KeepHistory">
+ <summary>
+ 是否记录逐步轨迹（默认 <c>True</c>，保持既有行为）。
+ </summary>
+ <remarks>
+ <c>True</c>：每一步的脉冲都会同步回主机并<b>拷贝</b>一份存入 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.SHistory"/>，
+ 供 <c>Decoder</c> 统计与栅格图使用；代价是每步一次 <c>[batch, Units]</c> 回读。
+ <para>
+ <c>False</c>：只维护设备端的计数累加器（见 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Counts"/>），
+ 整个仿真窗零逐步回读 —— 这是"全脑规模、只关心发放计数"场景的推荐配置。
+ </para>
+ 注意：<see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UHistory"/> 只在逐算子路径下产生（融合算子内部不落 <c>U</c>），
+ 需要膜电位轨迹时请把 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UseFusedStep"/> 置为 <c>False</c>。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResidentPrecision">
+ <summary>
+ 设备常驻状态的精度档位（默认 <see cref="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision.Double64"/>）。
+ </summary>
+ <remarks>仅在 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResetState(System.Int32)"/> 时生效（档位变化需要重新分配常驻缓冲）。</remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.LastStepPath">
+ <summary>最近一个时间步实际使用的路径。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.FallbackSteps">
+ <summary>回退到逐算子路径的时间步数（<c>0</c> 表示整段仿真都走在融合路径上）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Counts">
+ <summary>
+ 脉冲计数累加器 <c>Σ_t S[t]</c> [batch, Units]。
+ </summary>
+ <remarks>
+ 该张量在 GPU 后端下<b>以设备为主副本</b>：读主机内容之前必须先调用
+ <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.SyncFromDevice"/>。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.Membrane">
+ <summary>当前膜电位 <c>H[t]</c>（设备为主副本，读主机内容前需同步）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UHistory">
+ <summary>最近一次仿真中各时间步的触发前膜电位轨迹（可视化用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.SHistory">
+ <summary>最近一次仿真中各时间步的输出脉冲轨迹（可视化用）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.#ctor(System.String,System.Int32,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix,System.Double,System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LIFResetMode)">
+ <summary>
+ 构建稀疏递归 LIF 层。
+ </summary>
+ <param name="synapses">方阵稀疏突触连接 W[N, N]（行=pre，列=post）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResetState(System.Int32)">
+ <summary>
+ 重置膜电位、递归脉冲状态与轨迹缓存。每个样本批次开始前必须调用！
+ </summary>
+ <remarks>
+ 本方法同时负责<b>设备常驻缓冲的分配与释放</b>：上一轮的张量会被解除钉住
+ （否则它们占着的显存会一直留到后端 Dispose），新一轮的四个状态张量会按
+ <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResidentPrecision"/> 重新钉住。钉住失败（显存不足或后端不支持）时
+ 自动退回逐算子路径，功能不受影响。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.PrepareDeviceState">
+ <summary>
+ 按当前档位把四个状态张量钉成设备常驻缓冲。
+ </summary>
+ <returns>融合路径是否可用</returns>
+ <remarks>
+ 分档策略：
+ <list type="bullet">
+   <item>脉冲 <c>S_prev</c> / <c>S</c> 一律走双精度通道 —— 它是下一步稀疏乘法的
+         dense 输入，而 0/1 在两种精度下都是精确值，因此复用双精度内核最省事；</item>
+   <item>膜电位与计数累加器按 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResidentPrecision"/> 选择通道。</item>
+ </list>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ReleaseDeviceState">
+ <summary>解除四个状态张量的设备常驻缓冲（幂等；未钉住时是空操作）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.SyncFromDevice">
+ <summary>
+ 把设备常驻状态（膜电位 / 上一时刻脉冲 / 计数累加器）回读到主机数组。
+ </summary>
+ <returns>实际完成同步的张量个数（<c>0</c> 表示没有常驻状态需要同步）</returns>
+ <remarks>
+ GPU 后端下状态以设备为主副本，凡是"读主机内容"的场合（解码统计、栅格图、
+ 检查点落盘、切换到逐算子路径之前）都必须先调用本方法。
+ 未使用常驻缓冲时是空操作，不构成性能负担。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ReleaseDeviceBuffers">
+ <summary>
+ 解除本层的设备常驻缓冲，立即归还显存。
+ </summary>
+ <remarks>
+ 仿真结束后应当调用（或者在下一轮 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ResetState(System.Int32)"/> 时自动发生）：
+ 常驻缓冲不参与后端的 LRU 淘汰，一直挂着会白占显存。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 单时间步前向：外部注入电流 → 递归稀疏输入 → LIF 触发 → 复位 → 更新递归状态。
+ </summary>
+ <param name="externalCurrent">
+ 外部注入电流 [batch, Units]（可为 Nothing 表示本步无外部刺激）。
+ 通常由编码后的脉冲按 inputMap 散射得到。
+ </param>
+ <returns>本时间步输出脉冲 S[t] [batch, Units]</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.forwardStepByOperators(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 逐算子路径：<c>SpMM + Add + MultiplyScalar + Heaviside + 复位</c>。
+ </summary>
+ <remarks>
+ 这是 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.ForwardStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 的兼容实现，也是 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.UseFusedStep"/> 之前的唯一行为：
+ 每步分配 6 个 <c>[batch, Units]</c> 中间张量。它保留下来有两个用途：
+ 后端不支持融合算子时保证功能不缺失，以及提供含 <c>U</c> 的完整轨迹。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.RecordStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Boolean)">
+ <summary>
+ 记录一个时间步的脉冲轨迹（<see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.KeepHistory"/> 关闭时不做任何事）。
+ </summary>
+ <param name="S">本步的输出脉冲张量</param>
+ <param name="fused">
+ 该张量是否来自融合路径。融合路径下 <c>S</c> 的缓冲会<b>跨步复用</b>（双缓冲），
+ 且 GPU 后端下以设备为主副本；逐算子路径每步都产生一个全新的主机张量。
+ </param>
+ <remarks>
+ 正因为融合路径复用了缓冲，这里必须同步之后<b>拷贝</b>一份快照 ——
+ 否则 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.SHistory"/> 里会挂着同一片被反复改写的缓冲
+ （<c>Decoder</c> 的统计与栅格图会把最后一步的脉冲重复计入）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer.AccumulateCounts(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>就地累加计数累加器：<c>counts += S</c>（主机循环，仅逐算子路径使用）。</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization">
+ <summary>突触权重归一化方式</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization.None">
+ <summary>保留原始突触计数（不做任何缩放）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization.FanIn">
+ <summary>按扇入（列 / 突触后）归一化：每个突触后神经元的所有入边权重和为 1</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization.FanOut">
+ <summary>按扇出（行 / 突触前）归一化：每个突触前神经元的所有出边权重和为 1</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization.GlobalMax">
+ <summary>按全局最大权重（绝对值）缩放</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix">
+ <summary>
+ 稀疏突触连接矩阵（CSR 格式）。行 = 突触前神经元，列 = 突触后神经元。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix._csr">
+ <summary>
+ CSR 计算载体（零拷贝包装 <c>_rowPtr/_colIdx/_values</c>）。
+ 稀疏乘法委托给 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel"/> 时传递它；
+ 权重就地修改后必须通过 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr.MarkModified"/> 声明失效。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Rows">
+ <summary>突触前神经元数量（矩阵行数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Columns">
+ <summary>突触后神经元数量（矩阵列数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.NonZeros">
+ <summary>非零边（突触）数量</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.RowPointers">
+ <summary>行偏移数组（长度 Rows+1），只读访问（用于高级自定义算子）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.ColumnIndices">
+ <summary>非零边的列索引数组（长度 nnz）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Values">
+ <summary>非零边的权重数组（长度 nnz）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Csr">
+ <summary>
+ CSR 计算载体（零拷贝包装 <c>RowPointers/ColumnIndices/Values</c>）。
+ </summary>
+ <remarks>
+ <c>SparseLIFLayer</c> 用它把稀疏结构直接交给 <c>ITensorCompute.LifStep</c>；
+ 需要自行编写稀疏算子（或做性能分解）的调用方也可以直接用：
+ <code>
+   Tensor.computeKernel.LifStep(matrix.Csr, sPrev, ext, h, s, counts, beta, threshold, False)
+ </code>
+ 注意它包装的就是本类的三个数组，因此 <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.MarkModified"/> 的契约同样适用。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.MarkModified">
+ <summary>
+ 声明 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Values"/> 已被就地修改，使设备端（GPU）缓存的 CSR 副本失效。
+ </summary>
+ <remarks>
+ 凡是在本类之外就地改过 <see cref="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Values"/> 的调用方（典型例子：连接组的增益标定
+ <c>SynapseTriplets.ApplyGain</c>）都必须调用本方法。
+ 不调用的话，GPU 会继续复用显存里的旧权重 —— 表现为「CPU 与 GPU 结果不同，
+ 且差异无法从数据上解释」这类最难定位的伪 bug。
+ <see cref="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Normalize(Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization)"/> 内部已自行调用。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.FromTriplets(System.Int32[],System.Int32[],System.Double[],System.Int32,System.Int32)">
+ <summary>
+ 由三元组 (pre, post, weight) 构建 CSR 稀疏矩阵。
+ 相同 (pre, post) 的重复边按权重累加合并。
+ </summary>
+ <param name="pre">突触前神经元索引，取值 [0, rows)</param>
+ <param name="post">突触后神经元索引，取值 [0, columns)</param>
+ <param name="weight">突触权重（如归一化后的突触计数）</param>
+ <param name="rows">突触前神经元数量</param>
+ <param name="columns">突触后神经元数量</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.Normalize(Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseNormalization)">
+ <summary>
+ 就地按指定方式缩放权重。零和（无入边/出边）的神经元保持原值不变。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏 × 稠密矩阵乘法：X[batch, Rows] · W[Rows, Columns] → [batch, Columns]。
+
+ 实际计算委托给当前生效的张量计算后端（<c>Tensor.computeKernel</c>）：
+ 默认走 CPU 标量实现；若调用方已调用 <c>CudaTensor.Register()</c>，
+ 则自动走 CUDA CSR-SpMM 内核（cuda/ILCudaTensor/Kernels/spmm.cu）。
+ 无连接 / 规模过小 / 内核不可用时后端内部会回退 CPU，语义保持一致。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseMatrix.ToDense">
+ <summary>转成稠密张量（仅供小规模校验/调试，大规模连接组下请勿调用）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.Weight">
+ <summary>突触权重 [InputSize, OutputSize]，取值 [0, WMax]</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.APlus">
+ <summary>LTP 学习率（potentiation）。pre 脉冲数远多于 post，A₊/A₋ 需与迹量级匹配</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.AMinus">
+ <summary>LTD 学习率（depression）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.TraceDecay">
+ <summary>脉冲迹衰减系数 = exp(−Δt/τ)，τ≈20 步 → 0.95</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.WMax">
+ <summary>权重上限</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.NormalizeSum">
+ <summary>
+ 突触归一化目标：每个输出神经元的入边权重总和。
+ STDP 的经典搭档机制——当"获胜通路"被 LTP 增强后，归一化会
+ 自动按比例削弱同一神经元的其余连接（守恒竞争），
+ 从机制上保证模式特化。设为 0 表示禁用。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.NormalizeWeights">
+ <summary>
+ 把每个输出神经元的入边权重和缩放到 NormalizeSum（列归一化）。
+ 建议在每个模式呈现结束后调用。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.Beta">
+ <summary>膜电位衰减系数 β</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.Threshold">
+ <summary>发放阈值基线</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.AdaptRate">
+ <summary>
+ 自适应阈值（intrinsic plasticity）：每次发放后阈值抬升 AdaptRate，
+ 并按 AdaptDecay 指数回落。发放越频繁的神经元有效阈值越高，
+ 打破"赢家垄断"，促使输出神经元轮流接管不同输入模式 → 促进分化。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.AdaptDecay">
+ <summary>自适应阈值的每步衰减（0.99 ≈ 100 步时间尺度）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.Reset">
+ <summary>
+ 清空膜电位与脉冲迹（每次模式呈现前调用）。
+ 注意：自适应阈值 _adapt 有意跨呈现保留——它记录的是每个神经元的
+ "历史发放负荷"，Reset 后清零会让同一个赢家立刻重新垄断。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.STDPLayer.Step(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 单时间步：输入脉冲 → LIF 动态（WTA 触发）→ STDP 权重更新 → 迹更新。
+ </summary>
+ <param name="x">输入脉冲 [1, InputSize]</param>
+ <returns>输出脉冲 [1, OutputSize]（至多一个 1）</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind">
+ <summary>替代梯度函数类型</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind.FastSigmoid">
+ <summary>fast sigmoid：σ'(u) = 1/(α|u|+1)²（snnTorch 默认之一）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind.ATan">
+ <summary>反正切替代：σ'(u) = α/(2π) / (1 + (παu/2)²)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind.STE">
+ <summary>直通估计器：反向恒 1</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Surrogate">
+ <summary>替代梯度函数库</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Surrogate.Spike(System.Double)">
+ <summary>
+ 前向脉冲生成：Heaviside 阶跃 S = Θ(u)。
+ （u >= 0 时发放；u 恰为 0 在连续仿真中测度为零，归入不发放）
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Surrogate.Derivative(System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double)">
+ <summary>
+ 替代导数：反向传播时代替 Θ'(u)=δ(u) 使用。
+ </summary>
+ <param name="u">膜电位与阈值之差 U − U_thr</param>
+</member>
+<member name="M:Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Surrogate.SmoothSpike(System.Double,Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SurrogateKind,System.Double)">
+ <summary>
+ 光滑前向（仅供梯度数值自检）：替代导数的原函数。
+   FastSigmoid: f(u) = u / (α|u|+1)，恰好 f'(u) = 1/(α|u|+1)²
+   ATan       : f(u) = (1/π)·atan(παu/2) + 1/2，恰好等于 ATan 替代导数
+ 把前向的阶跃换成 f 后，loss 关于权重的"解析梯度"（用 σ' 反传）
+ 与"数值差分梯度"应一致，从而可验证 BPTT 实现的正确性。
+ </summary>
+</member>
+</members>
+</doc>

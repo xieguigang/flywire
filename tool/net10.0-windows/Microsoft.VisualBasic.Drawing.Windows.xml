@@ -1,0 +1,944 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Drawing.Windows
+</name>
+</assembly>
+<members>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CreateBuffer(System.Drawing.Bitmap)">
+ <summary>
+ create image read/write memory buffer
+ </summary>
+ <param name="bmp"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CreateCanvas2D(System.Drawing.Image,System.Boolean,System.String,System.String)">
+ <summary>
+ 无需处理图像数据，这个函数默认已经自动克隆了该对象，不会影响到原来的对象，
+ 除非你将<paramref name="directAccess"/>参数设置为真，函数才不会自动克隆图像对象
+ </summary>
+ <param name="res"></param>
+ <param name="bg">
+ the color string literal value of the default background color
+ </param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CanvasCreateFromImageFile(System.String)">
+ <summary>
+ 从指定的文件之中加载GDI+设备的句柄
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.LoadImage(System.String,System.Boolean,System.Boolean)">
+ <summary>
+ Load image from a file and then close the file handle.
+ (使用<see cref="M:System.Drawing.Image.FromStream(System.IO.Stream)"/>函数在加载完成图像到Dispose这段之间内都不会释放文件句柄，
+ 则使用这个函数则没有这个问题，在图片加载之后会立即释放掉文件句柄)
+ </summary>
+ <param name="path"></param>
+ <returns>
+ 当参数<paramref name="throwEx"/>为false时候，函数返回空值的话，说明图片文件错误
+ 例如文件未下载完成或者发生了二进制移码
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CreateGDIDevice(System.Drawing.SizeF,System.Drawing.Color)">
+ <summary>
+ 创建一个GDI+的绘图设备
+ </summary>
+ <param name="r"></param>
+ <param name="filled">默认的背景填充颜色为白色</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.GetIcon(System.Drawing.Image)">
+ <summary>
+ Convert image to icon
+ </summary>
+ <param name="res"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.GetIcon(System.Drawing.Bitmap)">
+ <summary>
+ Convert image to icon
+ </summary>
+ <param name="res"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CreateObject(System.Drawing.Graphics,System.Drawing.Image)">
+ <summary>
+ Internal create gdi device helper.(这个函数不会克隆原来的图像对象<paramref name="res"/>)
+ </summary>
+ <param name="g"></param>
+ <param name="res">绘图的基础图像对象</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Extensions.CreateGDIDevice(System.Drawing.Size,System.Drawing.Color,System.String,System.String)">
+ <summary>
+ 创建一个GDI+的绘图设备，默认的背景填充色为白色
+ </summary>
+ <param name="r"></param>
+ <param name="filled">默认的背景填充颜色为白色</param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.GifEncoder">
+ <summary>
+ Encodes multiple images as an animated gif to a stream. <br />
+ ALWAYS ALWAYS ALWAYS wire this up   in a using block <br />
+ Disposing the encoder will complete the file. <br />
+ Uses default .net GIF encoding and adds animation headers.
+ </summary>
+ <remarks>
+ https://github.com/DataDink/Bumpkit
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GifEncoder.#ctor(System.IO.Stream,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+ <summary>
+ Encodes multiple images as an animated gif to a stream. <br />
+ ALWAYS ALWAYS ALWAYS wire this in a using block <br />
+ Disposing the encoder will complete the file. <br />
+ Uses default .net GIF encoding and adds animation headers.
+ </summary>
+ <param name="stream">The stream that will be written to.</param>
+ <param name="width">Sets the width for this gif or null to use the first frame's width.</param>
+ <param name="height">Sets the height for this gif or null to use the first frame's height.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GifEncoder.AddFrame(System.Drawing.Image,System.Int32,System.Int32,System.Nullable{System.TimeSpan})">
+ <summary>
+ Adds a frame to this animation.
+ </summary>
+ <param name="img">The image to add</param>
+ <param name="x">The positioning x offset this image should be displayed at.</param>
+ <param name="y">The positioning y offset this image should be displayed at.</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.ImageFormatExtensions">
+ <summary>
+ Specifies the file format of the image. Not inheritable.
+ </summary>
+ 
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.ImageFormatExtensions.Png">
+ <summary>
+ 获取 W3C 可移植网络图形 (PNG) 图像格式。
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.ImageFormatExtensions.GetSaveImageFormat(System.String)">
+ <summary>
+ default is <see cref="P:System.Drawing.Imaging.ImageFormat.Png"/>
+ </summary>
+ <param name="format">大小写不敏感</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.ImageFormatExtensions.SaveAs(System.Drawing.Image,System.String,Microsoft.VisualBasic.Imaging.ImageFormats,System.Boolean)">
+ <summary>
+ Saves this <see cref="T:System.Drawing.Image"/> to the specified file in the specified format.
+ (这个函数可以很容易的将图像对象保存为tiff文件)
+ </summary>
+ <param name="res">
+ The image resource data that will be saved to the disk.
+ (因为这个函数可能会被<see cref="P:Microsoft.VisualBasic.Drawing.Graphics2D.ImageResource"/>所调用，
+ 由于该属性的Set方法是不公开可见的，所以将会不兼容这个方法，如果这个
+ 参数被设置为ByRef的话)
+ </param>
+ <param name="path">path string</param>
+ <param name="format">Image formats enumeration.</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.TiffWriter.SaveToExistingFile(System.String,System.Drawing.Image[],System.String)">
+ <summary>
+ This function can save newly scanned images on existing single page or multipage file
+ </summary>
+ <param name="fileName"></param>
+ <param name="bmp"></param>
+ <param name="type"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Effects.DropdownShadows(Microsoft.VisualBasic.Imaging.IGraphics,Microsoft.VisualBasic.Imaging.GraphicsPath,System.String,System.String,System.String)">
+ <summary>
+ Draw shadow of a specifc <paramref name="polygon"/>
+ </summary>
+ <param name="g"></param>
+ <param name="polygon"></param>
+ <param name="shadowColor$"></param>
+ <param name="alphaLevels$"></param>
+ <param name="gradientLevels$"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Effects.Vignette(System.Drawing.Image,System.Int32,System.Int32,System.Drawing.Color)">
+ <summary>
+ 羽化
+ </summary>
+ <param name="Image"></param>
+ <param name="y1"></param>
+ <param name="y2"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Effects.RotateImage(System.Drawing.Image,System.Single)">
+ <summary>
+ Creates a new Image containing the same image only rotated
+ </summary>
+ <param name="image">The <see cref="T:System.Drawing.Image"/> to rotate</param>
+ <param name="angle">The amount to rotate the image, clockwise, in degrees</param>
+ <returns>A new <see cref="T:System.Drawing.Bitmap"/> that is just large enough
+ to contain the rotated image without cutting any corners off.</returns>
+ <exception cref="T:System.ArgumentNullException">Thrown if <see cref="T:System.Drawing.Image"/> is null.</exception>
+ <remarks>
+ 
+ Explaination of the calculations
+
+ The trig involved in calculating the new width and height
+ is fairly simple; the hard part was remembering that when 
+ PI/2 &lt;= theta &lt;= PI and 3PI/2 &lt;= theta &lt; 2PI the width and 
+ height are switched.
+  
+ When you rotate a rectangle, r, the bounding box surrounding r
+ contains for right-triangles of empty space.  Each of the 
+ triangles hypotenuse's are a known length, either the width or
+ the height of r.  Because we know the length of the hypotenuse
+ and we have a known angle of rotation, we can use the trig
+ function identities to find the length of the other two sides.
+  
+ sine = opposite/hypotenuse
+ cosine = adjacent/hypotenuse
+  
+ solving for the unknown we get
+  
+ opposite = sine * hypotenuse
+ adjacent = cosine * hypotenuse
+  
+ Another interesting point about these triangles is that there
+ are only two different triangles. The proof for which is easy
+ to see, but its been too long since I've written a proof that
+ I can't explain it well enough to want to publish it.  
+  
+ Just trust me when I say the triangles formed by the lengths 
+ width are always the same (for a given theta) and the same 
+ goes for the height of r.
+  
+ Rather than associate the opposite/adjacent sides with the
+ width and height of the original bitmap, I'll associate them
+ based on their position.
+  
+ adjacent/oppositeTop will refer to the triangles making up the 
+ upper right and lower left corners
+  
+ adjacent/oppositeBottom will refer to the triangles making up 
+ the upper left and lower right corners
+  
+ The names are based on the right side corners, because thats 
+ where I did my work on paper (the right side).
+  
+ Now if you draw this out, you will see that the width of the 
+ bounding box is calculated by adding together adjacentTop and 
+ oppositeBottom while the height is calculate by adding 
+ together adjacentBottom and oppositeTop.
+ 
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.NamespaceDoc">
+ <summary>
+ Bitmap image effects and filter helpers: image effects, bitmap extension methods and pixel
+ level utilities.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Utils">
+ <summary>
+ Tools function for processing on <see cref="T:System.Drawing.Image"/>/<see cref="T:System.Drawing.Bitmap"/>
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Utils.TrimRoundAvatar(System.Drawing.Image,System.Int32)">
+ <summary>
+ 图片剪裁为圆形的头像
+ </summary>
+ <param name="resAvatar">要求为正方形或者近似正方形</param>
+ <param name="OutSize"></param>
+ <returns></returns>
+ <remarks></remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager">
+ <summary>
+ image resizing and cropping
+ </summary>
+ <remarks>
+ https://github.com/omuleanu/imager
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager.GetEncoderInfo(System.String)">
+ <summary>
+ get codec info by mime type
+ </summary>
+ <param name="mimeType"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager.PutOnCanvas(System.Drawing.Image,System.Int32,System.Int32,System.Drawing.Color)">
+ <summary>
+ the image remains the same size, and it is placed in the middle of the new canvas
+ </summary>
+ <param name="image">image to put on canvas</param>
+ <param name="width">canvas width</param>
+ <param name="height">canvas height</param>
+ <param name="canvasColor">canvas color</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager.PutOnWhiteCanvas(System.Drawing.Image,System.Int32,System.Int32)">
+ <summary>
+ the image remains the same size, and it is placed in the middle of the new canvas
+ </summary>
+ <param name="image">image to put on canvas</param>
+ <param name="width">canvas width</param>
+ <param name="height">canvas height</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager.ResizeScaled(System.Drawing.Image,System.Drawing.Size,System.Drawing.Drawing2D.InterpolationMode)">
+ <summary>
+ resize image based on the <see cref="M:System.Drawing.Graphics.DrawImage(System.Drawing.Image,System.Drawing.Rectangle)"/>
+ </summary>
+ <param name="image"></param>
+ <param name="newSize"></param>
+ <returns></returns>
+ <remarks>
+ this aspect ratio of the given <paramref name="image"/> will not be keeped.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Imaging.BitmapImage.Imager.Resize(System.Drawing.Image,System.Int32,System.Int32,System.Boolean,System.Drawing.Drawing2D.InterpolationMode)">
+ <summary>
+ resize an image and maintain aspect ratio
+ </summary>
+ <param name="image">image to resize</param>
+ <param name="newWidth">desired width</param>
+ <param name="maxHeight">max height</param>
+ <param name="onlyResizeIfWider">if image width is smaller than newWidth use image width</param>
+ <returns>resized image</returns>
+ <remarks>
+ the aspect ratio and size scale factor will be evaluated from the <paramref name="newWidth"/> 
+ and the original <see cref="P:System.Drawing.Image.Size"/> 
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.ImageExtensions.Adjust(System.Drawing.Bitmap@,System.Single,System.Single,System.Single)">
+ <summary>
+ 
+ </summary>
+ <param name="originalImage"></param>
+ <param name="brightness"></param>
+ <param name="contrast"></param>
+ <param name="gamma"></param>
+ <remarks>
+ 1 means no changed
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.CssInterop">
+ <summary>
+ .NET clr gdi+ component convert to css model
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.GDICanvas">
+ <summary>
+ 这个对象是<see cref="T:Microsoft.VisualBasic.Drawing.Graphics2D"/>以及<see cref="T:Microsoft.VisualBasic.Drawing.Wmf"/>公用的基础类型
+ </summary>
+ <remarks>the gdi+ graphics canvas base model</remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.GDICanvas.Graphics">
+ <summary>
+ GDI+ device handle.(GDI+绘图设备句柄)
+ </summary>
+ <remarks></remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawBézier(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.Point,System.Drawing.Point,System.Drawing.Point,System.Drawing.Point)">
+ <summary>
+ Draws a Bézier spline defined by four System.Drawing.Point structures.
+ </summary>
+ <param name="pen">System.Drawing.Pen structure that determines the color, width, and style of the
+ curve.</param>
+ <param name="pt1">System.Drawing.Point structure that represents the starting point of the curve.</param>
+ <param name="pt2">System.Drawing.Point structure that represents the first control point for the
+ curve.</param>
+ <param name="pt3">System.Drawing.Point structure that represents the second control point for the
+ curve.</param>
+ <param name="pt4">System.Drawing.Point structure that represents the ending point of the curve.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawEllipse(Microsoft.VisualBasic.Imaging.Pen,System.Single,System.Single,System.Single,System.Single)">
+ <summary>
+ Draws an ellipse defined by a bounding rectangle specified by a pair of coordinates,
+ a height, and a width.
+ </summary>
+ <param name="pen">System.Drawing.Pen that determines the color, width, and style of the ellipse.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse.</param>
+ <param name="width">Width of the bounding rectangle that defines the ellipse.</param>
+ <param name="height">Height of the bounding rectangle that defines the ellipse.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImage(Microsoft.VisualBasic.Imaging.Image,System.Drawing.Point)">
+ <summary>
+ Draws the specified System.Drawing.Image, using its original physical size, at
+ the specified location.
+ </summary>
+ <param name="image">System.Drawing.Image to draw.</param>
+ <param name="point">System.Drawing.Point structure that represents the location of the upper-left
+ corner of the drawn image.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImage(Microsoft.VisualBasic.Imaging.Image,System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ Draws the specified <see cref="T:Microsoft.VisualBasic.Imaging.Image"/> at the specified location and with the
+ specified size.
+ </summary>
+ <param name="image">System.Drawing.Image to draw.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="width">Width of the drawn image.</param>
+ <param name="height">Height of the drawn image.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImage(System.Drawing.Image,System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ Draws the specified <see cref="T:Microsoft.VisualBasic.Imaging.Image"/> at the specified location and with the
+ specified size.
+ </summary>
+ <param name="image">System.Drawing.Image to draw.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="width">Width of the drawn image.</param>
+ <param name="height">Height of the drawn image.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImageUnscaled(Microsoft.VisualBasic.Imaging.Image,System.Drawing.Point)">
+ <summary>
+ Draws a specified image using its original physical size at a specified location.
+ </summary>
+ <param name="image"><see cref="T:Microsoft.VisualBasic.Imaging.Image"/> to draw.</param>
+ <param name="point"><see cref="T:System.Drawing.Point"/> structure that specifies the upper-left corner of the drawn
+ image.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImageUnscaled(Microsoft.VisualBasic.Imaging.Image,System.Int32,System.Int32)">
+ <summary>
+ Draws the specified image using its original physical size at the location specified
+ by a coordinate pair.
+ </summary>
+ <param name="image">System.Drawing.Image to draw.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the drawn image.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImageUnscaled(Microsoft.VisualBasic.Imaging.Image,System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>
+ Draws a specified image using its original physical size at a specified location.
+ </summary>
+ <param name="image"><see cref="T:Microsoft.VisualBasic.Imaging.Image"/> to draw.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the drawn image.</param>
+ <param name="width"></param>
+ <param name="height"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawImageUnscaledAndClipped(Microsoft.VisualBasic.Imaging.Image,System.Drawing.Rectangle)">
+ <summary>
+ Draws the specified image without scaling and clips it, if necessary, to fit
+ in the specified rectangle.
+ </summary>
+ <param name="image">The <see cref="T:Microsoft.VisualBasic.Imaging.Image"/> to draw.</param>
+ <param name="rect">The <see cref="T:System.Drawing.Rectangle"/> in which to draw the image.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawLine(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.Point,System.Drawing.Point)">
+ <summary>
+ Draws a line connecting two <see cref="T:System.Drawing.Point"/> structures.
+ </summary>
+ <param name="pen"><see cref="T:Microsoft.VisualBasic.Imaging.Pen"/> that determines the color, width, and style of the line.</param>
+ <param name="pt1"><see cref="T:System.Drawing.Point"/> structure that represents the first point to connect.</param>
+ <param name="pt2"><see cref="T:System.Drawing.Point"/> structure that represents the second point to connect.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawLine(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.PointF,System.Drawing.PointF)">
+ <summary>
+ Draws a line connecting two System.Drawing.PointF structures.
+ </summary>
+ <param name="pen">System.Drawing.Pen that determines the color, width, and style of the line.</param>
+ <param name="pt1">System.Drawing.PointF structure that represents the first point to connect.</param>
+ <param name="pt2">System.Drawing.PointF structure that represents the second point to connect.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawPolygon(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.PointF[])">
+ <summary>
+ Draws a polygon defined by an array of System.Drawing.PointF structures.
+ </summary>
+ <param name="pen">System.Drawing.Pen that determines the color, width, and style of the polygon.</param>
+ <param name="points">Array of System.Drawing.PointF structures that represent the vertices of the
+ polygon.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawRectangle(Microsoft.VisualBasic.Imaging.Pen,System.Drawing.Rectangle)">
+ <summary>
+ Draws a rectangle specified by a System.Drawing.Rectangle structure.
+ </summary>
+ <param name="pen">A System.Drawing.Pen that determines the color, width, and style of the rectangle.</param>
+ <param name="rect">A System.Drawing.Rectangle structure that represents the rectangle to draw.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawString(System.String,Microsoft.VisualBasic.Imaging.Font,Microsoft.VisualBasic.Imaging.Brush,System.Drawing.RectangleF)">
+ <summary>
+ Draws the specified text string in the specified rectangle with the specified
+ System.Drawing.Brush and System.Drawing.Font objects.
+ </summary>
+ <param name="s">String to draw.</param>
+ <param name="font">System.Drawing.Font that defines the text format of the string.</param>
+ <param name="brush">System.Drawing.Brush that determines the color and texture of the drawn text.</param>
+ <param name="layoutRectangle">System.Drawing.RectangleF structure that specifies the location of the drawn
+ text.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.DrawString(System.String,Microsoft.VisualBasic.Imaging.Font,Microsoft.VisualBasic.Imaging.Brush,System.Drawing.PointF@)">
+ <summary>
+ Draws the specified text string at the specified location with the specified
+ <see cref="T:System.Drawing.Brush"/> and <see cref="T:System.Drawing.Font"/> objects.
+ </summary>
+ <param name="s">String to draw.</param>
+ <param name="font">System.Drawing.Font that defines the text format of the string.</param>
+ <param name="brush">System.Drawing.Brush that determines the color and texture of the drawn text.</param>
+ <param name="point">System.Drawing.PointF structure that specifies the upper-left corner of the drawn
+ text.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.FillEllipse(Microsoft.VisualBasic.Imaging.Brush,System.Drawing.RectangleF)">
+ <summary>
+ Fills the interior of an ellipse defined by a bounding rectangle specified by
+ a System.Drawing.RectangleF structure.
+ </summary>
+ <param name="brush">System.Drawing.Brush that determines the characteristics of the fill.</param>
+ <param name="rect">System.Drawing.RectangleF structure that represents the bounding rectangle that
+ defines the ellipse.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.FillEllipse(Microsoft.VisualBasic.Imaging.Brush,System.Single,System.Single,System.Single,System.Single)">
+ <summary>
+ Fills the interior of an ellipse defined by a bounding rectangle specified by
+ a pair of coordinates, a width, and a height.
+ </summary>
+ <param name="brush">System.Drawing.Brush that determines the characteristics of the fill.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse.</param>
+ <param name="width">Width of the bounding rectangle that defines the ellipse.</param>
+ <param name="height">Height of the bounding rectangle that defines the ellipse.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.FillPath(Microsoft.VisualBasic.Imaging.Brush,Microsoft.VisualBasic.Imaging.GraphicsPath)">
+ <summary>
+ Fills the interior of a System.Drawing.Drawing2D.GraphicsPath.
+ </summary>
+ <param name="brush">System.Drawing.Brush that determines the characteristics of the fill.</param>
+ <param name="path">System.Drawing.Drawing2D.GraphicsPath that represents the path to fill.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.FillPie(Microsoft.VisualBasic.Imaging.Brush,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+ <summary>
+ Fills the interior of a pie section defined by an ellipse specified by a pair
+ of coordinates, a width, a height, and two radial lines.
+ </summary>
+ <param name="brush">System.Drawing.Brush that determines the characteristics of the fill.</param>
+ <param name="x">The x-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse from which the pie section comes.</param>
+ <param name="y">The y-coordinate of the upper-left corner of the bounding rectangle that defines
+ the ellipse from which the pie section comes.</param>
+ <param name="width">Width of the bounding rectangle that defines the ellipse from which the pie section
+ comes.</param>
+ <param name="height">Height of the bounding rectangle that defines the ellipse from which the pie
+ section comes.</param>
+ <param name="startAngle">Angle in degrees measured clockwise from the x-axis to the first side of the
+ pie section.</param>
+ <param name="sweepAngle">Angle in degrees measured clockwise from the startAngle parameter to the second
+ side of the pie section.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.FillRectangle(Microsoft.VisualBasic.Imaging.Brush,System.Drawing.Rectangle)">
+ <summary>
+ Fills the interior of a rectangle specified by a System.Drawing.Rectangle structure.
+ </summary>
+ <param name="brush">System.Drawing.Brush that determines the characteristics of the fill.</param>
+ <param name="rect">System.Drawing.Rectangle structure that represents the rectangle to fill.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.Flush">
+ <summary>
+ Forces execution of all pending graphics operations and returns immediately without
+ waiting for the operations to finish.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.ResetClip">
+ <summary>
+ Resets the clip region of this System.Drawing.Graphics to an infinite region.
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.ResetTransform">
+ <summary>
+ Resets the world transformation matrix of this System.Drawing.Graphics to the
+ identity matrix.
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.RotateTransform(System.Single)">
+ <summary>
+ Applies the specified rotation to the transformation matrix of this System.Drawing.Graphics.
+ </summary>
+ <param name="angle">Angle of rotation in degrees.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.ScaleTransform(System.Single,System.Single)">
+ <summary>
+ Applies the specified scaling operation to the transformation matrix of this
+ System.Drawing.Graphics by prepending it to the object's transformation matrix.
+ </summary>
+ <param name="sx">Scale factor in the x direction.</param>
+ <param name="sy">Scale factor in the y direction.</param>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.TranslateTransform(System.Single,System.Single)">
+ <summary>
+ Changes the origin of the coordinate system by prepending the specified translation
+ to the transformation matrix of this System.Drawing.Graphics.
+ </summary>
+ <param name="dx">The x-coordinate of the translation.</param>
+ <param name="dy">The y-coordinate of the translation.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.MeasureString(System.String,Microsoft.VisualBasic.Imaging.Font)">
+ <summary>
+ Measures the specified string when drawn with the specified <see cref="P:Microsoft.VisualBasic.Imaging.IGraphics.Font"/>.
+ </summary>
+ <param name="text">String to measure.</param>
+ <param name="font"><see cref="P:Microsoft.VisualBasic.Imaging.IGraphics.Font"/> that defines the text format of the string.</param>
+ <returns>This method returns a System.Drawing.SizeF structure that represents the size,
+ in the units specified by the <see cref="P:System.Drawing.Graphics.PageUnit"/> property, of the
+ string specified by the text parameter as drawn with the font parameter.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.MeasureString(System.String)">
+ <summary>
+ Using <see cref="P:Microsoft.VisualBasic.Imaging.IGraphics.Font"/>
+ </summary>
+ <param name="text"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.GDICanvas.ReleaseHandle">
+ <summary>
+ Releases all resources used by this <see cref="P:Microsoft.VisualBasic.Drawing.GDICanvas.Graphics"/>.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Graphics2D">
+ <summary>
+ GDI+ device handle for encapsulates a GDI+ drawing surface.
+ </summary>
+ <remarks>
+ (GDI+绘图设备句柄，这个对象其实是为了将gdi+绘图与图形模块的SVG绘图操作统一起来的)
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Graphics2D.ImageResource">
+ <summary>
+ GDI+ device handle memory.
+ </summary>
+ <remarks>(GDI+设备之中的图像数据)</remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Graphics2D.Context">
+ <summary>
+ Can be serialize as a XML file node.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.Graphics2D.Context.color">
+ <summary>
+ the background color value
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Graphics2D.Size">
+ <summary>
+ Gets the width and height, in pixels, of this <see cref="P:Microsoft.VisualBasic.Drawing.Graphics2D.ImageResource"/>.(图像的大小)
+ </summary>
+ <returns>A <see cref="T:System.Drawing.Size"/> structure that represents the width and height, in pixels,
+ of this image.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Graphics2D.Center">
+ <summary>
+ 在图象上面的中心的位置点
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Graphics2D.Save(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)">
+ <summary>
+ 将GDI+设备之中的图像数据保存到指定的文件路径之中，默认的图像文件的格式为PNG格式
+ </summary>
+ <param name="Path"></param>
+ <param name="Format">默认为png格式</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Graphics2D.CreateDevice(System.Drawing.Size,System.Drawing.Color)">
+ <summary>
+ 
+ </summary>
+ <param name="r"></param>
+ <param name="filled">所填充的颜色</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Graphics2D.op_Explicit(Microsoft.VisualBasic.Drawing.Graphics2D)~System.Drawing.Image">
+ <summary>
+ Get the internal <see cref="P:Microsoft.VisualBasic.Drawing.Graphics2D.ImageResource"/>
+ </summary>
+ <param name="g2D"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Graphics2D.Open(System.Drawing.Image)">
+ <summary>
+ Creates a new <see cref="T:System.Drawing.Graphics"/> from the specified <see cref="T:Microsoft.VisualBasic.Imaging.Image"/>.
+ </summary>
+ <param name="image">
+ <see cref="T:Microsoft.VisualBasic.Imaging.Image"/> from which to create the new System.Drawing.Graphics.
+ </param>
+ <returns>
+ This method returns a new <see cref="T:System.Drawing.Graphics"/> for the specified <see cref="T:Microsoft.VisualBasic.Imaging.Image"/>.
+ </returns>
+ 
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Wmf">
+ <summary>
+ Windows Metafile (WMF) is an image file format originally designed for Microsoft Windows in the 1990s. 
+ Windows Metafiles are intended to be portable between applications and may contain both vector graphics 
+ and bitmap components. It acts in a similar manner to SVG files.
+ 
+ Essentially, a WMF file stores a list of function calls that have to be issued to the Windows Graphics 
+ Device Interface (GDI) layer to display an image on screen. Since some GDI functions accept pointers 
+ to callback functions for error handling, a WMF file may erroneously include executable code.
+ 
+ WMF Is a 16-bit format introduced in Windows 3.0. It Is the native vector format for Microsoft Office 
+ applications such as Word, PowerPoint, And Publisher. As of 2015 revision 12 of the Windows Metafile 
+ Format specification Is available for online reading Or download as PDF.
+ </summary>
+ <remarks>
+ The original 16 bit WMF file format was fully specified in volume 4 of the 1992 Windows 3.1 SDK documentation
+ (at least if combined with the descriptions of the individual functions and structures in the other volumes), 
+ but that specification was vague about a few details. These manuals were published as printed books available 
+ in bookstores with no click through EULA or other unusual licensing restrictions (just a general warning that 
+ if purchased as part of a software bundle, the software would be subject to one).
+ 
+ Over time the existence Of that historic specification was largely forgotten And some alternative implementations 
+ resorted To reverse engineering To figure out the file format from existing WMF files, which was difficult And 
+ Error prone. In September 2006, Microsoft again published the WMF file format specification In the context Of 
+ the Microsoft Open Specification Promise, promising To Not assert patent rights To file format implementors. 
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.Wmf.vectorMetafile">
+ <summary>
+ 矢量图的数据存储在这个元数据文件里面
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Wmf.wmfFile">
+ <summary>
+ The file path of the target wmf image file.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Wmf.#ctor(System.Drawing.Size,System.String,System.String)">
+ <summary>
+ The WMF format was designed to be executed by the Windows GDI layer in order to restore the image, but as 
+ the WMF binary files contain the definition of the GDI graphic primitives that constitute this image, it is 
+ possible to design alternative libraries that render WMF binary files, like the Kyktir application does, or 
+ convert them into other graphic formats. For example, the Batik library is able to render WMF files and 
+ convert them to their Scalable Vector Graphics (SVG) equivalent. The Vector Graphics package of the FreeHEP 
+ Java library allows the saving of Java2D drawings as Enhanced Metafiles (EMF). Inkscape and XnView can export 
+ to WMF or EMF.
+ </summary>
+ <param name="size"></param>
+ <param name="save$"></param>
+ <param name="backgroundColor$"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Wmf.ReleaseHandle">
+ <summary>
+ Close the metafile and free resources.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Interop.BitmapBuffer.#ctor(System.IntPtr,System.Int32,System.Drawing.Bitmap,System.Drawing.Imaging.BitmapData,System.Int32)">
+ <summary>
+ constructor for gdi+ image data object
+ </summary>
+ <param name="ptr"></param>
+ <param name="byts"></param>
+ <param name="raw"></param>
+ <param name="handle"></param>
+ <param name="channel"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Interop.BitmapBuffer.FromBitmap(System.Drawing.Bitmap)">
+ <summary>
+ create image read/write memory buffer
+ </summary>
+ <param name="curBitmap"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Interop.BitmapBuffer.FromBitmap(System.Drawing.Bitmap,System.Drawing.Imaging.ImageLockMode)">
+ <summary>
+ 使用这个函数进行写数据的话，会修改到原图
+ </summary>
+ <param name="curBitmap"></param>
+ <param name="mode"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Interop.NamespaceDoc">
+ <summary>
+ The GDI+ interop layer: bitmap buffers, GDI+ image types and the drawing interop helpers
+ that bridge managed graphics models to System.Drawing.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DrawingInterop">
+ <summary>
+ helper for make gdi+ graphics component conversion
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeFontObject(Microsoft.VisualBasic.Imaging.Font)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="font"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypePenObject(Microsoft.VisualBasic.Imaging.Pen)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="stroke"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeBrushObject(Microsoft.VisualBasic.Imaging.SolidBrush)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="paint"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeBrushObject(Microsoft.VisualBasic.Imaging.TextureBrush)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="paint"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeBrushObject(Microsoft.VisualBasic.Imaging.Brush)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="paint"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeFontFamilyObject(Microsoft.VisualBasic.Imaging.FontFamily)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="f"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeStringFormatObject(Microsoft.VisualBasic.Imaging.StringFormat)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="f"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeMatrixObject(Microsoft.VisualBasic.Imaging.Matrix)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object.
+ Replays the transform operation parameters stored on the imaging Matrix onto a GDI+ Matrix.
+ </summary>
+ <param name="matrix"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DrawingInterop.CTypeGraphicsPath(Microsoft.VisualBasic.Imaging.GraphicsPath)">
+ <summary>
+ Convert of the .NET 8.0 visualbasic graphics component as .NET clr windows gdi+ object
+ </summary>
+ <param name="path"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.NamespaceDoc">
+ <summary>
+ A Windows-only GDI+ graphics wrapper for the sciBASIC# drawing API: the canvas, image filters,
+ GIF/TIFF encoders and font metrics, with converters that bridge the graphics models to
+ System.Drawing.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Drawing2D.Text.FontMetrics">
+ <summary>
+ 
+ </summary>
+ <remarks>
+ only works for the gdi+ graphics context
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Drawing2D.Text.FontMetrics.Graphics">
+ <summary>
+ The default gdi+ graphics context
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.Drawing2D.Text.FontMetrics.Height">
+ <summary>
+ 在当前的字体条件下面的，使用默认的<see cref="P:Microsoft.VisualBasic.Drawing.Drawing2D.Text.FontMetrics.Graphics"/>上下文的文本行高
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Drawing2D.Text.FontMetrics.GetStringBounds(System.String,Microsoft.VisualBasic.Imaging.Font,System.Drawing.Graphics)">
+ <summary>
+ Using another graphics context
+ </summary>
+ <param name="s"></param>
+ <param name="g"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Drawing2D.Text.GraphicsText">
+ <summary>
+ 利用GDI+绘制旋转文字，矩形内可以根据布局方式排列文本
+ </summary>
+ <remarks>http://www.xuebuyuan.com/1613072.html</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Drawing2D.Text.GraphicsText.DrawString(System.String,System.Drawing.Font,System.Drawing.Brush,System.Drawing.RectangleF,System.Drawing.StringFormat,System.Single)">
+ <summary>
+ 绘制根据矩形旋转文本
+ </summary>
+ <param name="s">文本</param>
+ <param name="font">字体</param>
+ <param name="brush">填充</param>
+ <param name="layoutRectangle">局部矩形</param>
+ <param name="format">布局方式</param>
+ <param name="angle">角度</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Drawing2D.Text.GraphicsText.DrawString(System.String,System.Drawing.Font,System.Drawing.Brush,System.Drawing.PointF,System.Single,System.Drawing.StringFormat)">
+ <summary>
+ 绘制根据点旋转文本，一般旋转点给定位文本包围盒中心点
+ </summary>
+ <param name="s">文本</param>
+ <param name="font">字体</param>
+ <param name="brush">填充</param>
+ <param name="point">旋转点</param>
+ <param name="format">布局方式</param>
+ <param name="angle">角度</param>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Drawing2D.Text.NamespaceDoc">
+ <summary>
+ GDI+ text rendering: font metrics, graphics text drawing and the text layout model.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.Drawing2D.Text.TextRender">
+ <summary>
+ 基于HTML语法的字符串的绘制描述信息的解析
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Drawing2D.Text.TextRender.RenderHTML(System.Drawing.Graphics@,System.String,System.String,System.Drawing.PointF,System.Int32)">
+ <summary>
+ 
+ </summary>
+ <param name="g"></param>
+ <param name="text$"></param>
+ <param name="CSS_style$"></param>
+ <param name="location">默认是 ``(0, 0)``</param>
+ <param name="maxWidth%"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.Drawing2D.Text.TextRender.DrawHtmlText(System.String,System.String,System.String)">
+ <summary>
+ Rendering the html text as gdi+ image
+ </summary>
+ <param name="label$">HTML</param>
+ <param name="cssFont$">For html ``&lt;p>...&lt;/p>`` css style</param>
+ <param name="maxSize$"></param>
+ <returns></returns>
+</member>
+</members>
+</doc>

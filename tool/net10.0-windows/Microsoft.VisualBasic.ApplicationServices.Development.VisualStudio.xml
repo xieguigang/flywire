@@ -1,0 +1,2567 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.CodeSignHelpers">
+ <summary>
+ 使用AES加密进行代码的签名操作
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.CodeSignHelpers.SignCode(System.String,Microsoft.VisualBasic.SecurityString.AES,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.Languages)">
+ <summary>
+ 这个函数对代码部分的文本生成md5，然后将md5值字符串使用自己的密匙加密，后将结果写在代码文档的header region之中
+ 在验证的时候，只需要取出加密的结果，使用公匙解密，得到md5值，然后再计算代码部分的md5，二者比较一下就能够了解代
+ 码是否被修改了
+ </summary>
+ <param name="code$"></param>
+ <param name="key"></param>
+ <param name="lang"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.CodeStatics.StatVB(System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="code"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseMgr">
+ <summary>
+ Source code license banner
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseMgr.Template">
+ <summary>
+ The license template example.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseMgr.Ignores">
+ <summary>
+ Enumerates all of the VisualStudio IDE auto generated source file.
+ 
+ ```json
+ {".+\.Designer\.vb", "AssemblyInfo\.vb"}
+ ```
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseMgr.Insert(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseInfo,System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.CodeStatics@)">
+ <summary>
+ 
+ </summary>
+ <param name="src">*.vb path</param>
+ <param name="info">License meta data</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseMgr.Inserts(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.LicenseInfo,System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="info">The root directory</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.NamespaceDoc">
+ <summary>
+ Code signing and license inspection helpers for VB.NET source files: source code statistics,
+ license header information and VB code signature extraction for the supported languages.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.VBCodeSignature">
+ <summary>
+ 在这个模块之中对VB的代码文件进行大纲摘要的提取操作
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.VBCodeSignature.SummaryModules(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.CodeSign.CodeStatics)">
+ <summary>
+ 
+ </summary>
+ <param name="vb">the vb source code text</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AstInterpreter">
+ <summary>在 CPU 上直接执行一棵 <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax"/></summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AstInterpreter._env">
+ <summary>变量名 -> 当前值</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AstInterpreter.StepLimit">
+ <summary>单步执行的最大语句数，防止还原出错时出现死循环</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AstInterpreter.Invoke(System.Object[])">
+ <summary>用给定实参执行方法体，返回返回值（Sub 返回 Nothing）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock">
+ <summary>控制流图中的一个基本块</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.Id">
+ <summary>块的编号（等于在 Blocks 列表中的下标）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.Offset">
+ <summary>块首指令的 IL 偏移</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.ImmediateDominator">
+ <summary>直接支配节点（idom）；入口块指向自己，不可达块为 -1</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.DominanceFrontier">
+ <summary>支配边界 DF(B)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.ReversePostOrder">
+ <summary>反向后序序号（RPO），越小越靠前</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.ImmediatePostDominator">
+ <summary>直接后支配节点；为虚拟出口时记 -1</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.LoopLatch">
+ <summary>回边的源（latch）；多重回边时记最后一条</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.LoopFollow">
+ <summary>循环出口块（while 条件为假时去往的块）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.LoopBody">
+ <summary>自然循环的块集合（含 header 与 latch）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.Statements">
+ <summary>该块归约出的语句序列（不含跳转本身）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.Condition">
+ <summary>末指令为条件分支时的条件表达式</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.TrueSuccessor">
+ <summary>条件成立时去往的块</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.FalseSuccessor">
+ <summary>条件不成立时去往的块</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.ExitStack">
+ <summary>块出口处的求值栈（跨块的短路布尔会用到）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.Terminates">
+ <summary>该块是否以 ret / throw 结束（不再有后继）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph">
+ <summary>一个方法的控制流图</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.VirtualExit">
+ <summary>虚拟出口节点在后支配计算图中的编号；对外一律用 -1 表示"汇聚到出口"</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.EntryBlock">
+ <summary>入口块（编号固定为 0）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ReachableBlocks">
+ <summary>按 RPO 顺序返回全部可达块</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.Build(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader)">
+ <summary>由已解析好的方法体构建控制流图</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.SplitBlocks(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader)">
+ <summary>扫描全部跳转目标，把指令序列切成基本块</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.LinkBlocks">
+ <summary>按块末指令连边，并标记条件分支的 true/false 后继</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ReversePostOrderIds">
+ <summary>按 RPO 升序返回可达块的编号</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ComputeDominators">
+ <summary>
+ 迭代式计算直接支配节点（Cooper-Harvey-Kennedy）。
+ 同时填好 DominatorChildren 与 DominanceFrontier。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ComputeDominanceFrontier(System.Collections.Generic.List{System.Int32})">
+ <summary>
+ DF(X) = { Y | X 支配 Y 的某个前驱，但 X 并不严格支配 Y }
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ComputePostDominators">
+ <summary>
+ 计算直接后支配节点。做法是把整张图反向，并额外挂一个"虚拟出口"节点
+ （所有没有后继的块都连到它），然后在反向图上跑一遍支配算法。
+ 结果落在 <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock.ImmediatePostDominator"/>，
+ 指向虚拟出口时记为 <see cref="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.VirtualExit"/>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ComputeIdomOn(System.Collections.Generic.List{System.Collections.Generic.List{System.Int32}},System.Int32)">
+ <summary>
+ 在给定邻接表上跑 Cooper-Harvey-Kennedy 支配算法。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.ComputeNaturalLoops">
+ <summary>
+ 识别回边（A -> B 且 B 支配 A）并由此算出自然循环：
+ header = B，latch = A，body = 所有"不经过 B 就能到达 A"的块 ∪ {B}。
+ 同时给每个循环头填 LoopFollow（header 的后继中不在循环体内的那个）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph.Dominates(System.Int32,System.Int32)">
+ <summary>a 是否支配 b（含 a = b）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo">
+ <summary>IL opcode 归类的静态助手（全部为纯函数）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsLoadLocal(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Int32@)">
+ <summary>是否读取局部变量；是则给出下标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsStoreLocal(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Int32@)">
+ <summary>是否写入局部变量；是则给出下标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsLoadArg(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Int32@)">
+ <summary>是否读取形参；是则给出下标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsStoreArg(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Int32@)">
+ <summary>是否写入形参；是则给出下标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsLoadConstant(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Object@,System.Type@)">
+ <summary>是否加载字面量常量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.TryGetBinaryOperator(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BinaryOperator@)">
+ <summary>是否二元运算；是则给出运算符（结果类型由调用方按操作数推导）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsComparison(System.String)">
+ <summary>该二元指令是否为"比较"类（结果类型为 Boolean）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.TryGetUnaryOperator(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryOperator@)">
+ <summary>是否一元运算</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.TryGetConvertType(System.String,System.Type@,System.Boolean@)">
+ <summary>是否数值转换指令</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsLoadElement(System.String,System.Type@)">
+ <summary>是否数组取元素（ldelem.*）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsStoreElement(System.String)">
+ <summary>是否数组写元素（stelem.*）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IlOpcodeInfo.IsSkip(System.String)">
+ <summary>是否为可直接忽略的指令</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileDiagnostics">
+ <summary>反编译过程中产生的结构化诊断（框架层不写控制台）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileDiagnostics.Warn(System.Int32,System.String)">
+ <summary>记录一条与 IL 偏移相关的警告</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileDiagnostics.Info(System.String)">
+ <summary>记录一条与具体指令无关的提示</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileOptions">
+ <summary>反编译选项</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileOptions.Diagnostics">
+ <summary>结构化诊断的收集器；不传时内部自动建一个</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileOptions.AllowUninitializedLocals">
+ <summary>是否允许出现未初始化就读取的局部变量（VB 通常会先置零，允许时只记警告）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileException">
+ <summary>反编译失败</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodDecompiler.Decompile(System.Reflection.MethodInfo,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.DecompileOptions)">
+ <summary>
+ 把一个已编译的 VB.NET 方法反编译成自定义表达式/语句树。
+ </summary>
+ <param name="method">目标方法（必须是 Shared 且有 IL 体）</param>
+ <param name="options">可选的反编译选项</param>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodDecompiler.HoistDeclarations(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator)">
+ <summary>
+ SSA 的 phi 变量与栈合并变量在所有路径上被赋值、在汇聚点之后被读取，
+ 因此它们的声明必须出现在所有赋值之前。统一提到函数体最前最简单也最安全。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodDecompiler.DumpStructure(System.Reflection.MethodInfo)">
+ <summary>
+ 诊断用：把 IL 指令流与基本块 / 支配 / 循环结构打印成文本。
+ 反编译失败（尤其是"某个控制流形状归约不出来"）时，先看这份转储再改代码。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo">
+ <summary>一个 SSA phi 节点</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo.BlockId">
+ <summary>phi 所在的块</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo.SlotKey">
+ <summary>变量槽键：形参 "a&lt;n&gt;"，局部 "l&lt;n&gt;"</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo.Name">
+ <summary>该 phi 定义的名字（SSA 唯一）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo.VarType">
+ <summary>变量类型（用于生成声明）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.PhiInfo.Args">
+ <summary>入边：前驱块编号 -> 该前驱结束时变量的名字</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.Phis">
+ <summary>块编号 -> 该块开头的 phi 列表</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.UseNames">
+ <summary>指令偏移 -> 该处读取变量时应使用的名字</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.DefNames">
+ <summary>指令偏移 -> 该处定义变量时产生的新名字</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.BaseNames">
+ <summary>槽键 -> 基础名（未加版本号）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.SlotTypes">
+ <summary>槽键 -> 静态类型</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.Build(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ControlFlowGraph,System.Reflection.MethodInfo,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader)">
+ <summary>在给定 CFG 上构造 SSA（要求已先算好支配树）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.ArgKey(System.Int32)">
+ <summary>形参槽键（index 为 ldarg / starg 的下标）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.LocalKey(System.Int32)">
+ <summary>局部变量槽键（index 为 ldloc / stloc 的下标）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.ParameterBaseName(System.String)">
+ <summary>
+ 形参在 AST 里使用的名字。
+ 加 p_ 前缀是为了避免与局部变量（V_n）撞名，下游（CUDA 发射器）依赖这个约定。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SsaBuilder.TypeOfSlot(System.String)">
+ <summary>取槽的静态类型；未知时返回 Nothing</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator">
+ <summary>把 IL 指令流归约成语句与表达式节点</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator._exitStacks">
+ <summary>块编号 -> 该块出口处的求值栈</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator.MergeDeclarations">
+ <summary>跨块栈值合并时临时引入的变量声明（需提升到函数体开头）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator.Run">
+ <summary>按 RPO 逐块做栈模拟，把结果写回各个 <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock"/></summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator.BuildEntryStack(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock)">
+ <summary>
+ 由各前驱的出口栈合成入口栈。深度不一致直接报错；同一槽位上前驱们留下的
+ 节点不同（短路布尔的典型形态）时引入一个合并变量，并在各前驱末尾补赋值。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator.ReduceConditionalBranch(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction,System.Collections.Generic.List{Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Expression})">
+ <summary>
+ 把条件分支归一化成"条件成立去 true 后继"：
+ brtrue 原样；brfalse 取反；beq/bne/bgt/bge/blt/ble 弹两个操作数构造比较。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StackSimulator.WiderType(System.Type,System.Type)">
+ <summary>二元运算的结果类型：取两侧中"更宽"的那个</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.RegionOutput">
+ <summary>一段已归约好的语句 + 该段之后应该继续处理的块</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.Build">
+ <summary>从入口块出发，还原出整个方法体的语句块</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.PathEndsWithReturn(System.Int32)">
+ <summary>从 startId 出发的单后继链是否以 return 结束</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.TryBuildFor(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BasicBlock,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BlockStatement,System.Collections.Generic.List{Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Statement})">
+ <summary>
+ 识别归纳变量形态的循环并归约为 for。
+ 形态：循环体末尾是 "V_k = V_j + step" 紧跟 "V_j = V_k"（phi 回写），
+ 且循环头的条件里用到了 V_j。满足时把这两条语句从循环体摘掉，
+ 并把前置块里对 V_j 的初值赋值也摘出来，组成 for 的三段式。
+ 任何一步不匹配都返回 Nothing，回退成 while。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.IsPhiWriteBack(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Statement)">
+ <summary>是否为"V_a = V_b"这种把值直接搬给 phi 变量的回写</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.StructureRecovery.ReferencesLocal(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Expression,System.String)">
+ <summary>表达式树里是否引用了名为 name 的局部变量</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxWriter.WriteMethod(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax)">
+ <summary>把整棵方法语法树打印成伪代码</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxWriter.WriteBlock(System.Text.StringBuilder,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BlockStatement,System.Int32)">
+ <summary>把一个语句块打印到 builder</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxWriter.WriteExpression(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Expression)">
+ <summary>把表达式节点打印成一个字符串</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Globals.GetOpCode(System.Int16)">
+ <summary>
+ get msil opcode from <see cref="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Globals.OpcodeLookupTable"/>
+ </summary>
+ <param name="i"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Globals.ProcessSpecialTypes(System.String)">
+ <summary>
+ Retrieve the friendly name of a type
+ </summary>
+ <param name="typeName">
+ The complete name to the type
+ </param>
+ <returns>
+ The simplified name of the type (i.e. "int" instead f System.Int32)
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Globals.FixedPopCount(System.Reflection.Emit.OpCode)">
+ <summary>
+ 由 <see cref="P:System.Reflection.Emit.OpCode.StackBehaviourPop"/> 推导出该指令"固定"弹出的求值栈槽位数。
+ </summary>
+ <returns>
+ 0 / 1 / 2 / 3；<see cref="F:System.Reflection.Emit.StackBehaviour.Varpop"/>（call / callvirt / ret 等
+ 弹栈数量取决于签名）返回 -1，由调用方另行处理。
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Globals.FixedPushCount(System.Reflection.Emit.OpCode)">
+ <summary>
+ 由 <see cref="P:System.Reflection.Emit.OpCode.StackBehaviourPush"/> 推导出该指令"固定"压入的求值栈槽位数。
+ </summary>
+ <returns>0 / 1 / 2；<see cref="F:System.Reflection.Emit.StackBehaviour.Varpush"/> 返回 -1。</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.Size">
+ <summary>
+ 该指令的总字节长度（操作码 + 操作数）。由 <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader"/> 在解析时回填。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.NextOffset">
+ <summary>下一条指令的 IL 偏移（顺序执行时的落点）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.IsUnconditionalBranch">
+ <summary>无条件跳转（br / br.s / leave / leave.s）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.IsConditionalBranch">
+ <summary>条件跳转（brtrue / brfalse / 各类 beq bne bgt blt ...）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.IsSwitch">
+ <summary>多分支跳转（switch）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.IsBranch">
+ <summary>是否为任何一种跳转指令</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.IsReturn">
+ <summary>ret</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.BranchTargets">
+ <summary>
+ 该指令的全部跳转目标（绝对 IL 偏移）。
+ 条件/无条件跳转返回单元素数组，switch 返回全部 case 目标，其余返回空数组。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.CanFallThrough">
+ <summary>该指令是否会把控制流交给后面的指令（用于基本块切分）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.GetCode">
+ <summary>
+ Returns a friendly strign representation of this instruction
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.GetExpandedOffset(System.Int64)">
+ <summary>
+ Add enough zeros to a number as to be represented on 4 characters
+ </summary>
+ <param name="offset">
+ The number that must be represented on 4 characters
+ </param>
+ <returns>
+ </returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader">
+ <summary>
+ Parsing the IL of a Method Body
+ 
+ > https://www.codeproject.com/articles/14058/parsing-the-il-of-a-method-body
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.ilBytes">
+ <summary>方法的原始 IL 字节（用于回填 <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ILInstruction.OperandData"/>）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader._locals">
+ <summary>局部变量表，下标即 ldloc / stloc 的操作数</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader._exceptionClauses">
+ <summary>异常处理子句（切分基本块时不能跨越 try/handler 边界）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.offsetIndex">
+ <summary>IL 偏移 -> 指令下标</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.#ctor(System.Reflection.MethodInfo)">
+ <summary>
+ MethodBodyReader constructor
+ </summary>
+ <param name="mi">
+ The System.Reflection defined MethodInfo
+ </param>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.Instructions">
+ <summary>解析得到的指令序列（按 IL 偏移升序）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.MaxStackSize">
+ <summary>方法的最大求值栈深度</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.Locals">
+ <summary>局部变量表（下标即 ldloc / stloc 的操作数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.ExceptionClauses">
+ <summary>异常处理子句</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.IndexByOffset(System.Int32)">
+ <summary>按 IL 偏移查指令下标；不存在返回 -1</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.InstructionAt(System.Int32)">
+ <summary>按 IL 偏移取指令；不存在返回 Nothing</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.HasExceptionHandlers">
+ <summary>该方法是否含有 try / catch / finally 等异常结构</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.ConstructInstructions(System.Reflection.Module)">
+ <summary>
+ Constructs the array of ILInstructions according to the IL byte code.
+ </summary>
+ <param name="module"></param>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.ResolveOrToken(System.Reflection.Module,System.Int32,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.TokenKind,System.Reflection.MethodInfo)">
+ <summary>
+ 解析元数据令牌；解析失败时退回令牌本身（而不是让整段 IL 解析崩掉），
+ 上层遇到 Integer 类型的操作数即可判定"该指令不受支持"。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.Slice(System.Int32,System.Int32)">
+ <summary>从原始 IL 字节里切出 [startIndex, endIndex) 段</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodBodyReader.GetBodyCode">
+ <summary>
+ Gets the IL code of the method
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.NamespaceDoc">
+ <summary>
+ IL disassembly and decompilation of .NET assemblies: instruction and method body readers,
+ control flow graph construction, SSA and stack simulation, and structured syntax recovery
+ used to reconstruct readable source code.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LiteralExpression">
+ <summary>字面量常量（ldc.i4 / ldc.r4 / ldc.r8 / ldstr / ldnull ...）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LiteralExpression.Value">
+ <summary>常量的托管值（Integer / Single / Double / Long / String / Nothing）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterExpression">
+ <summary>方法形参引用（ldarg / ldarga）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterExpression.Index">
+ <summary>参数下标；实例方法的 ldarg.0 为 this</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterExpression.Name">
+ <summary>参数名（无 PDB 时用 argN 兜底）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalExpression">
+ <summary>局部变量引用（ldloc / ldloca）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalExpression.Index">
+ <summary>原始局部变量下标（与 MethodBody.Locals 对应）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalExpression.Version">
+ <summary>SSA 版本号；未做 SSA 时为 0</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalExpression.Name">
+ <summary>变量名（SSA 之后形如 V_0_1，无 PDB 时用 V_N 兜底）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalExpression.SsaName">
+ <summary>SSA 之后的唯一名字（同一变量的不同版本互不相同）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BinaryExpression">
+ <summary>二元运算</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryExpression">
+ <summary>一元运算</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ConvertExpression">
+ <summary>数值/引用转换（conv.r4 / conv.r8 / conv.i4 ...）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ConvertExpression.TargetType">
+ <summary>目标类型</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ConvertExpression.IsChecked">
+ <summary>是否为带溢出检查的 conv.ovf.*</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression">
+ <summary>方法调用（call / callvirt，仅白名单内的纯函数）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.Method">
+ <summary>被调用的方法；无法解析时为 Nothing</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.MethodName">
+ <summary>方法名（无法解析时用作兜底标识）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.DeclaringTypeName">
+ <summary>声明类型全名；用于白名单匹配</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.Instance">
+ <summary>实例方法的 this 参数（静态方法为 Nothing）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.FullName">
+ <summary>形如 System.Math.Sqrt 的完全限定名，供发射器查表</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.CallExpression.AllArguments">
+ <summary>参与求值的全部表达式（实例方法的 this 排在第一个）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ArrayIndexExpression">
+ <summary>数组取元素（ldelem.*）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ArrayIndexExpression.Array">
+ <summary>数组表达式</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ArrayIndexExpression.Index">
+ <summary>下标表达式</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ArrayLengthExpression">
+ <summary>数组长度（ldlen）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.TernaryExpression">
+ <summary>三元条件表达式（cond ? a : b）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.PhiArgument">
+ <summary>SSA phi 的一个入边：来自哪个基本块、取哪个值</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.PhiArgument.BlockId">
+ <summary>来源基本块编号</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.PhiExpression">
+ <summary>
+ SSA phi 节点。结构化还原阶段会把它就地折叠成"分支末尾赋值 + 声明提升"，
+ 因此正常情况下最终 AST 里不应残留 phi。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.PhiExpression.TargetName">
+ <summary>该 phi 对应的变量（用于折叠后定位目标）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BlockStatement">
+ <summary>语句块（同时用作方法体与 if / while / for 的 body）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.VariableDeclarationStatement">
+ <summary>局部变量声明（可带初值）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.VariableDeclarationStatement.Name">
+ <summary>SSA 之后的唯一名字</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.VariableDeclarationStatement.LocalIndex">
+ <summary>原始局部变量下标；SSA 产生的提升变量为 -1</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.VariableDeclarationStatement.VariableType">
+ <summary>声明的类型</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.VariableDeclarationStatement.Initializer">
+ <summary>初值表达式；可为 Nothing（仅声明）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AssignmentStatement">
+ <summary>赋值：target = value</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.AssignmentStatement.Target">
+ <summary>赋值目标：LocalExpression / ParameterExpression / ArrayIndexExpression</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ExpressionStatement">
+ <summary>只有副作用、丢弃结果的表达式语句（例如 stelem、无返回值的 call）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ExpressionStatement.Value">
+ <summary>注意：属性名不能叫 Expression（与 Expression 类名冲突）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ReturnStatement">
+ <summary>return 语句；Value 为 Nothing 表示 Sub 的隐式返回</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IfStatement">
+ <summary>if / else</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.IfStatement.ElseBody">
+ <summary>else 分支；没有 else 时为 Nothing</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.WhileStatement">
+ <summary>while 循环（由带单一回边的自然循环归约而来）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.WhileStatement.IsPostCondition">
+ <summary>条件在循环头还是循环尾（do-while 形态）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ForStatement">
+ <summary>for 循环（归纳变量形态的 while 提升而来）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ForStatement.Condition">
+ <summary>循环条件，形如 i &lt; n</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ForStatement.Increment">
+ <summary>步进表达式，形如 i + 1（即 i = i + step）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.NopStatement">
+ <summary>空语句（nop / 未归约出来的占位）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterDeclaration">
+ <summary>一个方法形参的声明</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterDeclaration.Name">
+ <summary>形参在源码里的名字（来自 MethodInfo）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterDeclaration.SsaName">
+ <summary>
+ 形参在 AST 里实际使用的名字（SSA 基础名，形如 p_x）。
+ AST 中的 <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterExpression"/> 用的是这个名字，
+ 解释器与 CUDA 发射器都必须用它，不能混用 <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.ParameterDeclaration.Name"/>。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.LocalDeclaration">
+ <summary>一个局部变量的声明（方法级符号表）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax">
+ <summary>
+ 一个方法反编译之后的完整语法树。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax.Body">
+ <summary>方法体（顶层语句块）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.MethodSyntax.Diagnostics">
+ <summary>反编译过程中的结构化诊断（警告不阻断，只记录）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxKind">
+ <summary>AST 节点类型</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BinaryOperator">
+ <summary>二元运算符</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryOperator">
+ <summary>一元运算符</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryOperator.Negate">
+ <summary>算术取负 neg</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryOperator.LogicalNot">
+ <summary>逻辑/按位取反 not</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.UnaryOperator.OnesComplement">
+ <summary>按位取反（与 LogicalNot 在 IL 层同指令，保留以区分意图）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxNode">
+ <summary>所有 AST 节点的基类</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxNode.Kind">
+ <summary>节点类型</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxNode.Type">
+ <summary>该节点的静态结果类型；未能推断时为 Nothing</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.SyntaxNode.IsExpression">
+ <summary>该节点在语义上是否产生一个值</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Expression">
+ <summary>表达式节点基类</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.Statement">
+ <summary>语句节点基类</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.OperatorPrecedence">
+ <summary>
+ 一个二元运算符的优先级（数字越大越紧），供发射器决定是否需要加括号。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.OperatorPrecedence.Negate(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.IL.BinaryOperator)">
+ <summary>比较运算取反（用于把 clt 之类的结果取反成 &gt;= 形态）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.NamespaceDoc">
+ <summary>
+ Visual Studio solution, VB.NET project and source code analysis toolkit: parses and writes
+ .sln/.slnx solutions and .vbproj files, builds VB.NET symbol trees with a recursive descent
+ parser, maps compiled assemblies by reflection and decodes IL and source maps.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Resource.MimeData.SerializeBitmapToBase64(Microsoft.VisualBasic.Imaging.Bitmap)">
+ <summary>
+ 将Bitmap对象序列化为Base64字符串
+ </summary>
+ <param name="bmp">要序列化的Bitmap对象</param>
+ <returns>Base64编码的字符串</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Resource.NamespaceDoc">
+ <summary>
+ The .resx resource file data model: typed resource headers, resx schema objects and the
+ MIME data helpers used to read and write .NET resources.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Global">
+ <summary>
+ Carries the content of the solution ``GlobalSection`` pairs
+ (e.g. ``SolutionGuid`` and other global properties).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Global.SolutionGuid">
+ <summary>
+ The solution GUID, if declared in ``GlobalSection(SolutionProperties)``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Global.Properties">
+ <summary>
+ All raw key/value pairs found in the global sections.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Global.GetValue(System.String)">
+ <summary>
+ Get a global property value by key (case-insensitive).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.LegacySlnParser.ParseSln(System.String)">
+ <summary>
+ Parse a classic Visual Studio ``.sln`` text solution file.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.LegacySlnParser.ParseSolutionConfigurations(System.String[],System.Int32,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution)">
+ <summary>
+ Parse a ``GlobalSection(SolutionConfigurationPlatforms)`` block.
+ Returns the index of the last consumed line.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.LegacySlnParser.ParseKeyValueSection(System.String[],System.Int32,System.Collections.Generic.Dictionary{System.String,System.String})">
+ <summary>
+ Parse a generic key = value global section into the supplied dictionary.
+ Returns the index of the last consumed line.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.NamespaceDoc">
+ <summary>
+ Low level readers and writers for the Visual Studio solution file formats: the legacy .sln
+ parser, the modern .slnx parser and writer, and solution configuration models.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Parser">
+ <summary>
+ Parses Visual Studio solution files, both the classic ``.sln`` (text) format
+ and the new ``.slnx`` (XML) format, into a unified <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution"/> model.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Parser.Parse(System.String)">
+ <summary>
+ Parse a solution file, automatically dispatching on its extension.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Parser.SplitQuoted(System.String)">
+ <summary>
+ Split a comma separated list, honoring double quotes so that
+ paths containing commas are not broken.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.TypeId">
+ <summary>
+ Known Visual Studio project type GUIDs.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project">
+ <summary>
+ A project or solution folder inside the solution.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.NodeType">
+ <summary>
+ The project type, derived from the project type GUID.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.TypeGuid">
+ <summary>
+ The project type GUID as it appears in the solution file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.Guid">
+ <summary>
+ The project GUID.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.Name">
+ <summary>
+ The node display name.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.TreePath">
+ <summary>
+ Includes virtual solution folder and project file path.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.RelativePath">
+ <summary>
+ Relative path of the project file (e.g. a ``.vbproj``) to the solution file.
+ Empty for solution folders.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.FullPath">
+ <summary>
+ Resolved full path of the project file. Empty for solution folders.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.ParentGuid">
+ <summary>
+ The GUID of the parent solution folder, or empty for top-level nodes.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project.IsFolder">
+ <summary>
+ True when this node is a solution folder (no physical project file).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SlnxParser.ParseSlnx(System.String)">
+ <summary>
+ Parse a Visual Studio ``.slnx`` XML solution file (VS2022 17.10+).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SlnxWriter.WriteProjectNode(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution,System.Xml.XmlNode,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project,System.Xml.XmlDocument)">
+ <summary>
+ Recursively write a project / folder node and its children into the
+ slnx XML tree. Folders become ``&lt;Folder&gt;`` elements, projects
+ become ``&lt;Project&gt;`` elements.
+ </summary>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SlnxWriter.GetTypeGuid(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.TypeId)">
+ <summary>
+ Resolve the project type GUID for an enum value via its
+ <see cref="T:System.ComponentModel.DescriptionAttribute"/> (inverse of <c>Parser.ResolveType</c>).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SolutionConfiguration">
+ <summary>
+ A solution level build configuration / platform pair, e.g. ``Debug|AnyCPU``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SolutionConfiguration.Name">
+ <summary>
+ The combined name, e.g. ``Debug|AnyCPU``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SolutionConfiguration.Configuration">
+ <summary>
+ The configuration part, e.g. ``Debug``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SolutionConfiguration.Platform">
+ <summary>
+ The platform part, e.g. ``AnyCPU``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.FolderWorkspace.Name">
+ <summary>
+ the name of the folder
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.FolderWorkspace.Path">
+ <summary>
+ the folder full path
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.NamespaceDoc">
+ <summary>
+ Visual Studio solution workspace model: solution, project workspace and folder workspace
+ abstractions that represent a loaded .sln or .slnx solution in memory.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution">
+ <summary>
+ Microsoft Visual Studio Solution File, works for both classic .sln (text)
+ and the new .slnx (XML) solution formats.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.Projects">
+ <summary>
+ The projects and solution folders declared in the solution.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.Configurations">
+ <summary>
+ Solution level build configurations / platforms, e.g. ``Debug|AnyCPU``.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.Global">
+ <summary>
+ Global section key/value pairs (e.g. ``SolutionGuid``).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.FilePath">
+ <summary>
+ The file path of the solution that this model was parsed from.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.IsXmlFormat">
+ <summary>
+ True when the source file was a ``.slnx`` (XML) solution.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.SolutionGuid">
+ <summary>
+ The solution GUID, mirrored from <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Global.SolutionGuid"/>.
+ Setting this also updates the underlying global property.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.GetProjectFullPath(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.Project)">
+ <summary>
+ Resolve the full path of a project relative to the solution file.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.GetProject(System.String)">
+ <summary>
+ Find a project or solution folder by its GUID (case-insensitive).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.GetRootProjects">
+ <summary>
+ Get all top-level nodes (no parent solution folder).
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.GetChildProjects(System.String)">
+ <summary>
+ Get the direct children of the given parent solution folder GUID.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.Save(System.String)">
+ <summary>
+ Save this solution model as a ``.slnx`` (XML) file. The output is
+ symmetric with <see cref="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.File.SlnxParser.ParseSlnx(System.String)"/> so it can be re-read.
+ </summary>
+ <param name="path">
+ The target ``.slnx`` file path. When omitted, <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.sln.Solution.FilePath"/> is used.
+ </param>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ">
+ <summary>
+ VLQ编码
+ 
+ > https://github.com/mozilla/source-map/blob/master/lib/base64-vlq.js
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.VLQ_BASE_SHIFT">
+ <summary>
+ A single base 64 digit can contain 6 bits of data. For the base 64 variable
+ length quantities we use in the source map spec, the first bit Is the sign,
+ the next four bits are the actual value, And the 6th bit Is the
+ continuation bit. The continuation bit tells us whether there are more
+ digits in this value following this digit.
+
+ ```
+   Continuation
+   |    Sign
+   |    |
+   V    V
+   101011
+ ```  
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.VLQ_BASE">
+ <summary>
+ binary 100000
+ </summary>        
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.VLQ_BASE_MASK">
+ <summary>
+ binary 011111
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.VLQ_CONTINUATION_BIT">
+ <summary>
+ binary 100000
+ </summary>        
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.toVLQSigned(System.Int32)">
+ <summary>
+ Converts from a two-complement value to a value where the sign bit Is
+ placed in the least significant bit.  
+ 
+ For example, as decimals:
+ 
+ + 1 becomes 2 (10 binary), -1 becomes 3 (11 binary)
+ + 2 becomes 4 (100 binary), -2 becomes 5 (101 binary)
+ 
+ </summary>
+ <param name="a"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.fromVLQSigned(System.Int32)">
+ <summary>
+ Converts to a two-complement value from a value where the sign bit Is
+ Is placed in the least significant bit.  
+ 
+ For example, as decimals:
+ 
+ + 2 (10 binary) becomes 1, 3 (11 binary) becomes -1
+ + 4 (100 binary) becomes 2, 5 (101 binary) becomes -2
+ 
+ </summary>
+ <param name="value"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.base64VLQ_decode(System.String)">
+ <summary>
+ Decodes the next VLQValue from the provided chars.
+ </summary>
+ <param name="[in]"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.base64VLQ.base64VLQ_decode(System.CharEnumerator)">
+ <summary>
+ Decodes the next VLQValue from the provided chars.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingEncode.encode(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.ApplicationServices.Debugging.Diagnostics.StackFrame},System.String)">
+ <summary>
+ 
+ </summary>
+ <param name="loci"></param>
+ <param name="file">target source file after encode</param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine">
+ <summary>
+ 
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine.targetCol">
+ <summary>
+ 第一位，表示这个位置在（转换后的代码的）的第几列。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine.fileIndex">
+ <summary>
+ 第二位，表示这个位置属于sources属性中的哪一个文件。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine.sourceLine">
+ <summary>
+ 第三位，表示这个位置属于转换前代码的第几行。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine.sourceCol">
+ <summary>
+ 第四位，表示这个位置属于转换前代码的第几列。
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.mappingLine.nameIndex">
+ <summary>
+ 第五位，表示这个位置属于names属性中的哪一个变量。
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.NamespaceDoc">
+ <summary>
+ Source map (v3) decoding and encoding: the base64 VLQ codec, line and segment mapping
+ decoders/encoders and the source map file model.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.sourceMap.sources">
+ <summary>
+ the source file path
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SourceMap.sourceMap.names">
+ <summary>
+ the symbol names
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol">
+ <summary>
+ base for callable members that own parameters, a return type and a body
+ with local variables: <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.MethodSymbol"/> and <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.PropertySymbol"/>.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol.ReturnType">
+ <summary>
+ return type; Nothing for Sub / Sub New / Property without an explicit As clause.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol.Locals">
+ <summary>
+ local variables declared inside the member body (Dim XXX As XXX).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.MethodSymbol">
+ <summary>
+ function / sub / operator / sub new (constructor).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.EnumSymbol.EnumBaseType">
+ <summary>
+ the underlying base type of an enum, e.g. Enum X As Long
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType">
+ <summary>
+ the base class of all code symbol types in a VB language project.
+ the concrete <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Type"/> is fixed by the derived class so that
+ symbol categories (container / member / variable) can never be confused.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Type">
+ <summary>
+ the exact kind of this symbol, fixed by the derived class.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Name">
+ <summary>
+ the symbol name
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Parent">
+ <summary>
+ the parent symbol that owns this symbol (a type container or a member).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.GenericTypeArguments">
+ <summary>
+ generic type argument for XXX(Of T)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Modifiers">
+ <summary>
+ access and custom modifiers, e.g. "Public Shared Overloads"
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Attributes">
+ <summary>
+ attribute declaration blocks applied on this symbol, e.g. &lt;ExportAPI()&gt;
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.XmlDoc">
+ <summary>
+ the xml documentation comment lines (''') that precedes this symbol
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.SourceLocations.IsMultiplePartial">
+ <summary>
+ true when this symbol is composed of several partial declarations.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.SourceLocations.Count">
+ <summary>
+ the number of recorded source locations (partial declarations).
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.SourceLocations.First">
+ <summary>
+ the first recorded source location; nothing when empty.
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Source.LineRange">
+ <summary>
+ the 1-based physical line range of the whole code block, including
+ any leading xml documentation comment (''') / attribute block
+ (&lt;...&gt;) and ending at the matching End XXX statement.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Source.DeclarationLine">
+ <summary>
+ the 1-based physical line where the declaration keyword
+ (Class / Function / ...) actually starts. May differ from
+ <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Source.LineRange"/>.Min when a leading xml doc / attribute
+ block is present.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Source.CodeBlock">
+ <summary>
+ extract the raw VB.NET source text of this symbol from its file.
+ </summary>
+ <remarks>
+ This property reads the whole file on every access (lazy, on
+ demand). Do not call it inside hot loops or ToString overrides.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.MemberSymbol">
+ <summary>
+ category base: a declaration that lives inside a <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol"/>,
+ e.g. method / property / event / delegate / variable (field or local).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.PropertySymbol">
+ <summary>
+ property declaration, e.g. Property X As XX / Property Item(index As Integer) As XX.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.EventSymbol">
+ <summary>
+ event symbol, e.g. Event XXX(x As XX)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.EventSymbol.DelegateType">
+ <summary>
+ the delegate type that backs this event
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.DelegateSymbol">
+ <summary>
+ delegate declaration, e.g. Public Delegate Function AAA(x As XX) As XXX
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.NamespaceDoc">
+ <summary>
+ The VB.NET source code symbol tree: namespace, type, member, variable and enum symbol
+ objects produced by the recursive descent parser and used for code analysis.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.NamespaceDoc">
+ <summary>
+ The VB.NET recursive descent parser and lexical scanner: tokens, statements, type
+ information helpers and the parser implementation that feeds the code symbol tree.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.TypeInfoHelper">
+ <summary>
+ helpers to build <see cref="T:Microsoft.VisualBasic.Scripting.MetaData.TypeInfo"/> clr type references from the
+ type name text that was extracted out of the VB.NET source code.
+
+ Because the type is only known by its textual name at parse time, the
+ <see cref="P:Microsoft.VisualBasic.Scripting.MetaData.TypeInfo.assembly"/> and <see cref="P:Microsoft.VisualBasic.Scripting.MetaData.TypeInfo.reference"/>
+ fields are left empty; <see cref="P:Microsoft.VisualBasic.Scripting.MetaData.TypeInfo.isSystemKnownType"/> can
+ still be used to detect framework known types.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.TypeInfoHelper.TypeRef(System.String)">
+ <summary>
+ build a clr type reference from a type name text (e.g. "Integer",
+ "System.String", "List(Of T)"). returns nothing for empty input.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBParser">
+ <summary>
+ recursive descent parser for VB.NET source code.
+
+ <see cref="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBParser.Parse(System.String)"/> turns a VB.NET source text string into a symbol
+ tree rooted at a synthetic <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol"/> (namespace kind).
+ It recognises container types (class/module/structure/enum/interface/
+ namespace), their members (function/sub/operator/property and delegate
+ declarations) and the local variable symbols (Dim/Static/Const) that
+ appear inside a member body. Every clr type reference is stored as a
+ <see cref="T:Microsoft.VisualBasic.Scripting.MetaData.TypeInfo"/>.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBParser.Parse(System.String)">
+ <summary>
+ parse the given VB.NET source text and return the root symbol
+ container (a synthetic namespace). Its <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.InternalNested"/>
+ holds nested types and its <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.Members"/> holds
+ top level members / fields.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBParser.DeclareFields(System.Collections.Generic.List{Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.Token},Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement)">
+ <summary>
+ declare type-level fields (Public/Private/Dim X As XX at container scope).
+ They are stored in <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.Members"/>.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBParser.DeclareLocals(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol)">
+ <summary>
+ declare local variables (Dim/Static/Const) inside a member body.
+ They are stored in <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol.Locals"/> so that
+ they are never confused with type-level members.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBScanner">
+ <summary>
+ lexical scanner for VB.NET source code.
+
+ It handles line continuations (the trailing underscore, outside of
+ strings/comments), strips single quote comments and collects triple
+ quote xml documentation lines, and finally tokenizes every logical
+ line into a flat list of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.Token"/>.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBScanner.Scan(System.String)">
+ <summary>
+ scan the given VB.NET source text into a list of statements.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement">
+ <summary>
+ a logical (already line-continued) source line together with the
+ xml documentation comment that immediately precedes it.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement.Line">
+ <summary>
+ the physical line (1-based, as shown in an editor) where the
+ declaration keyword of this statement starts.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement.EndLine">
+ <summary>
+ the last physical line (1-based) covered by this logical statement
+ after line continuation (trailing underscore) merging. Equal to
+ <see cref="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement.Line"/> when the statement is a single physical line.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement.LeadingLine">
+ <summary>
+ the earliest physical line (1-based) of the xml documentation
+ comment (''') / standalone attribute block (&lt;...&gt;) that
+ immediately precedes this statement. Falls back to <see cref="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBStatement.Line"/>
+ when there is no leading comment or attribute.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.TokenKind">
+ <summary>
+ the kind of a lexical token produced by <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.VBScanner"/>
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.Token">
+ <summary>
+ a single lexical token with its source text and line number.
+
+ <see cref="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.Syntax.Token.Line"/> holds the 1-based physical line of the logical
+ statement this token belongs to (a statement may span several physical
+ lines after continuation merging); it is not the exact line of the
+ token itself.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol">
+ <summary>
+ category base: a type declaration that can nest other types and members,
+ e.g. Namespace / Class / Module / Structure / Enum / Interface.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.InternalNested">
+ <summary>
+ nested type declarations owned by this container (class/structure/enum/interface/module/namespace).
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.Members">
+ <summary>
+ type members owned by this container (method/property/field/event/delegate).
+ NOTE: local variables inside a method/property body live in <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol.Locals"/>
+ /<see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.CallableMemberSymbol.Locals"/>, NOT here, to avoid the "Members" ambiguity.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.InheritsType">
+ <summary>
+ the base type from the Inherits clause
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.TypeContainerSymbol.ImplementsInterfaces">
+ <summary>
+ the implemented interfaces from the Implements clause
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.VariableSymbol">
+ <summary>
+ a variable symbol. Per design, class/structure fields AND local method variables
+ share this single type (Field is intentionally not split out). Use <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.CodeDOM.LanguageSymbolType.Parent"/>
+ to tell whether it is a field (Parent is a TypeContainerSymbol) or a local (Parent is a MemberSymbol).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NamespaceDoc">
+ <summary>
+ NuGet package resolution helpers for VB project files: package, framework and version
+ models together with the NuGet resolver and client used to restore dependencies.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient">
+ <summary>
+ 轻量 nuget 客户端: 基于 nuget.org flat-container 协议获取包, 并复用
+ NuGet 全局包目录(<c>~/.nuget/packages</c>)作为本地缓存。
+ </summary>
+ <remarks>
+ 功能边界(刻意保持轻量, 不引入 NuGet 官方客户端库):
+ <list type="bullet">
+ <item>版本索引: <c>{source}/{id}/index.json</c>;</item>
+ <item>包下载: <c>{source}/{id}/{version}/{id}.{version}.nupkg</c>(流式落盘);</item>
+ <item>本地缓存: 解压到 <c>~/.nuget/packages/{id}/{version}/</c>, 布局与 NuGet 完全一致,
+ 因此可以直接复用其它工具(Visual Studio / dotnet restore)已经安装过的包;
+ 以 NuGet 的 <c>.nupkg.metadata</c> 作为"安装完成"标记, 避免复用半成品目录;</item>
+ <item>原子写入: 先解压到同级临时目录, 全部成功后再改名, 中断不会污染缓存。</item>
+ </list>
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.NuGetOrgSource">
+ <summary>nuget.org v3 flat-container 源</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.InstallMarker">
+ <summary>NuGet 安装完成标记文件名</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.VersionCache">
+ <summary>进程内的版本索引缓存(避免同一 id 反复联网)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.Source">
+ <summary>包源地址(以 <c>/</c> 结尾)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.CacheRoot">
+ <summary>本地缓存根目录(默认为 NuGet 全局包目录)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.DefaultCacheRoot">
+ <summary>
+ NuGet 全局包目录: 优先取环境变量 <c>NUGET_PACKAGES</c>, 否则取
+ <c>~/.nuget/packages</c>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.GetVersions(System.String)">
+ <summary>
+ 读取一个包的可用版本列表(按版本号降序)。结果会按 id 缓存在进程内。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.GetBestVersion(System.String,System.Boolean)">
+ <summary>
+ 取最新版本: 默认取最新稳定版(跳过 prerelease); <paramref name="allowPrerelease"/> 为 True 时取最新版。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.GetPackageFolder(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion)">
+ <summary>包解压目录: <c>{cache}/{id-lower}/{version-lower}</c></summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.IsInstalled(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion)">
+ <summary>该包是否已经完成安装(存在解压目录与安装标记)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.Install(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion)">
+ <summary>
+ 确保指定版本的包已经存在于本地缓存, 返回包的解压目录。
+ 缓存未命中时从包源下载并解压。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.ContentHash(System.String)">
+ <summary>
+ 计算 nupkg 的内容哈希(base64 编码的 SHA512), 用于写入 NuGet 兼容的安装标记。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.FindNuspec(System.String)">
+ <summary>
+ 在包目录根层查找 <c>.nuspec</c> 描述文件; 不存在时返回 Nothing。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetClient.ClearVersionCache">
+ <summary>清空进程内的版本索引缓存(主要用于测试)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework">
+ <summary>
+ 目标框架 moniker(TFM)的兼容性排序、最优匹配与当前运行平台识别。
+ </summary>
+ <remarks>
+ 采用"等级"模型: 每个 TFM 映射为一个整数等级, 只有当资产 TFM 的等级
+ 不高于目标框架等级时才认为兼容, 并在全部兼容资产中取等级最高者。
+ <list type="bullet">
+ <item><c>netstandard1.0</c> → 1100 ... <c>netstandard2.1</c> → 1201</item>
+ <item><c>netcoreapp1.0</c> → 2100 ... <c>netcoreapp3.1</c> → 2301</item>
+ <item><c>net5.0</c> → 3500 ... <c>net10.0</c> → 4000</item>
+ <item>.NET Framework(<c>net48</c> 之类)与未知 TFM 返回 -1(不可用)</item>
+ </list>
+ 注意: 本模型针对现代 .NET(net5.0+)目标优化, 对 netcoreapp/netstandard 之间的
+ 细粒度相互兼容性(例如 netstandard2.1 需要 netcoreapp3.0+)不做精确建模。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.ModernBase">
+ <summary>现代 .NET(<c>netX.Y</c>, X &gt;= 5)的等级基数</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.CoreAppBase">
+ <summary>netcoreapp 系列的等级基数</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.StandardBase">
+ <summary>netstandard 系列的等级基数</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.AnyNames">
+ <summary>无框架约束的资产目录名(等价于兜底)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.GetLevel(System.String)">
+ <summary>
+ 计算 TFM 的兼容等级; 无法识别(或不与现代 .NET 兼容)时返回 -1。
+ </summary>
+ <param name="tfm">目标框架 moniker, 例如 <c>net10.0</c> / <c>netstandard2.0</c></param>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.IsCompatible(System.String,System.String)">
+ <summary>判断某个资产 TFM 是否可用于给定的目标框架</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.GetBest(System.Collections.Generic.IEnumerable{System.String},System.String)">
+ <summary>
+ 从候选 TFM 列表中选出对目标框架最优的一个:
+ 兼容候选中等级最高者; 没有兼容候选时回退到"无框架约束"项(<c>any</c>/空串)。
+ </summary>
+ <param name="frameworks">候选 TFM(例如 <c>lib/</c> 下的子目录名)</param>
+ <param name="targetFramework">目标框架 moniker</param>
+ <returns>命中的候选原文; 均不匹配时返回 Nothing</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.IsAny(System.String)">
+ <summary>该 TFM 是否为"任意框架"的兜底标记</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.GetCurrentRuntimeIdentifier">
+ <summary>
+ 当前进程的运行平台标识, 形如 <c>win-x64</c> / <c>linux-x64</c> / <c>osx-arm64</c>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework.Normalize(System.String)">
+ <summary>
+ 归一化 TFM: 去空白、转小写、去掉平台后缀(<c>net6.0-windows</c> → <c>net6.0</c>)。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependency">
+ <summary>
+ 一条 nuget 依赖声明(来自目标包的 <c>.nuspec</c>)。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependency.Id">
+ <summary>依赖包的 id</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependency.Range">
+ <summary>依赖的版本范围</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependency.TargetFramework">
+ <summary>声明该依赖的目标框架(空字符串表示兜底依赖组)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependencyGroup">
+ <summary>
+ 一个 nuspec 的依赖组(<c>&lt;group targetFramework="..."&gt;</c>)。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependencyGroup.TargetFramework">
+ <summary>目标框架 moniker; 空字符串表示 nuspec 中的兜底(无 targetFramework 属性)依赖组</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage">
+ <summary>
+ 一个已经落到本地缓存目录的 nuget 包: 包含解析出的依赖与资产(托管 dll / 原生资产目录)。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.Id">
+ <summary>包 id</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.Version">
+ <summary>实际选定的版本</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.PackageFolder">
+ <summary>包解压后的目录(<c>~/.nuget/packages/&lt;id&gt;/&lt;version&gt;</c>)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.NuspecFile">
+ <summary>包描述文件(.nuspec)路径</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.TargetFramework">
+ <summary>资产选择所依据的目标框架</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.IsRoot">
+ <summary>是否为本次 <c>#include</c> 直接引用的根包</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.Assemblies">
+ <summary>该包在当前目标框架下的托管程序集绝对路径</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.NativeAssets">
+ <summary>该包在当前运行平台下的原生资产目录</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetPackage.Dependencies">
+ <summary>该包在当前目标框架下的直接依赖</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult">
+ <summary>
+ 一次 nuget 依赖解析的完整结果: 根包 + 全部传递依赖。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult.Root">
+ <summary><c>#include</c> 直接引用的根包</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult.Packages">
+ <summary>根包与其全部传递依赖(按 id 去重, 每个 id 只保留最终选定的版本)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult.AllAssemblies">
+ <summary>解析出的全部托管程序集(去重, 保持稳定顺序)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult.AllNativeAssets">
+ <summary>解析出的全部原生资产目录(去重)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolveResult.PackageFolders">
+ <summary>全部包的解压目录(用于运行期依赖探测)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetException">
+ <summary>
+ nuget 包解析过程中出现的可预期错误(包不存在、版本不存在、网络不可达等)。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver">
+ <summary>
+ nuget 依赖解析器: 读取包内 <c>.nuspec</c>, 递归展开传递依赖,
+ 完成目标框架匹配、版本冲突消解与资产(托管 dll / 原生库目录)选择。
+ </summary>
+ <remarks>
+ 解析策略:
+ <list type="number">
+ <item><b>依赖展开</b>: 以广度优先方式展开依赖图, 每个包只保留一个最终版本;</item>
+ <item><b>版本冲突</b>: 与 NuGet 一致地"取较高版本" —— 在同一 id 上累积全部版本约束,
+ 优先选择同时满足最多约束的最高版本, 因此版本选择单调不降, 展开过程必然收敛;</item>
+ <item><b>框架匹配</b>: 依赖组与资产目录均按 <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetFramework"/> 的等级模型
+ 选择"不高于目标框架的最高等级"者;</item>
+ <item><b>资产</b>: 只收集 <c>lib/</c> 与当前平台 <c>runtimes/&lt;rid&gt;/lib</c> 下的托管 dll
+ (排除附属资源 <c>*.resources.dll</c>), <c>ref/</c> 为纯引用程序集(无 IL)因此不用于运行期。</item>
+ </list>
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.MaxIterations">
+ <summary>依赖展开的最大迭代次数(防御性上限, 正常包图远小于此)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.Client">
+ <summary>包获取客户端</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.TargetFramework">
+ <summary>目标框架 moniker</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.AllowPrerelease">
+ <summary>是否允许选择 prerelease 版本</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.Resolve(System.String,System.String,System.String,System.Boolean)">
+ <summary>
+ 解析一个 nuget 包及其全部传递依赖。
+ </summary>
+ <param name="packageId">包 id</param>
+ <param name="versionConstraint">版本或版本范围; 空/Nothing 表示取最新稳定版</param>
+ <param name="targetFramework">目标框架 moniker(如 net10.0)</param>
+ <param name="allowPrerelease">是否允许 prerelease 版本</param>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.ResolvePackages(System.String,System.String)">
+ <summary>
+ 解析入口: 返回根包与全部传递依赖(每个 id 只保留最终选定的版本)。
+ </summary>
+ <remarks>
+ 参数刻意命名为 <c>versionConstraint</c> 而非 <c>versionRange</c>:
+ VB 是大小写不敏感的, 若命名为 <c>versionRange</c> 会屏蔽同名的
+ <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange"/> 类型, 导致 <c>VersionRange.Parse</c> 解析失败。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.SelectVersion(System.String,System.Collections.Generic.List{Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange})">
+ <summary>
+ 在全部已有约束下选择版本。
+ </summary>
+ <remarks>
+ 与 NuGet 的解析规则保持一致:
+ <list type="bullet">
+ <item>没有任何版本约束(例如 <c>#include "pkg"</c>)时, 取<b>最新稳定版</b>;</item>
+ <item>存在版本约束时, 取<b>满足全部约束的最低版本</b> —— 这可以避免同一个包被
+ 多个依赖要求时把不同大版本的组件混用在一起(例如宿主包是 8.x, 却选到 10.x 的依赖);</item>
+ <item>约束之间无法同时满足时, 退化为"满足最多约束的最低版本", 保证解析过程仍然收敛。</item>
+ </list>
+ 另外, 若约束的下/上界本身是 prerelease 版本(例如精确锁定 <c>1.0.0-beta</c>),
+ 则会自动放开 prerelease 过滤, 否则锁定 prerelease 的写法永远无法命中。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.IsUnconstrained(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange)">
+ <summary>该版本范围是否未施加任何约束</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.HasPrereleaseBound(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange)">
+ <summary>该版本范围的边界是否为 prerelease 版本</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.LoadPackage(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion)">
+ <summary>把包取到本地缓存, 读取 nuspec, 解析依赖与资产</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.SelectDependencyGroup(System.Collections.Generic.List{Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetDependencyGroup})">
+ <summary>选择与目标框架最匹配的依赖组</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.FindBestFrameworkFolder(System.String)">
+ <summary>在给定根目录下挑选与目标框架最匹配的子目录</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetResolver.FindChild(System.Xml.Linq.XElement,System.String)">
+ <summary>按 localName 查找子元素(忽略 xml 命名空间差异)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion">
+ <summary>
+ NuGet 所使用的语义化版本号: <c>major.minor.patch[.revision][-prerelease][+build]</c>。
+ </summary>
+ <remarks>
+ 只实现 NuGet flat-container 依赖解析所需的最小语义:
+ 四段数字(缺失段视为 0)、预发布标签(按 SemVer 规则比较), 以及构建元数据(<c>+build</c> 直接忽略)。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.ReleaseLabel">
+ <summary>预发布标签(例如 <c>beta.1</c>); 稳定版为 Nothing</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.OriginalString">
+ <summary>解析之前的原始文本</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.IsPrerelease">
+ <summary>是否为预发布版本(例如 1.0.0-beta)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.FolderName">
+ <summary>用于 nuget 全局包目录的规范化小写版本号</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.TryParse(System.String,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion@)">
+ <summary>
+ 解析版本号文本; 失败时返回 False 并保持 <paramref name="version"/> 为 Nothing。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.CompareRelease(System.String,System.String)">
+ <summary>
+ 预发布标签比较: 稳定版大于任何预发布版; 标签按点号分段, 数字段按数值比较, 数字段小于字母段。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion.NormalizedString">
+ <summary>规范化版本号文本: 去掉多余的 0 段, 保留预发布标签(小写不改写)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange">
+ <summary>
+ NuGet 版本范围: <c>1.2.3</c>(最小版本)、<c>[1.2.3]</c>(精确)、<c>[1.0,)</c>、<c>[1.0,2.0)</c>、<c>(,2.0]</c> 等。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.MinVersion">
+ <summary>下界; Nothing 表示无下界</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.MaxVersion">
+ <summary>上界; Nothing 表示无上界</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.IsMinInclusive">
+ <summary>下界是否可取等号</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.IsMaxInclusive">
+ <summary>上界是否可取等号</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.OriginalString">
+ <summary>解析之前的原始文本</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.IsExact">
+ <summary>是否为精确版本约束</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.All">
+ <summary>无约束范围(任意版本)</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.VersionRange.Satisfies(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NuGet.NuGetVersion)">
+ <summary>判断给定版本是否落在本范围之内</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.AssemblyInfoExtensions.GetAssemblyInfo(System.String)">
+ <summary>
+ Get assembly info from a vbproject file
+ </summary>
+ <param name="vbproj">The file path of the ``*.vbproj`` file.</param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.AssemblyInfoExtensions.ParseAssemblyInfo(System.String)">
+ <summary>
+ Parse a assembly info vb source file.
+ </summary>
+ <param name="vb">The VB file content text, not file path.</param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Extensions.EnumerateSourceFiles(System.String)">
+ <summary>
+ Enumerate all of the vb source files in this vbproj.
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Extensions.EnumerateSourceFiles(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject,System.Boolean,System.Boolean)">
+ <summary>
+ Enumerate all of the vb source files in this vbproj.
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Extensions.AssemblyInfo(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject)">
+ <summary>
+ try to extract the assembly information from the vbproject file
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Extensions.GetOutputName(Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject)">
+ <summary>
+ Get output assembly name
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.NamespaceDoc">
+ <summary>
+ The VB.NET project (.vbproj) document model: the VBProject, VBDocument and project file
+ abstractions plus assembly info and project level extension helpers.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.NamespaceDoc">
+ <summary>
+ The strongly typed XML object model of the SDK style .vbproj project file.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBProjectReference">
+ <summary>
+ external project reference (ProjectReference item)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBProjectReference.Include">
+ <summary>relative or absolute path to the referenced vbproj</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBReference">
+ <summary>
+ external assembly reference: a <c>Reference</c> item carrying a <c>HintPath</c>.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBReference.Include">
+ <summary>assembly simple name (the Include attribute)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBReference.HintPath">
+ <summary>path of the referenced dll (relative to the project file or absolute)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBReference.Private">
+ <summary>whether the referenced assembly should be copied into the output folder</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBReference.Condition">
+ <summary>optional Condition attribute</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBPackageReference">
+ <summary>
+ nuget package reference (PackageReference item)
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBPackageReference.Id">
+ <summary>package id (the Include attribute)</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBBuildConfiguration">
+ <summary>
+ a single build configuration derived from a conditional PropertyGroup
+ (e.g. '$(Configuration)|$(Platform)' == 'Debug|AnyCPU').
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBBuildConfiguration.Condition">
+ <summary>the raw Condition string of the source PropertyGroup</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBBuildConfiguration.Configuration">
+ <summary>Debug / Release / ...</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBBuildConfiguration.Platform">
+ <summary>AnyCPU / x64 / ...</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBBuildConfiguration.Extra">
+ <summary>any other properties declared inside the conditional PropertyGroup</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBProjectMetadata">
+ <summary>
+ generic, non-packaging project metadata parsed from PropertyGroup elements.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBProjectMetadata.Other">
+ <summary>any unrecognized project properties</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBNuGetMetadata">
+ <summary>
+ nuget / packaging metadata parsed from PropertyGroup elements.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.ProjectXml.VBNuGetMetadata.Other">
+ <summary>any other unrecognized packaging properties</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBDocument.FileName">
+ <summary>
+ relative path to the vbproj file
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBDocument.Imports">
+ <summary>
+ namespace imports list
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBDocument.Types">
+ <summary>
+ language symbols that parsed from current vb.net source file document text
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Imports.Namespace">
+ <summary>
+ Imports XXX
+ </summary>
+ <returns></returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Imports.Alias">
+ <summary>
+ Imports X = XXX
+ </summary>
+ <returns></returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject">
+ <summary>
+ vbproj file model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Sdk">
+ <summary>the Sdk attribute of the root Project element (e.g. Microsoft.NET.Sdk)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Metadata">
+ <summary>generic project metadata (TargetFramework, Platforms, LangVersion, ...)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.NuGet">
+ <summary>packaging / nuget metadata</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Configurations">
+ <summary>conditional build configurations (Debug/Release x Platform)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.ProjectReferences">
+ <summary>external project references</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.PackageReferences">
+ <summary>nuget package references</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.References">
+ <summary>external assembly references (dll + HintPath)</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.CompileExcludes">
+ <summary>Compile Remove patterns collected from the vbproj</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.GetType(System.String)">
+ <summary>
+ Get symbol via fullname
+ </summary>
+ <param name="fullName">namespace + type symbol name</param>
+ <returns>
+ returns nothing if the given symbol could not be found
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.LoadAssembly(System.String)">
+ <summary>
+ Load a .NET assembly (dll) via reflection and map its symbols into a
+ virtual VBProject. The assembly metadata is read only (no execution).
+ </summary>
+ <param name="dllPath">path to the target dll file.</param>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Load(System.String,System.Boolean)">
+ <summary>
+ Parse vbproj xml file and the vb source files
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.LoadProjectXml(System.String)">
+ <summary>
+ Just read the vbproj xml file
+ </summary>
+ <param name="vbproj"></param>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.ParseProperties(System.Xml.Linq.XDocument,System.Xml.Linq.XNamespace,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject)">
+ <summary>
+ Parse every PropertyGroup (conditional or not) into the strongly typed
+ metadata / nuget / build-configuration models.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.ParseConfigCondition(System.String)">
+ <summary>
+ Extract Configuration / Platform from a conditional PropertyGroup
+ Condition such as '$(Configuration)|$(Platform)' == 'Debug|AnyCPU'.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.ParseItemGroups(System.Xml.Linq.XDocument,System.Xml.Linq.XNamespace,Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject)">
+ <summary>
+ Parse ItemGroup elements: ProjectReference, PackageReference and Compile
+ Remove patterns.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Generate">
+ <summary>
+ Generate a clean, canonical SDK-style vbproj document from this model.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject.Save(System.String)">
+ <summary>
+ Serialize this model back to a clean SDK-style vbproj file on disk.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Reflection.AssemblySymbolLoader">
+ <summary>
+ Loads a .NET assembly (dll) via read-only metadata reflection and maps
+ every type and member into the VBLang symbol tree model. The whole
+ assembly is hosted inside a single virtual <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBDocument"/> whose
+ <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBDocument.Types"/> dictionary holds the symbol tree (namespaces
+ -> types -> nested types / members). No source code is executed.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Reflection.AssemblySymbolLoader.LoadAssembly(System.String)">
+ <summary>
+ Read-only load a .NET dll and build its symbol tree wrapped in a
+ <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.VBProject"/>. The loaded assembly metadata is never executed.
+ </summary>
+ <param name="dllPath">absolute or relative path to the target dll.</param>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VBProj.Reflection.NamespaceDoc">
+ <summary>
+ Reflection based assembly symbol loader that maps compiled .NET assemblies into the VB
+ project code symbol tree.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLineType">
+ <summary>
+ Represents the type of a single diff line.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLineType.Added">
+ <summary>
+ A line that was added (prefixed with '+' in diff output).
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLineType.Deleted">
+ <summary>
+ A line that was deleted (prefixed with '-' in diff output).
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLineType.Context">
+ <summary>
+ An unchanged context line (prefixed with ' ' in diff output).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChangeKind">
+ <summary>
+ Represents the kind of change applied to a file.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChangeKind.Added">
+ <summary>
+ The file was added (new file).
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChangeKind.Modified">
+ <summary>
+ The file was modified (existing file changed).
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChangeKind.Deleted">
+ <summary>
+ The file was deleted.
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChangeKind.Renamed">
+ <summary>
+ The file was renamed.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLine">
+ <summary>
+ Represents a single line in a git diff output.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLine.Type">
+ <summary>
+ The type of change for this line.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffLine.Content">
+ <summary>
+ The raw content of the line (without the leading '+', '-', or ' ' prefix).
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk">
+ <summary>
+ Represents a contiguous section (hunk) of changes in a file diff.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk.OldStart">
+ <summary>
+ The starting line number in the old (original) file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk.OldCount">
+ <summary>
+ The number of lines this hunk occupies in the old file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk.NewStart">
+ <summary>
+ The starting line number in the new (modified) file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk.NewCount">
+ <summary>
+ The number of lines this hunk occupies in the new file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffHunk.Lines">
+ <summary>
+ The list of diff lines in this hunk.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChange">
+ <summary>
+ Represents the diff changes for a single file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChange.FilePath">
+ <summary>
+ The relative file path that was changed.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChange.ChangeKind">
+ <summary>
+ The kind of change applied to this file.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.FileChange.Hunks">
+ <summary>
+ The list of hunks (sections of changes) for this file.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult">
+ <summary>
+ Represents the complete parsed result of a git diff command.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult.Files">
+ <summary>
+ The list of file changes in this diff.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult.GetAllAddedLines">
+ <summary>
+ Get all added lines across all files.
+ </summary>
+ <returns>An enumerable of tuples (file path, line content).</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult.GetAllDeletedLines">
+ <summary>
+ Get all deleted lines across all files.
+ </summary>
+ <returns>An enumerable of tuples (file path, line content).</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.diff">
+ <summary>
+ Module for invoking git diff command and parsing its output into structured objects.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.diff.GetDiff(System.String,System.Boolean,System.String)">
+ <summary>
+ Run <c>git diff</c> on the specified folder path and parse the output.
+ </summary>
+ <param name="directory">The repository folder path to run git diff against.</param>
+ <param name="cached">If <c>True</c>, runs <c>git diff --cached</c> (staged changes).</param>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult"/> containing all parsed file changes.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.diff.ParseDiffText(System.String)">
+ <summary>
+ Parse raw git diff text into a structured <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult"/>.
+ </summary>
+ <param name="diffText">The raw output from <c>git diff</c>.</param>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult"/> containing all parsed file changes.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log">
+ <summary>
+ Represents a single log entry from a version control system, 
+ containing the commit identifier, author, timestamp, and commit message.
+ This model is designed to be compatible with both <c>git log</c> and <c>svn log</c> output formats.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.commit">
+ <summary>
+ Gets or sets the commit identifier (e.g., the SHA-1 hash for Git, or the revision number for SVN).
+ </summary>
+ <returns>A <see cref="T:System.String"/>   representing the unique identifier of this commit.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.author">
+ <summary>
+ Gets or sets the name of the author who created this commit.
+ </summary>
+ <returns>A <see cref="T:System.String"/>   containing the author's name or username.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.date">
+ <summary>
+ Gets or sets the date and time when this commit was created.
+ </summary>
+ <returns>A <see cref="T:System.DateTime"/>   value representing the commit timestamp.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.message">
+ <summary>
+ Gets or sets the commit message or log description associated with this commit.
+ </summary>
+ <returns>A <see cref="T:System.String"/>   containing the commit message text.</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.ParseGitLogText(System.String)">
+ <summary>
+ Parses the raw output text from <c>git log [fileName]</c> command and 
+ converts it into a sequence of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   objects.
+ </summary>
+ <param name="text">
+ The raw text output from the <c>git log</c> command. Each log block is expected to 
+ start with a line beginning with <c>"commit "</c>, followed by author, date, and 
+ message lines in standard Git log format.
+ </param>
+ <returns>
+ An <see cref="T:System.Collections.Generic.IEnumerable`1"/>   sequence of parsed <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   entries 
+ extracted from the input text.
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.ParseSvnLogText(System.String)">
+ <summary>
+ Parses the raw output text from <c>svn log [fileName]</c> command and 
+ converts it into a sequence of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   objects.
+ </summary>
+ <param name="text">
+ The raw text output from the <c>svn log</c> command. Log blocks are delimited by 
+ lines of dashes (<c>"----------"</c>). Each block starts with a header line 
+ containing the revision number, author, and date separated by pipe (<c>"|"</c>) 
+ characters, followed by the commit message body.
+ </param>
+ <returns>
+ An <see cref="T:System.Collections.Generic.IEnumerable`1"/>   sequence of parsed <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   entries 
+ extracted from the input text.
+ </returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.NamespaceDoc">
+ <summary>
+ Git repository access helpers: commit log and weekly log models together with diff
+ utilities.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry">
+ <summary>
+ Represents a single commit entry parsed from <c>git log --since="..." -p</c> output, 
+ aggregating the commit metadata, the list of changed files with their diff content, 
+ and the added/deleted line counts for convenient weekly-report generation.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry.meta">
+ <summary>
+ Gets or sets the commit metadata (hash, author, date, message).
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   object describing the commit.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry.changes">
+ <summary>
+ Gets or sets the parsed patch (diff) content for this commit, including the 
+ list of changed files and their hunks of changes.
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.DiffResult"/>   containing all changed files of this commit.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry.AddedLines">
+ <summary>
+ Gets or sets the total number of added lines across all changed files in this commit.
+ </summary>
+ <returns>An <see cref="T:System.Int32"/>   count of added lines.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry.DeletedLines">
+ <summary>
+ Gets or sets the total number of deleted lines across all changed files in this commit.
+ </summary>
+ <returns>An <see cref="T:System.Int32"/>   count of deleted lines.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.weeklyLog">
+ <summary>
+ Module for parsing <c>git log --since="..." -p</c> output into structured commit entries,
+ combining the existing <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log"/>   metadata parser and the <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.diff"/>   patch parser.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.weeklyLog.ParseWeeklyLogText(System.String)">
+ <summary>
+ Parse the raw output text from <c>git log --since="..." -p</c> and convert it into a 
+ sequence of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry"/>   objects, one per commit, each carrying its 
+ metadata, changed files, diff content and added/deleted line counts.
+ </summary>
+ <param name="text">
+ The raw text output from the <c>git log ... -p</c> command. Each commit block starts 
+ with a line beginning with <c>"commit "</c>, followed by author/date/message lines and, 
+ when the <c>-p</c> option is present, the patch sections starting with 
+ <c>"diff --git a/..."</c>.
+ </param>
+ <returns>
+ An <see cref="T:System.Collections.Generic.IEnumerable`1"/>   sequence of parsed commit entries 
+ extracted from the input text.
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.weeklyLog.ParseCommitBlock(System.String[])">
+ <summary>
+ Parse a single commit block (an array of text lines) into a <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.commitEntry"/>.
+ The metadata portion (before the first <c>"diff --git"</c> line) is parsed via the 
+ existing <see cref="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.log.ParseGitLogText(System.String)"/>   logic, while the patch portion is parsed 
+ via the existing <see cref="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.diff.ParseDiffText(System.String)"/>   logic.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.Git.weeklyLog.GetWeeklyLog(System.String,System.String,System.String)">
+ <summary>
+ Run <c>git --no-pager log --since="&lt;since&gt;" -p</c> on the specified repository 
+ directory and parse the output into structured commit entries.
+ </summary>
+ <param name="directory">The repository folder path to run the git log command against.</param>
+ <param name="since">
+ The <c>--since</c> argument value, e.g. <c>"1 week ago"</c>, <c>"2 days ago"</c> or a 
+ concrete date <c>"2026-07-29"</c>. Defaults to <c>"1 week ago"</c>.
+ </param>
+ <param name="git">The git executable name or path. Defaults to <c>"git"</c>.</param>
+ <returns>
+ An <see cref="T:System.Collections.Generic.IEnumerable`1"/>   sequence of parsed commit entries 
+ from the last week (or the period specified by <paramref name="since"/>).
+ </returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.VersionControl.NamespaceDoc">
+ <summary>
+ Version control integration entry point for the Visual Studio code tooling.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.WCFTraceFile">
+ <summary>
+ Utility class for reading and parsing Windows Communication Foundation (WCF) trace log files (.svclog).
+ Provides methods to deserialize E2E trace events from XML-formatted trace files.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.WCFTraceFile.ReadFile(System.String)">
+ <summary>
+ Reads and parses a WCF trace log file (.svclog) into a sequence of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.E2ETraceEvent"/>  objects.
+ </summary>
+ <param name="svclog">The file path or XML content string of the .svclog trace file.</param>
+ <returns>An enumerable collection of <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.E2ETraceEvent"/>  instances parsed from the trace file.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.E2ETraceEvent">
+ <summary>
+ Represents an End-to-End (E2E) trace event from a WCF trace log.
+ Contains system-level event information and optional application-specific data.
+ Maps to the "E2ETraceEvent" XML element in the Microsoft E2E trace event schema.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.E2ETraceEvent.System">
+ <summary>
+ Gets or sets the system-level event information associated with this trace event.
+ Contains metadata such as event ID, type, severity level, timestamp, source, and execution context.
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent"/>  instance containing the system event details.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.E2ETraceEvent.ApplicationData">
+ <summary>
+ Gets or sets the application-specific data payload attached to this trace event.
+ This may contain custom logging information, exception details, or diagnostic messages from the application.
+ </summary>
+ <returns>A string containing the application data content.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent">
+ <summary>
+ Represents the system-level event metadata for a WCF trace event.
+ Maps to the "System" XML element in the Windows event log schema.
+ Contains information about the event identifier, type, severity, timestamp, source, correlation, and execution context.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.EventID">
+ <summary>
+ Gets or sets the event identifier that uniquely identifies the type of event.
+ </summary>
+ <returns>A string representing the event ID.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Type">
+ <summary>
+ Gets or sets the type of the event (e.g., Error, Warning, Information, etc.).
+ </summary>
+ <returns>A string indicating the event type.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.SubType">
+ <summary>
+ Gets or sets the sub-type of the event, providing additional classification detail.
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.TagValue"/>  instance containing the sub-type name and value.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Level">
+ <summary>
+ Gets or sets the severity level of the event (e.g., Critical, Error, Warning, Information, Verbose).
+ </summary>
+ <returns>A string representing the event level.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.TimeCreated">
+ <summary>
+ Gets or sets the timestamp when the event was created.
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemTime"/>  instance containing the creation time.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Source">
+ <summary>
+ Gets or sets the source of the event, identifying the component or service that generated the trace.
+ </summary>
+ <returns>A <see cref="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.TagValue"/>  instance containing the source name and value.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Correlation">
+ <summary>
+ Gets or sets the correlation information for this event, used to correlate related trace events across activities.
+ </summary>
+ <returns>A <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Correlation"/>  instance containing the activity identifier.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Execution">
+ <summary>
+ Gets or sets the execution context information, including process and thread identifiers.
+ </summary>
+ <returns>An <see cref="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Execution"/>  instance containing process and thread details.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Channel">
+ <summary>
+ Gets or sets the event channel through which the event was logged.
+ </summary>
+ <returns>A string representing the event channel.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemEvent.Computer">
+ <summary>
+ Gets or sets the name of the computer where the event originated.
+ </summary>
+ <returns>A string containing the computer name.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Execution">
+ <summary>
+ Represents the execution context information for a trace event.
+ Contains the process name, process identifier, and thread identifier as XML attributes.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Execution.ProcessName">
+ <summary>
+ Gets or sets the name of the process that generated the trace event.
+ </summary>
+ <returns>A string containing the process name.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Execution.ProcessID">
+ <summary>
+ Gets or sets the numeric identifier of the process that generated the trace event.
+ </summary>
+ <returns>A string containing the process ID.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Execution.ThreadID">
+ <summary>
+ Gets or sets the identifier of the thread within the process that generated the trace event.
+ </summary>
+ <returns>A string containing the thread ID.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemTime">
+ <summary>
+ Represents a system timestamp value, serialized as an XML attribute.
+ Used to capture the creation time of a trace event.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.SystemTime.SystemTime">
+ <summary>
+ Gets or sets the system time value when the event was created.
+ Typically formatted as an ISO8601 date/time string.
+ </summary>
+ <returns>A string representing the system timestamp.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.TagValue">
+ <summary>
+ Represents a key-value pair where the name is stored as an XML attribute
+ and the value is stored as the XML element's text content.
+ Commonly used for representing sub-type, source, and other tagged metadata in WCF trace events.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.TagValue.Name">
+ <summary>
+ Gets or sets the attribute name of this key-value pair.
+ </summary>
+ <returns>A string containing the attribute name.</returns>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.TagValue.Value">
+ <summary>
+ Gets or sets the text content value of this key-value pair.
+ </summary>
+ <returns>A string containing the text value.</returns>
+</member>
+<member name="T:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Correlation">
+ <summary>
+ Represents activity correlation information for a WCF trace event.
+ Used to correlate related trace events across service boundaries by sharing a common activity identifier.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Correlation.ActivityID">
+ <summary>
+ Gets or sets the activity identifier used for correlating related trace events.
+ Typically a globally unique identifier (GUID) that links events belonging to the same logical operation.
+ </summary>
+ <returns>A string containing the activity ID.</returns>
+</member>
+</members>
+</doc>

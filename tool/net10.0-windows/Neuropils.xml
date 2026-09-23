@@ -1,0 +1,1892 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Neuropils
+</name>
+</assembly>
+<members>
+<member name="T:Neuropils.Analysis.PlotRuntime">
+ <summary>
+ 绘图运行时的初始化。
+ </summary>
+ <remarks>
+ <c>PlotEngine</c> 在排版标题 / 坐标轴刻度 / 图例时要量文本高度，而字体度量走的是
+ imaging 库里<b>全局注册</b>的文本度量驱动（<c>Font.GetHeight</c> 内部用的是
+ <c>DriverLoad.MeasureTextSize</c>，与传入的绘图设备无关）。没有注册时它会直接抛
+ <c>InvalidProgramException: missing text size measurement driver!</c>。
+ 
+ 所以任何要画图表的进程（主窗口、曲线图窗口、命令行出图）都必须先调用
+ <see cref="M:Neuropils.Analysis.PlotRuntime.EnsureRegistered"/> —— 它是幂等的。
+ </remarks>
+</member>
+<member name="M:Neuropils.Analysis.PlotRuntime.EnsureRegistered">
+ <summary>注册默认的文本度量 / 光栅化驱动（可重复调用）。</summary>
+</member>
+<member name="T:Neuropils.Analysis.CurveAggregation">
+ <summary>曲线图的组织方式。</summary>
+</member>
+<member name="F:Neuropils.Analysis.CurveAggregation.Individual">
+ <summary>每个响应神经元一条曲线（数量受上限约束，最活跃的优先）</summary>
+</member>
+<member name="F:Neuropils.Analysis.CurveAggregation.GroupMean">
+ <summary>每个选中的标签取值一条均值曲线</summary>
+</member>
+<member name="F:Neuropils.Analysis.CurveAggregation.GroupEnvelope">
+ <summary>组均值 + 上下包络（虚线）</summary>
+</member>
+<member name="T:Neuropils.Analysis.CurveOptions">
+ <summary>曲线图的绘制参数（界面上的下拉框全部映射到这里）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.Dimension">
+ <summary>筛选维度。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.Selected">
+ <summary>选中的标签取值（空 = 不筛选）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.Mode">
+ <summary>信号口径。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.Aggregation">
+ <summary>组织方式。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.MaxCurves">
+ <summary>逐神经元模式下的曲线数量上限。</summary>
+</member>
+<member name="P:Neuropils.Analysis.CurveOptions.Window">
+ <summary>放电率的滑动窗宽（步）。</summary>
+</member>
+<member name="T:Neuropils.Analysis.ResponseCurveBuilder">
+ <summary>
+ 把响应矩阵装配成可绘制的曲线集合。
+ </summary>
+ <remarks>
+ <b>为什么必须要"组织方式"这一层</b>：一次 140 μm 的电刺激会让三万多神经元发放，
+ 逐条画出来既看不清也没有意义（线宽 1 px，屏幕只有一千多像素宽）。
+ 因此提供三种视角：
+ <list type="bullet">
+   <item><see cref="F:Neuropils.Analysis.CurveAggregation.Individual"/>：挑最活跃的若干条画出来，
+         用来看"单个神经元的响应波形"；</item>
+   <item><see cref="F:Neuropils.Analysis.CurveAggregation.GroupMean"/>：每个选中的标签取值一条均值曲线，
+         用来看"不同脑区 / 递质 / 细胞类型的响应差异"；</item>
+   <item><see cref="F:Neuropils.Analysis.CurveAggregation.GroupEnvelope"/>：均值曲线 + 上下包络，
+         用来判断"这一群神经元是同步响应还是各响各的"。</item>
+ </list>
+ </remarks>
+</member>
+<member name="M:Neuropils.Analysis.ResponseCurveBuilder.Build(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset,Neuropils.Analysis.CurveOptions,System.String@)">
+ <summary>装配曲线集合（返回的列表顺序即图例顺序）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseCurveBuilder.buildIndividual(Neuropils.Analysis.ResponseDataset,Neuropils.Analysis.CurveOptions,System.Int32[],System.String@)">
+ <summary>逐神经元曲线（最活跃的优先，受上限约束）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseCurveBuilder.buildGroups(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset,Neuropils.Analysis.CurveOptions,System.Int32[],System.String@)">
+ <summary>按标签取值聚合的均值（± 包络）曲线。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseCurveBuilder.timeAxis(System.Int32)">
+ <summary>时间轴（1 基步号，与报告里的 <c>step</c> 列一致）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseCurveBuilder.Describe(Neuropils.Analysis.CurveOptions)">
+ <summary>把选中的标签取值拼成可读的一句话（放标题里）。</summary>
+</member>
+<member name="T:Neuropils.Analysis.NeuronLabelDimension">
+ <summary>筛选神经元集合所用的标签维度。</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.Neuropil">
+ <summary>主导脑区（neuropil）</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.Neurotransmitter">
+ <summary>神经递质类型（nt_type）</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.PrimaryType">
+ <summary>细胞类型（primary_type）</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.SuperClass">
+ <summary>分类层级：super_class</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.CellClass">
+ <summary>分类层级：class</summary>
+</member>
+<member name="F:Neuropils.Analysis.NeuronLabelDimension.CellGroup">
+ <summary>分类层级：group（与细胞类型同一层级的粗分类）</summary>
+</member>
+<member name="T:Neuropils.Analysis.ResponseSignalMode">
+ <summary>纵轴"响应电信号强度"的取值口径。</summary>
+</member>
+<member name="F:Neuropils.Analysis.ResponseSignalMode.MembranePotential">
+ <summary>触发前膜电位（来自分析回放，最忠实于神经元真实电信号）</summary>
+</member>
+<member name="F:Neuropils.Analysis.ResponseSignalMode.SpikeRate">
+ <summary>滑动窗放电率（由记录下来的脉冲序列折算，任何一次实验都可用）</summary>
+</member>
+<member name="F:Neuropils.Analysis.ResponseSignalMode.Spike">
+ <summary>原始脉冲（0/1）</summary>
+</member>
+<member name="T:Neuropils.Analysis.ResponseDataset">
+ <summary>
+ 电刺激实验的响应曲线数据源：把一次刺激的结果规整成
+ 「响应神经元 × 时间步」的响应矩阵，并提供按标签筛选与折算曲线的能力。
+ </summary>
+ <remarks>
+ 两种构造方式：
+ <list type="bullet">
+   <item><see cref="M:Neuropils.Analysis.ResponseDataset.FromReplay(Neuropils.Simulation.StimulationReplay,Neuropils.Data.BrainDataset,System.Double)"/>：直接用本次会话刚跑完的结果（含膜电位）；</item>
+   <item><see cref="M:Neuropils.Analysis.ResponseDataset.FromReport(System.String,Neuropils.Data.BrainDataset)"/>：从落盘的实验记录目录读回来 ——
+         于是"记录下来的响应结果数据"在重启程序之后仍然可以画图。</item>
+ </list>
+ 
+ 标签一律从 <see cref="T:Neuropils.Data.BrainDataset"/> 与 <see cref="T:FlywireAI.Connectome.ConnectomeIndex"/> 现取，
+ 因此筛选维度与三维视图、图例用的是同一套注释信息。
+ </remarks>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Summary">
+ <summary>本次刺激的元信息（用于标题与状态栏）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Source">
+ <summary>数据来源描述（会话内结果 / 记录目录）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Steps">
+ <summary>时间步数 T。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Units">
+ <summary>神经元总数 N。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.TargetNeuron">
+ <summary>被刺激的神经元索引（-1 表示未知）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.TargetRootId">
+ <summary>被刺激神经元的 root_id。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.RadiusUm">
+ <summary>募集半径 (微米)。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Current">
+ <summary>注入电流强度。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Responders">
+ <summary>响应神经元索引（矩阵的行）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Potential">
+ <summary>膜电位矩阵（可能为空 —— 记录里没有分析回放时）</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Pulses">
+ <summary>脉冲矩阵（0/1，逐神经元逐步；永远可用）</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Counts">
+ <summary>逐神经元累计脉冲计数（长度 = <see cref="P:Neuropils.Analysis.ResponseDataset.Units"/>；可能为空）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.PotentialValidated">
+ <summary>分析回放与快速仿真的脉冲是否一致（``Nothing`` = 没有膜电位数据）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.PotentialMismatches">
+ <summary>不一致的神经元-步对数。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.Threshold">
+ <summary>动作电位阈值（用于在图上标出阈值线）。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.HasPotential">
+ <summary>是否拿到了膜电位轨迹。</summary>
+</member>
+<member name="P:Neuropils.Analysis.ResponseDataset.AvailableModes">
+ <summary>当前数据可用的信号口径。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.TotalSpikes(System.Int32)">
+ <summary>响应神经元的累计脉冲数（用于"最活跃"排序）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.FromReplay(Neuropils.Simulation.StimulationReplay,Neuropils.Data.BrainDataset,System.Double)">
+ <summary>用本次会话刚跑完的刺激结果构造。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.FromReport(System.String,Neuropils.Data.BrainDataset)">
+ <summary>
+ 从落盘的实验记录目录构造（读取 summary / active_neurons / response_potential / activity 四个文件）。
+ </summary>
+</member>
+<member name="F:Neuropils.Analysis.ResponseDataset.Unannotated">
+ <summary>没有注释信息时的标签名。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.LabelOf(Neuropils.Analysis.NeuronLabelDimension,System.Int32,Neuropils.Data.BrainDataset)">
+ <summary>取一个神经元的标签值（该维度上没有注释时返回 <see cref="F:Neuropils.Analysis.ResponseDataset.Unannotated"/>）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.Categories(Neuropils.Analysis.NeuronLabelDimension,Neuropils.Data.BrainDataset,System.Int32[]@)">
+ <summary>
+ 统计某个标签维度在<b>响应神经元集合</b>里出现的取值与数量。
+ </summary>
+ <remarks>
+ 只统计有响应的神经元：注释表里上百个类别中绝大多数在当前刺激下根本没有神经元
+ 被激活，列出来只会让筛选面板变成噪音。
+ </remarks>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.SelectRows(Neuropils.Analysis.NeuronLabelDimension,Neuropils.Data.BrainDataset,System.Collections.Generic.IEnumerable{System.String})">
+ <summary>选中标签集合内的响应神经元行号（未选中任何值时返回全部）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.TopRows(System.Int32[],System.Int32)">
+ <summary>按累计脉冲数取最活跃的若干行（用于"曲线数量上限"的取舍）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.Curve(System.Int32,Neuropils.Analysis.ResponseSignalMode,System.Int32)">
+ <summary>
+ 取第 <paramref name="row"/> 行的响应曲线（按所选口径折算）。
+ </summary>
+ <param name="row">响应矩阵行号</param>
+ <param name="mode">信号口径</param>
+ <param name="window">放电率的滑动窗宽（步），仅在 <see cref="F:Neuropils.Analysis.ResponseSignalMode.SpikeRate"/> 下使用</param>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.smoothed(System.Double[],System.Int32)">
+ <summary>
+ 脉冲 → 滑动窗放电率。
+ </summary>
+ <remarks>
+ 用居中滑动窗（窗口在两侧各取 <c>window/2</c> 步）而不是累积窗：
+ 累积窗会把峰值整体右移，看上去像是"响应比实际发生得更晚"。
+ 归一化成"每步发放概率"（窗内脉冲数 / 窗内步数），与膜电位同量纲、可比。
+ </remarks>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.applySummary(System.Collections.Generic.Dictionary{System.String,System.String})">
+ <remarks>
+ 形参不能叫 <c>summary</c>：VB 不区分大小写，它会遮蔽 <see cref="P:Neuropils.Analysis.ResponseDataset.Summary"/> 属性，
+ 于是下面那句 "Summary = ..." 变成给字典赋值。
+ </remarks>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.readActiveNeurons(System.String)">
+ <summary>
+ 读取"逐步激活神经元清单"（<c>step,neuron_index,root_id</c>）。
+ </summary>
+ <returns>脉冲矩阵（行 = path.Neurons 的顺序）与神经元清单、步数。</returns>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.readPotential(System.String,System.Int32)">
+ <summary>读取膜电位矩阵（<c>neuron_index,root_id,t1,t2,...</c>）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.readActivity(System.String,System.Int32)">
+ <summary>读取逐神经元累计脉冲计数（<c>neuron_index,root_id,spike_count,firing_rate</c>）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.realignTo(System.ValueTuple{System.Double[][],System.Int32[],System.Int32},System.Int32[],System.Int32,System.Int32)">
+ <summary>把脉冲矩阵重排到指定神经元顺序（缺行的补零）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.ResponseDataset.realignPulses(System.ValueTuple{System.Double[][],System.Int32[],System.Int32},System.Int32[],System.Int32)">
+ <summary>按结果顺序重建脉冲矩阵（<see cref="M:Neuropils.Analysis.ResponseDataset.FromReport(System.String,Neuropils.Data.BrainDataset)"/> 的第一版，行序保持文件顺序）。</summary>
+</member>
+<member name="T:Neuropils.Analysis.StimulationArchive">
+ <summary>
+ 电刺激实验记录目录的索引：每一次刺激都会在
+ <c>&lt;数据目录&gt;\snn-output\&lt;时间戳&gt;_stimulation\</c> 下落一份完整记录。
+ </summary>
+ <remarks>
+ 有了这个索引，"打开历史实验"就不必依赖会话内存 —— 关掉程序再打开，
+ 之前的响应结果依然可以画图。
+ </remarks>
+</member>
+<member name="F:Neuropils.Analysis.StimulationArchive.Suffix">
+ <summary>记录目录的后缀（由 <c>StimulationReport.Write</c> 生成）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.StimulationArchive.Enumerate(System.String)">
+ <summary>列出全部实验记录目录（按时间倒序，最新在前）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.StimulationArchive.Latest(System.String)">
+ <summary>最新的一次实验记录目录（没有任何记录时返回 ``Nothing``）。</summary>
+</member>
+<member name="M:Neuropils.Analysis.StimulationArchive.Describe(System.String)">
+ <summary>读一条实验记录的摘要（用于列表显示；读取失败时返回目录名）。</summary>
+</member>
+<member name="T:Neuropils.Data.BrainDataset">
+ <summary>
+ 三维可视化所使用的果蝇大脑数据集：神经元索引与注释、三维坐标、主导脑区，
+ 以及连接表。
+ </summary>
+ <remarks>
+ 三个设计决策：
+ 
+ 1. <b>神经元索引复用 <see cref="T:FlywireAI.Connectome.ConnectomeIndex"/></b>（``root_id`` ↔ ``[0, N)`` 双向映射
+    以及 name / group / class / primary_type 注释）。这样三维视图里的"第 i 个点"与
+    SNN 仿真里的"第 i 个神经元"是同一个对象，两个子系统的结果可以直接互相印证；
+ 2. <b>属性用稀疏值类型数组</b>（``Double()`` / ``Integer()`` / ``String()``）而不是对象
+    列表：13 万个神经元如果每条属性都装箱，托管堆会多付出数倍的开销；
+ 3. <b>连接表用并行数组</b>（<see cref="P:Neuropils.Data.BrainDataset.Pre"/> / <see cref="P:Neuropils.Data.BrainDataset.Post"/> / ...）而不是对象列表：
+    534 万条连接用对象表示需要数 GB，用并行数组约 100 MB。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Index">
+ <summary>神经元索引与注释（``root_id`` ↔ 索引，name / group / class / primary_type）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Positions">
+ <summary>
+ 神经元坐标，按 ``[x0, y0, z0, x1, y1, z1, ...]`` 排列 (纳米)。
+ 没有坐标的神经元三个分量都是 ``NaN``。
+ </summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.PositionMarks">
+ <summary>每个神经元在 ``coordinates.csv`` 里被标记的坐标条数（0 表示没有坐标）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Neuropil">
+ <summary>
+ 主导脑区索引，``-1`` 表示该神经元在脑区表里没有记录。
+ </summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.NeuropilNames">
+ <summary>脑区名称表（<see cref="P:Neuropils.Data.BrainDataset.Neuropil"/> 的元素指向这里）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.NeuropilSynapses">
+ <summary>主导脑区的突触总数（用于排序 / 筛选）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Neurotransmitters">
+ <summary>每个神经元的递质类型（``neurons.csv`` 的 ``nt_type``，缺注释时为空串）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Activity">
+ <summary>
+ 每个神经元的仿真活跃度（脉冲计数）；``Nothing`` 表示当前数据集没有活跃度数据。
+ </summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ActivitySource">
+ <summary>活跃度数据的来源描述（用于界面状态栏）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Pre">
+ <summary>连接的前突触神经元索引（并行数组）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Post">
+ <summary>连接的后突触神经元索引（并行数组）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.SynCount">
+ <summary>连接的突触数量（并行数组）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ConnectionNeuropil">
+ <summary>连接所在脑区的索引（指向 <see cref="P:Neuropils.Data.BrainDataset.ConnectionNeuropils"/>，``-1`` 表示未知）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ConnectionNtType">
+ <summary>连接的递质类型索引（指向 <see cref="P:Neuropils.Data.BrainDataset.ConnectionNeurotransmitters"/>）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ConnectionNeuropils">
+ <summary>连接的脑区名称表。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ConnectionNeurotransmitters">
+ <summary>连接的递质名称表。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Source">
+ <summary>数据集来源目录或描述（用于界面状态栏）。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.Units">
+ <summary>神经元总数 N。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.ConnectionCount">
+ <summary>连接总数。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.PositionedCount">
+ <summary>拥有坐标的神经元数量。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDataset.HasActivity">
+ <summary>是否带有仿真活跃度数据？</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.HasPosition(System.Int32)">
+ <summary>该神经元是否有可用的三维坐标？</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.GetPosition(System.Int32)">
+ <summary>取得神经元的坐标；没有坐标时返回无效值。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.GetNeuropilName(System.Int32)">
+ <summary>神经元的主导脑区名；未知时返回 ``(unknown)``。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.GetConnectionNeuropilName(System.Int32)">
+ <summary>连接的脑区名；未知时返回 ``(unknown)``。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.GetConnectionNtTypeName(System.Int32)">
+ <summary>连接的递质名；未知时返回空串。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDataset.HasBothEndsPositioned(System.Int32)">
+ <summary>该连接的终点是否都是有坐标的神经元（画线的前提）。</summary>
+</member>
+<member name="T:Neuropils.Data.BrainDatasetLoader">
+ <summary>
+ 把 FAFB v783 的表格装配成 <see cref="T:Neuropils.Data.BrainDataset"/>。
+ </summary>
+ <remarks>
+ 全部表格都以<b>流式</b>方式读取（``Stream*`` 扩展方法，惰性迭代、O(1) 内存），
+ 因为其中连接表有 261 MB / 534 万行、脑区表有 321 列。整个加载过程可以在后台线程
+ 上运行，并通过 <paramref name="progress"/> 与 <paramref name="cancel"/> 反馈进度
+ 与响应取消。
+ 
+ 数据来源与用途：
+ 
+ * ``names.csv`` → 神经元主索引 (<see cref="T:FlywireAI.Connectome.ConnectomeIndex"/>)；
+ * ``classification.csv`` / ``consolidated_cell_types.csv`` / ``neurons.csv`` → 注释；
+ * ``coordinates.csv`` → 每个神经元的三维坐标 (点云的位置)；
+ * ``neuropil_synapse_table.csv`` → 每个神经元的主导脑区 (颜色维度之一)；
+ * ``connections_princeton.csv`` → 突触连接 (三维连线)；
+ * ``neuron_activity_*.csv`` → 仿真活跃度 (可选，找不到时界面可以现场重跑仿真)。
+ </remarks>
+</member>
+<member name="F:Neuropils.Data.BrainDatasetLoader.DefaultMaxConnections">
+ <summary>连接表的默认读取上限 (534 万行 × 5 个并行数组约 100 MB)。</summary>
+</member>
+<member name="P:Neuropils.Data.BrainDatasetLoader.MaxConnections">
+ <summary>连接表的读取上限 (超过之后截断，并在进度里报告)。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.Load(System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 加载整个数据集。
+ </summary>
+ <param name="progress">进度回调 (已经格式化的文本)</param>
+ <param name="cancel">取消标记</param>
+ <exception cref="T:System.IO.FileNotFoundException">必需的表格不存在</exception>
+ <exception cref="T:System.OperationCanceledException">调用方取消了加载</exception>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.reportStage(System.Action{System.String},System.String,System.Diagnostics.Stopwatch,System.Int64@)">
+ <summary>报告一个阶段的耗时 (同时也把逐阶段耗时写进自检报告)。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadNeurotransmitters(FlywireAI.Connectome.ConnectomeIndex,System.Threading.CancellationToken)">
+ <summary>每神经元的递质类型 (``neurons.csv``)。</summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadPositions(Neuropils.Data.BrainDataset,System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 每个神经元的三维坐标：``coordinates.csv`` 对同一个神经元可能有多条标记位置，
+ 这里取它们的算术平均 (并记录标记条数)。
+ </summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadNeuropils(Neuropils.Data.BrainDataset,System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 每个神经元的主导脑区：在 321 列的脑区表里取"输入+输出突触数最多"的脑区。
+ </summary>
+ <remarks>
+ 列名通过 <see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/> 反射得到（``input synapses in AL_L`` 之类），
+ 属性名本身被简写成 VB 标识符，只有列名保留着脑区前缀。取值走
+ <see cref="!:Delegate.CreateDelegate(Type, MethodInfo)"/> 绑定出来的委托而不是
+ ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.parseNeuropilHeader(System.String[])">
+ <summary>
+ 从脑区表的表头里挑出 ``input/output synapses in &lt;region&gt;`` 列的位置。
+ </summary>
+ <remarks>
+ 只解析需要的 160 列：整张表有 321 列，逐列走反射映射实测要 32 s，
+ 按位置取值并只解析这 160 列约 1.5 s。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadConnections(Neuropils.Data.BrainDataset,System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 连接表：``pre_root_id, post_root_id, neuropil, syn_count, nt_type``。
+ </summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadActivity(Neuropils.Data.BrainDataset,System.Action{System.String})">
+ <summary>
+ 仿真活跃度：读取 ``neuron_activity_*.csv`` (全量逐神经元脉冲计数)。
+ </summary>
+ <remarks>
+ 找不到时不做任何事：界面可以在需要的时候现场跑一次全脑仿真 (GPU 下只要几十毫秒)，
+ 那条路径拿到的活跃度与这里的文件完全同源 (都是 <c>BrainSimulationResult.Counts</c>)。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.intern(System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.String,System.Int32})">
+ <summary>把名称字符串映射到连续索引 (保持首次出现的顺序)。</summary>
+</member>
+<member name="T:Neuropils.Data.NeuronColorDimension">
+ <summary>
+ 点云的着色维度。
+ </summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorDimension.Neuropil">
+ <summary>主导脑区 (``neuropil_synapse_table.csv`` 的 argmax)。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorDimension.Neurotransmitter">
+ <summary>神经递质类型 (``neurons.csv`` 的 ``nt_type``)。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorDimension.CellType">
+ <summary>细胞类型 (``consolidated_cell_types.csv`` 的 ``primary_type``)。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorDimension.SuperClass">
+ <summary>分类层级 (``classification.csv`` 的 ``super_class``)。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorDimension.Activity">
+ <summary>仿真活跃度 (连续值 → 热力图，不是离散配色)。</summary>
+</member>
+<member name="T:Neuropils.Data.ColorLegendItem">
+ <summary>图例中的一项。</summary>
+</member>
+<member name="P:Neuropils.Data.ColorLegendItem.Visible">
+ <summary>该类别当前是否显示 (由侧栏的勾选框控制)。</summary>
+</member>
+<member name="T:Neuropils.Data.NeuronColorizer">
+ <summary>
+ 把一个着色维度解析成"每个神经元一个颜色"以及配套的图例。
+ </summary>
+ <remarks>
+ 几个取舍：
+ 
+ * <b>颜色按类别名固定分配</b>：类别顺序以"神经元数量降序"决定 (大类的颜色最醒目)，
+   但分配表在构造时一次算好。这样切换显示/隐藏某个脑区时，其余脑区的颜色不会跳变；
+ * <b>类别数超过 <see cref="F:Neuropils.Data.NeuronColorizer.DefaultMaxLegendItems"/> 时合并尾部为 "(others)"</b>：
+   脑区约 80 个、细胞类型可达数千个，逐类给色既不可读也不可辨；
+ * <b>活跃度走热力图而不是离散配色</b>：连续量的分级配色会丢失动态范围，
+   这里直接复用渲染管线的 ``ColorScheme`` (256 级调色板纹理)。
+ </remarks>
+</member>
+<member name="F:Neuropils.Data.NeuronColorizer.DefaultMaxLegendItems">
+ <summary>图例与配色的最大类别数 (超出部分归入 "(others)")。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorizer.OthersKey">
+ <summary>合并尾部类别所使用的名字。</summary>
+</member>
+<member name="F:Neuropils.Data.NeuronColorizer.m_colorText">
+ <summary>
+ 每个神经元的 html 颜色字符串。
+ </summary>
+ <remarks>
+ 字符串按类别驻留并复用引用：13 万个点如果各自持有独立的字符串实例，
+ 会白白产生 13 万个小字符串 (每个约 24 字节外加一次分配)。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.NeuronColorizer.IsHeatMap">
+ <summary>该维度是否使用连续热力图着色。</summary>
+</member>
+<member name="P:Neuropils.Data.NeuronColorizer.Intensity">
+ <summary>神经元的活跃度 (热力图维度使用，其它维度为 ``Nothing``)。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.Create(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorDimension)">
+ <summary>按维度构建一个着色器 (维度不可用时返回 ``Nothing``)。</summary>
+</member>
+<member name="P:Neuropils.Data.NeuronColorizer.Legend">
+ <summary>图例项 (按神经元数量降序)。</summary>
+</member>
+<member name="P:Neuropils.Data.NeuronColorizer.VisibleCategoryCount">
+ <summary>当前可见的类别数。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.IsVisible(Neuropils.Data.ColorLegendItem)">
+ <summary>某个图例项是否可见。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.SetVisible(Neuropils.Data.ColorLegendItem,System.Boolean)">
+ <summary>按图例项切换该类别的显示。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.SetOnly(System.Collections.Generic.IEnumerable{Neuropils.Data.ColorLegendItem})">
+ <summary>只显示给定类别，隐藏其余类别。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.ShowAll">
+ <summary>显示全部类别。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.IsNeuronVisible(System.Int32)">
+ <summary>该神经元在当前筛选下是否可见。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.GetColorText(System.Int32)">
+ <summary>神经元颜色的 html 形式 (离散维度)。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.GetColor(System.Int32)">
+ <summary>
+ 神经元的离散颜色 (不含透明度)。
+ </summary>
+ <remarks>
+ 连线的着色需要把"前突触神经元的颜色"再叠上自己的透明度，
+ 因此这里返回颜色值而不是 html 字符串。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.GetCategoryColor(System.Int32)">
+ <summary>类别颜色表 (索引与 <see cref="P:Neuropils.Data.NeuronColorizer.Legend"/> 的类别索引一致)。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.GetCategoryName(System.Int32)">
+ <summary>神经元所属类别的名字。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.categoryIndexOf(System.String)">
+ <summary>某个类别当前是否被隐藏 (用于快速过滤)。</summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.buildCategories(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorDimension)">
+ <summary>
+ 把维度解析成类别表：每个神经元的类别索引、类别名与类别计数。
+ </summary>
+ <remarks>
+ 只有离散维度会走出"类别"这一层；活跃度维度直接把连续值交给热力图，
+ 这里返回一个单类别表作为占位。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.buildPalette(System.Int32)">
+ <summary>
+ 生成类别配色：先用 ColorBrewer 的定性色板 (区分度高)，
+ 类别数超过色板长度时用黄金角旋转色相继续补足。
+ </summary>
+</member>
+<member name="M:Neuropils.Data.NeuronColorizer.hsv(System.Double,System.Double,System.Double)">
+ <summary>HSV → RGB (h ∈ [0, 360), s/v ∈ [0, 1])。</summary>
+</member>
+<member name="T:Neuropils.Data.VisualizationConfig">
+ <summary>
+ 三维大脑可视化的配置：在 SNN 仿真的文件布局之上补充可视化所需的表格。
+ </summary>
+ <remarks>
+ 继承 <see cref="T:FlywireAI.Connectome.SnnConfig"/> 而不是另起一套配置，是为了让"仿真"与"看仿真结果"
+ 共用同一个 ``DataDir`` 与同一批表格路径：两个子系统读到的必须是同一份数据。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.VisualizationConfig.CoordinatesCsv">
+ <summary>
+ 标记位置坐标表 (``coordinates.csv``)：``root_id, position, supervoxel_id``。
+ </summary>
+ <remarks>
+ 13.9 MB / 238,909 行，覆盖约 13 万个神经元。文档说明这些坐标是"人工校对时
+ 标记的位置"，并不保证是胞体，但它是唯一一张"每神经元一行"的坐标表，
+ 因此作为点云的位置来源。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.VisualizationConfig.NeuropilTableCsv">
+ <summary>
+ 按脑区统计的突触表 (``neuropil_synapse_table.csv``)：321 列 / 134,181 行。
+ </summary>
+ <remarks>
+ 每行是一个神经元对 80 个脑区的输入/输出突触数与伙伴数。对每个神经元取
+ "输入+输出突触数最多的脑区"即可得到它的主导脑区，这是"不同脑区不同颜色"
+ 的依据 (数据集里没有直接给出每个神经元的脑区归属)。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.VisualizationConfig.ActivityDir">
+ <summary>
+ 神经元活动表 (``neuron_activity_&lt;mode&gt;.csv``) 的搜索目录，
+ 为空表示 ``&lt;DataDir&gt;\snn-output``。
+ </summary>
+ <remarks>
+ 该文件由 <c>SimulationReport</c> 落盘 (全量 139,255 行逐神经元脉冲计数)。
+ 找不到时可以用界面上的"现场运行仿真"按钮重新跑一次 (GPU 全脑 T=30 约几十毫秒)。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.VisualizationConfig.ResolveActivityDir">
+ <summary>解析活动表所在目录。</summary>
+</member>
+<member name="M:Neuropils.FormMain.runChartExport(System.String[])">
+ <summary>
+ ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
+ </summary>
+ <remarks>
+ <list type="bullet">
+   <item>维度：``neuropil`` / ``nt`` / ``type`` / ``super`` / ``class`` / ``group``；</item>
+   <item>口径：``potential``（膜电位）/ ``rate``（放电率）/ ``spike``（0-1 脉冲）；</item>
+   <item>组织：``one``（逐个神经元）/ ``mean``（组均值）/ ``envelope``（组均值 ± 包络）；</item>
+   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
+ </list>
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.runChartWindowProbe(System.String[])">
+ <summary>
+ ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
+ </summary>
+ <remarks>
+ <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
+ 等首帧渲染完成后抓帧写盘再退出。
+ 
+ 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
+ "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.runSelfTest(System.String[])">
+ <summary>
+ 自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
+ </summary>
+ <remarks>
+ 用真实数据把"读表 → 着色 → 装配 → 拾取"整条链路跑一遍，并把每一步的<b>实测耗时</b>
+ 与关键规模写入报告。设计目的有两个：
+ 
+ 1. 无人值守的回归 —— 三维界面本身很难自动断言，但数据链路可以；
+ 2. 性能基线 —— 534 万条连接的过滤/连线构建、13 万点的投影与拾取都必须保持在
+    可交互的量级 (报告里的毫秒数就是验收依据)。
+ 
+ 报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.buildSmokeScene(Neuropils.Rendering.BrainScene)">
+ <summary>构建冒烟测试用的场景 (点云 + 连线)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.firstProbePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>挑一个"投影之后落回画布内"的点作为拾取探针。</summary>
+</member>
+<member name="M:Neuropils.FormMain.connectionsResolved(Neuropils.Data.BrainDataset)">
+ <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.countVisiblePositioned(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer)">
+ <summary>某个类别里"有坐标且可见"的神经元数量。</summary>
+</member>
+<member name="M:Neuropils.FormMain.mappingDelta(System.Text.StringBuilder,Neuropils.Data.BrainDataset,Neuropils.Rendering.BrainScene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ 校验"点索引 → 神经元索引 → 数据层坐标"这条映射链自洽。
+ </summary>
+ <remarks>
+ 场景里的点是被<b>平移过</b>的 (减去了点云质心，让模型绕自身中心旋转)，
+ 因此判据是 <c>数据层坐标 − 质心 == 场景点坐标</c>。
+ 抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.categorySample(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Data.ColorLegendItem)">
+ <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.busiestNeuron(Neuropils.Data.BrainDataset)">
+ <summary>
+ 出度最大的神经元 (用于验证"选中神经元的连接"这一模式)。
+ </summary>
+ <remarks>
+ 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
+ 而计数数组只有 13 万个 ``Integer``。
+ </remarks>
+</member>
+<member name="F:Neuropils.FormMain.m_snakeForm">
+ <summary>果蝇大脑玩贪吃蛇的观战窗口（单实例复用）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snakePlayground">
+ <summary>装配好的游戏用大脑环境（连接组 + CSR + 标定，约 30 秒，只做一次）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snakeHighlighter">
+ <summary>把三维点云切换成"喂给蛇的大脑活动"的高亮器。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snakeMask">
+ <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.onOpenSnakeWindow(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
+ <summary>
+ 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.openSnakeWindow">
+ <summary>打开观战窗口（链接与命令行自检共用）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.showSnakeWindow(FlywireSnake.SnakePlayground)">
+ <summary>创建观战窗口并接上"三维活动可视化"。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snakeProbePng">
+ <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
+</member>
+<member name="M:Neuropils.FormMain.startSnakeProbeCapture(Neuropils.SnakeBrainForm)">
+ <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
+ <remarks>
+ 抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
+ 因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.verifySnakeShutdown(Neuropils.SnakeBrainForm)">
+ <summary>
+ 抓完屏把观战窗口关掉，验证"关窗 = 停机"：不该再有脑活动事件，点云也该恢复原色。
+ </summary>
+ <remarks>
+ 停机前定时器是活的，每 tick 都会推一次脑活动；停机后如果还能数到事件，
+ 说明定时器没被真正停掉 —— 那就是用户看到的"关了窗口大脑还在闪"。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.captureWindow(System.Windows.Forms.Form,System.String)">
+ <summary>
+ 把观战窗口<b>自身</b>画成一张图。
+ </summary>
+ <remarks>
+ 与 <see cref="M:Neuropils.FormMain.captureScreen(System.String)"/> 的区别是它与屏幕上的 z 序无关：
+ 窗口被别人挡着也照样能拿到内容，因此适合在自动化里核对
+ "右侧的感觉通道 / 运动读出到底有没有画出数据"。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.environmentInteger(System.String,System.Int32)">
+ <summary>
+ 从环境变量读一个整数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+ 约定 -1 表示"沿用默认档位"）。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.environmentDouble(System.String,System.Double)">
+ <summary>
+ 从环境变量读一个浮点数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+ 约定负数表示"沿用默认档位"）。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.captureScreen(System.String)">
+ <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.loadTrainedDecoder(FlywireSnake.SnakeBrain)">
+ <summary>尽量用已训练好的解码器开局（没有就用随机读出）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.onSnakeBrainActivity(System.Int32[],FlywireSnake.SnakeStep)">
+ <summary>
+ 把"果蝇大脑此刻发放的神经元"实时点亮到三维点云上。
+ </summary>
+ <remarks>
+ 与本窗口的响应对齐：会话在 UI 线程上推进，因此这个回调也在 UI 线程，
+ 可以直接更新画布而不用跨线程封送。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.runSnakeProbe(System.String[])">
+ <summary>
+ ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``
+ </summary>
+ <remarks>
+ "感觉 / 读出标定"那三个档位（<c>FLYWIRE_SNAKE_SENSORS_PER_CHANNEL</c> /
+ <c>FLYWIRE_SNAKE_SENSOR_CURRENT</c> / <c>FLYWIRE_SNAKE_FEATURE_WINDOW</c>）
+ 走<b>环境变量</b>而不是第 7 个命令行参数：本仓库的
+ <c>Microsoft.VisualBasic.App</c> 类型在"命令行参数多于 6 个"时会直接抛
+ <c>TypeInitializationException</c>（Core 的 <c>App.CommandLine</c> 字段初始化，
+ <c>GitBashEnvironment.GetCommandLineArgs</c> 里的命令行解析），
+ 整个进程的日志与 CSV 加载都会跟着失效。
+ </remarks>
+</member>
+<member name="F:Neuropils.FormMain.HoldFloorMs">
+ <summary>低于这个按住时长就按最弱刺激处理。</summary>
+</member>
+<member name="F:Neuropils.FormMain.HoldCeilingMs">
+ <summary>按住到这个时长即达到映射区间的上界。</summary>
+</member>
+<member name="F:Neuropils.FormMain.RadiusFloorNm">
+ <summary>募集半径的下界（纳米）：约 25 微米，电极尖端的最近一圈。</summary>
+</member>
+<member name="F:Neuropils.FormMain.RadiusCeilingNm">
+ <summary>募集半径的上界（纳米）：约 140 微米，一个局部脑区尺度的微刺激。</summary>
+</member>
+<member name="F:Neuropils.FormMain.CurrentFloor">
+ <summary>注入电流的下界（略高于阈值 1.0，保证被募集的神经元会发放）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.CurrentCeiling">
+ <summary>注入电流的上界。</summary>
+</member>
+<member name="T:Neuropils.FormMain.HoldStimulus">
+ <summary>一次"按住"映射出来的刺激参数。</summary>
+</member>
+<member name="F:Neuropils.FormMain.HoldStimulus.RadiusNm">
+ <summary>募集半径（纳米）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.HoldStimulus.Current">
+ <summary>注入电流强度。</summary>
+</member>
+<member name="F:Neuropils.FormMain.ReplayTrail">
+ <summary>回放时的余辉长度（之前多少步仍然可见）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_holdWatch">
+ <summary>按住计时（鼠标左键）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_holdTimer">
+ <summary>按住过程中的强度回显定时器。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_replayTimer">
+ <summary>回放时钟。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_holdNeuron">
+ <summary>按住期间命中的神经元（-1 表示还没命中）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_stimulator">
+ <summary>刺激引擎（首次使用时装配）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_stimBusy">
+ <summary>是否正在跑刺激仿真。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_stimWorker">
+ <summary>刺激仿真专用的工作线程与其任务队列。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_replay">
+ <summary>最近一次刺激的结果。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_highlighter">
+ <summary>把回放状态映射到点云颜色/尺寸的高亮器。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_replayStep">
+ <summary>当前回放到的步号（0 基，-1 表示没有回放）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_replayPlaying">
+ <summary>回放是否在自动播放。</summary>
+</member>
+<member name="M:Neuropils.FormMain.initializeStimulation">
+ <summary>
+ 初始化电刺激/回放相关的定时器与面板（由 <c>initializeUi</c> 在控件建好之后调用）。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.stimulusFromHold(System.Int64)">
+ <summary>按住时长 → 刺激参数（募集半径 + 注入电流）。</summary>
+ <remarks>
+ <b>为什么"按住越久"映射成"募集的神经元越多"</b>
+ 
+ 初版按"电流强度"映射，实测发现：本数据集的权重经过结构归一化，单个神经元即使
+ 持续注入 16 倍阈值电流也只能激活它自己（全脑 139,255 神经元 / 373 万突触下实测
+ active = 1，零传播）。这是网络动力学的正确结果 —— 单个突触前神经元对突触后的
+ 贡献只有 1/扇入 量级，靠"一个神经元"无论如何也点不着网络。
+ 
+ 真实电刺激也是如此：电流从电极尖端扩散，兴奋的是<b>一片</b>神经元，
+ 微刺激实验里"强度"指的就是被募集的组织范围。因此这里把按住时长映射成
+ 「募集半径（25 → 140 微米）」与「注入电流（1.2 → 2.5）」，
+ 工具条上的"强度×"再整体缩放半径。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.beginStimulationHold(System.Int32,System.Int32)">
+ <summary>鼠标按下：开始计时并进入按住预览。</summary>
+</member>
+<member name="M:Neuropils.FormMain.updateHoldPreview(System.Int32,System.Int32)">
+ <summary>刷新"目标 + 当前刺激参数"的回显。</summary>
+</member>
+<member name="M:Neuropils.FormMain.endStimulationHold">
+ <summary>结束按住计时，返回按住时长（毫秒）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.isHeatMap">
+ <summary>
+ 当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
+ </summary>
+ <remarks>
+ 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
+ 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.stimulateAt(System.Int32,System.Int32,System.Int64)">
+ <summary>在指定位置施加电刺激（点击命中神经元时）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.startStimulation(System.Int32,Neuropils.FormMain.HoldStimulus,System.Int64)">
+ <summary>在后台装配（首次）并运行一次刺激仿真，完成后自动进入回放。</summary>
+</member>
+<member name="M:Neuropils.FormMain.ensureStimWorker">
+ <summary>
+ 刺激仿真专用的工作线程。
+ </summary>
+ <remarks>
+ <b>为什么不用线程池</b>：CUDA 的"当前上下文"是<b>线程局部</b>状态，上下文在创建它的
+ 那条线程上绑定。把整个刺激流程固定在同一条线程上执行，上下文就始终"属于"这条线程：
+ 
+ * 不会再出现"第一次刺激正常、第二次点击报
+   <c>cuMemAlloc_v2 failed: CUDA_ERROR_INVALID_CONTEXT (201)</c>"——
+   那是线程池把第二次任务调度到另一条线程上的结果
+   （ILCuda 侧也已修好：<c>CudaRuntime.EnsureCurrent</c> 会在每个底层调用前自动为当前线程
+   绑定上下文，这里是双保险）；
+ * 同一时刻只有一次仿真在碰 GPU（配合 <c>m_stimBusy</c> 的界面侧互斥）。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.onStimulationFailed(System.String)">
+ <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.updateReplayFrame">
+ <summary>把当前回放帧刷到点云上。</summary>
+</member>
+<member name="M:Neuropils.FormMain.updateReplayPanel">
+ <summary>刷新回放面板的可用状态与进度条位置。</summary>
+</member>
+<member name="M:Neuropils.FormMain.stopReplay(System.Boolean)">
+ <summary>停止回放（可选把点云恢复成未高亮状态）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.setStimulusMarker(System.Int32)">
+ <summary>把"电极位置"用一个大号十字标出来。</summary>
+</member>
+<member name="M:Neuropils.FormMain.clearStimulusMarker">
+ <summary>撤掉电极标记（回放高亮不清除，那是点云的颜色）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.onStimulusStepsChanged(System.Object,System.EventArgs)">
+ <summary>仿真步数改变（下一次刺激生效）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.rebindHighlighter">
+ <summary>
+ 场景被重建之后重新绑定高亮器。
+ </summary>
+ <remarks>
+ 切换着色维度、改筛选条件都会重建点云，此时基准颜色已经变了 ——
+ 继续用旧的高亮器会把"上一套配色下的颜色"写进新点云。
+ </remarks>
+</member>
+<member name="T:Neuropils.FormMain.SnapshotStimulus">
+ <summary>出图模式下的电刺激规格（离线验证回放渲染）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snapshotStimulus">
+ <summary>出图模式下的刺激规格（``Nothing`` 表示这次出图不做刺激）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.parseSnapshotStimulus(System.String)">
+ <summary>
+ 解析 ``stim=&lt;neuron>:&lt;radiusUm>:&lt;current>:&lt;step>`` 形式的出图参数。
+ </summary>
+ <remarks>
+ ``neuron`` 为 -1 时取"出度最大的神经元"，``step`` 为 -1 时取"最活跃的那一步"。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.applySnapshotStimulus">
+ <summary>
+ 出图模式：在后台跑一次电刺激，随后在 UI 线程把指定步的高亮画出来并抓帧。
+ </summary>
+ <remarks>
+ 这是唯一能<b>离线验证回放渲染</b>的入口：自检模式（--stimulate）只覆盖数据链路，
+ 不碰 GPU；而回放的"点亮 + 放大"最终要落到顶点着色器上，只能靠出图来确认。
+ 
+ 首次运行需要装配连接组（读 261 MB 连接表，约 30 s），因此它是离线诊断模式，
+ 不追求交互速度 —— 但仿真本身与交互模式走的是<b>同一段代码</b>
+ （<see cref="T:Neuropils.Simulation.BrainStimulator"/>），所以出图结果能代表交互观感。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.runStimulationProbe(System.String[])">
+ <summary>
+ 电刺激自检（``--stimulate &lt;报告.txt&gt; [数据目录] [神经元] [强度列表]``）。
+ </summary>
+ <remarks>
+ 目的有两个：
+ 
+ 1. <b>标定强度映射</b>：全脑的权重经过结构归一化，单个神经元的持续放电能扩散多远
+    只能实测 —— 这里对同一神经元扫一串强度，把"注入强度 → 逐步激活规模"打出来，
+    界面上的按住时长映射区间（"StrengthFloor" ~ "StrengthCeiling"）
+    就是据此定的；
+ 2. <b>验证回放数据链路</b>：运行、取逐步激活、落盘、并断言逐步清单与统计一致。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.checkStepConsistency(System.Text.StringBuilder,System.Int32@,Neuropils.Simulation.StimulationReplay)">
+ <summary>逐步激活清单必须与实际脉冲数一致（回放数据的正确性底线）。</summary>
+</member>
+<member name="M:Neuropils.FormMain.fileLineCount(System.String)">
+ <remarks>
+ 形参不能叫 ``file``：会遮蔽 <see cref="T:System.IO.File"/>（VB 不区分大小写）。
+ </remarks>
+</member>
+<member name="F:Neuropils.FormMain.DefaultDataDir">
+ <summary>数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_chartLink">
+ <summary>状态栏右下角的"响应曲线"链接。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snakeLink">
+ <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_chartForm">
+ <summary>响应曲线窗口（单实例复用）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_chartTip">
+ <summary>状态栏链接的悬停提示。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snapshotPath">
+ <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_rebuildTimer">
+ <summary>
+ 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
+ </summary>
+ <remarks>
+ 必须写全 System.Windows.Forms.Timer：System.Threading 里也有一个同名的 Timer
+ (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.createReplayPanel">
+ <summary>
+ 回放控制面板：播放/暂停、单步、进度条、速度与状态。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
+ <summary>
+ 打开响应曲线窗口。
+ </summary>
+ <remarks>
+ 数据优先级：<b>本次会话刚跑完的刺激结果</b>（含膜电位分析回放）→
+ 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
+ "记录下来的响应结果"也还能画出来。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.captureAndExit">
+ <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.adjustSplitter">
+ <summary>
+ 把右侧栏固定成一个便于阅读的宽度。
+ </summary>
+ <remarks>
+ 只在控件已经完成布局之后调用；布局中或尺寸过小时保持默认位置
+ (硬设一个不合法的 SplitterDistance 会直接抛异常)。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.dimensionFromUi">
+ <summary>
+ 工具条上当前选中的着色维度（界面上唯一一处"维度 → 枚举"的映射）。
+ </summary>
+</member>
+<member name="M:Neuropils.FormMain.onReload(System.Object,System.EventArgs)">
+ <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.rebuildColorizer(Neuropils.Data.NeuronColorDimension,System.Boolean)">
+ <summary>重建着色器与图例。</summary>
+</member>
+<member name="M:Neuropils.FormMain.rebuildScene(System.Boolean)">
+ <summary>重建点云与连线并送进画布。</summary>
+</member>
+<member name="M:Neuropils.FormMain.applyScene(System.Boolean)">
+ <summary>
+ 把装配好的场景交给画布。
+ </summary>
+ <remarks>
+ 第一次载入走 <c>LoadPointCloud</c> (会 FitView)，之后的重新着色 / 筛选走
+ <c>UpdatePointCloud</c>：用户在交互中调好的视角不应该被一次重新着色重置。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.drawFocusMarker(System.Int32)">
+ <summary>在选中神经元周围补三根短十字线 (与连线一起提交)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.scheduleRebuild">
+ <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.refreshLegend">
+ <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.showGradient">
+ <summary>画出当前配色方案的色标 (热力图维度)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.pickAt(System.Int32,System.Int32)">
+ <summary>在画布的给定位置拾取神经元，并在详情面板里显示它的注释。</summary>
+</member>
+<member name="M:Neuropils.FormMain.showNeuronDetails(System.Int32)">
+ <summary>显示一个神经元的全部注释与连接统计。</summary>
+</member>
+<member name="M:Neuropils.FormMain.countConnections(System.Int32)">
+ <summary>
+ 统计一个神经元的出/入连接数与突触总数。
+ </summary>
+ <remarks>
+ 单次线性扫描 534 万条连接 (约 30 ms)，因此可以随点击实时计算，
+ 不需要预先为每个神经元建立邻接表 (那会多占用数百 MB 内存)。
+ </remarks>
+</member>
+<member name="T:Neuropils.Rendering.ConnectionRenderMode">
+ <summary>
+ 连接的绘制模式。
+ </summary>
+</member>
+<member name="F:Neuropils.Rendering.ConnectionRenderMode.PerConnection">
+ <summary>每条 (pre, post) 连接画一根线 (原始连接组)。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ConnectionRenderMode.NeuropilAggregate">
+ <summary>聚合为脑区 ↔ 脑区的宏连接 (几百根线，看清宏观结构)。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ConnectionRenderMode.SelectedNeuron">
+ <summary>只画选中神经元的连接 (用于"选中一个神经元看它连到哪")。</summary>
+</member>
+<member name="T:Neuropils.Rendering.LineColorMode">
+ <summary>
+ 连线的着色方式。
+ </summary>
+</member>
+<member name="F:Neuropils.Rendering.LineColorMode.PresynapticNeuron">
+ <summary>跟随前突触神经元的颜色 (与点云配色一致，最容易对应)。</summary>
+</member>
+<member name="F:Neuropils.Rendering.LineColorMode.Neurotransmitter">
+ <summary>按连接的递质类型上色 (抑制性/兴奋性一目了然)。</summary>
+</member>
+<member name="F:Neuropils.Rendering.LineColorMode.Uniform">
+ <summary>统一使用半透明灰。</summary>
+</member>
+<member name="T:Neuropils.Rendering.SceneBuildOptions">
+ <summary>
+ 场景装配参数。
+ </summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.SynapseThreshold">
+ <summary>只画突触数不少于该值的连接 (界面上是一个滑块)。</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.MaxLines">
+ <summary>
+ 连线的数量上限，``&lt;= 0`` 表示不限制。
+ </summary>
+ <remarks>
+ 默认值高于本数据集的全量连接数 (534 万)，也就是"默认不截断"：真正控制画面密度的是
+ <see cref="P:Neuropils.Rendering.SceneBuildOptions.SynapseThreshold"/> (≥20 突触时约 50 万条线)，这里只是防止显存与
+ 上传时间被极端参数打爆。
+ 显存量级：每条线 2 个顶点 × 16 字节，200 万条约 64 MB，全量约 171 MB。
+ </remarks>
+</member>
+<member name="F:Neuropils.Rendering.SceneBuildOptions.LineListPresetCapacity">
+ <summary>
+ 连线列表的初始容量上限。
+ </summary>
+ <remarks>
+ 不要按"可能的最大条数"预分配：滑块把阈值从 20 提到 100 时实际只需要 2 万条线，
+ 却会为此预留/清零几百 MB (534 万 × 每个 LineSegment 56 字节 ≈ 300 MB)。
+ 这里只预留一个有代表性的大小，超出部分交给 List 自己的增长策略。
+ </remarks>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.HasLineLimit">
+ <summary>连线的数量是否有限制？</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.Mode">
+ <summary>连接的绘制模式。</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.LineColor">
+ <summary>连线的着色方式。</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.LineAlpha">
+ <summary>连线的透明度 (0~255)；连接组很密，半透明才有层次。</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.FocusNeuron">
+ <summary>选中神经元模式下的目标神经元索引。</summary>
+</member>
+<member name="P:Neuropils.Rendering.SceneBuildOptions.AggregateMinStrength">
+ <summary>宏连接模式下的最小突触总数。</summary>
+</member>
+<member name="T:Neuropils.Rendering.BrainScene">
+ <summary>
+ 装配好的三维场景内容。
+ </summary>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.Points">
+ <summary>点云。</summary>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.PointNeurons">
+ <summary>
+ 点索引 → 神经元索引。
+ </summary>
+ <remarks>
+ 点云经过了"有坐标 + 通过筛选"的过滤，因此第 k 个点并不等于第 k 个神经元。
+ 鼠标拾取拿到的下标必须经过这张表才能查到正确的 root_id。
+ </remarks>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.Lines">
+ <summary>连线。</summary>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.CandidateLines">
+ <summary>满足阈值与可见性的连接总数 (被画出的 + 因上限丢弃的)。</summary>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.DroppedLines">
+ <summary>因 <see cref="P:Neuropils.Rendering.SceneBuildOptions.MaxLines"/> 被丢弃的连接数。</summary>
+</member>
+<member name="P:Neuropils.Rendering.BrainScene.AggregateLinks">
+ <summary>宏连接模式下的脑区级连线数。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainScene.BuildLookup(System.Int32)">
+ <summary>神经元索引 → 点索引 (拾取的反向映射)，未出现在点云里的神经元为 -1。</summary>
+</member>
+<member name="T:Neuropils.Rendering.BrainSceneBuilder">
+ <summary>
+ 把 <see cref="T:Neuropils.Data.BrainDataset"/> 装配成渲染管线所需的点云与连线。
+ </summary>
+ <remarks>
+ 装配是纯托管的数据转换（没有 GPU 调用），因此可以在后台线程上完成：
+ 全量连接组的过滤 + 构建约需数百毫秒，放在 UI 线程上会明显卡顿。
+ </remarks>
+</member>
+<member name="F:Neuropils.Rendering.BrainSceneBuilder.NtColors">
+ <summary>递质类型 → 连线颜色 (仅用于 <see cref="F:Neuropils.Rendering.LineColorMode.Neurotransmitter"/>)。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.Build(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>装配点云与连线。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.FindBusiestNeuron(Neuropils.Data.BrainDataset)">
+ <summary>
+ 出度最大的神经元。
+ </summary>
+ <remarks>
+ 用作"选中神经元的连接"这个模式的默认目标：全脑里最忙的那个神经元
+ (几万条连接) 是最能说明"网络长什么样"的样本。
+ 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
+ 而计数数组只有 13 万个 ``Integer``。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.BuildPoints(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,System.Int32[]@)">
+ <summary>只装配点云 (着色维度变化时不需要重建连线)。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.BuildLines(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>只装配连线 (强度阈值 / 模式变化时不需要重建点云)。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.composePoints(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,System.Int32[]@)">
+ <remarks>
+ 名字不能叫 BuildPoints：VB 不区分大小写，会与上面的公开重载冲突
+ (同一个模块内两个只差大小写的成员是重定义错误)。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.composeLines(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <remarks>
+ 名字不能叫 BuildLines：与公开重载同名 (VB 不区分大小写)。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.buildPerConnectionLines(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>每条连接一根线。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.buildFocusLines(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>只画某个神经元的输入/输出连接。</summary>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.buildAggregatedLines(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>
+ 把连接组聚合为脑区 ↔ 脑区的宏连接。
+ </summary>
+ <remarks>
+ 端点取各脑区可见神经元的质心，颜色与透明度由"突触总数"决定
+ (越强的连接越不透明)，因此即使只有几百根线也能看出信息流的方向。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.BrainSceneBuilder.aggregateColor(System.Int64,Neuropils.Rendering.SceneBuildOptions)">
+ <summary>宏连接的配色：突触总数越多越不透明、越偏暖色。</summary>
+</member>
+<member name="T:Neuropils.Rendering.ReplayHighlighter">
+ <summary>
+ 把回放中「某一步及其余辉」映射到点云的颜色与尺寸上。
+ </summary>
+ <remarks>
+ <b>为什么不用"重建点云"的方式做动画</b>
+ 
+ 每帧重建 13 万个 <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint"/> 会把回放的帧率压到个位数
+ （139,255 次结构体构造 + 字符串装配 + 全量重传）。这里只在<b>变化的那一小部分</b>
+ 上下手：维护一份点云的可变副本 + 一份未改动的基准副本，
+ 每帧先把上一帧点亮的点还原、再点亮当前帧的点，然后把整份数组交给画布。
+ 
+ 单帧的改动量 = 当前步 + 余辉涉及的神经元数（全脑规模下通常是几千个），
+ 其余 13 万个点完全不动。
+ 
+ 另外：放大靠的是<b>逐点尺寸系数</b>（<see cref="P:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint.SizeScale"/>），
+ 而不是去改全局点大小 —— 后者会让渲染管线判定几何签名变化并重传整份实例缓冲。
+ </remarks>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.CurrentColor">
+ <summary>当前步的激活点颜色（最亮）。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.TrailColor">
+ <summary>余辉中段的激活点颜色。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.FadeColor">
+ <summary>余辉尾部的激活点颜色。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.m_heatMap">
+ <summary>
+ 点云当前是否走"热力图"配色（颜色来自调色板查找而不是嵌入色）。
+ </summary>
+ <remarks>
+ 两种配色方式决定"点亮"要改哪个字段：
+ 嵌入色模式下改 <c>Color</c>；热力图模式下着色器根本不看 <c>Color</c>，
+ 只能把热值抬到量程上限（调色板最亮的那一档）。
+ 放大则两种模式都可用（只是承载尺寸系数的字段不同，见 SizeScale）。
+ </remarks>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.m_touched">
+ <summary>上一帧被改写过的神经元（下一帧先还原它们）。</summary>
+</member>
+<member name="P:Neuropils.Rendering.ReplayHighlighter.Points">
+ <summary>当前供画布使用的点云（含高亮）。</summary>
+</member>
+<member name="P:Neuropils.Rendering.ReplayHighlighter.HasHighlight">
+ <summary>是否高亮过任何点。</summary>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.Apply(Neuropils.Simulation.StimulationReplay,System.Int32,System.Int32)">
+ <summary>
+ 点亮第 <paramref name="stepIndex"/> 步及其余辉。
+ </summary>
+ <param name="replay">刺激结果</param>
+ <param name="stepIndex">当前步号（0 基）</param>
+ <param name="trail">余辉长度（之前多少步仍可见）</param>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.highlight(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint,System.Double)">
+ <summary>把一个基准点改写成"被点亮"的样子。</summary>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.peakHeat">
+ <summary>
+ 当前点云折算出来的最大热值（热力图模式下的"最亮档"）。
+ </summary>
+ <remarks>
+ 必须与渲染管线的折算方式<b>完全一致</b>：热值取 0 时管线会用 Z 坐标代替
+ （<c>GpuSceneGeometry.BuildCloudInstances</c>），因此最大值要在
+ <c>Intensity ≠ 0 ? Intensity : Z</c> 上取。
+ 照搬 <c>Intensity</c> 的最大值会算出一个低于实际量程上限的数 ——
+ 那样"点亮"的神经元只是调色板中段，看起来并不比原有的高活跃神经元更亮。
+ 
+ 取到真正的上限值还有个附带好处：归一化区间不受影响（这个值本来就存在于点云里），
+ 其余点不会被压暗。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.ApplyMask(System.Double[],System.Int32[])">
+ <summary>
+ 按"逐神经元权重"直接高亮（用于非回放的实时场景，例如果蝇大脑玩游戏时的活动）。
+ </summary>
+ <param name="mask">长度 = 神经元数 的权重数组：0 = 不亮，1 = 最亮</param>
+ <param name="actual">本帧真正被点亮的神经元（用于下一帧还原）</param>
+ <remarks>
+ 与 <see cref="M:Neuropils.Rendering.ReplayHighlighter.Apply(Neuropils.Simulation.StimulationReplay,System.Int32,System.Int32)"/> 共用同一套"先还原上一帧、再点亮当前帧"的机制，
+ 因此单帧开销只与变化的那部分神经元数量有关。
+ </remarks>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.Reset">
+ <summary>还原全部高亮（结束回放 / 关闭刺激模式）。</summary>
+</member>
+<member name="M:Neuropils.Rendering.ReplayHighlighter.MarkStimulus(System.Int32)">
+ <summary>只标出"本次被刺激的神经元"（还没开始回放时也能看到电极在哪）。</summary>
+</member>
+<member name="F:Neuropils.Rendering.ReplayHighlighter.SizeBoost">
+ <summary>当前步的激活点在全局点大小基础上的放大倍数。</summary>
+</member>
+<member name="T:Neuropils.ResponseChartForm">
+ <summary>
+ 电刺激响应曲线窗口：把一次刺激实验记录下来的响应结果画成曲线。
+ </summary>
+ <remarks>
+ <b>横轴</b>是时间步，<b>纵轴</b>是神经元的响应电信号强度（默认取触发前膜电位）。
+ 曲线可以逐神经元画，也可以按「脑区 / 神经递质 / 细胞类型 / 分类层级」筛选出的
+ 神经元集合聚合后画（组均值 ± 包络）。
+ 
+ 曲线<b>直接绘制在 <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas"/> 控件上</b>（Direct2D/D3D11 GPU 画布）：
+ <c>LinePlot</c> 通过注入 <c>IGraphics</c> 的方式使用控件自己的绘图设备，
+ 中间不需要位图，也不存在"先画到 Bitmap 再贴到控件"的拷贝。
+ 
+ 数据来源是<b>记录下来的响应结果</b>：会话内刚跑完的结果直接画，
+ 也可以随时打开任意一次历史实验的记录目录。
+ </remarks>
+</member>
+<member name="M:Neuropils.ResponseChartForm.#ctor(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset)">
+ <summary>
+ 构造响应曲线窗口。
+ </summary>
+ <param name="data">响应数据（会话内结果或落盘记录）</param>
+ <param name="dataset">数据集（提供脑区 / 递质等标签）</param>
+</member>
+<member name="M:Neuropils.ResponseChartForm.createFilterBar">
+ <summary>顶部：信号口径 / 组织方式 / 曲线上限。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.createValuePanel">
+ <summary>左侧：标签取值勾选（勾选 = 只看这些，不勾选 = 全部）。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.createCanvas">
+ <summary>右侧：GPU 画布 + 状态行。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.ApplyOptions(Neuropils.Analysis.NeuronLabelDimension,Neuropils.Analysis.ResponseSignalMode,Neuropils.Analysis.CurveAggregation)">
+ <summary>
+ 按给定参数切换视图（供自动化自检与外部调用；界面上等价于改三个下拉框）。
+ </summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.onValueChecked(System.Object,System.Windows.Forms.ItemCheckEventArgs)">
+ <summary>取值列表项被勾选 / 取消勾选。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.refreshCategories">
+ <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.unwrap(System.String)">
+ <summary>把列表项文本（"名称  (n)"）还原成纯标签值。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.rebuildSeries">
+ <summary>重新装配曲线集合并请求重绘。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.onRender(System.Object,Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs)">
+ <summary>
+ 把曲线画到控件的 GPU 画布上。
+ </summary>
+ <remarks>
+ 每帧新建一个 <c>LinePlot</c>：绘图引擎的排版尺寸取自画布尺寸，
+ 控件一旦缩放就需要按新尺寸重新排版，复用旧对象会画到旧尺寸上。
+ 因为画布是外部注入的，<c>Dispose</c> 不会关闭控件自己的绘图设备。
+ </remarks>
+</member>
+<member name="M:Neuropils.ResponseChartForm.CaptureTo(System.String)">
+ <summary>把控件当前画面（也就是曲线图）抓成一帧写盘。</summary>
+ <remarks>
+ 走的是控件的 GPU 画布回读：强制同步重绘一帧并保存，
+ 因此拿到的是屏幕上真正显示的内容，而不是另画一遍。
+ </remarks>
+</member>
+<member name="P:Neuropils.ResponseChartForm.CanvasReady">
+ <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
+</member>
+<member name="M:Neuropils.ResponseChartForm.RenderToFile(System.String,Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset,Neuropils.Analysis.CurveOptions,System.Int32,System.Int32,System.String@)">
+ <summary>
+ 把响应曲线渲染成一张图片文件（不需要窗口，用于命令行出图与自动化验证）。
+ </summary>
+ <param name="file">输出 png 路径</param>
+ <param name="data">响应数据</param>
+ <param name="dataset">数据集</param>
+ <param name="options">曲线参数</param>
+ <param name="width">画布宽 (像素)</param>
+ <param name="height">画布高 (像素)</param>
+ <remarks>
+ 走的是与窗口<b>完全相同</b>的代码路径（同一个 <c>LinePlot</c> + 同一套曲线装配），
+ 区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
+ 也能在没有窗口的环境里验证绘图链路。
+ </remarks>
+</member>
+<member name="T:Neuropils.Simulation.BrainStimulator">
+ <summary>
+ 交互式电刺激的仿真引擎：把"点中一个神经元并注入电流"变成一次可回放的 SNN 仿真。
+ </summary>
+ <remarks>
+ <b>为什么分「装配」与「刺激」两段</b>
+ 
+ 一次全脑仿真的固定成本几乎都在读连接表（261 MB / 534 万行）与建 CSR 上，
+ 而这两件事与"刺激哪个神经元"无关。因此 <see cref="M:Neuropils.Simulation.BrainStimulator.Prepare(System.Action{System.String},System.Threading.CancellationToken)"/> 只在前台做一次
+ （后台线程，数百毫秒量级），之后每一次点击只需要：
+ 
+ 1. 用目标神经元建一个 ``inputSize = 1`` 的驱动方案（<c>Stimulation.CreateSingle</c>）；
+ 2. 装配一个极轻量的网络（``AddSparseLayer`` 只校验并持有 CSR 引用，不复制权重）；
+ 3. 跑 T 个时间步并取回逐步激活。
+ 
+ 如果没有这一步"装配与刺激分离"，每次点击都要重读 534 万行连接 —— 交互体验无从谈起。
+ 
+ <b>增益（gain）只在装配阶段标定一次</b>：标定用的是配置里的批量刺激方案
+ （5000 个神经元），而单击刺激只有 1 个输入特征 —— 用单点刺激去标定会把增益顶到上限
+ （因为目标活跃比例永远达不到）。标定一次、之后固定增益，也正好保证了
+ "不同点位 / 不同强度的多次刺激"是在同一套网络参数下比较的。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.BrainStimulator.IsPrepared">
+ <summary>连接组与增益是否已经就绪。</summary>
+</member>
+<member name="P:Neuropils.Simulation.BrainStimulator.Gain">
+ <summary>标定得到的全局权重增益。</summary>
+</member>
+<member name="P:Neuropils.Simulation.BrainStimulator.BackendName">
+ <summary>刺激所用的后端名称。</summary>
+</member>
+<member name="P:Neuropils.Simulation.BrainStimulator.LastError">
+ <summary>最后一次失败的原因（``Nothing`` 表示没有失败）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.Prepare(System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 装配连接组并标定一次增益。
+ </summary>
+ <remarks>
+ 会读 261 MB 的连接表并建 CSR（数百毫秒到数秒），因此必须在后台线程调用。
+ 重复调用是幂等的：已经就绪时直接返回。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.Stimulate(System.Int32,System.Double,System.Double,System.Int64,System.Action{System.String})">
+ <summary>
+ 对指定神经元施加电刺激并运行一次完整仿真。
+ </summary>
+ <param name="neuron">目标神经元索引（电极中心）</param>
+ <param name="radiusNm">募集半径（纳米）：电极附近的神经元会被一起兴奋</param>
+ <param name="strength">注入电流强度</param>
+ <param name="holdMilliseconds">按住时长（仅用于回显与落盘）</param>
+ <param name="reporter">进度回调</param>
+ <remarks>
+ 必须在后台线程调用：即使 GPU 可用，一次仿真仍需数十毫秒，CPU 上更慢。
+ 
+ 刺激的是一群神经元而不是一个 —— 原因见 <c>Stimulation.CreatePatch</c> 的说明
+ （归一化权重下一个神经元无法点燃网络，真实电极也会募集一片组织）。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.Recruit(Neuropils.Data.BrainDataset,System.Int32,System.Double,System.Int32)">
+ <summary>
+ 募集点击位置附近的神经元（电极电流的扩散范围）。
+ </summary>
+ <param name="dataset">数据集（提供三维坐标）</param>
+ <param name="neuron">电极中心神经元</param>
+ <param name="radiusNm">募集半径（纳米）</param>
+ <param name="maxNeurons">募集数量上限（电极中心兴奋最强，超出上限时保留最近的）</param>
+ <remarks>
+ 一次线性扫描 13 万个坐标（约 1 ms），因此界面可以在"按住"的过程中实时预览
+ "这一下会募集多少个神经元"，不需要预先建空间索引。
+ </remarks>
+</member>
+<member name="F:Neuropils.Simulation.BrainStimulator.DefaultMaxRecruit">
+ <summary>募集数量的默认上限。</summary>
+ <remarks>
+ 上限同时决定输入张量的宽度（每个被募集的神经元是一个输入特征）。
+ 实测（全脑坐标，密度约 0.004 个/μm³）：半径 25 μm 募集约 220 个，
+ 50 μm 约 2,500 个，100 μm 约 17,000 个 —— 如果上限压到 6000，
+ 按住时长的后半段就会失去意义（半径再大结果也一样）。
+ 25,000 让 25~140 μm 整个区间保持单调（140 μm 的理论值约 34,000，取上限），
+ 而散射与输入张量的代价仍然可以忽略 —— 实测 15,000 募集时单次仿真 80 ms，
+ 25,000 时约 120 ms，仍然是"点一下就能看到结果"的量级。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.analyzePotential(FlywireAI.Connectome.Stimulation,Neuropils.Simulation.StimulationReplay,System.Action{System.String})">
+ <summary>
+ 分析回放：把同一次刺激沿<b>逐算子路径</b>再跑一遍，取回每个神经元的触发前膜电位。
+ </summary>
+ <param name="stimulation">刺激方案（与快速仿真完全相同的方案）</param>
+ <param name="replay">快速仿真的结果（响应神经元集合由它决定，膜电位写回它）</param>
+ <param name="reporter">进度回调</param>
+ <remarks>
+ <b>为什么要再跑一遍</b>：融合单步内核在设备内完成"泄漏积分 + 阈值触发 + 复位"，
+ 中间不落膜电位（<c>SparseLIFLayer.UHistory</c> 只在逐算子路径下产生，这是 SNN 库的
+ 既有约定）。而膜电位是唯一能反映"响应强度"的连续量：脉冲是 0/1，
+ 画出来只是一堆方波。
+ 
+ <b>为什么可信</b>：
+ <list type="bullet">
+   <item>两条路径在双精度档下数值等价（SNN 库有逐位一致实测），因此回放给出的就是
+         快速仿真内部的那条轨迹；</item>
+   <item>回放结束后会把它的脉冲序列与快速仿真<b>逐步逐神经元对齐</b>，
+         不一致的个数记进 <c>AnalysisMismatches</c> —— 曲线图上会明确标注，
+         不一致时不要采信膜电位。</item>
+ </list>
+ 
+ <b>为什么把后端切到 SIMD</b>：逐算子路径会为每个算子产生一次显存往返，
+ 在 GPU 上反而更慢；这条路径本来就是主机标量实现（与 GPU 逐位等价），
+ 所以分析阶段用 CPU 跑，跑完再把后端切回去。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.collectResponders(Neuropils.Simulation.StimulationReplay)">
+ <summary>快速仿真里至少发放过一次的神经元（也就是响应矩阵的行）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.countSpikeMismatches(Neuropils.Simulation.StimulationReplay,System.Collections.Generic.List{Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor})">
+ <summary>逐步比对两条路径的脉冲序列，返回不一致的神经元-步对数。</summary>
+</member>
+<member name="M:Neuropils.Simulation.BrainStimulator.activationsOf(Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.SparseLIFLayer,System.Int32)">
+ <summary>
+ 取第 <paramref name="stepIndex"/> 步被激活的神经元索引。
+ </summary>
+ <remarks>
+ 数据源是层内的逐步脉冲轨迹 <c>SHistory</c>（<c>KeepHistory = True</c> 时每步一份独立
+ 快照）：脉冲张量里大于 0 的分量就是这一步发放的神经元。
+ 之所以不用 <c>BrainSimulationResult</c>，是因为它只保留了逐步的<b>计数</b>，
+ 而回放需要具体是哪些神经元。
+ </remarks>
+</member>
+<member name="T:Neuropils.Simulation.StimulationReplay">
+ <summary>
+ 一次电刺激仿真的完整结果（可回放）。
+ </summary>
+ <remarks>
+ 回放需要的是「每个时间步哪些神经元发放了」，而 <c>BrainSimulationResult</c> 只给出
+ 逐步的<b>计数</b>（<c>PerStepActive</c>）。因此这里额外保存每一步的激活神经元索引
+ （由 <c>SparseLIFLayer.SHistory</c> 的逐步脉冲张量扫描而来），
+ 以及整段仿真的逐神经元累计计数（可直接当作"仿真活跃度"着色数据使用）。
+ 
+ 逐步索引的内存量级很小：全脑 T=30 时每步约数千个神经元，总计约数百 KB。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Label">
+ <summary>刺激方案的描述文本（记录"这一次刺激到底是什么"）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Neuron">
+ <summary>被刺激的神经元索引。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.RootId">
+ <summary>被刺激神经元的 root_id。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.RecruitedNeurons">
+ <summary>被募集的神经元数量（电极附近一起被兴奋的那一群）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.RadiusNm">
+ <summary>募集半径 (纳米)。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Strength">
+ <summary>注入的刺激强度 (电流，与膜电位阈值同量纲)。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.HoldMilliseconds">
+ <summary>刺激的按住时长 (毫秒)，用于界面回显"这次的强度是怎么来的"。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Steps">
+ <summary>时间步数 T。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Units">
+ <summary>神经元总数 N。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ActiveSteps">
+ <summary>每一步被激活的神经元索引（长度 = <see cref="P:Neuropils.Simulation.StimulationReplay.Steps"/>）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.SpikesPerStep">
+ <summary>每个时间步的脉冲数（长度 = T）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ActivePerStep">
+ <summary>每个时间步的活跃神经元数（长度 = T）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Counts">
+ <summary>整段仿真的逐神经元累计脉冲计数（长度 = N）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.TotalSpikes">
+ <summary>整段仿真的脉冲总数。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ResponseNeurons">
+ <summary>
+ 有响应（至少发放过一次）的神经元索引，与 <see cref="P:Neuropils.Simulation.StimulationReplay.ResponsePotential"/> 行一一对应。
+ </summary>
+ <remarks>
+ 只保存"有响应"的神经元：全脑 139,255 个神经元里绝大多数全程静止，
+ 把它们也存下来会让响应矩阵从几 MB 涨到几十 MB，而绘图时又只会画有响应的那些。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ResponsePotential">
+ <summary>
+ 逐神经元的<b>响应电信号强度</b>轨迹：<c>ResponsePotential(k)(t)</c> 是
+ 第 <c>ResponseNeurons(k)</c> 个神经元在第 t 步的触发前膜电位。
+ </summary>
+ <remarks>
+ <b>为什么是膜电位而不是脉冲</b>：脉冲是 0/1，画成曲线就是一堆方波，
+ "响应强度"根本看不出来；膜电位是连续量，既有亚阈值的积分爬升，
+ 也有越阈后的复位跌落，是这一层神经元真实传递的电信号。
+ 
+ 数据来源是<b>分析回放</b>（同一刺激、逐算子路径重跑一遍）：融合单步内核内部
+ 不落膜电位（<c>SparseLIFLayer.UHistory</c> 只在逐算子路径下产生），
+ 而两条路径在双精度档下数值等价，因此这次回放给出的就是快速仿真内部的那条轨迹。
+ 详见 <c>BrainStimulator.analyzePotential</c>。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ResponseSignal">
+ <summary>响应信号的名字（用于图表标题与报告）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.AnalysisMs">
+ <summary>分析回放耗时 (毫秒)。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.AnalysisMatches">
+ <summary>
+ 分析回放的脉冲序列是否与快速仿真逐位一致（``Nothing`` 表示没做分析回放）。
+ </summary>
+ <remarks>
+ 这是膜电位可信度的<b>自校验</b>：两条路径的脉冲序列一致，才说明分析回放
+ 复现的确实是这次刺激实验的动力学；不一致时界面会明确提示不要采信膜电位曲线。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.AnalysisMismatches">
+ <summary>分析回放中与快速仿真不一致的脉冲数（0 = 完全一致）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReplay.ResponseCurve(System.Int32)">
+ <summary>按神经元索引取响应曲线；没有响应时返回空数组。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReplay.ResponseRow(System.Int32)">
+ <summary>神经元索引 → 响应矩阵行号（无响应时为 -1）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Gain">
+ <summary>生效的全局权重增益。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.Backend">
+ <summary>实际使用的后端（CUDA / SIMD）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.StepPath">
+ <summary>实测走的单步实现路径（Fused / OpByOp）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.FallbackSteps">
+ <summary>回退到逐算子路径的步数（0 表示整段都走在融合路径上）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ElapsedMs">
+ <summary>仿真步循环耗时 (毫秒)。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.WallMs">
+ <summary>从"点击"到"可以回放"的墙钟耗时 (毫秒，含装配与回读)。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ReportDir">
+ <summary>本次结果的落盘目录（``Nothing`` 表示没有落盘）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ReportFiles">
+ <summary>落盘的文件清单。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.GeneratedAt">
+ <summary>产生结果的时刻。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ActiveUnionCount">
+ <summary>整段仿真中出现过激活的神经元总数（并集）。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.PeakStep">
+ <summary>最活跃的那个时间步（回放默认停在这一帧）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReplay.StepActive(System.Int32)">
+ <summary>取某一步的激活神经元索引；越界时返回空集。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReplay.ActivityMask(System.Int32,System.Int32)">
+ <summary>
+ 把"第 <paramref name="stepIndex"/> 步及其余辉"折算成逐神经元的显示权重。
+ </summary>
+ <param name="stepIndex">当前回放到的步号</param>
+ <param name="trail">余辉长度（之前多少步仍然可见）</param>
+ <returns>
+ 长度 = N 的权重数组：当前步为 1.0，余辉按步数线性衰减到 0，
+ 未激活的神经元为 0。用于决定点亮颜色与放大倍数。
+ </returns>
+ <remarks>
+ 用权重而不是布尔值，是为了让回放看起来像"一波动起来"：
+ 只有当前步的神经元全亮，之前几步的神经元逐渐变暗，
+ 否则 T=30 步的轨迹叠在一起会糊成一片。
+ </remarks>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.ActiveFraction">
+ <summary>整段仿真中"至少激活过一次"的神经元占全脑的比例。</summary>
+</member>
+<member name="P:Neuropils.Simulation.StimulationReplay.PeakActive">
+ <summary>最活跃步的活跃神经元数。</summary>
+</member>
+<member name="T:Neuropils.Simulation.StimulationReport">
+ <summary>
+ 把一次电刺激仿真的结果落盘（"记录仿真结果"）。
+ </summary>
+ <remarks>
+ 输出四份 csv 到 ``&lt;DataDir&gt;\snn-output\&lt;时间戳&gt;_stimulation\``：
+ 
+ * ``stimulation_summary.csv``：刺激与仿真的元信息（kv 形式，便于拼进批量实验的汇总表）；
+ * ``stimulation_steps.csv``：逐步统计（步号、活跃数、脉冲数、累计）；
+ * ``stimulation_active_neurons.csv``：<b>逐步激活神经元清单</b>（回放数据源，可离线复现回放）；
+ * ``neuron_activity_stimulation.csv``：逐神经元累计脉冲计数 ——
+   与 <c>SimulationReport</c> 的同名表同构，因此可视化端的"仿真活跃度"着色
+   可以直接把本次刺激的结果当作一个活跃度快照使用（重新载入数据即可选中）。
+ 
+ 写成"每次刺激一个目录"而不是覆盖同名文件：电刺激实验往往是"同一点位扫强度"
+ 或"同强度扫点位"，逐次覆盖会让对照关系无从追溯。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.Write(Neuropils.Simulation.StimulationReplay,System.String,FlywireAI.Connectome.ConnectomeIndex)">
+ <summary>写入一次刺激的全部报告文件，返回落盘目录。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.writeText(System.String,System.String)">
+ <remarks>
+ 形参不能叫 ``file``：会遮蔽 <see cref="T:System.IO.File"/>（VB 不区分大小写），
+ 于是 <c>File.WriteAllText</c> 会被解析成"字符串上的成员"而编译失败。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.responsePotential(Neuropils.Simulation.StimulationReplay,FlywireAI.Connectome.ConnectomeIndex)">
+ <summary>
+ 逐神经元逐步的响应电信号矩阵（曲线图的数据源）。
+ </summary>
+ <remarks>
+ 一行一个"有响应"的神经元，一列一个时间步（<c>t1..tT</c>）。
+ 之所以把时间步铺成列而不是"每个神经元-步一行"：前者是一张标准的
+ 神经元 × 时间矩阵，行数只有几千、列数只有几十，读回来可以直接画曲线；
+ 后者会膨胀成几十万行，纯粹是解析开销。
+ </remarks>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.activeNeurons(Neuropils.Simulation.StimulationReplay,FlywireAI.Connectome.ConnectomeIndex)">
+ <summary>逐步激活神经元清单（回放数据源）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.neuronActivity(Neuropils.Simulation.StimulationReplay,FlywireAI.Connectome.ConnectomeIndex)">
+ <summary>逐神经元累计计数（与 SimulationReport 的同名表同构）。</summary>
+</member>
+<member name="M:Neuropils.Simulation.StimulationReport.csv(System.String,System.Object)">
+ <summary>``key,value`` 形式的一行（value 里的逗号/引号会被转义）。</summary>
+</member>
+<member name="T:Neuropils.SnakeBrainForm">
+ <summary>
+ 观战窗口：看果蝇大脑玩贪吃蛇的实时画面。
+ </summary>
+ <remarks>
+ 左半屏是游戏本身的画面（直接调用 Snake2 的 <see cref="M:Snake2.Render.Draw(System.Drawing.Graphics)"/>，
+ 与玩家手动玩时看到的是同一套渲染），右半屏是"大脑此刻在做什么"：
+ 
+ <list type="bullet">
+   <item><b>感觉通道</b>：16 个通道的强度 —— 大脑看到的食物方位 / 危险；</item>
+   <item><b>运动读出</b>：4 组运动神经元的脉冲数与解码出的走向；</item>
+   <item><b>脑活动</b>：本 tick 发放的神经元总数，并通过 <see cref="E:Neuropils.SnakeBrainForm.BrainActivityChanged"/>
+         事件送到主窗口的三维点云上点亮。</item>
+ </list>
+ 
+ 会话在 UI 线程上推进（每 tick 只有两次内核启动，几毫秒量级），
+ 训练在后台线程上跑，完成后把新解码器换上。
+ </remarks>
+</member>
+<member name="E:Neuropils.SnakeBrainForm.BrainActivityChanged">
+ <summary>大脑活动事件：&lt;本 tick 发放的神经元, 本 tick 的完整读数&gt;。</summary>
+</member>
+<member name="P:Neuropils.SnakeBrainForm.Session">
+ <summary>本窗口所用的游戏会话（主窗口也用它拿活动读数）。</summary>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.PauseForProbe">
+ <summary>
+ 供命令行自检抓屏前调用：先停表，抓到的才是"恰好跑了 N 帧"的那一帧。
+ </summary>
+ <remarks>
+ 抓屏前的 <c>Application.DoEvents()</c> 会把定时器消息再抽进来（重入），
+ 不先停表的话游戏会在抓屏过程中继续往前跑，帧数与画面都对不上。
+ </remarks>
+</member>
+<member name="F:Neuropils.SnakeBrainForm.m_stopped">
+ <summary>停过机之后不再重复停机。</summary>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
+ <summary>
+ 关窗即停机：定时器是"游戏引擎 + 大脑逐步仿真"的唯一驱动，停掉它两者就都停了。
+ </summary>
+ <remarks>
+ 不停表的话后果很具体：<see cref="T:System.Windows.Forms.Timer"/> 的 WM_TIMER 发到的是它自己的隐藏窗口，
+ <b>不随窗体销毁而结束</b> —— 关窗之后会话继续 tick，主窗口的三维点云
+ 也就继续被脑活动点亮（看起来"关不掉地一直闪"）。
+ </remarks>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.Dispose(System.Boolean)">
+ <remarks>
+ 兜底再停一次：即使窗体是被 Dispose 掉的（没走 Close），也不该留下一个
+ 还在后台推进游戏与仿真的定时器。重复调用由 <see cref="F:Neuropils.SnakeBrainForm.m_stopped"/> 挡住。
+ </remarks>
+</member>
+<member name="P:Neuropils.SnakeBrainForm.Stopped">
+ <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.updateReadouts(FlywireSnake.SnakeStep)">
+ <summary>刷新右侧读数（感觉通道 / 运动读出 / 统计）。</summary>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.trainDecoder">
+ <summary>在后台训练解码器，完成后立刻换上。</summary>
+</member>
+<member name="T:Neuropils.ChannelBars">
+ <summary>
+ 竖排条形读数控件：一行一个通道，画名称 + 条形 + 数值。
+ </summary>
+ <remarks>
+ 手写而不是用 ProgressBar：一次要显示 16 行，ProgressBar 无法紧凑排布，
+ 也没法在同一行里带标签。
+ </remarks>
+</member>
+<member name="F:Neuropils.ChannelBars.m_adaptive">
+ <summary>量程是否是自适应（<paramref name="maximum"/> 传 &lt;= 0 时开启）。</summary>
+</member>
+<member name="F:Neuropils.ChannelBars.AdaptiveDecay">
+ <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
+</member>
+<member name="M:Neuropils.ChannelBars.SetData(System.String[],System.Double[],System.Drawing.Color,System.Double)">
+ <summary>
+ 灌入一行行读数。
+ </summary>
+ <param name="maximum">
+ 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="F:Neuropils.ChannelBars.AdaptiveDecay"/> 缓慢回落。
+ 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
+ </param>
+</member>
+</members>
+</doc>

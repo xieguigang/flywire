@@ -1,0 +1,636 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Drawing.DirectX.WinForm
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas">
+ <summary>
+ A winforms control that draws its whole content through the gpu accelerated
+ directx 2d pipeline.
+ </summary>
+ <remarks>
+ The control owns a dxgi flip model swap chain that is bound to its own
+ window handle, so the winform paint cycle drives the gpu presentation
+ directly:
+
+ 1. <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnPaint(System.Windows.Forms.PaintEventArgs)"/> opens a drawing frame on the swap chain
+ 2. the <see cref="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Render"/> event is raised, the handler draws through the
+    <c>IGraphics</c> of the event data
+ 3. <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnPaint(System.Windows.Forms.PaintEventArgs)"/> finishes the frame and presents it onto the window
+
+ The control never paints through gdi+ - the gpu canvas owns every pixel of
+ the client area - so the background painting is suppressed and the opaque
+ style is set, which removes the flickering frame of a gdi+ filled control.
+
+ The canvas is recreated together with the window handle, so docking,
+ re-parenting and a dpi change are handled transparently. A removed gpu
+ device is handled by the backend itself: the swap chain is rebuilt at the
+ beginning of the next frame.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.m_rendering">
+ <summary>guard against the reentrant paint request of a nested message loop</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.m_capturePending">
+ <summary>
+ the pending capture request of <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.SaveImage(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)"/> and
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.CaptureFrame"/>
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.m_retryTimer">
+ <summary>
+ the timer that retries the creation of the directx canvas
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.m_canvasRetry">
+ <summary>the number of the canvas creation attempts of the current retry run</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.m_needsFreshHandle">
+ <summary>is a fresh window handle required for the next creation attempt?</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.FreshHandleRetryCount">
+ <summary>
+ The number of failed creation attempts after which the control asks
+ winforms for a fresh window handle.
+ </summary>
+ <remarks>
+ dxgi binds a window handle to its swap chain, and such a handle keeps
+ refusing a new swap chain with E_ACCESSDENIED until the window itself is
+ replaced.
+ </remarks>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Render">
+ <summary>
+ raised when the control needs to redraw its content
+ </summary>
+ <remarks>
+ the frame is already opened when the event is raised: everything that is
+ drawn in the handler becomes visible when the frame is presented right
+ after the event returns.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Graphics">
+ <summary>
+ the gpu accelerated drawing canvas of this control
+ </summary>
+ <remarks>
+ the canvas is only available after the window handle of the control has
+ been created. The content that is drawn outside of the
+ <see cref="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Render"/> event is presented by the next paint request.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.DeviceDescription">
+ <summary>
+ a short description of the gpu device that is in use
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.IsDeviceLost">
+ <summary>
+ was the gpu device removed? the swap chain is rebuilt on the next frame.
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.LastError">
+ <summary>
+ the message of the last rendering failure, Nothing means that every
+ frame was drawn without an error
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.AutoClear">
+ <summary>
+ clear the canvas with the <see cref="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.BackgroundColor"/> at the beginning
+ of every frame
+ </summary>
+ <remarks>
+ the back buffer of a flip model swap chain holds undefined pixels after
+ the frame has been presented, so this should only be turned off when the
+ render handler covers the whole canvas itself.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.BackgroundColor">
+ <summary>
+ the color of the canvas background
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.VSync">
+ <summary>
+ should the frame submission wait for the vertical blank?
+ </summary>
+ <remarks>
+ waiting for the vertical blank keeps the presentation smooth, but it
+ blocks the ui thread for up to one screen refresh interval per frame.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.SaveImage(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)">
+ <summary>
+ save the current canvas content into an image file
+ </summary>
+ <remarks>
+ The back buffer of the window swap chain only holds valid pixels while
+ the frame is being submitted, so this forces a synchronous repaint of
+ the control and captures the pixels of that frame: the
+ <see cref="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Render"/> event is raised one more time to do so.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.CaptureFrame">
+ <summary>
+ export the current canvas content as a raster image
+ </summary>
+ <remarks>
+ this works exactly like <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.SaveImage(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)"/> but returns the image
+ object instead of writing it into a file.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnHandleCreated(System.EventArgs)">
+ <summary>
+ the canvas is not created here: dxgi rejects a swap chain that is
+ created on a window which is still being created, so the canvas is
+ created lazily by the first paint request instead.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnHandleDestroyed(System.EventArgs)">
+ <summary>
+ the window handle is destroyed, so the swap chain that is bound to it has
+ to be released here, this also covers the disposal of the control.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnVisibleChanged(System.EventArgs)">
+ <summary>
+ a dxgi swap chain can only be created on a window that is already
+ visible, so the creation is retried when the control becomes visible
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.OnPaintBackground(System.Windows.Forms.PaintEventArgs)">
+ <summary>
+ the directx canvas owns the whole client area, so the gdi+ background
+ painting is suppressed here
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.CreateCanvas">
+ <summary>
+ create the directx canvas on the window of this control
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.DeviceCreated">
+ <summary>
+ raised after the directx canvas has been created successfully, the host
+ may use it to refresh the device information of its user interface
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.MaxCanvasRetryCount">
+ <summary>
+ the number of the canvas creation attempts before the control gives up
+ </summary>
+ <remarks>
+ the creation is retried because dxgi rejects a flip model swap chain
+ while the hosting window is still being created
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.CanvasRetryInterval">
+ <summary>
+ the delay in milliseconds between two canvas creation attempts
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.IsCanvasCreated">
+ <summary>
+ has the directx canvas been created successfully?
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.ScheduleCanvasRetry">
+ <summary>
+ schedule another attempt of the canvas creation
+ </summary>
+ <remarks>
+ A paint request that is handled without drawing does not produce another
+ paint request by itself, so a control that fails to create its swap chain
+ would stay without a canvas for its whole lifetime. The creation is
+ therefore retried on a timer until the hosting window is ready for the
+ swap chain.
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs">
+ <summary>
+ The event data of the <see cref="E:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas.Render"/> event.
+ </summary>
+ <remarks>
+ The drawing canvas that is passed here is the very same
+ <c>Microsoft.VisualBasic.Drawing.DirectX.DxGraphics</c> object that the
+ other rendering backend drivers of this solution create, so every existing
+ drawing code works without any change.
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs.Graphics">
+ <summary>
+ the gpu accelerated drawing canvas of the frame that is being rendered
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs.Size">
+ <summary>
+ the size of the canvas in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs.Width">
+ <summary>
+ the width of the canvas in pixels
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs.Height">
+ <summary>
+ the height of the canvas in pixels
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas">
+ <summary>
+ A winforms canvas that renders an interactive 3d scene through the gpu
+ accelerated directx pipeline.
+ </summary>
+ <remarks>
+ This control is the winforms adapter of the reusable 3d scene pipeline of
+ the <c>Microsoft.VisualBasic.Drawing.DirectX.Scene3D</c> namespace:
+
+ * the scene geometry is owned by <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene"/>
+ * the view interaction is owned by <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.OrbitCameraController"/>
+ * the lighting is owned by <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting"/>
+ * the rendering is done by an <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.ISceneRenderBackend"/>. The default
+   back end is the real direct3d 11 pipeline
+   (<see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11SceneRenderer"/>): the geometry is uploaded once and
+   every frame only a constant buffer and a handful of draw calls are sent to
+   the gpu device. <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct3D11DirectSceneRenderer"/> renders
+   straight into the canvas back buffer without any copy, and
+   <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Direct2DSceneRenderer"/> keeps the original polygon painter as
+   the comparison and fall back path.
+
+ The control only translates the winforms mouse and keyboard events into the
+ neutral input model of the controller and requests a repaint afterwards, so
+ the whole pipeline stays reusable outside of winforms.
+
+ Input mapping: the left button orbits the camera, the right button
+ translates the view, the mouse wheel changes the view distance.
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.m_ownedRenderer">
+ <remarks>
+ every control owns its own back end instance: the gpu back ends cache the
+ geometry of the scene that they rendered, a shared instance would rebuild
+ that cache for every canvas of the process
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.m_debugFont">
+ <summary>the font of the debug overlay, it is created once and reused</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Scene">
+ <summary>
+ the geometry of the scene, this object is never nothing
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.HasScene">
+ <summary>
+ does the scene hold any geometry?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.SurfaceCount">
+ <summary>
+ the number of the faces in the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.PointCount">
+ <summary>
+ the number of the points in the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LineCount">
+ <summary>
+ the number of the connection lines in the scene
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LoadSurfaces(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Imaging.Drawing3D.Surface})">
+ <summary>
+ replace the geometry of the scene with the given faces and fit the view
+ onto the new model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LoadPointCloud(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint})">
+ <summary>
+ replace the geometry of the scene with the given point cloud and fit the
+ view onto the new model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LoadConnections(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment})">
+ <summary>
+ load the connection lines of the scene, they are drawn on top of the faces
+ and of the point cloud
+ </summary>
+ <remarks>
+ the lines are an overlay, so the point cloud and the faces of the scene are
+ kept: a network graph can be drawn on top of the point cloud of the very
+ same neurons
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ClearConnections">
+ <summary>
+ drop the connection lines of the scene and keep the primary geometry
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.UpdatePointCloud(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint})">
+ <summary>
+ replace the point cloud of the scene without moving the camera
+ </summary>
+ <remarks>
+ Recoloring the points or hiding a subset of them reloads the cloud, and the
+ view of the user has to survive that: the camera is only reset by
+ <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LoadPointCloud(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint})"/>, which is the entry point that loads a new
+ model.
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.UpdateConnections(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.LineSegment})">
+ <summary>
+ replace the connection lines of the scene without moving the camera
+ </summary>
+ <remarks>
+ see <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.UpdatePointCloud(System.Collections.Generic.IEnumerable{Microsoft.VisualBasic.Drawing.DirectX.Scene3D.PointCloudPoint})"/>: filtering the graph must not reset the
+ view that the user has set up
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ClearScene">
+ <summary>
+ drop all of the geometry of the scene
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.HitTest(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ pick the scene element that is closest to the given position of the canvas
+ </summary>
+ <param name="x">the horizontal position on the canvas, in pixels</param>
+ <param name="y">the vertical position on the canvas, in pixels</param>
+ <param name="radius">the pick radius, in pixels</param>
+ <remarks>
+ the elements are projected with the same camera formulas that the render
+ back ends use, so the pick matches what the user sees; a point of the point
+ cloud wins over a connection line when both are within the radius
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.HitTestPoint(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ pick a point of the point cloud, -1 means that none is within the radius
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.HitTestLine(System.Int32,System.Int32,System.Int32)">
+ <summary>
+ pick a connection line, -1 means that none is within the radius
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.TryProjectPoint(Microsoft.VisualBasic.Imaging.Drawing3D.Point3D,System.Drawing.PointF@)">
+ <summary>
+ project a world point of the scene onto the canvas
+ </summary>
+ <returns>false when the point is behind the camera</returns>
+ <remarks>
+ the host uses this to draw its own overlay (labels, markers, a rubber band
+ selection) on top of the rendered frame
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Renderer">
+ <summary>
+ the rendering back end of the scene, assign another implementation to
+ render the same scene through a different pipeline
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RendererChanged">
+ <summary>
+ the rendering back end has been replaced
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RendererDescription">
+ <summary>
+ a readable description of the rendering back end that is in use
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ActiveMultisampleCount">
+ <summary>
+ the sample count of the multi sample anti aliasing that the gpu device
+ actually granted, one when the anti aliasing is off
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.IsGpuPipelineActive">
+ <summary>
+ is the frame rendered by the direct3d 11 pipeline?
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RendererFallbackReason">
+ <summary>
+ the message of the last fall back of the gpu pipeline to the polygon
+ painter, an empty text means that the gpu pipeline is in use
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.MultisampleCount">
+ <summary>
+ the number of the samples of the multi sample anti aliasing of the gpu
+ back end, one disables it
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.CullBackFaces">
+ <summary>
+ discard the faces that point away from the viewer
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Controller">
+ <summary>
+ the camera interaction controller of the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Lighting">
+ <summary>
+ the lighting parameters of the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Options">
+ <summary>
+ the presentation options of the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.LastSceneError">
+ <summary>
+ the message of the last rendering failure, nothing means that the last
+ frame was rendered without an error
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RenderMode">
+ <summary>
+ the presentation mode of the scene
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ColorScheme">
+ <summary>
+ the name of the heat map color scheme, for example ``viridis``
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.PointSize">
+ <summary>
+ the edge length in pixels of a point cloud point
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.PointAlpha">
+ <summary>
+ the alpha channel of the heat map colors of a point cloud
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.UseEmbeddedColor">
+ <summary>
+ use the per point color of the source file instead of the heat map
+ coloring when the file provides one
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ShowGround">
+ <summary>
+ draw the ground grid below the model
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ShowConnections">
+ <summary>
+ draw the connection lines of the scene
+ </summary>
+ <remarks>
+ the connections are an overlay of the scene, so the point cloud and the
+ graph can be shown at the same time; toggling this option does not rebuild
+ the gpu geometry of the lines
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.GroundColor">
+ <summary>
+ the color of the ground grid lines
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ShowDebugOverlay">
+ <summary>
+ draw the camera parameters and the extra debug text onto the canvas
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ExtraDebugText">
+ <summary>
+ additional lines that the debug overlay displays below the camera
+ parameters, the host may fill this with its frame rate for example
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.DebugText">
+ <summary>
+ the text that the debug overlay displays
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.EnableKeyboardShortcuts">
+ <summary>
+ handle the keyboard shortcuts of the canvas
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.FitView">
+ <summary>
+ compute the view distance that makes the whole model visible
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ResetView">
+ <summary>
+ restore the default rotation angles and the offset, and fit the view
+ onto the model again
+ </summary>
+ <remarks>
+ the lighting parameters are not touched here, the host resets them
+ through <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.Scene3D.SceneLighting.Reset"/> when it needs to
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.UpdateViewport">
+ <summary>
+ synchronize the viewport of the camera with the client area of this
+ control
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ZoomIn">
+ <summary>
+ move the camera towards the model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ZoomOut">
+ <summary>
+ move the camera away from the model
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.CycleRenderMode">
+ <summary>
+ switch to the next presentation mode
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Snapshot">
+ <summary>
+ export the frame that is currently displayed as a raster image
+ </summary>
+ <remarks>
+ this forces a synchronous repaint of the control, so it must not be
+ called from inside a render handler
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.SaveSnapshot(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)">
+ <summary>
+ export the frame that is currently displayed into an image file
+ </summary>
+ <remarks>
+ this forces a synchronous repaint of the control, so it must not be
+ called from inside a render handler
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RequestRender">
+ <summary>
+ request a repaint of the canvas
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.SceneChanged">
+ <summary>
+ raised after the geometry of the scene has been replaced
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ViewChanged">
+ <summary>
+ raised after the view of the scene has been changed by the interaction
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.RenderModeChanged">
+ <summary>
+ raised after the presentation mode of the scene has been changed
+ </summary>
+</member>
+<member name="E:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.SnapshotRequested">
+ <summary>
+ raised when the user requests a snapshot with the keyboard, the host
+ should ask for a file name and call <see cref="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.SaveSnapshot(System.String,Microsoft.VisualBasic.Imaging.ImageFormats)"/>
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.IsInputKey(System.Windows.Forms.Keys)">
+ <summary>
+ the navigation keys and the shortcut keys are input keys of this canvas
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.OnSceneRender(System.Object,Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs)">
+ <summary>
+ render the scene of the current frame and the debug overlay
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.DrawDebugOverlay(Microsoft.VisualBasic.Imaging.IGraphics)">
+ <summary>
+ draw the camera parameters onto the canvas
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.ApplyNewScene">
+ <summary>
+ fit the view onto a newly loaded model and reset the view state
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas.Dispose(System.Boolean)">
+ <summary>
+ release the gpu resources of the back end that this control created
+ </summary>
+ <remarks>
+ a back end that the host assigned itself is not released here: it may be
+ shared with other canvases of the application
+ </remarks>
+</member>
+</members>
+</doc>

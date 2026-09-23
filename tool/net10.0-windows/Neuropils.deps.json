@@ -1,0 +1,738 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "Neuropils/1.0.0": {
+        "dependencies": {
+          "FlywireAI": "1.0.0",
+          "FlywireSnake": "1.0.0",
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.DataPlot": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.Framework": "5.0.9762.11310",
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Drawing.DirectX": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Drawing.DirectX.WinForm": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Imaging": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MIME.Html": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310",
+          "Snake2": "1.0.0",
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.BinaryData.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.DataPlot.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.Framework.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.DataMining.Framework.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Drawing.DirectX.Reference": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Drawing.DirectX.WinForm.Reference": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Drawing.Windows.Reference": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Imaging.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MIME.Html.Reference": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime.Reference": "5.33.9762.11310"
+        },
+        "runtime": {
+          "Neuropils.dll": {}
+        }
+      },
+      "System.Composition/10.0.12": {
+        "dependencies": {
+          "System.Composition.AttributedModel": "10.0.12",
+          "System.Composition.Convention": "10.0.12",
+          "System.Composition.Hosting": "10.0.12",
+          "System.Composition.Runtime": "10.0.12",
+          "System.Composition.TypedParts": "10.0.12"
+        }
+      },
+      "System.Composition.AttributedModel/10.0.12": {
+        "runtime": {
+          "lib/net10.0/System.Composition.AttributedModel.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "System.Composition.Convention/10.0.12": {
+        "dependencies": {
+          "System.Composition.AttributedModel": "10.0.12"
+        },
+        "runtime": {
+          "lib/net10.0/System.Composition.Convention.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "System.Composition.Hosting/10.0.12": {
+        "dependencies": {
+          "System.Composition.Runtime": "10.0.12"
+        },
+        "runtime": {
+          "lib/net10.0/System.Composition.Hosting.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "System.Composition.Runtime/10.0.12": {
+        "runtime": {
+          "lib/net10.0/System.Composition.Runtime.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "System.Composition.TypedParts/10.0.12": {
+        "dependencies": {
+          "System.Composition.AttributedModel": "10.0.12",
+          "System.Composition.Hosting": "10.0.12",
+          "System.Composition.Runtime": "10.0.12"
+        },
+        "runtime": {
+          "lib/net10.0/System.Composition.TypedParts.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "System.Reflection.MetadataLoadContext/10.0.12": {
+        "runtime": {
+          "lib/net10.0/System.Reflection.MetadataLoadContext.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "FlywireAI/1.0.0": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Data.Framework": "5.0.9762.11310",
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "FlywireAI.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "FlywireSnake/1.0.0": {
+        "dependencies": {
+          "FlywireAI": "1.0.0",
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor": "1.0.9762.11310",
+          "Microsoft.VisualBasic.DataMining.Framework": "1.0.9762.11310",
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning": "5.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310",
+          "Snake2": "1.0.0"
+        },
+        "runtime": {
+          "FlywireSnake.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310",
+          "System.Reflection.MetadataLoadContext": "10.0.12"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Computing.ILCuda/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Computing.ILCuda.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Computing.ILCuda": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.BinaryData/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Data.BinaryData.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.DataPlot/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Imaging": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MIME.Html": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Data.DataPlot.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.Framework/5.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Data.Framework.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.DataMining.Framework/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.DataMining.Framework.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.DirectX/1.0.9762.29476": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Imaging": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.DirectX.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.DirectX.WinForm/1.0.9762.29476": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Data.BinaryData": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Drawing.DirectX": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Imaging": "1.0.9762.11310",
+          "Microsoft.VisualBasic.MIME.Html": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.DirectX.WinForm.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.Windows/1.0.9762.29476": {
+        "dependencies": {
+          "Microsoft.VisualBasic.MIME.Html": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.Windows.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Imaging/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Drawing.Windows": "1.0.9762.29476",
+          "Microsoft.VisualBasic.MIME.Html": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Imaging.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MachineLearning/5.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.DataMining.Framework": "1.0.9762.11310",
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.MachineLearning.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MachineLearning.TensorFlow/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Math.Core/5.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Math.Core.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MIME.Html/1.0.9762.11310": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.MIME.Html.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Runtime/10.5.9762.11310": {
+        "dependencies": {
+          "System.Composition": "10.0.12"
+        },
+        "runtime": {
+          "Microsoft.VisualBasic.Runtime.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Snake2/1.0.0": {
+        "runtime": {
+          "Snake2.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Computing.ILCuda.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Computing.ILCuda.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.BinaryData.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Data.BinaryData.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.DataPlot.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Data.DataPlot.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Data.Framework.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Data.Framework.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.DataMining.Framework.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.DataMining.Framework.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.DirectX.Reference/1.0.9762.29476": {
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.DirectX.dll": {
+            "assemblyVersion": "1.0.9762.29476",
+            "fileVersion": "1.0.9762.29476"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.DirectX.WinForm.Reference/1.0.9762.29476": {
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.DirectX.WinForm.dll": {
+            "assemblyVersion": "1.0.9762.29476",
+            "fileVersion": "1.0.9762.29476"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Drawing.Windows.Reference/1.0.9762.29476": {
+        "runtime": {
+          "Microsoft.VisualBasic.Drawing.Windows.dll": {
+            "assemblyVersion": "1.0.9762.29476",
+            "fileVersion": "1.0.9762.29476"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Imaging.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Imaging.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MachineLearning.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.MachineLearning.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MachineLearning.TensorFlow.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.MachineLearning.TensorFlow.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Math.Core.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Math.Core.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.MIME.Html.Reference/1.0.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.MIME.Html.dll": {
+            "assemblyVersion": "1.0.9762.11310",
+            "fileVersion": "1.0.9762.11310"
+          }
+        }
+      },
+      "Microsoft.VisualBasic.Runtime.Reference/5.33.9762.11310": {
+        "runtime": {
+          "Microsoft.VisualBasic.Runtime.dll": {
+            "assemblyVersion": "5.33.9762.11310",
+            "fileVersion": "5.33.9762.11310"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Neuropils/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Composition/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fjUHMvT9eTFbpcevI4bMpb3ukHvjBaxqrkopXIhrk+tuW/D/NdJCIlzHRagqA86z+IEowZxEjpa0LRUHGuVFAg==",
+      "path": "system.composition/10.0.12",
+      "hashPath": "system.composition.10.0.12.nupkg.sha512"
+    },
+    "System.Composition.AttributedModel/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-tl0VsgDslx5qj7S08+olVpSwhTrUuWLL3IUAGTEVUXaagHroUKifGy+tIiQkITzMDvNbDTs13GvyxgSV3G8B4w==",
+      "path": "system.composition.attributedmodel/10.0.12",
+      "hashPath": "system.composition.attributedmodel.10.0.12.nupkg.sha512"
+    },
+    "System.Composition.Convention/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Lyo9C8qk+/wFo9Ge9G9KiOQZWjdfVW6hZWz0yMTqpjkf6xTHkxHxWCKh7xw/kxhdrz/GNroy18qMJWbkqDJ3DQ==",
+      "path": "system.composition.convention/10.0.12",
+      "hashPath": "system.composition.convention.10.0.12.nupkg.sha512"
+    },
+    "System.Composition.Hosting/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2y5uJ+7ixLbpvE6Z5tespyhUvl2EEo1SuDW9xpeThpwsh8FeS39DZ7iLOSAcHG0FNjBwA5GqvNjgm4Pl5xjUPQ==",
+      "path": "system.composition.hosting/10.0.12",
+      "hashPath": "system.composition.hosting.10.0.12.nupkg.sha512"
+    },
+    "System.Composition.Runtime/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7iYtUEuk0KAboGtFI9qw4hy1u4Wry4MmxNMOlfHgR3ab365QGF+FwjefpDRo3wmwijgJ8wJD0o4bK1v6jdlY3w==",
+      "path": "system.composition.runtime/10.0.12",
+      "hashPath": "system.composition.runtime.10.0.12.nupkg.sha512"
+    },
+    "System.Composition.TypedParts/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-GQVuDQ4W0vg94QA8xiP/btHk6wKnV2S9FoJuJc8+SjI70RW3C6lJWd2YI7lpZXML5DcCIumDHtD+S7MT47Vj8Q==",
+      "path": "system.composition.typedparts/10.0.12",
+      "hashPath": "system.composition.typedparts.10.0.12.nupkg.sha512"
+    },
+    "System.Reflection.MetadataLoadContext/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+DWu1fzj75I1FgdHSg3crgeZmfF2z55x1+OXF2IO2Lcq/iNgM9tL734pxAG0vo5iE82FVPHwbqUt31o8ipPBWg==",
+      "path": "system.reflection.metadataloadcontext/10.0.12",
+      "hashPath": "system.reflection.metadataloadcontext.10.0.12.nupkg.sha512"
+    },
+    "FlywireAI/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "FlywireSnake/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Computing.ILCuda/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.BinaryData/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.DataPlot/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.Framework/5.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.DataMining.Framework/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.DirectX/1.0.9762.29476": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.DirectX.WinForm/1.0.9762.29476": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.Windows/1.0.9762.29476": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Imaging/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MachineLearning/5.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MachineLearning.TensorFlow/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Math.Core/5.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MIME.Html/1.0.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Runtime/10.5.9762.11310": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Snake2/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Computing.ILCuda.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.BinaryData.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.DataPlot.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Data.Framework.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.DataMining.Framework.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.DirectX.Reference/1.0.9762.29476": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.DirectX.WinForm.Reference/1.0.9762.29476": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Drawing.Windows.Reference/1.0.9762.29476": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Imaging.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MachineLearning.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MachineLearning.TensorFlow.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Math.Core.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.MIME.Html.Reference/1.0.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualBasic.Runtime.Reference/5.33.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

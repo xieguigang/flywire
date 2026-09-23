@@ -1,0 +1,974 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Computing.ILCuda.GPUTensor
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor">
+ <summary>
+ <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.ITensorCompute"/> 的 CUDA GPU 实现（全 double 精度）。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DefaultCacheBytes">
+ <summary>默认的显存驻留缓存上限（1 GiB）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.RowBlockSize">
+ <summary>末轴行内核使用的每 block 线程数（必须与 tensor.cu 的 TENSOR_BLOCK 一致）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.StageBlockSize">
+ <summary>两段式全局归约阶段一的每 block 线程数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaxStageBlocks">
+ <summary>两段式全局归约阶段一的 block 数上限（配合 grid-stride 可处理任意长度）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MinGpuElements">
+ <summary>低于该元素数时走 CPU 兜底，避免显存拷贝开销倒挂</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MinGemmElements">
+ <summary>矩阵乘走到 GPU 的最小规模（m * k * n）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MinSparseNnz">
+ <summary>
+ 稀疏 SpMM 走到 GPU 的最小非零元素数（nnz）。
+ 连接规模过小时显存拷贝/启动开销会倒挂，回退 CPU 反而更快。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LastError">
+ <summary>最近一次 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Register(Microsoft.VisualBasic.Computing.ILCuda.Runtime.EngineOptions,System.Int64,System.Boolean)"/> 失败的原因</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Current">
+ <summary>当前已注册的 GPU 后端实例（未注册时为 Nothing）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UseFp32Gemm">
+ <summary>
+ 是否让矩阵乘改走单精度（FP32）内核。
+ </summary>
+ <remarks>
+ 消费级显卡（例如 8GB 的 RTX 30 / 40 系）的 FP64 吞吐只有 FP32 的 <b>1/64</b>，
+ 而矩阵乘占语言模型全部浮点运算的 95% 以上，因此把 GEMM 放到 FP32 上
+ 能拿到接近一个数量级的实际加速（主机侧数据仍是 Double，只在显存里降精度）。
+ 设为 <c>False</c> 会退回 <c>tensorGemmDoubleKernel</c> 的全双精度路径，
+ 用于"FP32 与 FP64 数值对照"这类诊断场景。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UseResidentStore">
+ <summary>
+ 是否让矩阵乘使用常驻显存缓冲（跳过 LRU 缓存的版本失效重传）。
+ </summary>
+ <remarks>
+ 详见 <see cref="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore"/>。默认关闭，开启后
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 会优先返回被钉住的常驻缓冲。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor._resident">
+ <summary>设备常驻缓冲注册表（权重 / 梯度 / 优化器状态的长期落脚点）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UseFp64Residency">
+ <summary>
+ 是否让 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/> 生效，即是否允许把张量钉成<b>双精度</b>常驻缓冲。
+ </summary>
+ <remarks>
+ 默认 <c>False</c>：既有调用方（稠密训练）只使用单精度常驻通道，
+ 不因为本特性多占显存。脉冲网络需要"零往返 + 双精度保真"时应显式打开，
+ 见 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/> 的说明。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor._resident64">
+ <summary>双精度设备常驻缓冲注册表（脉冲网络的递归状态）。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor._lifWorkspaces">
+ <summary>
+ 融合 LIF 单步的跨时间步工作区（键 = 膜电位张量的主机数组引用）：
+ 复用突触输入缓冲 <c>I</c>，避免每步 <c>cuMemAlloc</c> 一次 1.1 MB。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifWorkspace">
+ <summary>
+ 融合 LIF 单步的工作区：一片跨步复用的突触输入缓冲。
+ </summary>
+ <remarks>
+ 稀疏内核是"按行散射 + atomicAdd"，输出必须预先清零；把缓冲留在本对象里
+ 而不是每步新建，可以省掉一次分配 / 释放（在十万神经元规模下即 1.1 MB）。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifWorkspace.Input">
+ <summary>突触输入 <c>I[batch, columns]</c>（内核用 atomicAdd 累加，启动前必须清零）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifWorkspace.Elements">
+ <summary>缓冲的元素数（形状变化时需要重建）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaxCacheBytes">
+ <summary>自适应缓存容量的上限（4 GiB）。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MinCacheBytes">
+ <summary>自适应缓存容量的下限（256 MiB），保证小显存设备上也有一份可用空间。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.AdaptiveCacheBytes">
+ <summary>
+ 按设备可用显存推算合适的驻留缓存容量：取可用量的 1/4，上限 4 GiB。
+ </summary>
+ <remarks>
+ 这里有两个缓存（单精度与双精度），各取可用量的 1/4，合计约占可用显存的一半，
+ 余下的留给 CUDA 上下文本身与各式算子输出缓冲。
+ <para>
+ 取 1/4 而不是更大，是因为容量过小虽然会频繁淘汰，容量过大则会挤压
+ 算子输出缓冲的分配空间；语言模型里单个张量可达数百 MB，
+ 在 8 GB 卡上 1/4（约 1.7 GiB）已足够容纳整个工作集。
+ </para>
+ 查询失败（上下文尚未就绪）时退回 <see cref="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DefaultCacheBytes"/>。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Resident">
+ <summary>
+ 设备常驻缓冲注册表。
+ </summary>
+ <remarks>
+ 常驻缓冲由本注册表<b>独立持有</b>，不参与 <see cref="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1"/> 的 LRU 淘汰，
+ 因此权重可以在整个训练过程中一直留在显存里。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Engine">
+ <summary>底层 CUDA 引擎</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.KernelFailures">
+ <summary>IL2Cuda 生成内核的翻译失败信息（正常情况下为空）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Register(Microsoft.VisualBasic.Computing.ILCuda.Runtime.EngineOptions,System.Int64,System.Boolean)">
+ <summary>
+ 尝试初始化 CUDA 并把 <see cref="P:Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor.computeKernel"/> 切换为 GPU 后端。
+ 设备不可用 / NVRTC 与驱动版本不匹配时返回 False，并且**不改变**当前后端。
+ </summary>
+ <param name="options">引擎选项（设备号 / NVRTC 路径等），<c>Nothing</c> 表示使用默认值</param>
+ <param name="cacheBytes">
+ 单精度与双精度两个驻留缓存各自的容量上限（字节）。
+ <c>0</c>（默认）表示按设备可用显存自适应；传正数则显式指定。
+ </param>
+ <remarks>
+ 缓存容量不能太小：语言模型的张量本身就有数百 MB，容量不足会让算子之间
+ 频繁互相淘汰，既拖慢速度也更容易触发淘汰相关的边界问题。
+ 自适应策略取可用显存的一半、上限 4 GiB，在 8 GB 卡上约为 3.5 GiB。
+ </remarks>
+ <param name="useFp32Gemm">
+ 是否让矩阵乘走单精度内核。默认 <c>True</c>。
+ 在消费级显卡（FP64 只有 FP32 的 1/64）上这是主要的加速来源；
+ 设为 <c>False</c> 可用于观察纯双精度路径的数值与耗时。
+ </param>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Unregister">
+ <summary>把计算后端切回默认的 SIMD CPU 实现</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SyncIfPinned(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ CPU 兜底之前，把被钉住的张量的最新内容同步回主机。
+ </summary>
+ <remarks>
+ 这是"设备常驻"最容易踩的坑：被钉住的张量以<b>设备为主副本</b>，主机
+ <c>Data</c> 会陈旧；而所有 CPU 实现读的都是主机数组。于是只要有一个算子
+ 落了 CPU 兜底，就会用旧权重静默算出错误结果。
+ <para>
+ 真实踩到的例子：增量解码（KV Cache）时注意力的 GEMM 只有 <c>m = 1</c>，
+ 规模 <c>1 × 128 × 128 = 16384</c> 低于 <see cref="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MinGemmElements"/>（65536），
+ 于是落到 CPU 兜底。全序列路径走 GPU 读常驻缓冲、解码路径走 CPU 读陈旧主机副本，
+ 两条路径结果不一致 —— 表现为"KV Cache 逐 token 一致性"莫名失败。
+ </para>
+ <para>
+ 因此凡是可能消费权重、又存在 CPU 兜底分支的算子，都必须在兜底前调用本方法。
+ <see cref="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UseResidentStore"/> 关闭时本方法几乎是空操作，不构成性能负担。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Device(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>取张量底层数据对应的显存缓冲（驻留缓存，零精度损失）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 取张量对应的<b>单精度</b>显存缓冲（用于 FP32 的矩阵乘内核）。
+ </summary>
+ <remarks>
+ 查找顺序：<b>常驻表 → LRU 缓存</b>。
+   * 常驻表命中的是"权重 / 梯度 / 优化器状态"这类长期张量。
+     它们一旦钉住就不再随版本号失效，因此训练时不会每步重传整个模型
+     （200M 参数单精度下即 764 MB/步）；
+   * 未钉住的张量（激活、临时结果）落到 LRU 缓存，行为与改造前一致。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Device64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 取张量对应的<b>双精度</b>显存缓冲，查找顺序同样是「常驻表 → LRU 缓存」。
+ </summary>
+ <remarks>
+ 与 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Device(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 的唯一差别是它会先查双精度常驻表（<see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>）。
+ 这一点是脉冲网络能"零往返"的关键：被钉住的膜电位 / 脉冲 / 计数累加器
+ 跳过版本校验，内核直接原地读写同一片显存，主机数组只在需要时同步一次。
+ <para>
+ 反之，若用 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Device(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 去读一个被钉住的张量，就会从<b>陈旧的主机副本</b>
+ 重新上传（LRU 缓存只看数组引用 + 版本号），静默算错 —— 所以凡是消费
+ 递归状态的算子里都必须用本方法取缓冲。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.EwBinary(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String)">
+ <summary>逐元素二元（纯标量内核：两个输入数组）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.EwUnary(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Double[])">
+ <summary>逐元素一元（可带 0 / 1 / 2 个运行时标量参数）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LaunchRow(System.String,Microsoft.VisualBasic.Computing.ILCuda.Runtime.DeviceBuffer{System.Double},Microsoft.VisualBasic.Computing.ILCuda.Runtime.DeviceBuffer{System.Double},System.Int32,System.Int32)">
+ <summary>启动一个“每 block 一行”的末轴内核</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ReduceGlobal(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.String)">
+ <summary>
+ 两段式全局归约：阶段一由多个 block 并行产出部分结果，阶段二由 1 个 block 汇总。
+ 两段都在 GPU 上完成，不需要主机端同步。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.IsLastAxis(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32@)">
+ <summary>归一化轴下标并判断是否为“末轴且连续”</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ReducedShape(System.Int32[],System.Int32,System.Boolean)">
+ <summary>归约后的输出形状（去掉 axis 维；keepdims 时该维保留为 1）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.RowReduce(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.String,System.Boolean)">
+ <summary>
+ 末轴行归约：把张量按最后一维切成 outerSize 行逐行归约。
+ 不满足“末轴”条件时返回 Nothing，由调用方回退 CPU。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.RowSoftmax(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.String)">
+ <summary>末轴逐行 softmax / log-softmax（输出形状与输入相同）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Heaviside(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 阶跃函数(Heaviside): 大于 0 的元素取 1, 否则取 0
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MatMul(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 分块矩阵乘：<c>C(m×n) = A(m×k) · B(k×n)</c>。
+ </summary>
+ <remarks>
+ 默认走<b>单精度</b>内核（Kernels\blas.cu 的 <c>gemmKernel</c>）：
+ 消费级显卡的 FP64 吞吐只有 FP32 的 1/64，而 GEMM 是语言模型里
+ 占绝对主导的浮点运算。主机侧数据始终是 <c>Double</c>，
+ 只在显存里降精度计算，结果再升精度回写主机。
+ <see cref="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UseFp32Gemm"/> 设为 <c>False</c> 可退回纯双精度路径做数值对照。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MatMulFp32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32,System.Int32,System.Int32,Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaKernel)">
+ <summary>
+ 单精度矩阵乘路径：输入从主机（或常驻表）取 FP32 缓冲，
+ 结果回读后升精度为 <c>Double()</c>。
+ </summary>
+ <remarks>
+ 内核是 ILCuda 自带的 <c>gemmKernel</c>，其索引全程用 <c>size_t</c> 转换
+ （见 Kernels\blas.cu），因此 12.8 万词表这类大矩阵在内核内部不会有 Int32 溢出。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.EnsureDeviceCount(System.Int64,System.String)">
+ <summary>
+ 校验单次算子输出的元素数落在 <c>DeviceBuffer(Of T)</c> 的 <c>Int32</c> 计数契约内。
+ </summary>
+ <remarks>
+ <c>ILCuda\Runtime\DeviceBuffer.vb</c> 的构造函数形参与 <c>Count</c> 属性都是
+ <c>Integer</c>，因此单个算子能寻址的元素数上限是 <see cref="T:System.Int32"/>
+ （约 21.5 亿）。张量形状本身也是 <c>Integer()</c>，所以这个分支在纯 CPU 语义下
+ 不可达；显式写出来是为了让"越界"变成一条指出算子与规模的<b>可读诊断</b>，
+ 而不是让底层算术静默溢出后抛出难以定位的异常。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SpMM(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 稀疏（CSR）× 稠密矩阵乘：dense[batch, Rows] · W[Rows, Columns] → [batch, Columns]。
+ </summary>
+ <remarks>
+ CSR 三个数组按 <see cref="T:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr"/> 的引用与版本常驻显存；
+ 内核为 Kernels\spmm.cu 的 <c>tensorSpmmCsrKernel</c>（按 (batch,row) 行并行，
+ 输出用 atomicAdd(double) 累加，需 sm_60 及以上）。
+ 无连接、规模过小、或内核不可用（NVRTC 编译失败）时自动回退 CPU 实现。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)">
+ <summary>
+ 融合的稀疏递归 LIF 单步（GPU）：先由 <c>tensorSpmmCsrKernel</c> 把递归输入
+ 散射进<b>跨步复用</b>的显存缓冲 <c>I</c>，再由 <c>tensorLifUpdate*Kernel</c>
+ 就地更新膜电位 / 脉冲 / 计数累加器。
+ </summary>
+ <remarks>
+ 本覆写相对基类（主机标量实现）的差别只有"数据放在哪里"：
+ <list type="bullet">
+   <item>递归状态以<b>设备为主副本</b>，跨时间步常驻显存，全程零主机往返；</item>
+   <item><c>I</c> 缓冲按膜电位张量的引用身份缓存，只分配一次。</item>
+ </list>
+ 因此本覆写<b>要求状态张量已通过</b> <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>（双精度档）或
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>（单精度档）<b>钉住</b>：内核是就地写入的，
+ 若状态只存在于 LRU 缓存里，调用方就再也无法把结果同步回主机数组
+ （<see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 只认常驻表）。任一前提不满足时返回 <c>False</c>，
+ 由调用方回退到逐算子路径 —— 语义完全一致，只是慢一些。
+ <para>
+ 档位选择：<c>h</c> 与 <c>counts</c> 双双钉在双精度表 → 走全双精度内核
+ （与 CPU 逐位一致）；钉在单精度表 → 走混合内核（<c>H</c>/<c>counts</c> 单精度，
+ 但脉冲 <c>S</c> 仍写双精度，以便下一步直接复用双精度的稀疏内核，
+ 而 0/1 在两种精度下都是精确值）。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.GetLifWorkspace(System.Double[],System.Int32)">
+ <summary>
+ 取（或按需创建）某个膜电位张量对应的融合 LIF 工作区。
+ </summary>
+ <remarks>
+ 键是主机 <c>Double()</c> 数组的引用身份：同一层在同一个仿真窗里每步复用的是
+ 同一个张量对象，因此整段仿真只会分配一次 <c>I</c> 缓冲；
+ 神经元数量或批大小变化（<c>ResetState</c> 之后）时按元素数重建。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ReleaseLifWorkspace(System.Double[])">
+ <summary>释放某个张量对应的融合 LIF 工作区（未占用时返回 <c>False</c>）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifWorkspaceCount">
+ <summary>当前缓存的融合 LIF 工作区个数（诊断用）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Transpose(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 二维转置：由 IL2Cuda 生成的 Grid2D double 内核完成，
+ 输出 (C, R) 的第 (i, j) 个元素 = 输入 (R, C) 的第 (j, i) 个元素。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaxCellKernelThreads">
+ <summary>融合内核允许的最大线程数（blockDim.x 的 CUDA 上限）。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.CellGraphLayerBlockSize">
+ <summary>
+ 融合内核的图卷积层线程数：输出特征维度不超过 32，用 32 线程覆盖。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.EnsureResident64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>
+ 确保张量已钉成<b>双精度</b>设备常驻缓冲——本组融合内核全部就地写入状态，
+ 只有常驻表里的缓冲才能被 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 同步回主机数组。
+ </summary>
+ <returns>张量已在常驻表中时返回 True；无法钉住时返回 False（调用方回退 CPU）</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LtcRk4Batch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Int32,System.Int32)">
+ <summary>
+ 液态时间常数网络（LTC / LNN）批量 RK4 积分（GPU）。
+ </summary>
+ <remarks>
+ 整批细胞的状态 <c>[B, m]</c> 常驻显存，<c>subSteps</c> 个子步在内核里一次跑完：
+ 一次内核启动服务全部细胞，且没有任何主机往返（对比：逐算子写法每步需要
+ 十几次 GEMM + 逐元素调用，每次都要上传/回读）。
+ <para>
+ 任一前提不满足（内核缺失 / 形状不支持 / 状态无法钉住 / 可选权重缺失）时
+ 直接走基类的标量实现，语义完全等价，只是慢一些。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.GraphLayerBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32)">
+ <summary>
+ 图卷积批量层（GPU）：自身分支 + CSR 邻居聚合 + 偏置 + 激活。
+ </summary>
+ <remarks>
+ 拓扑与系数对全部细胞共享，因此一份 CSR 常驻显存即可服务整个 batch；
+ 节点特征按 <c>[B·n, inF]</c> 行优先布局，邻居行号 = 批内基址 + 源节点号。
+ <c>edges</c> 为空（解码器等无邻居层）时内核退化为普通全连接层。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.GraphFeatureBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32,System.Int32)">
+ <summary>
+ 节点特征拼装（GPU）：<c>[B·n, 2+2d] ← [x̄ ‖ p ‖ e_i ‖ z_pert]</c>。
+ </summary>
+ <remarks>
+ 纯数据搬移，一次内核完成；输入中的逐节点向量按行索引取，扰动向量按批索引取。
+ 该拼装如果没有内核支撑，在主机侧就是 <c>B·n·dims</c> 次带索引的写入
+ （实测占 GRN 前向可观的一部分），因此同样做成融合算子。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.FluxHeadBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 通量读取头批量计算（GPU）：<c>v = e ⊙ gsat([h ‖ u]·Wv + bv)</c>。
+ </summary>
+ <remarks>
+ 输出必须落在常驻缓冲里（内核直接写显存），因此这里对 <paramref name="output"/>
+ 调用 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.EnsureResident64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>；调用方读主机数组之前需要
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/>。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SystemTauBatch(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 系统时间常数批量计算（GPU）：<c>τ^sys = 1/(1/τ_eff + σ(h·Wgate + u·WgateIn + bg))</c>。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ConvOutSize(System.Int32,System.Int32,System.Int32,System.Int32)">
+ <summary>卷积/池化的输出边长: (input + 2*padding - kernel) / stride + 1</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ElementCount(System.Int32[])">
+ <summary>
+ 形状的元素总数（以 <c>Long</c> 累乘后再收敛到 <c>Int32</c>）。
+ </summary>
+ <remarks>
+ 卷积 / 池化的输出元素数同样可能超过 Int32 —— 例如 <c>[batch, H, W, C]</c>
+ 在大输入下累乘就会溢出。用 Long 累乘可以让溢出被<b>显式检测</b>，
+ 而不是得到一个负数后传给 <c>DeviceBuffer</c> 抛出难以定位的异常。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.TryKernel(System.String)">
+ <summary>
+ 取一个手写内核；若该符号不在当前 NVRTC 编译单元之中则返回 Nothing，
+ 由调用方回退到 CPU 参考实现（与其它算子的回退策略一致）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.ZeroBias(System.Int32)">
+ <summary>偏置为 Nothing 时用零张量占位，使后续显存上传路径保持统一</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaskedCrossEntropy(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Boolean[],Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)">
+ <summary>
+ GPU 端融合掩码交叉熵：<c>softmax + 负对数似然 + d(logits) = (softmax − onehot) / count</c>。
+ </summary>
+ <param name="logits">形状 <c>[rows, vocab]</c> 的二维 logits（主机张量）</param>
+ <param name="targets">长度 <c>&gt;= rows</c> 的目标 token；越界或负数视为"不计入"</param>
+ <param name="mask">
+ 长度 <c>&gt;= rows</c> 的 0/1 掩码；<c>Nothing</c> 表示全部计入。
+ 之所以不用 <c>Boolean()</c>：内核按 <c>int</c> 读取，显式用 <c>Integer()</c>
+ 可以避免 .NET 布尔数组的跨语言尺寸歧义。
+ </param>
+ <param name="dLogits">输出：形状同 <paramref name="logits"/> 的梯度</param>
+ <returns>内核不可用时返回 <c>False</c>，由调用方回退主机实现</returns>
+ <remarks>
+ 这是训练步里最重的一处主机循环：12.8 万词表下 <c>[rows, vocab]</c> 是
+ 3300 万次 <c>exp</c>，搬到 GPU 后由"每行一个 block + 共享内存树形归约"完成。
+ 
+ 只在计数完成后调用 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaskedCrossEntropyFp32Core(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32[],System.Double,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@,System.Single[]@)"/>。
+ 内核不可用时回退 <see cref="M:Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.TensorComputeBase.MaskedCrossEntropy(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Boolean[],Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@)"/>，
+ 保证"任何后端切换都不会让某个算子失效"。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.MaskedCrossEntropyFp32Core(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Int32[],System.Int32[],System.Double,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor@,System.Single[]@)">
+ <summary>
+ 融合掩码交叉熵内核的原始驱动。
+ </summary>
+ <param name="maskInt">已经判定好的 0/1 掩码（长度 <c>&gt;= rows</c>）</param>
+ <param name="inv"><c>1 / count</c>，count 由调用方统计</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.TryAdamWStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)">
+ <summary>
+ GPU 端 AdamW 单步更新：原地更新参数与一阶/二阶矩，并在更新后清零梯度累加器。
+ </summary>
+ <remarks>
+ 四个张量都必须已被 <see cref="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.Resident"/> 钉住 —— 否则
+ <c>MarkHostModified</c> 会让下一次 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 从主机重新上传，
+ 把内核刚写好的更新结果冲掉。钉住后 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 直接命中常驻表、
+ 跳过版本校验，更新结果才得以保留。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.TryAccumulateFp32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double)">
+ <summary>
+ 梯度累加：<c>accum += alpha * src</c>（GPU，单精度）。
+ </summary>
+ <remarks>
+ 独立内核而非复用 <c>ewAxpyKernel</c>：后者把输入与输出都标了
+ <c>__restrict__</c>，在同一段缓冲上做累加会违反 restrict 契约。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SupportsDeviceResidency">
+ <summary>
+ CUDA 后端支持设备常驻缓冲。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>
+ 把张量钉成设备常驻缓冲。
+ </summary>
+ <remarks>
+ 只应在"该张量的主机副本不再被任何主机循环读取"时使用 ——
+ 钉住后设备成为主副本，主机侧的 <c>Data</c> 会变陈旧。
+ 典型安全对象是只被 GEMM 消费的权重矩阵（<c>MatMul</c> 会通过
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 直接命中常驻表）。
+ 反例：RMSNorm 的 γ（<c>RmsNorm</c> 在主机循环里读 <c>Gamma.Data</c>）、
+ 词嵌入（<c>LLMModel.Embed</c> 在主机上查表）都不该被钉住。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice64(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)">
+ <summary>
+ 把张量钉成<b>双精度</b>设备常驻缓冲（脉冲网络的递归状态专用）。
+ </summary>
+ <remarks>
+ 与 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/> 的区别只在于缓冲元素类型：这里是
+ <c>DeviceBuffer(Of Double)</c>，不经过任何降精度转换。
+ 典型用法（<see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.LifStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Boolean)"/> 的前提条件）：
+ <code>
+   backend.UseFp64Residency = True
+   backend.PinDevice64(h,      "lif.H",      zeroFill:=False)
+   backend.PinDevice64(sPrev,  "lif.S_prev", zeroFill:=False)
+   backend.PinDevice64(s,      "lif.S",      zeroFill:=False)
+   backend.PinDevice64(counts, "lif.counts", zeroFill:=True)
+ </code>
+ <para>
+ 注意双精度常驻缓冲<b>不参与</b> LRU 容量核算（与单精度通道一样独立计数），
+ 因此仿真结束后应调用 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UnpinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 及时释放。
+ 打开本通道后 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.TryAdamWStep(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)"/> 仍只认单精度通道，
+ 若同时需要 AdamW 请对参数张量另行调用 <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor,System.String,System.Boolean)"/>。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.UnpinDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>解除钉住并立即释放显存（单精度 / 双精度两个通道一并解除）。</summary>
+ <remarks>
+ 同时释放该张量对应的融合 LIF 工作区：否则一次 <c>ResetState</c> 之后
+ 旧的 <c>I</c> 缓冲会一直挂着（键是主机数组引用，GC 无法回收显存）。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.IsDevicePinned(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>该张量当前是否已被钉住（任一精度通道命中即视为已钉住）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinnedDeviceBytes">
+ <summary>当前钉住的显存总字节数（单精度 + 双精度两个通道之和）。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.PinnedDeviceBytes64">
+ <summary>双精度常驻缓冲占用的字节数（诊断用）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.SyncFromDevice(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)">
+ <summary>
+ 把设备常驻缓冲的内容回写到主机数组。
+ </summary>
+ <remarks>
+ 回写之后主机版本号会递增，但<b>不会</b>触发重新上传 ——
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DeviceF32(Microsoft.VisualBasic.MachineLearning.TensorFlow.Tensor)"/> 优先命中常驻表并跳过版本校验，
+ 因此设备仍然是主副本，刚回写的内容不会被覆盖。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.IsKernelAvailable(System.String)">
+ <summary>
+ 指定名称的内核当前是否可用。
+ </summary>
+ <remarks>
+ 内核不可用（NVRTC 编译失败 / 驱动不匹配）时相关算子会静默回退 CPU，
+ 调用方在"汇报是否真的用上了 GPU"之前应当先问一下这里，
+ 否则很容易把"算得慢"误报成"GPU 有效果"。
+ </remarks>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.IsFusedLifAvailable">
+ <summary>融合 LIF 单步内核（双精度档）是否可用。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.IsSparseSpmmAvailable">
+ <summary>稀疏 SpMM 内核是否可用。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DescribeKernels">
+ <summary>
+ 关键内核的可用性快照，用于诊断"训练步到底有没有走上 GPU"。
+ </summary>
+ <remarks>
+ 内核不可用（NVRTC 编译失败 / 驱动不匹配）时全部算子都会<b>静默回退 CPU</b>。
+ 如果没有这份诊断，性能不符预期时很难分清"算得慢"和"根本没上 GPU"。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.CudaTensor.DescribeDevice">
+ <summary>
+ 设备与显存概览（名称 / 计算能力 / 显存总量与可用量），供报告使用。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Entry">
+ <summary>单个缓存条目：显存缓冲 + 上传时的数据版本 + LRU 时间戳</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Entry.Finalize">
+ <summary>兜底释放（正常情况下都会走显式 Dispose）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.HostComparer">
+ <summary>按数组引用身份比较的相等性比较器</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.#ctor(System.Int64)">
+ <param name="capacityBytes">显存容量上限（字节）；&lt;= 0 表示不限制</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Bytes">
+ <summary>已驻留的字节数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Count">
+ <summary>当前驻留的缓冲个数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.GetBuffer(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,System.Double[],System.Int64,System.Func{System.Double[],`0[]})">
+ <summary>
+ 取得主机数组对应的显存缓冲；版本不一致时用 <paramref name="convert"/> 重新上传。
+ </summary>
+ <param name="convert">主机 Double 数组到显存元素类型的转换（identity 或降精度）</param>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.ProtectedRecentEntries">
+ <summary>
+ 淘汰时受到保护、不参与释放的"最近使用"条目数。
+ </summary>
+ <remarks>
+ 这不是性能优化，而是<b>正确性要求</b>。
+ <para>
+ 一个算子往往会连续取多个显存缓冲（二元算子取 a、b；GEMM 取 A、B）。
+ 如果第二次取缓冲触发的淘汰把第一次刚拿到的缓冲释放掉，
+ 调用方就持有一段<b>已释放的显存</b>，内核读到的将是垃圾数据 ——
+ 在小模型上因为容量充裕而从未触发，一旦模型放大到缓冲条目本身就有数百 MB，
+ 淘汰就会频繁发生，表现为 loss 突然变成 NaN（实测：2 亿参数档）。
+ </para>
+ <para>
+ 保护最近若干个条目可以从结构上消除这个竞态：刚被取用的条目必定
+ 不在被释放之列。代价是容量可能被少量突破，这是有意的取舍 ——
+ 宁可多用一点显存，也不能让内核读到已释放的缓冲。
+ </para>
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Evict(System.Int64)">
+ <summary>按 LRU 淘汰直到腾出需要的空间（最近使用过的若干条目受保护）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceCache`1.Clear">
+ <summary>释放全部驻留的显存缓冲</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore">
+ <summary>
+ 以主机 <c>Double()</c> 数组引用为键的设备常驻缓冲注册表。
+ </summary>
+ <remarks>
+ 缓冲一律是<b>单精度</b>（<c>DeviceBuffer(Of Single)</c>）：消费级显卡的 FP64
+ 吞吐只有 FP32 的 1/64，而训练的全部浮点运算里矩阵乘占 95% 以上，
+ 因此设备侧统一用 FP32；主机侧保留 <c>Double()</c> 主副本以便检查点落盘
+ 与 CPU 路径对照。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Entry">
+ <summary>
+ 单个常驻条目。
+ </summary>
+ <remarks>
+ <see cref="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Entry.Finalize"/> 只是异常路径的兜底：正常流程一律走显式 Dispose。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Entry.Version">
+ <summary>钉住时刻的数据版本号，仅用于诊断（不参与失效判定）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.HostComparer">
+ <summary>按数组引用身份比较的相等性比较器（与 DeviceCache 保持同一约定）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.TotalBytes">
+ <summary>常驻缓冲占用的总字节数。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Count">
+ <summary>常驻条目的个数。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.IsPinned(System.Double[])">
+ <summary>主机数组是否已被钉住。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.TryGet(System.Double[],Microsoft.VisualBasic.Computing.ILCuda.Runtime.DeviceBuffer{System.Single}@)">
+ <summary>
+ 取已钉住的缓冲；未钉住时返回 <c>Nothing</c>（而不是抛异常）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Pin(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,System.Double[],System.String,System.Boolean)">
+ <summary>
+ 把主机数组钉成常驻显存缓冲（已钉住则直接返回现有缓冲）。
+ </summary>
+ <param name="engine">用于诊断显存余量的引擎</param>
+ <param name="host">主机主副本</param>
+ <param name="label">诊断用标签，例如 <c>layer3.moe.expert5.Wg</c></param>
+ <param name="zeroFill">
+ 是否用 0 初始化。梯度累加器与优化器状态（m / v）用 <c>True</c>，
+ 权重用 <c>False</c>（按主机内容上传）。
+ </param>
+ <remarks>
+ 分配前会查询设备可用显存；不足以容纳时抛出带具体字节数的
+ <see cref="T:System.OutOfMemoryException"/>，而不是让 CUDA 底层抛出难以定位的错误码。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Unpin(System.Double[])">
+ <summary>解除钉住并立即释放显存。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Download(System.Double[])">
+ <summary>
+ 把常驻缓冲的内容回读到主机（设备为主副本时用于同步检查点 / 统计）。
+ </summary>
+ <remarks>
+ 未钉住时直接返回 <c>Nothing</c>，由调用方决定是否视为错误。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Upload(System.Double[])">
+ <summary>把主机内容重新上传到常驻缓冲。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Describe">
+ <summary>各常驻缓冲的 <c>(标签, 元素数, 字节数)</c> 快照，用于诊断输出。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.Clear">
+ <summary>释放全部常驻缓冲。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.EnsureCapacity(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,System.Int64,System.String)">
+ <summary>
+ 分配前预检显存余量，不足时抛出带具体数字的可读异常。
+ </summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.ParallelConvertThreshold">
+ <summary>
+ 低于该元素数就串行转换：小数组上并行调度本身的开销更大。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.ToSingle(System.Double[])">
+ <summary>主机 <c>Double()</c> → 显存 <c>Single()</c>（降精度上传）</summary>
+ <remarks>
+ 这一步是 O(元素数) 的纯类型转换，必须在主机上完成（<c>Double</c> 与 <c>Single</c>
+ 的位模式不同，不能用 <c>Buffer.BlockCopy</c> 直接搬）。语言模型的 LM head
+ 在 12.8 万词表下是 3300 万元素，串行 VB 循环会达到数百毫秒 ——
+ 足以盖过内核本身的全部计算时间。因此大数组一律分块并行。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.ToDouble(System.Single[])">
+ <summary>显存 <c>Single()</c> → 主机 <c>Double()</c>（升精度回读）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore.RunChunked(System.Int32,System.Action{System.Int32,System.Int32})">
+ <summary>
+ 把 <c>[0, n)</c> 切成约 <c>4 × 处理器数</c> 块并行执行。
+ </summary>
+ <remarks>
+ 块数取"处理器数的 4 倍"是为了让负载均衡足以吸收个别块偏慢的情况，
+ 又不会因为块太小而让调度开销占主导。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64">
+ <summary>
+ 以主机 <c>Double()</c> 数组引用为键的<b>双精度</b>设备常驻缓冲注册表。
+ </summary>
+ <remarks>
+ 用于脉冲网络的递归状态（膜电位 / 脉冲 / 计数累加器）等高精度长期张量：
+ 它们既不能承受单精度舍入（会改变阈值判定），又必须避免每步上传下载
+ （<c>[1, N]</c> 张量在十万神经元规模下即 1.1 MB/次）。
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Entry">
+ <summary>单个常驻条目。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Entry.Version">
+ <summary>钉住时刻的数据版本号，仅用于诊断（不参与失效判定）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Entry.Finalize">
+ <summary>异常路径兜底（正常情况下都会走显式 Dispose）</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.HostComparer">
+ <summary>按数组引用身份比较的相等性比较器（与 DeviceCache 保持同一约定）</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.TotalBytes">
+ <summary>常驻缓冲占用的总字节数。</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Count">
+ <summary>常驻条目的个数。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.IsPinned(System.Double[])">
+ <summary>主机数组是否已被钉住。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.TryGet(System.Double[],Microsoft.VisualBasic.Computing.ILCuda.Runtime.DeviceBuffer{System.Double}@)">
+ <summary>
+ 取已钉住的缓冲；未钉住时返回 <c>Nothing</c>（而不是抛异常）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Pin(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,System.Double[],System.String,System.Boolean)">
+ <summary>
+ 把主机数组钉成双精度常驻显存缓冲（已钉住则直接返回现有缓冲）。
+ </summary>
+ <param name="engine">用于诊断显存余量的引擎</param>
+ <param name="host">主机主副本</param>
+ <param name="label">诊断用标签，例如 <c>lif.H</c></param>
+ <param name="zeroFill">是否用 0 初始化（计数累加器用 <c>True</c>）</param>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Unpin(System.Double[])">
+ <summary>解除钉住并立即释放显存。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Download(System.Double[])">
+ <summary>
+ 把常驻缓冲的内容回读到主机（设备为主副本时用于检查点 / 统计同步）。
+ </summary>
+ <remarks>未钉住时直接返回 <c>Nothing</c>，由调用方决定是否视为错误。</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Upload(System.Double[])">
+ <summary>把主机内容重新上传到常驻缓冲。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Describe">
+ <summary>各常驻缓冲的 <c>(标签, 元素数, 字节数)</c> 快照，用于诊断输出。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.Clear">
+ <summary>释放全部常驻缓冲。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DeviceResidentStore64.EnsureCapacity(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,System.Int64,System.String)">
+ <summary>
+ 分配前预检显存余量，不足时抛出带具体数字的可读异常。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernels">
+ <summary>
+ 待反编译为 CUDA 的双精度逐元素函数（本身不会被托管调用）。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernels.DStep(System.Double)">
+ <summary>
+ 阶跃函数(Heaviside): 大于 0 时为 1, 否则为 0
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernels.DTranspose(System.Double[],System.Int32,System.Int32,System.Int32)">
+ <summary>
+ 转置：输出 (C, R) 的第 (i, j) 个元素 = 输入 (R, C) 的第 (j, i) 个元素。
+ 内核以二维 grid 启动，il_nRows = C、il_nCols = R。
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernelRegistry">
+ <summary>
+ 把 <see cref="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernels"/> 里的方法逐个翻译成 CUDA 内核并注册到编译单元。
+ 必须在 <c>CudaEngine.TryCreate</c> 之前调用。
+ </summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernelRegistry.Failures">
+ <summary>翻译失败的“方法名 -> 失败原因”</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernelRegistry.Available(System.String)">
+ <summary>该内核是否可用（已成功翻译并注册）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernelRegistry.EnsureRegistered">
+ <summary>逐个翻译并注册全部双精度内核（幂等）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernelRegistry.KernelMethod(System.String)">
+ <summary>翻译用：按方法名取 <see cref="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.DoubleKernels"/> 上的静态方法</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.NamespaceDoc">
+ <summary>
+ Device resident tensor types for the ILCuda framework: dense CudaTensor and sparse CSR
+ storage, host/device buffer caches and the tensor kernel entry points.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Entry">
+ <summary>单条缓存项：CSR 三个数组的显存缓冲 + 上传时的版本 + LRU 时间戳</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Entry.ByteSize">
+ <summary>本条目占用字节数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Entry.Release">
+ <summary>释放三个显存缓冲</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Entry.Finalize">
+ <summary>兜底释放（正常情况下都会走显式 Release）</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.#ctor(System.Int64)">
+ <param name="capacityBytes">显存容量上限（字节）；&lt;= 0 表示不限制</param>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Bytes">
+ <summary>已驻留的字节数</summary>
+</member>
+<member name="P:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Count">
+ <summary>当前驻留的条目个数</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.GetBuffers(Microsoft.VisualBasic.Computing.ILCuda.Runtime.CudaEngine,Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute.SparseCsr)">
+ <summary>
+ 取得 CSR 对应的显存缓冲；版本不一致时淘汰旧条目并重新上传。
+ </summary>
+ <remarks>调用方须保证 <c>csr.NonZeros &gt; 0</c>（零非零元素无法分配显存缓冲）。</remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Evict(System.Int64)">
+ <summary>按 LRU 淘汰直到腾出需要的空间</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.SparseCsrCache.Clear">
+ <summary>释放全部驻留的显存缓冲</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowSoftmax">
+ <summary>末轴 softmax</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowLogSoftmax">
+ <summary>末轴 log-softmax</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowSum">
+ <summary>末轴求和</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowMean">
+ <summary>末轴求均值</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowMax">
+ <summary>末轴最大值</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowMin">
+ <summary>末轴最小值</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowArgMax">
+ <summary>末轴 argmax</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.RowArgMin">
+ <summary>末轴 argmin</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.GemmDouble">
+ <summary>双精度分块矩阵乘 C(m x n) = A(m x k) * B(k x n)</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.SpmmCsr">
+ <summary>CSR 稀疏 × 稠密（Kernels\spmm.cu）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.Conv2DForward">
+ <summary>卷积前向（NHWC）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.Conv2DBackwardInput">
+ <summary>卷积反向 - 对输入的梯度</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.Conv2DBackwardFilter">
+ <summary>卷积反向 - 对卷积核的梯度</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.Conv2DBackwardBias">
+ <summary>卷积反向 - 对偏置的梯度</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.MaxPool2DForward">
+ <summary>最大池化前向（同时产出 argMax）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.MaxPool2DBackward">
+ <summary>最大池化反向（按 argMax 散射）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.TrainTranspose">
+ <summary>二维转置（单精度，可直读设备常驻权重）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.TrainAdamW">
+ <summary>AdamW 原地更新参数与一阶/二阶矩，并清零梯度累加器</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.TrainAccumulate">
+ <summary>梯度累加：<c>accum += alpha * src</c></summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.TrainMaskedCrossEntropy">
+ <summary>融合掩码交叉熵：softmax + NLL + <c>d(logits) = (softmax − onehot) / count</c></summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.LifUpdateDouble">
+ <summary>融合的递归 LIF 单步（双精度状态，就地更新 H / S / counts）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.LifUpdateFp32">
+ <summary>融合的递归 LIF 单步（单精度 H / counts，脉冲仍为双精度）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.CellLtcRk4">
+ <summary>液态时间常数网络（LNN）批量 RK4 积分：状态 [B, m] 就地推进若干子步</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.CellGraphLayer">
+ <summary>图卷积批量层：自身分支 + CSR 邻居聚合 + 偏置 + 激活（decoder 复用空 CSR 形态）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.CellGraphFeature">
+ <summary>节点特征拼装：[B·n, 2+2d] ← [x̄ ‖ p ‖ e_i ‖ z_pert]</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.CellFluxHead">
+ <summary>通量读取头批量计算：v = e ⊙ gsat([h ‖ u]·Wv + bv)（含可逆开关）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.CellSysTau">
+ <summary>系统时间常数批量计算：τ^sys = 1/(1/τ_eff + σ(h·Wg + u·Wgi + bg))</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.PartialSum">
+ <summary>全局求和 - 阶段一（部分结果）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.FinalSum">
+ <summary>全局求和 - 阶段二（汇总）</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.PartialMax">
+ <summary>全局最大值 - 阶段一</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.FinalMax">
+ <summary>全局最大值 - 阶段二</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.PartialMin">
+ <summary>全局最小值 - 阶段一</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.TensorKernelNames.FinalMin">
+ <summary>全局最小值 - 阶段二</summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Computing.ILCuda.NamespaceDoc">
+ <summary>
+ ILCudaTensor extends the ILCuda compute framework with device resident tensor types and ready
+ to use CUDA tensor kernels for dense and sparse tensors.
+ </summary>
+</member>
+</members>
+</doc>
