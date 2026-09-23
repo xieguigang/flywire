@@ -149,15 +149,19 @@ Namespace FlywireSnake
             Return best
         End Function
 
-        ''' <summary>方向 → 动作编号。</summary>
-        Public Shared Function actionOf(direction As Point, Optional fallback As Point = Nothing) As Integer
+        ''' <summary>方向 → 动作编号（找不到时返回 <paramref name="fallback"/>，再找不到就返回"向右"）。</summary>
+        ''' <remarks>
+        ''' 备用参数用 <c>Point?</c>：<see cref="Point"/> 是值类型，
+        ''' 值类型不能与 <c>Nothing</c> 比较（"IsNot 操作数必须是引用类型"）。
+        ''' </remarks>
+        Public Shared Function actionOf(direction As Point, Optional fallback As Point? = Nothing) As Integer
             For i As Integer = 0 To ActionCount - 1
                 If SnakeSensors.Directions(i) = direction Then Return i
             Next
 
-            If fallback IsNot Nothing Then
+            If fallback.HasValue Then
                 For i As Integer = 0 To ActionCount - 1
-                    If SnakeSensors.Directions(i) = fallback Then Return i
+                    If SnakeSensors.Directions(i) = fallback.Value Then Return i
                 Next
             End If
 

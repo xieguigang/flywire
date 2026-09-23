@@ -1,4 +1,4 @@
-Imports System.Diagnostics
+﻿Imports System.Diagnostics
 Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
@@ -235,12 +235,12 @@ Namespace FlywireSnake
             Call report(reporter, $"brain ready: {brain.FlowSummary}, motor neurons={brain.MotorFeatures.Length}")
 
             ' ---- 对照 1：未训练解码器（随机读出）----
-            Dim untrained As Double = evaluate(decoder, brain, episodes, maxTicks, teacher:=False)
+            Dim untrained As Double = averageScore(decoder, brain, episodes, maxTicks, teacher:=False)
 
             Call report(reporter, $"untrained decoder score = {untrained:F2}")
 
             ' ---- 对照 2：教师策略（贪心追食物），训练目标的上限参考 ----
-            Dim teacherScore As Double = evaluate(decoder, brain, episodes, maxTicks, teacher:=True)
+            Dim teacherScore As Double = averageScore(decoder, brain, episodes, maxTicks, teacher:=True)
 
             Call report(reporter, $"teacher (greedy) score = {teacherScore:F2}")
 
@@ -260,7 +260,7 @@ Namespace FlywireSnake
             Call report(reporter, $"decoder trained: {samples.Count:N0} samples, accuracy={accuracy:P1}")
 
             ' ---- 对照 3：训练后由果蝇大脑驱动 ----
-            Dim trained As Double = evaluate(decoder, brain, episodes, maxTicks, teacher:=False)
+            Dim trained As Double = averageScore(decoder, brain, episodes, maxTicks, teacher:=False)
 
             Call report(reporter, $"trained decoder score = {trained:F2}")
 
@@ -285,10 +285,14 @@ Namespace FlywireSnake
                                  Optional maxTicks As Integer = 300,
                                  Optional teacher As Boolean = False) As Double
 
-            Return evaluate(decoder, brain, episodes, maxTicks, teacher)
+            Return averageScore(decoder, brain, episodes, maxTicks, teacher)
         End Function
 
-        Private Function evaluate(decoder As SnakeDecoder,
+        ''' <remarks>
+        ''' 名字不能叫 <c>evaluate</c>：VB 不区分大小写，那样就与公开的
+        ''' <see cref="Evaluate"/> 只差"可选参数"了，编译器不允许这种重载。
+        ''' </remarks>
+        Private Function averageScore(decoder As SnakeDecoder,
                                   brain As SnakeBrain,
                                   episodes As Integer,
                                   maxTicks As Integer,

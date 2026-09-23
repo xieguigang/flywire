@@ -73,12 +73,15 @@ Namespace FlywireSnake
         ''' <summary>各动作的打分。</summary>
         ''' <param name="features">特征向量（长度必须等于 <see cref="FeatureCount"/>）</param>
         ''' <param name="forbidden">禁止的动作（蛇不能反向），设为 -∞</param>
+        ''' <remarks>
+        ''' 局部变量不能叫 <c>scores</c>：与函数同名（VB 不区分大小写）。
+        ''' </remarks>
         Public Function Scores(features As Double(), Optional forbidden As Integer = -1) As Double()
-            Dim scores As Double() = New Double(ActionCount - 1) {}
+            Dim result As Double() = New Double(ActionCount - 1) {}
 
             For a As Integer = 0 To ActionCount - 1
                 If a = forbidden Then
-                    scores(a) = Double.NegativeInfinity
+                    result(a) = Double.NegativeInfinity
                     Continue For
                 End If
 
@@ -90,21 +93,21 @@ Namespace FlywireSnake
                     sum += row(i) * features(i)
                 Next
 
-                scores(a) = sum
+                result(a) = sum
             Next
 
-            Return scores
+            Return result
         End Function
 
         ''' <summary>按打分挑一个动作。</summary>
         Public Function Decide(features As Double(), Optional forbidden As Integer = -1) As Integer
-            Dim scores As Double() = Scores(features, forbidden)
+            Dim result As Double() = Scores(features, forbidden)
             Dim best As Integer = -1
             Dim bestScore As Double = Double.NegativeInfinity
 
-            For a As Integer = 0 To scores.Length - 1
-                If scores(a) > bestScore Then
-                    bestScore = scores(a)
+            For a As Integer = 0 To result.Length - 1
+                If result(a) > bestScore Then
+                    bestScore = result(a)
                     best = a
                 End If
             Next

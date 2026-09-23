@@ -105,10 +105,14 @@ Namespace FlywireSnake
         ''' 装配与增益标定（读连接表、建 CSR）是一次性的工作，由 <see cref="SnakePlayground"/> 完成；
         ''' 本类只负责"选神经元 + 逐步推进"。
         ''' </remarks>
+        ''' <remarks>
+        ''' 形参不能叫 <c>motorGroups</c>：VB 不区分大小写，会遮蔽 <see cref="MotorGroups"/> 属性，
+        ''' 于是下面所有 <c>MotorGroups.Length</c> 都会变成对整数取 Length。
+        ''' </remarks>
         Public Sub New(index As ConnectomeIndex,
                        network As BrainNetwork,
                        Optional sensorsPerChannel As Integer = 32,
-                       Optional motorGroups As Integer = SnakeSensorEncoder.ActionCount,
+                       Optional groupCount As Integer = SnakeSensorEncoder.ActionCount,
                        Optional seed As Integer = 42)
 
             If index Is Nothing Then Throw New ArgumentNullException(NameOf(index))
@@ -135,9 +139,15 @@ Namespace FlywireSnake
             FlowSummary = $"afferent(感觉输入)={afferents.Length:N0}, efferent(运动输出)={efferents.Length:N0}"
 
             SensorNeurons = splitChannels(afferents, SnakeSensors.ChannelCount, sensorsPerChannel, seed)
-            MotorGroups = splitGroups(efferents, motorGroups)
+            MotorGroups = splitGroups(efferents, groupCount)
 
-            m_features = New Double(MotorGroups.Sum(Function(g) g.Length) - 1) {}
+            Dim featureCount As Integer = 0
+
+            For Each group As Integer() In MotorGroups
+                featureCount += group.Length
+            Next
+
+            m_features = New Double(featureCount - 1) {}
             m_groupSpikes = New Double(MotorGroups.Length - 1) {}
 
             ' 每 tick 都要读数，因此必须保留逐步脉冲轨迹
