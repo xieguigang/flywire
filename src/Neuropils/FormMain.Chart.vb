@@ -160,9 +160,10 @@ Partial Public Class FormMain
 
             Dim data As ResponseDataset = ResponseDataset.FromReport(reportDir, dataset)
 
-            ' 默认按"组均值"视图打开自检：标签取值多的时候曲线数量可控、画面稳定
             Dim form As New ResponseChartForm(data, dataset)
 
+            ' 先把命令行指定的视图应用上去，再显示 —— 抓到的帧才是要验证的那个视图
+            Call form.ApplyOptions(dimension, mode, aggregation)
             Call form.Show()
 
             For i As Integer = 1 To 80

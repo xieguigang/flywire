@@ -430,3 +430,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 docs/Download Data.html
+.chart-window.png
+.chart-window2.png
