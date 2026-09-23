@@ -59,8 +59,14 @@ Public Partial Class FormMain
     Private m_cancel As CancellationTokenSource
     Private m_busy As Boolean
 
-    ''' <summary>拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。</summary>
-    Private ReadOnly m_rebuildTimer As New Timer()
+    ''' <summary>
+    ''' 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
+    ''' </summary>
+    ''' <remarks>
+    ''' 必须写全 System.Windows.Forms.Timer：System.Threading 里也有一个同名的 Timer
+    ''' (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
+    ''' </remarks>
+    Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
 
     Public Sub New()
         Call initializeUi()
