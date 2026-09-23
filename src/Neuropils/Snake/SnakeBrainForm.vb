@@ -279,6 +279,9 @@ Public Class SnakeBrainForm
     End Sub
 
     Private Sub onStepped(session As SnakeSession, frame As SnakeStep)
+        ' 读数必须在这里刷新：resetSession 里那次调用拿到的是"还没跑过的空帧"，
+        ' 只在开局刷一次的话两个条形读数框永远是空的（每 tick 的通知才是数据源）
+        Call updateReadouts(frame)
         RaiseEvent BrainActivityChanged(frame.ActiveNeurons, frame)
     End Sub
 
@@ -294,7 +297,10 @@ Public Class SnakeBrainForm
             Call values.Add(frame.Sensors(c))
         Next
 
-        m_sensors.SetData(names.ToArray(), values.ToArray(), Color.FromArgb(34, 211, 238))
+        ' 感觉通道的语义就是 [0,1] 的强度，量程固定；运动组是"本 tick 的脉冲个数"，
+        ' 各组神经元数上百，固定量程 1 会让每一根都顶满（看似有数据其实读不出差别），
+        ' 因此让它自适应（见 ChannelBars.SetData 的 maximum <= 0 分支）
+        m_sensors.SetData(names.ToArray(), values.ToArray(), Color.FromArgb(34, 211, 238), 1.0)
 
         Dim moveNames As String() = {"上 ↑", "下 ↓", "左 ←", "右 →"}
 
@@ -414,11 +420,41 @@ Public Class ChannelBars
     Private m_color As Color = Color.Cyan
     Private m_maximum As Double = 1.0
 
-    Public Sub SetData(names As String(), values As Double(), color As Color, Optional maximum As Double = 1.0)
+    ''' <summary>量程是否是自适应（<paramref name="maximum"/> 传 &lt;= 0 时开启）。</summary>
+    Private m_adaptive As Boolean
+
+    ''' <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
+    Private Const AdaptiveDecay As Double = 0.97
+
+    ''' <summary>
+    ''' 灌入一行行读数。
+    ''' </summary>
+    ''' <param name="maximum">
+    ''' 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="AdaptiveDecay"/> 缓慢回落。
+    ''' 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
+    ''' </param>
+    Public Sub SetData(names As String(), values As Double(), color As Color, Optional maximum As Double = 0)
         m_names = If(names, New String() {})
         m_values = If(values, New Double() {})
         m_color = color
-        m_maximum = If(maximum <= 0, 1.0, maximum)
+        m_adaptive = maximum <= 0
+
+        If m_adaptive Then
+            Dim peak As Double = 0
+
+            For i As Integer = 0 To m_values.Length - 1
+                Dim magnitude As Double = Math.Abs(m_values(i))
+
+                If magnitude > peak Then peak = magnitude
+            Next
+
+            ' 峰值立即跟上（否则强读数会顶格看不出差别），之后缓慢回落
+            m_maximum = If(peak >= m_maximum, peak, m_maximum * AdaptiveDecay)
+
+            If m_maximum <= 0 Then m_maximum = 1.0
+        Else
+            m_maximum = maximum
+        End If
 
         Call Invalidate()
     End Sub
@@ -450,7 +486,10 @@ Public Class ChannelBars
                 End Using
 
                 Using brush As New SolidBrush(Me.ForeColor)
-                    Call g.DrawString(value.ToString("F2"), font, brush, Me.ClientSize.Width - 38, y + 1)
+                    ' 自适应量程下的读数是"个脉冲"，F2 那串小数会画不下
+                    Dim text As String = If(m_adaptive, value.ToString("F0"), value.ToString("F2"))
+
+                    Call g.DrawString(text, font, brush, Me.ClientSize.Width - 38, y + 1)
                 End Using
             Next
         End Using
