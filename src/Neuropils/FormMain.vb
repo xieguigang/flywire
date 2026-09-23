@@ -36,6 +36,7 @@ Public Partial Class FormMain
     Private ReadOnly m_buildOptions As New SceneBuildOptions()
 
     Private m_canvas As DxScene3DCanvas
+    Private m_split As SplitContainer
     Private m_legend As CheckedListBox
     Private m_gradient As PictureBox
     Private m_details As TextBox
@@ -108,19 +109,20 @@ Public Partial Class FormMain
 
         Dim sidebar As Control = createSidebar()
 
-        Dim split As New SplitContainer With {
+        ' 注意：SplitterDistance / Panel*MinSize 必须在控件真正拿到尺寸之后再设置。
+        ' 在构造函数里直接赋值会因为"还没有完成布局"而抛
+        ' InvalidOperationException (SplitterDistance must be between ...)，
+        ' 这就是为什么它们被放到 FormMain_Load 的 adjustSplitter 里。
+        m_split = New SplitContainer With {
             .Dock = DockStyle.Fill,
             .Orientation = Orientation.Vertical,
-            .SplitterDistance = 1130,
-            .FixedPanel = FixedPanel.Panel2,
-            .Panel1MinSize = 400,
-            .Panel2MinSize = 260
+            .FixedPanel = FixedPanel.Panel2
         }
 
-        split.Panel1.Controls.Add(m_canvas)
-        split.Panel2.Controls.Add(sidebar)
+        m_split.Panel1.Controls.Add(m_canvas)
+        m_split.Panel2.Controls.Add(sidebar)
 
-        Me.Controls.Add(split)
+        Me.Controls.Add(m_split)
         Me.Controls.Add(createToolbar())
         Me.Controls.Add(createMenu())
         Me.Controls.Add(createStatusBar())
@@ -310,6 +312,8 @@ Public Partial Class FormMain
     Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_config.DataDir = DefaultDataDir
 
+        Call adjustSplitter()
+
         Dim args As String() = Environment.GetCommandLineArgs()
 
         ' 自检模式：把数据层与场景装配的实测结果写成报告，便于无人值守的回归
@@ -324,6 +328,30 @@ Public Partial Class FormMain
         End If
 
         Call startLoad()
+    End Sub
+
+    ''' <summary>
+    ''' 把右侧栏固定成一个便于阅读的宽度。
+    ''' </summary>
+    ''' <remarks>
+    ''' 只在控件已经完成布局之后调用；布局中或尺寸过小时保持默认位置
+    ''' (硬设一个不合法的 SplitterDistance 会直接抛异常)。
+    ''' </remarks>
+    Private Sub adjustSplitter()
+        If m_split Is Nothing Then Return
+
+        Try
+            m_split.Panel1MinSize = 240
+            m_split.Panel2MinSize = 300
+
+            Dim width As Integer = m_split.Width
+
+            If width > 600 Then
+                m_split.SplitterDistance = System.Math.Max(320, width - 400)
+            End If
+        Catch ex As Exception
+            Trace.WriteLine($"unable to place the splitter: {ex.Message}")
+        End Try
     End Sub
 
     Protected Overrides Sub OnFormClosed(e As FormClosedEventArgs)
