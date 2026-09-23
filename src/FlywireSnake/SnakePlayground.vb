@@ -116,8 +116,16 @@ Imports Snake2
         ''' </remarks>
         Public Property DaggerRounds As Integer = 2
 
-        ''' <summary>强化学习微调的局数（0 = 不做）。</summary>
-        Public Property RlEpisodes As Integer = 40
+        ''' <summary>
+        ''' 强化学习微调的局数（0 = 不做）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 默认关闭：实测这一层在当前规模下没能稳定地把闭环得分抬起来
+        ''' （同一版权重在两次 8 局评估里分别是 15.6 与 6.3，游戏本身单局方差太大，
+        ''' 40 局评估下模仿学习本身只有 3.75 分）。代码留着，
+        ''' 等读出层的信息量上来（或把评估局数做大）再开。
+        ''' </remarks>
+        Public Property RlEpisodes As Integer = 0
 
         ''' <summary>强化学习每练几局评一次分（并只保留最好的一版）。</summary>
         Public Property RlBlockSize As Integer = 20
@@ -349,6 +357,7 @@ Imports Snake2
             Dim accuracy As Double = decoder.Train(samples, epochs:=24, rate:=0.25)
 
             Call report(reporter, $"decoder trained (round 0): accuracy={accuracy:P1}")
+            Call report(reporter, decoder.Diagnose(samples))
 
             For round As Integer = 1 To Math.Max(0, DaggerRounds)
                 For e As Integer = 1 To episodes
@@ -360,6 +369,7 @@ Imports Snake2
 
                 Call report(reporter,
                             $"decoder trained (dagger {round}): samples={samples.Count:N0}, accuracy={accuracy:P1}")
+                Call report(reporter, decoder.Diagnose(samples))
             Next
 
             ' ---- 强化学习微调：不再"像教师"，而是直接把分数拿回来 ----

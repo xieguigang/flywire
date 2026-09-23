@@ -178,8 +178,35 @@ Partial Public Class FormMain
                                            $"active neurons={activeNeurons.Length}, score={frame.Score}, " &
                                            $"saved={m_snakeProbePng}")
                 Call Console.Out.Flush()
-                Call Environment.Exit(0)
+
+                ' 关窗这一步必须挪到本次事件处理之外（BeginInvoke）：
+                ' 现在还在"定时器 → Tick → 事件"的调用栈里，就地关窗会把会话置空，
+                ' 栈退回去时正要访问它会炸
+                Call snakeForm.BeginInvoke(New Action(Sub() verifySnakeShutdown(snakeForm)))
             End Sub
+    End Sub
+
+    ''' <summary>
+    ''' 抓完屏把观战窗口关掉，验证"关窗 = 停机"：不该再有脑活动事件，点云也该恢复原色。
+    ''' </summary>
+    ''' <remarks>
+    ''' 停机前定时器是活的，每 tick 都会推一次脑活动；停机后如果还能数到事件，
+    ''' 说明定时器没被真正停掉 —— 那就是用户看到的"关了窗口大脑还在闪"。
+    ''' </remarks>
+    Private Sub verifySnakeShutdown(snakeForm As SnakeBrainForm)
+        Dim before As Integer = m_snakeProbeSeen
+
+        Call snakeForm.Close()
+
+        ' 等两秒再数：这两个数都不该动
+        Call Threading.Thread.Sleep(1500)
+        Call Application.DoEvents()
+
+        Call Console.Out.WriteLine($"snake shutdown probe: post-close activity events={m_snakeProbeSeen - before}, " &
+                                   $"timer stopped={snakeForm.Stopped}, " &
+                                   $"highlighter released={m_snakeHighlighter Is Nothing}")
+        Call Console.Out.Flush()
+        Call Environment.Exit(0)
     End Sub
 
     ''' <summary>

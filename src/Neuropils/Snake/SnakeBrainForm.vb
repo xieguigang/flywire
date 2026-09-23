@@ -272,6 +272,13 @@ Public Class SnakeBrainForm
         Call MyBase.Dispose(disposing)
     End Sub
 
+    ''' <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
+    Friend ReadOnly Property Stopped As Boolean
+        Get
+            Return m_stopped
+        End Get
+    End Property
+
     Private Sub shutdown()
         If m_stopped Then Return
 

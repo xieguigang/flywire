@@ -130,11 +130,17 @@ Imports System.Text
         ''' <param name="epochs">迭代轮数</param>
         ''' <param name="rate">学习率</param>
         ''' <param name="l2">L2 正则（防止权重发散）</param>
+        ''' <param name="balance">
+        ''' 是否按类别频率加权（默认开）。示范动作里"直行"占压倒性多数，
+        ''' 不加权的话交叉熵最省事的解法就是"永远猜直行"，
+        ''' 准确率看起来很高（因为基线本来就高），但转向学不到 —— 蛇就会一直往前撞。
+        ''' </param>
         ''' <returns>训练集准确率</returns>
         Public Function Train(samples As IList(Of SnakeSample),
                               Optional epochs As Integer = 12,
                               Optional rate As Double = 0.35,
-                              Optional l2 As Double = 1.0E-4) As Double
+                              Optional l2 As Double = 1.0E-4,
+                              Optional balance As Boolean = True) As Double
 
             If samples Is Nothing OrElse samples.Count = 0 Then Return 0
 
@@ -142,6 +148,7 @@ Imports System.Text
             Dim gradient As Double()() = New Double(ActionCount - 1)() {}
             Dim logits As Double() = New Double(ActionCount - 1) {}
             Dim probability As Double() = New Double(ActionCount - 1) {}
+            Dim sampleWeight As Double() = classWeights(samples, balance)
 
             For a As Integer = 0 To ActionCount - 1
                 gradient(a) = New Double(FeatureCount - 1) {}
@@ -184,7 +191,7 @@ Imports System.Text
 
                     ' ---- 反向：交叉熵对权重的梯度 = (p - onehot) * feature ----
                     For a As Integer = 0 To ActionCount - 1
-                        Dim delta As Double = probability(a) - If(a = sample.Action, 1.0, 0.0)
+                        Dim delta As Double = (probability(a) - If(a = sample.Action, 1.0, 0.0)) * sampleWeight(sample.Action)
                         Dim row As Double() = m_weights(a)
                         Dim g As Double() = gradient(a)
 
@@ -216,14 +223,108 @@ Imports System.Text
             If samples Is Nothing OrElse samples.Count = 0 Then Return 0
 
             Dim hit As Integer = 0
+            Dim counted As Integer = 0
 
             For Each sample As SnakeSample In samples
                 If sample.Features Is Nothing OrElse sample.Features.Length <> FeatureCount Then Continue For
 
+                counted += 1
+
                 If Decide(sample.Features) = sample.Action Then hit += 1
             Next
 
-            Return hit / samples.Count
+            If counted = 0 Then Return 0
+
+            Return hit / counted
+        End Function
+
+        ''' <summary>
+        ''' 训练集诊断：示范动作的类别分布、各类召回率、以及"永远猜最多那一类"的基线。
+        ''' </summary>
+        ''' <remarks>
+        ''' <b>为什么必须看这个</b>：示范动作里"直行"占比很高，所以"一致率 70%"完全可能
+        ''' 只是一个只会直行的读出层（基线本来就有 60%+），转向一个都没学会。
+        ''' 只有召回率才说明读出层是不是真的在"看"大脑。
+        ''' </remarks>
+        Public Function Diagnose(samples As IList(Of SnakeSample)) As String
+            If samples Is Nothing OrElse samples.Count = 0 Then Return "（没有样本）"
+
+            Dim total As Integer() = New Integer(ActionCount - 1) {}
+            Dim hit As Integer() = New Integer(ActionCount - 1) {}
+            Dim counted As Integer = 0
+            Dim correct As Integer = 0
+
+            For Each sample As SnakeSample In samples
+                If sample.Features Is Nothing OrElse sample.Features.Length <> FeatureCount Then Continue For
+                If sample.Action < 0 OrElse sample.Action >= ActionCount Then Continue For
+
+                total(sample.Action) += 1
+                counted += 1
+
+                If Decide(sample.Features) = sample.Action Then
+                    hit(sample.Action) += 1
+                    correct += 1
+                End If
+            Next
+
+            If counted = 0 Then Return "（样本特征维度对不上）"
+
+            Dim best As Integer = 0
+
+            For a As Integer = 1 To ActionCount - 1
+                If total(a) > total(best) Then best = a
+            Next
+
+            Dim parts As New List(Of String)()
+
+            For a As Integer = 0 To ActionCount - 1
+                Dim recall As Double = If(total(a) = 0, 0, hit(a) / total(a))
+
+                Call parts.Add($"{If(a = 0, "上", If(a = 1, "下", If(a = 2, "左", "右")))} {total(a)} 条 / 召回 {recall:P0}")
+            Next
+
+            Return $"样本 {counted:N0}，整体一致率 {correct / counted:P1}，" &
+                   $"多数类基线 {total(best) / counted:P1}（" &
+                   $"{If(best = 0, "上", If(best = 1, "下", If(best = 2, "左", "右")))}），" &
+                   $"各类：{String.Join("；", parts)}"
+        End Function
+
+        ''' <summary>
+        ''' 每类的样本权重（<paramref name="balance"/> 为 False 时全部为 1）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 反频率加权：样本少的动作拿到更大的权重，把"永远猜多数类"这条捷径堵掉。
+        ''' </remarks>
+        Private Function classWeights(samples As IList(Of SnakeSample), balance As Boolean) As Double()
+            Dim result As Double() = New Double(ActionCount - 1) {}
+
+            If Not balance Then
+                For a As Integer = 0 To ActionCount - 1
+                    result(a) = 1.0
+                Next
+
+                Return result
+            End If
+
+            Dim counts As Integer() = New Integer(ActionCount - 1) {}
+            Dim counted As Integer = 0
+
+            For Each sample As SnakeSample In samples
+                If sample.Action < 0 OrElse sample.Action >= ActionCount Then Continue For
+
+                counts(sample.Action) += 1
+                counted += 1
+            Next
+
+            For a As Integer = 0 To ActionCount - 1
+                If counts(a) = 0 OrElse counted = 0 Then
+                    result(a) = 1.0
+                Else
+                    result(a) = counted / (ActionCount * CDbl(counts(a)))
+                End If
+            Next
+
+            Return result
         End Function
 
         Private Sub shuffle(order As Integer())
