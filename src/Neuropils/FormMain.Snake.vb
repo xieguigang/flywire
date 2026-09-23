@@ -327,6 +327,8 @@ Partial Public Class FormMain
         Dim decisionMargin As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_MARGIN", -1)
         Dim decisionSmoothing As Double = environmentDouble("FLYWIRE_SNAKE_DECISION_SMOOTHING", -1)
         Dim daggerRounds As Integer = environmentInteger("FLYWIRE_SNAKE_DAGGER_ROUNDS", -1)
+        Dim rlEpisodes As Integer = environmentInteger("FLYWIRE_SNAKE_RL_EPISODES", -1)
+        Dim rlRate As Double = environmentDouble("FLYWIRE_SNAKE_RL_RATE", -1)
 
         ' 游戏要跑很多 tick，逐 tick 回读对 CPU 后端来说太贵，因此默认尝试 GPU
         m_config.UseGpu = True
@@ -355,12 +357,15 @@ Partial Public Class FormMain
                 If decisionMargin >= 0 Then playground.DecisionMargin = decisionMargin
                 If decisionSmoothing >= 0 Then playground.DecisionSmoothing = decisionSmoothing
                 If daggerRounds >= 0 Then playground.DaggerRounds = daggerRounds
+                If rlEpisodes >= 0 Then playground.RlEpisodes = rlEpisodes
+                If rlRate >= 0 Then playground.RlLearningRate = rlRate
 
                 Call report.AppendLine()
                 Call report.AppendLine($"tuning    : 每通道感觉神经元 {playground.SensorsPerChannel} 个、" &
                                        $"注入电流 {playground.SensorCurrent}、读出窗宽 {playground.FeatureWindow} tick、" &
                                        $"迟滞余量 {playground.DecisionMargin}、平滑 {playground.DecisionSmoothing}、" &
-                                       $"DAgger {playground.DaggerRounds} 轮")
+                                       $"DAgger {playground.DaggerRounds} 轮、" &
+                                       $"REINFORCE {playground.RlEpisodes} 局 @ lr={playground.RlLearningRate}")
                 Call report.AppendLine()
 
                 ' 感觉 / 运动神经元的选取：先跑一局看通路是否活着

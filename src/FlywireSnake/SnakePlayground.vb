@@ -116,6 +116,24 @@ Imports Snake2
         ''' </remarks>
         Public Property DaggerRounds As Integer = 2
 
+        ''' <summary>强化学习微调的局数（0 = 不做）。</summary>
+        Public Property RlEpisodes As Integer = 40
+
+        ''' <summary>强化学习每练几局评一次分（并只保留最好的一版）。</summary>
+        Public Property RlBlockSize As Integer = 20
+
+        ''' <summary>
+        ''' 强化学习期间每次评分的局数。
+        ''' </summary>
+        ''' <remarks>
+        ''' 这个游戏单局得分的方差很大（同一版策略实测在 0~12 分之间跳），
+        ''' 局数太少的话"保留最好的一版"基本等于掷骰子。
+        ''' </remarks>
+        Public Property RlEvaluationEpisodes As Integer = 8
+
+        ''' <summary>强化学习的学习率（按决策步数平摊后的每步步长）。</summary>
+        Public Property RlLearningRate As Double = 0.0005
+
 #End Region
 
         ''' <remarks>
@@ -343,6 +361,22 @@ Imports Snake2
                 Call report(reporter,
                             $"decoder trained (dagger {round}): samples={samples.Count:N0}, accuracy={accuracy:P1}")
             Next
+
+            ' ---- 强化学习微调：不再"像教师"，而是直接把分数拿回来 ----
+            If RlEpisodes > 0 Then
+                Dim policy As New SnakePolicyGradient(decoder) With {.LearningRate = RlLearningRate}
+                Dim bestReinforce As Double = policy.Train(
+                    session,
+                    RlEpisodes,
+                    RlBlockSize,
+                    maxTicks,
+                    Function() averageScore(decoder, brain, Math.Max(1, RlEvaluationEpisodes), maxTicks, False),
+                    Sub(message) Call report(reporter, message))
+
+                Call report(reporter,
+                            $"reinforce done: best closed-loop score = {bestReinforce:F2} " &
+                            $"（{policy.Episodes} 局，权重已回退到最好的一版）")
+            End If
 
             ' ---- 对照 3：训练后由果蝇大脑驱动 ----
             Dim trained As Double = averageScore(decoder, brain, episodes, maxTicks, teacher:=False)

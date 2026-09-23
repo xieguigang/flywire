@@ -150,12 +150,15 @@ Imports Snake2
             Return best
         End Function
 
-        ''' <summary>走到 <paramref name="cell"/> 之后，离"最划算的猎物"还有多远（越小越好）。</summary>
+        ''' <summary>从某个格子看，"最划算的猎物"的折算代价（越小越好）。</summary>
         ''' <remarks>
         ''' 对每份食物各算一次"折算代价" = 曼哈顿距离 − 价值折分（越贵的越值得多走几步），
         ''' 取其中最小的那个。全图没有食物时返回 0（四处找吃的都一样）。
+        ''' 
+        ''' 强化学习那边也用它做密集奖励（<see cref="SnakePolicyGradient"/>）：
+        ''' "这一步让代价降了多少"就是这一小步的即时奖励。
         ''' </remarks>
-        Private Shared Function preyCost(game As Game, cell As Point) As Double
+        Public Shared Function PreyCost(game As Game, cell As Point) As Double
             Dim best As Double = Double.MaxValue
 
             For Each food As Food In game.foods

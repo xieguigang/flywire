@@ -132,6 +132,18 @@ Imports Snake2
         End Property
 
         ''' <summary>
+        ''' 外部动作选择器：设了它就不再走"读出层 + 决策平滑器"，而是由它直接给出动作。
+        ''' </summary>
+        ''' <remarks>
+        ''' 强化学习训练用（见 <see cref="SnakePolicyGradient"/>）：它需要自己按策略分布采样动作、
+        ''' 并记住当时的特征与概率，才能回头算梯度。传 <c>Nothing</c> 就恢复成读出层决策。
+        ''' 
+        ''' 形参语义：<c>(运动神经元特征, 禁止的动作编号)</c> → <c>动作编号</c>。
+        ''' 注意特征数组是<b>复用</b>的缓冲，需要留存时请自行拷贝。
+        ''' </remarks>
+        Public Property Sampler As Func(Of Double(), Integer, Integer)
+
+        ''' <summary>
         ''' 每个 tick 之后触发（界面重绘 + 三维活动可视化的数据源）。
         ''' </summary>
         ''' <remarks>形参不能叫 <c>step</c>：那是 VB 的保留字（For ... Step）。</remarks>
@@ -217,6 +229,9 @@ Imports Snake2
             If forcedAction >= 0 Then
                 ' 教师（示范）策略：不经过读出层，也不该被决策平滑器影响
                 action = forcedAction
+            ElseIf Sampler IsNot Nothing Then
+                ' 强化学习采样（同样不经过决策平滑器：平滑器是"给读出层去抖"的，不该改变策略本身）
+                action = Sampler(m_brain.MotorFeatures, reverseAction(snake.Direction))
             Else
                 Dim forbidden As Integer = reverseAction(snake.Direction)
                 Dim scores As Double() = m_decoder.Scores(m_brain.MotorFeatures, forbidden)
