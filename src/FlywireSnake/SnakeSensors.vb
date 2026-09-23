@@ -1,6 +1,8 @@
 Imports System.Drawing
 
-Namespace FlywireSnake
+' 注意：这里不再显式写 Namespace FlywireSnake ——
+' VB 工程未指定 RootNamespace 时会默认用工程名作为根命名空间，
+' 再手写一层就会变成 FlywireSnake.FlywireSnake.*（外部引用时找不到类型）。
 
     ''' <summary>
     ''' 感觉通道：把贪吃蛇的游戏画面折算成一组"外界刺激强度"。
@@ -43,7 +45,7 @@ Namespace FlywireSnake
         }
 
         ''' <summary>某个通道的名字（用于可视化与报告）。</summary>
-        Public Shared Function ChannelName(channel As Integer) As String
+    Public Shared Function ChannelName(channel As Integer) As String
             If channel < FoodSectors Then
                 Return $"食物方位 {channel}"
             ElseIf channel < FoodSectors + DangerChannels Then
