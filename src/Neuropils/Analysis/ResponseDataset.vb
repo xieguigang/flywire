@@ -162,7 +162,9 @@ Namespace Analysis
                 Throw New DirectoryNotFoundException($"刺激记录目录不存在: {dir}")
             End If
 
-            Dim summary As Dictionary(Of String, String) = readSummary(Path.Combine(dir, "stimulation_summary.csv"))
+            ' 一律写 IO.Path.*：本文件里有若干名为 path 的参数，VB 不区分大小写，
+            ' 直接用 Path 会被遮蔽成那个字符串参数
+            Dim summary As Dictionary(Of String, String) = readSummary(IO.Path.Combine(dir, "stimulation_summary.csv"))
             Dim result As New ResponseDataset With {
                 .Source = dir,
                 .Units = If(dataset Is Nothing, 0, dataset.Units)
@@ -170,7 +172,7 @@ Namespace Analysis
 
             Call result.applySummary(summary)
 
-            Dim active = readActiveNeurons(Path.Combine(dir, "stimulation_active_neurons.csv"))
+            Dim active = readActiveNeurons(IO.Path.Combine(dir, "stimulation_active_neurons.csv"))
 
             If active.Neurons Is Nothing OrElse active.Neurons.Length = 0 Then
                 Throw New InvalidDataException($"记录目录缺少（或为空的）stimulation_active_neurons.csv: {dir}")
@@ -182,9 +184,9 @@ Namespace Analysis
             ' 脉冲矩阵：文件里的行序就是"首次出现顺序"，这里按神经元编号重排，便于与膜电位矩阵对齐
             result.Responders = sortedCopy(active.Neurons)
             result.Pulses = realignPulses(active, result.Responders, result.Steps)
-            result.Counts = readActivity(Path.Combine(dir, "neuron_activity_stimulation.csv"), result.Units)
+            result.Counts = readActivity(IO.Path.Combine(dir, "neuron_activity_stimulation.csv"), result.Units)
 
-            Dim potentialFile As String = Path.Combine(dir, "stimulation_response_potential.csv")
+            Dim potentialFile As String = IO.Path.Combine(dir, "stimulation_response_potential.csv")
 
             If File.Exists(potentialFile) Then
                 Dim loaded = readPotential(potentialFile, result.Steps)
@@ -428,22 +430,26 @@ Namespace Analysis
             Return table
         End Function
 
-        Private Sub applySummary(summary As Dictionary(Of String, String))
+        ''' <remarks>
+        ''' 形参不能叫 <c>summary</c>：VB 不区分大小写，它会遮蔽 <see cref="Summary"/> 属性，
+        ''' 于是下面那句 "Summary = ..." 变成给字典赋值。
+        ''' </remarks>
+        Private Sub applySummary(table As Dictionary(Of String, String))
             Dim value As String = Nothing
 
-            If summary.TryGetValue("neuron_index", value) Then Integer.TryParse(value, TargetNeuron)
-            If summary.TryGetValue("root_id", value) Then Long.TryParse(value, TargetRootId)
-            If summary.TryGetValue("time_steps", value) Then Integer.TryParse(value, Steps)
-            If summary.TryGetValue("radius_um", value) Then Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, RadiusUm)
-            If summary.TryGetValue("strength", value) Then Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, Current)
+            If table.TryGetValue("neuron_index", value) Then Integer.TryParse(value, TargetNeuron)
+            If table.TryGetValue("root_id", value) Then Long.TryParse(value, TargetRootId)
+            If table.TryGetValue("time_steps", value) Then Integer.TryParse(value, Steps)
+            If table.TryGetValue("radius_um", value) Then Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, RadiusUm)
+            If table.TryGetValue("strength", value) Then Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, Current)
 
-            If summary.TryGetValue("neurons", value) Then
+            If table.TryGetValue("neurons", value) Then
                 Dim units As Integer
 
                 If Integer.TryParse(value, units) AndAlso units > 0 Then Units = units
             End If
 
-            Summary = $"记录目录 {Path.GetFileName(If(Source, ""))}：神经元 #{TargetNeuron} (root_id {TargetRootId}), " &
+            Summary = $"记录目录 {IO.Path.GetFileName(If(Source, ""))}：神经元 #{TargetNeuron} (root_id {TargetRootId}), " &
                       $"半径 {RadiusUm:F0} μm, 电流 {Current:F2}, T={Steps}"
         End Sub
 
@@ -456,7 +462,8 @@ Namespace Analysis
 
             Dim rows As New Dictionary(Of Integer, Integer)(65536)
             Dim members As New List(Of Integer)(8192)
-            Dim events As New List(Of (Row As Integer, Step As Integer))(262144)
+            ' 元组元素名不能叫 Step（VB 保留字）
+            Dim events As New List(Of (Row As Integer, StepIndex As Integer))(262144)
             Dim stepCount As Integer = 0
 
             For Each line As String In File.ReadLines(path)
@@ -491,8 +498,8 @@ Namespace Analysis
             For i As Integer = 0 To events.Count - 1
                 Dim e = events(i)
 
-                If e.Step >= 1 AndAlso e.Step <= stepCount Then
-                    matrix(e.Row)(e.Step - 1) = 1.0
+                If e.StepIndex >= 1 AndAlso e.StepIndex <= stepCount Then
+                    matrix(e.Row)(e.StepIndex - 1) = 1.0
                 End If
             Next
 

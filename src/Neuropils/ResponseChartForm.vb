@@ -374,7 +374,7 @@ Public Class ResponseChartForm
     Private Shared Function unwrap(item As String) As String
         If item Is Nothing Then Return ""
 
-        Dim index As Integer = item.LastIndexOf("  ("c)
+        Dim index As Integer = item.LastIndexOf("  (")
 
         If index > 0 Then Return item.Substring(0, index)
 
@@ -396,7 +396,7 @@ Public Class ResponseChartForm
         Me.Text = $"电刺激响应曲线 — 神经元 #{m_data.TargetNeuron} (root_id {m_data.TargetRootId})"
 
         Call updateSummary()
-        Call m_canvas.RequestRender()
+        Call m_canvas.Invalidate()
     End Sub
 
     Private Sub updateSummary()
@@ -432,15 +432,19 @@ Public Class ResponseChartForm
 
         Using plot As New LinePlot(e.Graphics, m_theme)
             plot.Title = $"electric stimulation response — neuron #{m_data.TargetNeuron}"
-            plot.SubTitle = $"{ResponseCurveBuilder.DescribeMode(currentMode())} · " &
-                            $"{ResponseCurveBuilder.Describe(New CurveOptions With {
+            plot.SubTitle = $"纵轴 = {ResponseCurveBuilder.DescribeMode(currentMode())}" &
+                            If(currentMode() = ResponseSignalMode.MembranePotential, " (阈值 " & m_data.Threshold.ToString("G4") & ") ", " ") &
+                            $"· 横轴 = 时间步 · " &
+                            ResponseCurveBuilder.Describe(New CurveOptions With {
                                 .Dimension = currentDimension(),
                                 .Selected = selectedValues()
-                            })}"
+                            })
             plot.XLabel = "time step"
-            plot.YLabel = If(currentMode() = ResponseSignalMode.MembranePotential, "membrane potential U", "response")
+
+            ' 纵轴量纲写在副标题里而不是用 YLabel：绘图库的 Y 轴标题排版在 GPU 画布上
+            ' 会被放到绘图区内部（旋转后的定位不跟随画布变换），副标题更稳也更清楚
             plot.ShowLegend = m_series IsNot Nothing AndAlso m_series.Count > 1 AndAlso m_series.Count <= 24
-            plot.LegendLocation = PlotEngine.LegendPos.RightOutside
+            plot.LegendLocation = PlotEngine.LegendPos.UpperRight
 
             If m_series IsNot Nothing AndAlso m_series.Count > 0 Then
                 Call plot.Plot(m_series)
@@ -500,7 +504,7 @@ Public Class ResponseChartForm
                                         options As CurveOptions,
                                         Optional width As Integer = 1600,
                                         Optional height As Integer = 900,
-                                        ByRef description As String = Nothing) As Boolean
+                                        Optional ByRef description As String = Nothing) As Boolean
 
         Call PlotRuntime.EnsureRegistered()
 
@@ -510,12 +514,11 @@ Public Class ResponseChartForm
         Using g As New DxGraphics(width, height, theme.BackgroundColor)
             Using plot As New LinePlot(g, theme)
                 plot.Title = $"electric stimulation response — neuron #{data.TargetNeuron}"
-                plot.SubTitle = $"{ResponseCurveBuilder.DescribeMode(options.Mode)} · " &
+                plot.SubTitle = $"纵轴 = {ResponseCurveBuilder.DescribeMode(options.Mode)} · 横轴 = 时间步 · " &
                                 $"{ResponseCurveBuilder.Describe(options)}"
                 plot.XLabel = "time step"
-                plot.YLabel = If(options.Mode = ResponseSignalMode.MembranePotential, "membrane potential U", "response")
                 plot.ShowLegend = series.Count > 1 AndAlso series.Count <= 24
-                plot.LegendLocation = PlotEngine.LegendPos.RightOutside
+                plot.LegendLocation = PlotEngine.LegendPos.UpperRight
 
                 Call plot.Plot(If(series.Count > 0, series, New List(Of Series)() From {
                     New Series With {.Name = "(没有可绘制的曲线)", .X = New Double() {1, 2}, .Y = New Double() {0, 0}, .Visible = False}

@@ -24,9 +24,10 @@ Namespace Analysis
 
             Dim dirs As New List(Of String)()
 
-            For Each path As String In Directory.EnumerateDirectories(root, "*" & Suffix)
-                If File.Exists(Path.Combine(path, "stimulation_summary.csv")) Then
-                    Call dirs.Add(path)
+            ' 循环变量不能叫 path：VB 不区分大小写，会遮蔽 System.IO.Path
+            For Each dir As String In Directory.EnumerateDirectories(root, "*" & Suffix)
+                If File.Exists(IO.Path.Combine(dir, "stimulation_summary.csv")) Then
+                    Call dirs.Add(dir)
                 End If
             Next
 
@@ -50,11 +51,11 @@ Namespace Analysis
 
         ''' <summary>读一条实验记录的摘要（用于列表显示；读取失败时返回目录名）。</summary>
         Public Shared Function Describe(dir As String) As String
-            Dim summary As String = Path.Combine(dir, "stimulation_summary.csv")
+            Dim summary As String = IO.Path.Combine(dir, "stimulation_summary.csv")
 
-            If Not File.Exists(summary) Then Return Path.GetFileName(dir)
+            If Not File.Exists(summary) Then Return IO.Path.GetFileName(dir)
 
-            Dim sb As New StringBuilder(Path.GetFileName(dir))
+            Dim sb As New StringBuilder(IO.Path.GetFileName(dir))
             Dim neuron As String = Nothing
             Dim radius As String = Nothing
             Dim response As String = Nothing

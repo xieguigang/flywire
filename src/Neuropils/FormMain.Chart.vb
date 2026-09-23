@@ -46,8 +46,14 @@ Partial Public Class FormMain
             values = args(8).Split(","c)
         End If
 
-        Dim width As Integer = If(args.Length > 9 AndAlso IsNumeric(args(9)), CInt(Val(args(9))), 1600)
-        Dim height As Integer = If(args.Length > 10 AndAlso IsNumeric(args(10)), CInt(Val(args(10))), 900)
+        ' 不能用 IsNumeric：它在本工程里同时命中了两个模块（Information / PrimitiveParser）
+        Dim width As Integer = 1600
+        Dim height As Integer = 900
+
+        If args.Length > 9 Then Integer.TryParse(args(9), width)
+        If args.Length > 10 Then Integer.TryParse(args(10), height)
+        If width <= 0 Then width = 1600
+        If height <= 0 Then height = 900
 
         Try
             Call report.AppendLine("Neuropils stimulation response chart export")

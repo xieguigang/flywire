@@ -56,6 +56,8 @@ Public Partial Class FormMain
     Private m_chartLink As LinkLabel
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Private m_chartForm As ResponseChartForm
+    ''' <summary>状态栏链接的悬停提示。</summary>
+    Private ReadOnly m_chartTip As New ToolTip()
 
     ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
     Private m_stimulateMode As ToolStripButton
@@ -484,10 +486,14 @@ Public Partial Class FormMain
             .VisitedLinkColor = Color.FromArgb(34, 211, 238),
             .DisabledLinkColor = Color.FromArgb(100, 116, 139),
             .Margin = New Padding(6, 4, 6, 0),
-            .Enabled = False,
-            .ToolTipText = "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）"
+            .Enabled = False
         }
         AddHandler m_chartLink.LinkClicked, AddressOf onOpenResponseChart
+
+        ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂
+        m_chartTip.SetToolTip(
+            m_chartLink,
+            "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
 
         Call bar.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
 
