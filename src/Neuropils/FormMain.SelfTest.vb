@@ -90,6 +90,24 @@ Partial Public Class FormMain
                 Call report.AppendLine($"        top: {String.Join(", ", colorizer.Legend.Take(4).Select(Function(item) $"{item.Key}={item.Count}"))}")
             Next
 
+            ' 活跃度维度：只有数据集里带 snn-output 的 neuron_activity_*.csv 时才可校验
+            If dataset.HasActivity Then
+                Dim heat As NeuronColorizer = NeuronColorizer.Create(dataset, NeuronColorDimension.Activity)
+
+                Call check(report, failures, "[Activity] heat map colorizer", heat IsNot Nothing AndAlso heat.IsHeatMap, True)
+                Call check(report, failures, "[Activity] intensity covers every neuron",
+                           heat.Intensity IsNot Nothing AndAlso heat.Intensity.Length = dataset.Units, True)
+
+                Dim mapping As Integer() = Nothing
+                Dim points As PointCloudPoint() = BrainSceneBuilder.BuildPoints(dataset, heat, mapping)
+
+                Call check(report, failures, "[Activity] heat map keeps every point (没有按类别过滤)",
+                           points.Length, dataset.PositionedCount)
+                Call report.AppendLine($"      Activity        : {points.Length} points (heat map), source={dataset.ActivitySource}")
+            Else
+                Call report.AppendLine("      Activity        : skipped (dataset has no neuron_activity_*.csv)")
+            End If
+
             Call report.AppendLine()
 
             ' ---- 3) 连线装配 (逐条 / 阈值 / 脑区宏连接 / 选中神经元)
@@ -192,10 +210,12 @@ Partial Public Class FormMain
             ' ---- 5) 拾取性能 (13 万点的线性扫描)
             Call appendSection(report, "5. picking performance")
 
+            Const rounds As Integer = 5
+
             Dim pickTimer As Stopwatch = Stopwatch.StartNew()
             Dim hits As Integer = 0
 
-            For round As Integer = 1 To 5
+            For round As Integer = 1 To rounds
                 Dim h As SceneHitTest = SceneHitTester.HitTest(cloud, camera, 450 + round, 350 + round, 10)
 
                 If h.HasHit Then hits += 1
@@ -203,9 +223,12 @@ Partial Public Class FormMain
 
             pickTimer.Stop()
 
-            Call report.AppendLine($"      5 hit tests over {cloud.PointCount} points: {pickTimer.ElapsedMilliseconds} ms " &
-                                   $"({pickTimer.ElapsedMilliseconds / 5.0:F1} ms/click, {hits} hits)")
-            Call check(report, failures, "a click stays interactive (< 200 ms)", pickTimer.ElapsedMilliseconds < 1000, True)
+            Dim perClick As Double = pickTimer.ElapsedMilliseconds / CDbl(rounds)
+
+            Call report.AppendLine($"{rounds} hit tests over {cloud.PointCount} points: {pickTimer.ElapsedMilliseconds} ms " &
+                                   $"({perClick:F1} ms/click, {hits} hits)")
+            Call check(report, failures, "one click stays interactive (< 40 ms)", perClick < 40.0, True)
+            Call check(report, failures, "the pick probes found neurons", hits > 0, True)
             Call report.AppendLine()
         Catch ex As Exception
             Call report.AppendLine()

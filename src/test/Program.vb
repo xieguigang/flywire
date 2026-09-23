@@ -681,7 +681,13 @@ Module Program
             Dim groupFile As String = files.First(Function(f As String) f.Contains("group_activity"))
             Dim cellTypeFile As String = files.First(Function(f As String) f.Contains("celltype_activity"))
 
-            Call check($"[{mode}] report file count", files.Length, 6)
+            ' 6 份报告 + 1 份全量逐神经元计数 (neuron_activity_*.csv，供三维可视化做活跃度着色)
+            Call check($"[{mode}] report file count", files.Length, 7)
+
+            Dim neuronFile As String = files.First(Function(f As String) f.Contains("neuron_activity"))
+
+            Call check($"[{mode}] neuron activity csv rows == N + header",
+                       fileLineCount(neuronFile), network.Units + 1)
             Call check($"[{mode}] per-step csv rows == T + header", fileLineCount(perStepFile), config.TimeSteps + 1)
             Call check($"[{mode}] stimulated neurons csv rows == M + header", fileLineCount(stimFile), stimulation.Count + 1)
             Call check($"[{mode}] top neurons csv has data rows", fileLineCount(topFile) > 1, True)
