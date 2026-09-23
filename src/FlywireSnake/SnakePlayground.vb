@@ -200,16 +200,18 @@ Namespace FlywireSnake
                                       decoder As SnakeDecoder,
                                       Optional host As Form = Nothing) As SnakeSession
 
+            ' 局部变量不能叫 game：VB 不区分大小写，会遮蔽类型名 Game（下面的 Game.ViewCols 就取不到了）
             Dim canvas As Form = If(host, New Form() With {
-                .ClientSize = New Size(Game.ViewCols * Game.CellSize, Game.ViewRows * Game.CellSize)
+                .ClientSize = New Size(Snake2.Game.ViewCols * Snake2.Game.CellSize,
+                                       Snake2.Game.ViewRows * Snake2.Game.CellSize)
             })
 
-            Dim game As New Game()
-            Dim render As New Render(canvas, game)
+            Dim world As New Snake2.Game()
+            Dim render As New Render(canvas, world)
 
-            Call game.InitGame(render)
+            Call world.InitGame(render)
 
-            Return New SnakeSession(game, render, brain, decoder)
+            Return New SnakeSession(world, render, brain, decoder)
         End Function
 
 #End Region
