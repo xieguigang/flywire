@@ -37,6 +37,11 @@
     <ProjectReference Include="..\..\..\Microsoft.VisualBasic.Drawing\src\DxCanvas\DxCanvas.vbproj" />
     <ProjectReference Include="..\..\..\pixelArtist\src\Snake2\Snake2.vbproj" />
     <ProjectReference Include="..\FlywireAI\FlywireAI.vbproj" />
+    <!--
+      果蝇大脑驾驶贪吃蛇的操作逻辑（含 Snake2 游戏本体）。
+      观战窗口与三维活动可视化都通过它拿到"大脑此刻在做什么"。
+    -->
+    <ProjectReference Include="..\FlywireSnake\FlywireSnake.vbproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -99,15 +99,15 @@ Namespace FlywireSnake
         ''' <param name="index">连接组索引（提供 flow 注释）</param>
         ''' <param name="network">已装配的稀疏递归网络（<c>BrainNetworkBuilder.Assemble</c>）</param>
         ''' <param name="sensorsPerChannel">每个感觉通道使用多少个感觉神经元</param>
-        ''' <param name="motorGroups">运动读出分组数（= 动作数）</param>
+        ''' <param name="groupCount">运动读出分组数（= 动作数）</param>
         ''' <param name="seed">挑选神经元的随机种子（保证可复现）</param>
         ''' <remarks>
         ''' 装配与增益标定（读连接表、建 CSR）是一次性的工作，由 <see cref="SnakePlayground"/> 完成；
         ''' 本类只负责"选神经元 + 逐步推进"。
-        ''' </remarks>
-        ''' <remarks>
-        ''' 形参不能叫 <c>motorGroups</c>：VB 不区分大小写，会遮蔽 <see cref="MotorGroups"/> 属性，
-        ''' 于是下面所有 <c>MotorGroups.Length</c> 都会变成对整数取 Length。
+        ''' 
+        ''' 形参名是 <c>groupCount</c> 而不是"motorGroups"：VB 不区分大小写，
+        ''' 后者会遮蔽 <see cref="MotorGroups"/> 属性，于是下面所有
+        ''' <c>MotorGroups.Length</c> 都会变成对整数取 Length。
         ''' </remarks>
         Public Sub New(index As ConnectomeIndex,
                        network As BrainNetwork,

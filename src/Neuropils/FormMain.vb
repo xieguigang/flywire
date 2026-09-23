@@ -595,6 +595,13 @@ Public Partial Class FormMain
             Return
         End If
 
+        ' 果蝇大脑玩贪吃蛇：训练 + 三组对照评估（与观战窗口共用同一套代码）
+        If args.Length > 2 AndAlso String.Equals(args(1), "--snake", StringComparison.OrdinalIgnoreCase) Then
+            Call runSnakeProbe(args)
+
+            Return
+        End If
+
         ' 出图模式：载入 → 装配 → 抓一帧写成 png → 退出。
         ' 除了给论文/报告出图，它还是"渲染管线真的能跑起来"的可验证产物
         ' (自检模式只覆盖数据链路，不碰 GPU)。
