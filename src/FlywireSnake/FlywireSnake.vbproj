@@ -8,6 +8,7 @@
     <MyType>WindowsForms</MyType>
     <UseWPF>True</UseWPF>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
