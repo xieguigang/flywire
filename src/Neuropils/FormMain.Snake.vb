@@ -197,6 +197,24 @@ Partial Public Class FormMain
         End Using
     End Sub
 
+    ''' <summary>从环境变量读一个整数（没设 / 解析不了时返回 0，表示"沿用默认档位"）。</summary>
+    Private Shared Function environmentInteger(name As String) As Integer
+        Dim value As Integer
+
+        Call Integer.TryParse(Environment.GetEnvironmentVariable(name), value)
+
+        Return value
+    End Function
+
+    ''' <summary>从环境变量读一个浮点数（没设 / 解析不了时返回 0，表示"沿用默认档位"）。</summary>
+    Private Shared Function environmentDouble(name As String) As Double
+        Dim value As Double
+
+        Call Double.TryParse(Environment.GetEnvironmentVariable(name), value)
+
+        Return value
+    End Function
+
     ''' <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
     Private Shared Sub captureScreen(file As String)
         Dim bounds As Rectangle = Screen.PrimaryScreen.Bounds
@@ -268,12 +286,16 @@ Partial Public Class FormMain
 #End Region
 
     ''' <summary>
-    ''' ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]
-    ''' [每通道感觉神经元数] [感觉注入电流] [读出窗宽]``
+    ''' ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``
     ''' </summary>
     ''' <remarks>
-    ''' 后三个参数是"感觉 / 读出标定"的档位：调它们就是为了让大脑真的能感觉到游戏状态
-    ''' （见 <see cref="SnakePlayground.SensorsPerChannel"/> 的说明），留成命令行参数是为了能一档一档地实测。
+    ''' "感觉 / 读出标定"那三个档位（<c>FLYWIRE_SNAKE_SENSORS_PER_CHANNEL</c> /
+    ''' <c>FLYWIRE_SNAKE_SENSOR_CURRENT</c> / <c>FLYWIRE_SNAKE_FEATURE_WINDOW</c>）
+    ''' 走<b>环境变量</b>而不是第 7 个命令行参数：本仓库的
+    ''' <c>Microsoft.VisualBasic.App</c> 类型在"命令行参数多于 6 个"时会直接抛
+    ''' <c>TypeInitializationException</c>（Core 的 <c>App.CommandLine</c> 字段初始化，
+    ''' <c>GitBashEnvironment.GetCommandLineArgs</c> 里的命令行解析），
+    ''' 整个进程的日志与 CSV 加载都会跟着失效。
     ''' </remarks>
     Private Sub runSnakeProbe(args As String())
         Dim report As New StringBuilder()
@@ -292,13 +314,10 @@ Partial Public Class FormMain
         If ticks <= 0 Then ticks = 300
         If evaluateRounds <= 0 Then evaluateRounds = 8
 
-        Dim sensorsPerChannel As Integer = 0
-        Dim sensorCurrent As Double = 0
-        Dim featureWindow As Integer = 0
-
-        If args.Length > 7 Then Integer.TryParse(args(7), sensorsPerChannel)
-        If args.Length > 8 Then Double.TryParse(args(8), sensorCurrent)
-        If args.Length > 9 Then Integer.TryParse(args(9), featureWindow)
+        ' 0 = 没给，沿用 SnakePlayground 的默认档位
+        Dim sensorsPerChannel As Integer = environmentInteger("FLYWIRE_SNAKE_SENSORS_PER_CHANNEL")
+        Dim sensorCurrent As Double = environmentDouble("FLYWIRE_SNAKE_SENSOR_CURRENT")
+        Dim featureWindow As Integer = environmentInteger("FLYWIRE_SNAKE_FEATURE_WINDOW")
 
         ' 游戏要跑很多 tick，逐 tick 回读对 CPU 后端来说太贵，因此默认尝试 GPU
         m_config.UseGpu = True
