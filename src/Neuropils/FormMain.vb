@@ -44,8 +44,8 @@ Public Partial Class FormMain
     Private m_lineColorBox As ToolStripComboBox
     Private m_thresholdBox As NumericUpDown
     Private m_pointSizeBox As NumericUpDown
-    Private m_showConnections As CheckBox
-    Private m_showGround As CheckBox
+    Private m_showConnections As ToolStripButton
+    Private m_showGround As ToolStripButton
     Private m_progress As ToolStripProgressBar
     Private m_statusText As ToolStripStatusLabel
     Private m_sceneText As ToolStripStatusLabel
