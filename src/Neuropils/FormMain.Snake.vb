@@ -2,7 +2,9 @@ Imports System.Diagnostics
 Imports System.IO
 Imports System.Linq
 Imports System.Text
+Imports System.Threading.Tasks
 Imports FlywireSnake
+Imports Neuropils.Rendering
 Imports Snake2
 
 ''' <summary>
@@ -20,6 +22,154 @@ Imports Snake2
 ''' </list>
 ''' </remarks>
 Partial Public Class FormMain
+
+#Region "观战窗口"
+
+    ''' <summary>果蝇大脑玩贪吃蛇的观战窗口（单实例复用）。</summary>
+    Private m_snakeForm As SnakeBrainForm
+
+    ''' <summary>装配好的游戏用大脑环境（连接组 + CSR + 标定，约 30 秒，只做一次）。</summary>
+    Private m_snakePlayground As SnakePlayground
+
+    ''' <summary>把三维点云切换成"喂给蛇的大脑活动"的高亮器。</summary>
+    Private m_snakeHighlighter As ReplayHighlighter
+
+    ''' <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
+    Private m_snakeMask As Double()
+
+    ''' <summary>
+    ''' 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
+    ''' </summary>
+    Private Sub onOpenSnakeWindow(sender As Object, e As LinkLabelLinkClickedEventArgs)
+        If m_dataset Is Nothing Then Return
+
+        If m_snakeForm IsNot Nothing AndAlso Not m_snakeForm.IsDisposed Then
+            Call m_snakeForm.BringToFront()
+
+            Return
+        End If
+
+        If m_snakePlayground IsNot Nothing Then
+            Call showSnakeWindow(m_snakePlayground)
+
+            Return
+        End If
+
+        m_statusText.Text = "正在装配游戏用的果蝇大脑（连接组 → CSR，约 30 秒）..."
+        m_progress.Visible = True
+        m_progress.Style = ProgressBarStyle.Marquee
+
+        Task.Run(
+            Function() As SnakePlayground
+                ' 顺带把 GPU 后端注册上：逐 tick 推理用融合路径最快
+                Call GpuRuntime.TryRegister(m_config, AddressOf onLoadProgress)
+
+                Return SnakePlayground.Create(m_config, AddressOf onLoadProgress)
+            End Function) _
+            .ContinueWith(
+                Sub(task As Task(Of SnakePlayground))
+                    m_progress.Visible = False
+                    m_progress.Style = ProgressBarStyle.Continuous
+
+                    If task.IsFaulted Then
+                        m_statusText.Text = "装配果蝇大脑失败"
+                        Call MessageBox.Show(Me, $"{task.Exception?.GetBaseException()?.Message}",
+                                             "无法启动观战窗口", MessageBoxButtons.OK, MessageBoxIcon.Error)
+
+                        Return
+                    End If
+
+                    m_snakePlayground = task.Result
+
+                    Call showSnakeWindow(m_snakePlayground)
+                End Sub,
+                TaskScheduler.FromCurrentSynchronizationContext())
+    End Sub
+
+    ''' <summary>创建观战窗口并接上"三维活动可视化"。</summary>
+    Private Sub showSnakeWindow(playground As SnakePlayground)
+        Dim brain As SnakeBrain = playground.CreateBrain()
+        Dim decoder As SnakeDecoder = loadTrainedDecoder(brain)
+
+        If m_snakeHighlighter Is Nothing AndAlso m_scene IsNot Nothing Then
+            m_snakeHighlighter = New ReplayHighlighter(m_scene, m_dataset.Units, isHeatMap())
+        End If
+
+        If m_snakeMask Is Nothing Then
+            m_snakeMask = New Double(m_dataset.Units - 1) {}
+        End If
+
+        m_snakeForm = New SnakeBrainForm(playground, brain, decoder)
+        AddHandler m_snakeForm.BrainActivityChanged, AddressOf onSnakeBrainActivity
+        AddHandler m_snakeForm.FormClosed,
+            Sub()
+                m_snakeForm = Nothing
+
+                ' 关窗后把点云恢复成原来的着色
+                If m_snakeHighlighter IsNot Nothing Then
+                    Call m_snakeHighlighter.Reset()
+                    Call m_canvas.UpdatePointCloud(m_snakeHighlighter.Points)
+
+                    m_snakeHighlighter = Nothing
+                End If
+            End Sub
+
+        Call m_snakeForm.Show(Me)
+
+        m_statusText.Text = $"观战窗口已打开：{brain.FlowSummary}"
+    End Sub
+
+    ''' <summary>尽量用已训练好的解码器开局（没有就用随机读出）。</summary>
+    Private Function loadTrainedDecoder(brain As SnakeBrain) As SnakeDecoder
+        Try
+            Dim file As String = IO.Path.Combine(m_config.ResolveActivityDir(), "snake", "snake_decoder.csv")
+
+            If File.Exists(file) Then
+                Return SnakeDecoder.Load(file, brain.MotorFeatures.Length)
+            End If
+        Catch ex As Exception
+            Debug.WriteLine($"unable to load the trained decoder: {ex.Message}")
+        End Try
+
+        Return New SnakeDecoder(brain.MotorFeatures.Length)
+    End Function
+
+    ''' <summary>
+    ''' 把"果蝇大脑此刻发放的神经元"实时点亮到三维点云上。
+    ''' </summary>
+    ''' <remarks>
+    ''' 与本窗口的响应对齐：会话在 UI 线程上推进，因此这个回调也在 UI 线程，
+    ''' 可以直接更新画布而不用跨线程封送。
+    ''' </remarks>
+    Private Sub onSnakeBrainActivity(activeNeurons As Integer(), frame As SnakeStep)
+        If m_scene Is Nothing OrElse m_dataset Is Nothing Then Return
+
+        If m_snakeHighlighter Is Nothing Then
+            m_snakeHighlighter = New ReplayHighlighter(m_scene, m_dataset.Units, isHeatMap())
+        End If
+
+        If m_snakeMask Is Nothing OrElse m_snakeMask.Length <> m_dataset.Units Then
+            m_snakeMask = New Double(m_dataset.Units - 1) {}
+        Else
+            ' 只清上一帧动过的格子：整块清零在 13 万长度上每 tick 也要 1 MB 的写带宽
+            Array.Clear(m_snakeMask, 0, m_snakeMask.Length)
+        End If
+
+        If activeNeurons IsNot Nothing Then
+            For i As Integer = 0 To activeNeurons.Length - 1
+                Dim neuron As Integer = activeNeurons(i)
+
+                If neuron >= 0 AndAlso neuron < m_snakeMask.Length Then
+                    m_snakeMask(neuron) = 1.0
+                End If
+            Next
+        End If
+
+        Call m_snakeHighlighter.ApplyMask(m_snakeMask, activeNeurons)
+        Call m_canvas.UpdatePointCloud(m_snakeHighlighter.Points)
+    End Sub
+
+#End Region
 
     ''' <summary>
     ''' ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``

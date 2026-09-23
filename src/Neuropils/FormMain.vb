@@ -54,6 +54,8 @@ Public Partial Class FormMain
     Private m_sceneText As ToolStripStatusLabel
     ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
     Private m_chartLink As LinkLabel
+    ''' <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
+    Private m_snakeLink As LinkLabel
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Private m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
@@ -490,12 +492,28 @@ Public Partial Class FormMain
         }
         AddHandler m_chartLink.LinkClicked, AddressOf onOpenResponseChart
 
+        ' ---- 右下角：果蝇大脑玩贪吃蛇的观战窗口 ----
+        m_snakeLink = New LinkLabel With {
+            .Text = "果蝇大脑玩贪吃蛇",
+            .AutoSize = True,
+            .LinkBehavior = LinkBehavior.HoverUnderline,
+            .LinkColor = Color.FromArgb(34, 211, 238),
+            .ActiveLinkColor = Color.White,
+            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
+            .Margin = New Padding(6, 4, 6, 0)
+        }
+        AddHandler m_snakeLink.LinkClicked, AddressOf onOpenSnakeWindow
+
         ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂
         m_chartTip.SetToolTip(
             m_chartLink,
             "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
+        m_chartTip.SetToolTip(
+            m_snakeLink,
+            "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
 
         Call bar.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
+        Call bar.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
 
         Return bar
     End Function
