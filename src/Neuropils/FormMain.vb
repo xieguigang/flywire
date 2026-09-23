@@ -554,7 +554,8 @@ Public Partial Class FormMain
         End If
 
         Call m_canvas.UpdateConnections(lines)
-        Call m_canvas.ShowConnections = True
+
+        m_canvas.ShowConnections = True
         m_showConnections.Checked = True
     End Sub
 
