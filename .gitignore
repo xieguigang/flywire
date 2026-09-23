@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+docs/Download Data_files
+
 # User-specific files
 *.rsuser
 *.suo
@@ -427,3 +429,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+docs/Download Data.html
