@@ -590,9 +590,16 @@ Public Partial Class FormMain
 
     Protected Overrides Sub OnFormClosed(e As FormClosedEventArgs)
         m_rebuildTimer.Stop()
+        m_replayTimer.Stop()
+        m_holdTimer.Stop()
 
         If m_cancel IsNot Nothing Then
             Call m_cancel.Cancel()
+        End If
+
+        ' 让刺激工作线程退出循环（后台线程本来就不会阻止进程结束，这里只是把收尾做干净）
+        If m_stimWork IsNot Nothing AndAlso Not m_stimWork.IsAddingCompleted Then
+            Call m_stimWork.CompleteAdding()
         End If
 
         Call MyBase.OnFormClosed(e)

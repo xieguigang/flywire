@@ -1,3 +1,4 @@
+Imports System.Collections.Concurrent
 Imports System.Diagnostics
 Imports System.Drawing
 Imports System.IO
@@ -83,6 +84,10 @@ Partial Public Class FormMain
 
     ''' <summary>是否正在跑刺激仿真。</summary>
     Private m_stimBusy As Boolean
+
+    ''' <summary>刺激仿真专用的工作线程与其任务队列。</summary>
+    Private m_stimWorker As Thread
+    Private m_stimWork As BlockingCollection(Of Action)
 
     ''' <summary>最近一次刺激的结果。</summary>
     Private m_replay As StimulationReplay
@@ -294,40 +299,72 @@ Partial Public Class FormMain
         m_statusText.Text = $"电刺激 #{neuron}：半径 {radius / 1000.0:F0}μm / 电流 {current:F1}，正在运行全脑仿真 ..."
 
         Call setStimulusMarker(neuron)
+        Call ensureStimWorker()
 
-        Task.Run(
-            Function()
-                Dim prepared As Boolean = stimulator.Prepare(AddressOf onLoadProgress, CancellationToken.None)
+        ' 整段（装配连接组 + 仿真 + 落盘）都提交到专用线程执行，见 ensureStimWorker 的说明
+        Call m_stimWork.Add(
+            Sub()
+                Try
+                    Dim prepared As Boolean = stimulator.Prepare(AddressOf onLoadProgress, CancellationToken.None)
 
-                If Not prepared Then
-                    Throw New InvalidOperationException($"刺激引擎装配失败: {stimulator.LastError}")
-                End If
+                    If Not prepared Then
+                        Throw New InvalidOperationException($"刺激引擎装配失败: {stimulator.LastError}")
+                    End If
 
-                Dim result As StimulationReplay = stimulator.Stimulate(index, radius, current, holdMs, AddressOf onLoadProgress)
+                    Dim result As StimulationReplay = stimulator.Stimulate(index, radius, current, holdMs, AddressOf onLoadProgress)
 
-                ' 记录仿真结果（逐步激活清单 + 统计 + 活跃度快照）
-                Call StimulationReport.Write(result, m_config.ResolveActivityDir(), m_dataset.Index)
+                    ' 记录仿真结果（逐步激活清单 + 统计 + 活跃度快照）
+                    Call StimulationReport.Write(result, m_config.ResolveActivityDir(), m_dataset.Index)
 
-                Return (stimulator, result)
-            End Function) _
-            .ContinueWith(AddressOf onStimulationCompleted, TaskScheduler.FromCurrentSynchronizationContext())
+                    Call BeginInvoke(New Action(Sub() onStimulationCompleted(result)))
+                Catch ex As Exception
+                    Dim reason As String = $"{ex.GetType().Name}: {ex.Message}"
+
+                    Call BeginInvoke(New Action(Sub() onStimulationFailed(reason)))
+                End Try
+            End Sub)
     End Sub
 
-    Private Sub onStimulationCompleted(task As Task(Of (Stimulator As BrainStimulator, Replay As StimulationReplay)))
+    ''' <summary>
+    ''' 刺激仿真专用的工作线程。
+    ''' </summary>
+    ''' <remarks>
+    ''' <b>为什么不用线程池</b>：CUDA 的"当前上下文"是<b>线程局部</b>状态，上下文在创建它的
+    ''' 那条线程上绑定。把整个刺激流程固定在同一条线程上执行，上下文就始终"属于"这条线程：
+    ''' 
+    ''' * 不会再出现"第一次刺激正常、第二次点击报
+    '''   <c>cuMemAlloc_v2 failed: CUDA_ERROR_INVALID_CONTEXT (201)</c>"——
+    '''   那是线程池把第二次任务调度到另一条线程上的结果
+    '''   （ILCuda 侧也已修好：<c>CudaRuntime.EnsureCurrent</c> 会在每个底层调用前自动为当前线程
+    '''   绑定上下文，这里是双保险）；
+    ''' * 同一时刻只有一次仿真在碰 GPU（配合 <c>m_stimBusy</c> 的界面侧互斥）。
+    ''' </remarks>
+    Private Sub ensureStimWorker()
+        If m_stimWorker IsNot Nothing Then Return
+
+        m_stimWork = New BlockingCollection(Of Action)()
+        m_stimWorker = New Thread(AddressOf stimWorkerLoop) With {
+            .IsBackground = True,
+            .Name = "SNN stimulation"
+        }
+        m_stimWorker.Start()
+    End Sub
+
+    Private Sub stimWorkerLoop()
+        For Each work As Action In m_stimWork.GetConsumingEnumerable()
+            Try
+                Call work()
+            Catch ex As Exception
+                ' 单个任务失败不能让工作线程退出：否则后面每一次点击都会失败
+                System.Diagnostics.Debug.WriteLine($"stimulation worker: {ex.Message}")
+            End Try
+        Next
+    End Sub
+
+    Private Sub onStimulationCompleted(replay As StimulationReplay)
         m_stimBusy = False
         m_progress.Visible = False
         m_progress.Style = ProgressBarStyle.Continuous
-
-        If task.IsFaulted Then
-            Dim reason As String = If(task.Exception?.GetBaseException()?.Message, "unknown error")
-
-            m_statusText.Text = "电刺激失败"
-            Call MessageBox.Show(Me, reason, "电刺激仿真失败", MessageBoxButtons.OK, MessageBoxIcon.Error)
-
-            Return
-        End If
-
-        Dim replay As StimulationReplay = task.Result.Replay
 
         m_replay = replay
 
@@ -356,6 +393,16 @@ Partial Public Class FormMain
         If Not String.IsNullOrEmpty(replay.ReportDir) Then
             m_sceneText.Text = $"结果已记录: {replay.ReportDir}"
         End If
+    End Sub
+
+    ''' <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
+    Private Sub onStimulationFailed(reason As String)
+        m_stimBusy = False
+        m_progress.Visible = False
+        m_progress.Style = ProgressBarStyle.Continuous
+        m_statusText.Text = "电刺激失败"
+
+        Call MessageBox.Show(Me, reason, "电刺激仿真失败", MessageBoxButtons.OK, MessageBoxIcon.Error)
     End Sub
 
 #End Region
@@ -804,6 +851,7 @@ Partial Public Class FormMain
             Call report.AppendLine()
 
             Dim best As StimulationReplay = Nothing
+            Dim first As StimulationReplay = Nothing
 
             For Each radius As Double In radii
                 Dim replay As StimulationReplay = stimulator.Stimulate(probeNeuron, radius, current, 0, Nothing)
@@ -812,6 +860,7 @@ Partial Public Class FormMain
                                        $"{replay.ActiveUnionCount,8:N0} {replay.PeakActive,6:N0} " &
                                        $"{replay.FallbackSteps,10} {replay.WallMs,9:N0}")
 
+                If first Is Nothing Then first = replay
                 If best Is Nothing OrElse replay.ActiveUnionCount > best.ActiveUnionCount Then
                     best = replay
                 End If
@@ -820,6 +869,40 @@ Partial Public Class FormMain
             Call report.AppendLine()
             Call check(report, failures, "at least one strength activates neurons",
                        best IsNot Nothing AndAlso best.TotalSpikes > 0, True)
+
+            ' ---- 换个线程再刺激一次（这是"第一次正常、第二次报 CUDA_ERROR_INVALID_CONTEXT"的复现场景）----
+            ' CUDA 的当前上下文是线程局部状态：线程池把第二次任务调度到另一条线程时，
+            ' 那条线程没有绑定上下文，分配显存就会失败。这里刻意用另一条线程重跑同样的刺激，
+            ' 并要求结果与第一次逐位一致。
+            Call report.AppendLine()
+            Call report.AppendLine("---- cross thread re-run (regression: CUDA_ERROR_INVALID_CONTEXT) ----")
+
+            Dim second As StimulationReplay = Nothing
+            Dim failure As String = Nothing
+            Dim radius0 As Double = radii(0)
+
+            Call Task.Run(
+                Sub()
+                    Try
+                        second = stimulator.Stimulate(probeNeuron, radius0, current, 0, Nothing)
+                    Catch ex As Exception
+                        failure = $"{ex.GetType().Name}: {ex.Message}"
+                    End Try
+                End Sub).Wait()
+
+            Call check(report, failures, "a second stimulation on another thread succeeds",
+                       If(failure, "ok"), "ok")
+
+            If failure IsNot Nothing OrElse second Is Nothing Then
+                Call report.AppendLine($"      [FAIL] {failure}")
+            Else
+                Call report.AppendLine($"      {radius0 / 1000.0,9:F0} {second.RecruitedNeurons,11:N0} {second.TotalSpikes,8:N0} " &
+                                       $"{second.ActiveUnionCount,8:N0} {second.PeakActive,6:N0} " &
+                                       $"{second.FallbackSteps,10} {second.WallMs,9:N0}")
+
+                Call check(report, failures, "cross thread re-run is bit identical to the first run",
+                           If(first Is Nothing, -1.0, first.TotalSpikes), second.TotalSpikes)
+            End If
 
             If best IsNot Nothing Then
                 Call report.AppendLine()
