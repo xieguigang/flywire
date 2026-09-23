@@ -13,6 +13,8 @@ Namespace Connectome
     ''' 
     ''' * ``simulation_summary.csv``：配置与本次运行的全局指标 (kv 形式)；
     ''' * ``top_neurons_&lt;mode&gt;.csv``：放电最多的神经元 (附 name / group / class / primary_type 注释)；
+    ''' * ``neuron_activity_&lt;mode&gt;.csv``：<b>全量</b>逐神经元脉冲计数 (按索引排列，
+    '''   三维可视化据此以仿真活跃度给点云着色 —— 只落盘 top-N 是无法还原全脑热力分布的)；
     ''' * ``group_activity_&lt;mode&gt;.csv``：按 ``names.csv`` 的 group 聚合的活动统计；
     ''' * ``celltype_activity_&lt;mode&gt;.csv``：按 ``consolidated_cell_types.csv`` 的 primary_type 聚合的活动统计；
     ''' * ``per_step_activity_&lt;mode&gt;.csv``：每个时间步的活跃神经元数与脉冲数；
@@ -48,6 +50,7 @@ Namespace Connectome
 
             Call writeSummary(result, config, network, stat, stimulation, mode)
             Call writeTopNeurons(result, config, index, mode)
+            Call writeNeuronCounts(result, index, mode)
             Call writeGroupActivity(result, index, mode)
             Call writeCellTypeActivity(result, index, mode)
             Call writePerStepActivity(result, mode)
@@ -292,6 +295,30 @@ Namespace Connectome
             Next
 
             Call writeFile($"top_neurons_{mode}.csv", sb.ToString)
+        End Sub
+
+        ''' <summary>
+        ''' 全量逐神经元脉冲计数 (按神经元索引排列)。
+        ''' </summary>
+        ''' <remarks>
+        ''' 三维可视化需要<b>每一个</b>神经元的活跃度才能画出全脑的热力分布，
+        ''' 而 ``top_neurons`` 只保留了前 N 个，聚合表又丢掉了空间分布。
+        ''' 这个文件不大 (139,255 行约 5 MB)，但让"看仿真结果"不再需要重跑仿真。
+        ''' </remarks>
+        Private Sub writeNeuronCounts(result As BrainSimulationResult, index As ConnectomeIndex, mode As String)
+            Dim sb As New StringBuilder()
+
+            Call sb.AppendLine("neuron_index,root_id,spike_count,firing_rate")
+
+            For i As Integer = 0 To result.Units - 1
+                Call sb.AppendLine(String.Join(",",
+                    i,
+                    index.GetRootId(i),
+                    num(result.Counts(i)),
+                    num(result.Counts(i) / result.TimeSteps)))
+            Next
+
+            Call writeFile($"neuron_activity_{mode}.csv", sb.ToString)
         End Sub
 
         Private Sub writeGroupActivity(result As BrainSimulationResult, index As ConnectomeIndex, mode As String)
