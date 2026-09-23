@@ -88,12 +88,13 @@ Public Partial Class FormMain
         Me.StartPosition = FormStartPosition.CenterScreen
         Me.MinimumSize = New Size(900, 600)
 
+        ' 注意：3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
+        ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底。
+        ' 另外：VB 的对象初始化器里不能夹注释行 (会被当成语法错误)，因此这条说明写在这里。
         m_canvas = New DxScene3DCanvas With {
             .Dock = DockStyle.Fill,
             .AutoClear = False,
             .BackColor = Color.Black,
-            ' 3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
-            ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底
             .BackgroundColor = Color.FromArgb(12, 12, 18),
             .Renderer = m_renderer,
             .RenderMode = SceneRenderMode.PointCloud,
@@ -540,6 +541,16 @@ Public Partial Class FormMain
         m_progress.Visible = True
 
         If m_buildOptions.Mode = ConnectionRenderMode.SelectedNeuron Then
+            ' 还没点过任何神经元时，先用"最忙的神经元"作为默认目标，
+            ' 否则这个模式一开始会是空的 (看起来像功能失效)
+            If m_focusNeuron < 0 Then
+                m_focusNeuron = BrainSceneBuilder.FindBusiestNeuron(m_dataset)
+
+                If m_focusNeuron >= 0 Then
+                    Call showNeuronDetails(m_focusNeuron)
+                End If
+            End If
+
             m_buildOptions.FocusNeuron = m_focusNeuron
         End If
 

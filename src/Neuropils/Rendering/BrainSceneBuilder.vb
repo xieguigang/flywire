@@ -206,6 +206,36 @@ Namespace Rendering
             Return scene
         End Function
 
+        ''' <summary>
+        ''' 出度最大的神经元。
+        ''' </summary>
+        ''' <remarks>
+        ''' 用作"选中神经元的连接"这个模式的默认目标：全脑里最忙的那个神经元
+        ''' (几万条连接) 是最能说明"网络长什么样"的样本。
+        ''' 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
+        ''' 而计数数组只有 13 万个 ``Integer``。
+        ''' </remarks>
+        Public Function FindBusiestNeuron(dataset As Data.BrainDataset) As Integer
+            If dataset Is Nothing OrElse dataset.Pre Is Nothing Then Return -1
+
+            Dim counts As Integer() = New Integer(dataset.Units - 1) {}
+            Dim best As Integer = -1
+            Dim bestCount As Integer = 0
+
+            For c As Integer = 0 To dataset.ConnectionCount - 1
+                Dim neuron As Integer = dataset.Pre(c)
+
+                counts(neuron) += 1
+
+                If counts(neuron) > bestCount Then
+                    bestCount = counts(neuron)
+                    best = neuron
+                End If
+            Next
+
+            Return best
+        End Function
+
         ''' <summary>只装配点云 (着色维度变化时不需要重建连线)。</summary>
         Public Function BuildPoints(dataset As Data.BrainDataset,
                                     colorizer As Data.NeuronColorizer,

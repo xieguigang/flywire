@@ -144,7 +144,7 @@ Partial Public Class FormMain
                                    $"({aggregateLines.Candidates} connections aggregated), {aggregateTimer.ElapsedMilliseconds} ms")
 
             ' 选中一个真实神经元，检查它的连接能否被单独装配
-            Dim busiest As Integer = busiestNeuron(dataset)
+            Dim busiest As Integer = BrainSceneBuilder.FindBusiestNeuron(dataset)
 
             If busiest >= 0 Then
                 Dim focus As New SceneBuildOptions With {
