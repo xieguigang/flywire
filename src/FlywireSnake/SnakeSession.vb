@@ -1,4 +1,5 @@
 Imports System.Drawing
+Imports Snake2
 
 Namespace FlywireSnake
 
@@ -110,8 +111,11 @@ Namespace FlywireSnake
         ''' <summary>最近一个 tick 的结果。</summary>
         Public Property LastStep As SnakeStep
 
-        ''' <summary>每个 tick 之后触发（界面重绘 + 三维活动可视化的数据源）。</summary>
-        Public Event Stepped(session As SnakeSession, step As SnakeStep)
+        ''' <summary>
+        ''' 每个 tick 之后触发（界面重绘 + 三维活动可视化的数据源）。
+        ''' </summary>
+        ''' <remarks>形参不能叫 <c>step</c>：那是 VB 的保留字（For ... Step）。</remarks>
+        Public Event Stepped(session As SnakeSession, frame As SnakeStep)
 
         Public Sub New(game As Game, render As Render, brain As SnakeBrain, decoder As SnakeDecoder)
             If game Is Nothing Then Throw New ArgumentNullException(NameOf(game))

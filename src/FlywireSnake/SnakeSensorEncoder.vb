@@ -1,5 +1,6 @@
 Imports System.Drawing
 Imports System.Linq
+Imports Snake2
 
 Namespace FlywireSnake
 
