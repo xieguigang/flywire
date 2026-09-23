@@ -174,7 +174,7 @@ Partial Public Class FormMain
                 Call g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size)
             End Using
 
-            Call bmp.Save(file, Imaging.ImageFormat.Png)
+            Call bmp.Save(file, System.Drawing.Imaging.ImageFormat.Png)
         End Using
     End Sub
 
