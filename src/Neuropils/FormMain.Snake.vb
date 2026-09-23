@@ -138,6 +138,7 @@ Partial Public Class FormMain
     Private m_snakeProbePng As String = Nothing
     Private m_snakeProbeTicks As Integer
     Private m_snakeProbeSeen As Integer
+    Private m_snakeProbeCaptured As Boolean
 
     ''' <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
     ''' <remarks>
@@ -147,9 +148,17 @@ Partial Public Class FormMain
     Private Sub startSnakeProbeCapture(snakeForm As SnakeBrainForm)
         AddHandler snakeForm.BrainActivityChanged,
             Sub(activeNeurons As Integer(), frame As SnakeStep)
+                ' 抓屏后的重入事件直接丢掉，帧数才不会被 DoEvents 抽出来的定时器消息灌大
+                If m_snakeProbeCaptured Then Return
+
                 m_snakeProbeSeen += 1
 
-                If m_snakeProbeSeen <> m_snakeProbeTicks Then Return
+                If m_snakeProbeSeen < m_snakeProbeTicks Then Return
+
+                m_snakeProbeCaptured = True
+
+                ' 先停表：否则 DoEvents 会重入定时器，抓到的帧数与请求的不一致
+                Call snakeForm.PauseForProbe()
 
                 ' 让最后一帧先画出来，再抓屏
                 Call Application.DoEvents()

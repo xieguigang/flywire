@@ -230,6 +230,18 @@ Public Class SnakeBrainForm
         End If
     End Sub
 
+    ''' <summary>
+    ''' 供命令行自检抓屏前调用：先停表，抓到的才是"恰好跑了 N 帧"的那一帧。
+    ''' </summary>
+    ''' <remarks>
+    ''' 抓屏前的 <c>Application.DoEvents()</c> 会把定时器消息再抽进来（重入），
+    ''' 不先停表的话游戏会在抓屏过程中继续往前跑，帧数与画面都对不上。
+    ''' </remarks>
+    Friend Sub PauseForProbe()
+        m_timer.Stop()
+        m_playButton.Text = "开始"
+    End Sub
+
     Private Sub togglePlay()
         If m_timer.Enabled Then
             m_timer.Stop()
