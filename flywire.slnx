@@ -16,6 +16,9 @@
     <Project Path="../GCModeller/src/runtime/sciBASIC#/vs_solutions/dev/VisualStudio/VisualStudio.NET5.vbproj">
       <Platform Solution="*|x64" Project="x64" />
     </Project>
+    <Project Path="../pixelArtist/src/Snake2/Snake2.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
   </Folder>
   <Folder Name="/framework/DirectX/">
     <Project Path="../Microsoft.VisualBasic.Drawing/src/DXApi/DXApi.vbproj">
@@ -53,6 +56,7 @@
   <Project Path="src/FlywireAI/FlywireAI.vbproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="src/FlywireSnake/FlywireSnake.vbproj" Id="41e51db6-3c63-41f9-9512-7337f80ebd0c" />
   <Project Path="src/Neuropils/Neuropils.vbproj" Id="1fa55757-7557-4e31-8af0-8d255a9a36e7">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
