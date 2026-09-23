@@ -28,7 +28,7 @@ Namespace FAFBv783
         ''' <summary>
         ''' 以惰性迭代的方式打开 csv 文件句柄，并且逐行解析为数据模型对象。
         ''' 
-        ''' (``DataLinqStream.OpenHandle`` + ``DataLinqStream.AsLinq``，这两个函数都定义在
+        ''' (``DataStream.OpenHandle`` + ``DataStream.AsLinq``，这两个函数都定义在
         ''' ``Data\DataFrame\Linq\DataStream.vb`` 文件之中)
         ''' </summary>
         ''' <typeparam name="T">
@@ -37,30 +37,44 @@ Namespace FAFBv783
         ''' <param name="path">csv 文件所在的文件路径。</param>
         ''' <param name="encoding">文本编码，默认使用 <see cref="Encodings.Default"/>。</param>
         ''' <param name="parallel">是否以并行 Linq 的方式读取数据行。</param>
+        ''' <param name="silent">是否关闭只读属性冲突的提示信息。</param>
         ''' <remarks>
-        ''' ### 为什么没有使用 <see cref="DataStream"/> 类 ?
+        ''' 数据行以惰性迭代的方式进行读取，内存占用为 O(1)；在迭代结束或者被提前中断的时候
+        ''' 由 ``Using`` 语句关闭文件句柄。
         ''' 
-        ''' ``DataStream.OpenHandle`` + ``DataStream.AsLinq`` 这一对函数在实测之中存在一个框架缺陷：
+        ''' 注意: 在 2026-09-23 之前版本的 ``DataStream`` 之中存在两个缺陷 (目前已经修复):
         ''' 
-        ''' ``DataStream`` 的构造函数已经通过 ``ReadLine`` 读取了标题行，但是 ``BufferProvider`` 在
-        ''' 解析数据之前调用了 ``_file.BaseStream.Seek(0, Begin)`` 重新定位底层文件流，却没有同时调用
-        ''' ``StreamReader.DiscardBufferedData()`` 丢弃 reader 内部已经缓冲的文本，于是:
-        ''' 
-        ''' 1. 缓冲区之中的数据行会被重复读取一次 (实测 ``names.csv`` 返回 139,282 行，实际只有 139,255 行)；
-        ''' 2. 并且 ``DataStream.Dispose`` 并不会关闭内部的 ``StreamReader``，导致文件句柄一直被占用
-        '''    (再次打开相同的文件会抛出 ``IOException``)。
-        ''' 
-        ''' 而 ``DataLinqStream.OpenHandle`` 所返回的数据行是 ``IterateAllLines().Skip(1)``，即标题行之后
-        ''' 的完整的文本行序列，不存在重复读取的问题，并且底层的 <see cref="StreamReader"/> 由迭代器
-        ''' 的 ``Using`` 语句负责释放，因此在这里使用这个 api 来加载超大的 csv 文件。
+        ''' 1. ``BufferProvider`` 在 ``BaseStream.Seek(0)`` 之后没有调用 ``StreamReader.DiscardBufferedData()``，
+        ''' 导致文件开头缓冲区之中的数据行会被重复读取一次 (例如 ``names.csv`` 返回 139,282 行而不是 139,255 行)；
+        ''' 2. ``Dispose`` 没有关闭内部的 ``StreamReader``，导致文件句柄一直被占用
+        ''' (再次打开相同的文件会抛出 ``IOException``)。
         ''' </remarks>
         <Extension>
-        Public Function OpenDataStream(Of T As {New, Class})(path$,
-                                                            Optional encoding As Encoding = Nothing,
-                                                            Optional parallel As Boolean = False) As IEnumerable(Of T)
+        Public Iterator Function OpenDataStream(Of T As {New, Class})(path$,
+                                                                    Optional encoding As Encoding = Nothing,
+                                                                    Optional parallel As Boolean = False,
+                                                                    Optional silent As Boolean = False) As IEnumerable(Of T)
 
-            ' 数据行以惰性迭代的方式进行读取 (内存占用为 O(1))，迭代结束或者被提前中断的时候
-            ' 由底层迭代器的 Using 语句关闭文件句柄
+            Using handle As DataStream = DataStream.OpenHandle(path, encoding:=encoding)
+                For Each row As T In handle.AsLinq(Of T)(parallel, silent)
+                    Yield row
+                Next
+            End Using
+        End Function
+
+        ''' <summary>
+        ''' 以惰性迭代的方式打开 csv 文件句柄，并且逐行解析为数据模型对象。
+        ''' 
+        ''' (``DataLinqStream.OpenHandle`` + ``DataLinqStream.AsLinq``，这两个函数也定义在同一个
+        ''' ``Data\DataFrame\Linq\DataStream.vb`` 文件之中，可以作为 <see cref="OpenDataStream(Of T)"/>
+        ''' 的替代实现)
+        ''' </summary>
+        <Extension>
+        Public Function OpenDataLinqStream(Of T As {New, Class})(path$,
+                                                                Optional encoding As Encoding = Nothing,
+                                                                Optional parallel As Boolean = False) As IEnumerable(Of T)
+
+            ' 数据行是 IterateAllLines().Skip(1) 的惰性序列，底层的文件读取器由迭代器的 Using 语句释放
             Return DataLinqStream _
                 .OpenHandle(path, encoding:=encoding, tqdm_wrap:=False) _
                 .AsLinq(Of T)(parallel)

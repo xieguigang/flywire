@@ -38,11 +38,11 @@ Module Program
 
         Call run("1. full loading via LoadCsv", AddressOf testFullLoading)
         Call run("2. streaming loading via StreamXxx", AddressOf testStreamLoading)
-        Call run("3. huge table via DataStream.OpenHandle + AsLinq", AddressOf testHugeTableStream)
+        Call run("3. huge table via OpenHandle + AsLinq (raw api)", AddressOf testHugeTableStream)
         Call run("4. Int64 root_id precision", AddressOf testRootIdPrecision)
         Call run("5. raw rows for undocumented csv", AddressOf testRawRows)
         Call run("6. stream rows vs full load rows", AddressOf testRowCountConsistency)
-        Call run("7. framework note on DataStream.AsLinq", AddressOf testDataStreamHandleBehavior)
+        Call run("7. streaming api regression (framework fixes)", AddressOf testDataStreamHandleBehavior)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -173,7 +173,7 @@ Module Program
     ''' </summary>
     Private Sub testHugeTableStream()
         Console.WriteLine()
-        Console.WriteLine("=== 3. huge table via DataStream.OpenHandle + AsLinq ===")
+        Console.WriteLine("=== 3. huge table via OpenHandle + AsLinq (raw api) ===")
 
         Const limit As Integer = 200000
 
@@ -231,6 +231,10 @@ Module Program
         Call check("loaded root_id equals the raw csv text", loaded(0).RootId, expectedId)
 
         Call check("root_id > 2^53", expectedId > 9007199254740992L, True)
+
+        ' 框架默认的字符串 -> Int64 转换器 (Casting.CastLong) 的精度校验
+        Dim casted As Long = Microsoft.VisualBasic.Scripting.Runtime.Casting.CastLong("720575940599457990")
+        Call check("framework Casting.CastLong precision", casted, 720575940599457990L)
 
         ' 演示使用 Double 中转解析时所产生的精度丢失
         Dim lossByDouble As Long = CLng(CDbl(expectedId))
@@ -294,16 +298,15 @@ Module Program
     ''' </summary>
     Private Sub testDataStreamHandleBehavior()
         Console.WriteLine()
-        Console.WriteLine("=== 7. framework note: DataStream.OpenHandle + AsLinq ===")
+        Console.WriteLine("=== 7. streaming api regression (framework fixes) ===")
 
         Dim file As String = csv("names.csv")
         Dim expected As Integer = csvLineCount("names.csv")
 
-        Dim viaOpenHandle As Integer = file.StreamCellNames().Count()
-        Console.WriteLine($"    data lines in names.csv       : {expected}")
-        Console.WriteLine($"    DataLinqStream rows (used)    : {viaOpenHandle}")
+        Console.WriteLine($"    data lines in names.csv: {expected}")
 
-        ' 注意：DataStream 不会释放文件句柄，所以这个演示放在最后执行
+        ' 1. DataStream.AsLinq 完整枚举之后的行数应该与数据文件的行数一致
+        '    (修复 BufferProvider 之中缺少 DiscardBufferedData 所导致的数据行重复读取)
         Dim n As Integer = 0
 
         Using handle As DataStream = DataStream.OpenHandle(file)
@@ -312,7 +315,20 @@ Module Program
             Next
         End Using
 
-        Console.WriteLine($"    DataStream.AsLinq rows        : {n} (duplicated: {n - expected})")
+        Call check("DataStream.AsLinq rows == data lines", n, expected)
+
+        ' 2. 完整枚举之后文件句柄应该已经被释放 (可以再次打开同一个文件)
+        '    (修复 Dispose 没有关闭内部 StreamReader 所导致的文件句柄泄漏)
+        Call check("file can be reopened after streaming", tryReopen(file), expected)
+
+        ' 3. 迭代被提前中断 (Take) 之后文件句柄同样应该被释放
+        Dim take5 = file.StreamCellNames().Take(5).ToArray
+        Call check("Take(5) rows", take5.Length, 5)
+        Call check("file can be reopened after Take", tryReopen(file), expected)
+
+        ' 4. 另一个数据流 api 的行为对照
+        Dim viaLinqStream As Integer = file.OpenDataLinqStream(Of CellNames)().Count()
+        Call check("DataLinqStream rows == data lines", viaLinqStream, expected)
     End Sub
 
 #End Region
@@ -327,15 +343,30 @@ Module Program
     ''' 数据文件的行数 (不包含标题行)。
     ''' </summary>
     Private Function csvLineCount(name As String) As Long
-        Dim lines As String() = System.IO.File.ReadAllLines(csv(name))
-        Dim n As Long = lines.Length
+        Return tryReopen(csv(name))
+    End Function
 
-        ' 跳过末尾的空行
-        Do While n > 0 AndAlso String.IsNullOrWhiteSpace(lines(n - 1))
-            n -= 1
-        Loop
+    ''' <summary>
+    ''' 重新打开目标文件并且返回其数据行数 (不包含标题行)。
+    ''' 
+    ''' 文件仍旧被其他对象占用 (例如流式读取之后文件句柄没有被释放) 的时候会抛出
+    ''' ``IOException``，在这里捕获并且返回 -1。
+    ''' </summary>
+    Private Function tryReopen(path As String) As Long
+        Try
+            Dim lines As String() = System.IO.File.ReadAllLines(path)
+            Dim n As Long = lines.Length
 
-        Return n - 1
+            ' 跳过末尾的空行
+            Do While n > 0 AndAlso String.IsNullOrWhiteSpace(lines(n - 1))
+                n -= 1
+            Loop
+
+            Return n - 1
+        Catch ex As Exception
+            Console.WriteLine($"    [ERROR] {path} -> {ex.GetType().Name}: {ex.Message}")
+            Return -1
+        End Try
     End Function
 
     ''' <summary>

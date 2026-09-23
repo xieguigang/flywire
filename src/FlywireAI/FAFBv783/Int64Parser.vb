@@ -18,6 +18,10 @@ Namespace FAFBv783
     ''' 所以需要通过 <see cref="IParser"/> 自定义解析器直接从文本解析 Int64 数值，
     ''' 从而保证 ID 数据的精度。
     ''' </summary>
+    ''' <remarks>
+    ''' 2026-09-23: 框架默认的转换器 ``Casting.CastLong`` 已经修正为优先按照整数文本解析，
+    ''' 这里保留自定义解析器是为了让本模块的数据加载行为不依赖于所引用的框架版本。
+    ''' </remarks>
     Public Class Int64Parser : Implements IParser
 
         ''' <summary>
