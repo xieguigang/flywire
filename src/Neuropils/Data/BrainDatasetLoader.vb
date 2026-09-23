@@ -514,8 +514,10 @@ Namespace Data
                 Return
             End If
 
+            ' 报告是写到 snn-output\<时间戳>\ 子目录里的，所以要递归搜索，
+            ' 并取最近一次写入的那一份 (同一目录下会有多轮仿真的结果)
             Dim latest As String = Directory _
-                .EnumerateFiles(dir, "neuron_activity_*.csv") _
+                .EnumerateFiles(dir, "neuron_activity_*.csv", SearchOption.AllDirectories) _
                 .OrderByDescending(Function(f) File.GetLastWriteTimeUtc(f)) _
                 .FirstOrDefault()
 

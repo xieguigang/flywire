@@ -57,6 +57,8 @@ Public Partial Class FormMain
     Private m_lookup As Integer()
     Private m_focusNeuron As Integer = -1
     Private m_viewInitialized As Boolean = False
+    ''' <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
+    Private m_snapshotPath As String = Nothing
     Private m_cancel As CancellationTokenSource
     Private m_busy As Boolean
 
@@ -90,6 +92,9 @@ Public Partial Class FormMain
             .Dock = DockStyle.Fill,
             .AutoClear = False,
             .BackColor = Color.Black,
+            ' 3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
+            ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底
+            .BackgroundColor = Color.FromArgb(12, 12, 18),
             .Renderer = m_renderer,
             .RenderMode = SceneRenderMode.PointCloud,
             .ColorScheme = "viridis",
@@ -323,11 +328,55 @@ Public Partial Class FormMain
             Return
         End If
 
-        If args.Length > 1 AndAlso Directory.Exists(args(1)) Then
+        ' 出图模式：载入 → 装配 → 抓一帧写成 png → 退出。
+        ' 除了给论文/报告出图，它还是"渲染管线真的能跑起来"的可验证产物
+        ' (自检模式只覆盖数据链路，不碰 GPU)。
+        If args.Length > 2 AndAlso String.Equals(args(1), "--snapshot", StringComparison.OrdinalIgnoreCase) Then
+            m_snapshotPath = args(2)
+            m_config.DataDir = If(args.Length > 3, args(3), m_config.DataDir)
+
+            ' 参数位: <png> [dataDir] [着色维度 0..4] [连接模式 0=不画 1=逐条 2=宏连接 3=选中神经元]
+            If args.Length > 4 Then
+                m_dimensionBox.SelectedIndex = System.Math.Max(0, System.Math.Min(4, CInt(Val(args(4)))))
+            End If
+
+            If args.Length > 5 Then
+                Dim connections As Integer = CInt(Val(args(5)))
+
+                If connections > 0 Then
+                    m_connectionBox.SelectedIndex = System.Math.Max(0, System.Math.Min(2, connections - 1))
+                    m_showConnections.Checked = True
+                End If
+            End If
+        ElseIf args.Length > 1 AndAlso Directory.Exists(args(1)) Then
             m_config.DataDir = args(1)
         End If
 
         Call startLoad()
+    End Sub
+
+    ''' <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
+    Private Sub captureAndExit()
+        Dim file As String = m_snapshotPath
+
+        m_snapshotPath = Nothing
+
+        Call BeginInvoke(New Action(
+            Sub()
+                Try
+                    ' 抓帧内部会强制一次同步重绘，因此此刻的布局与首帧渲染都已经完成
+                    If m_canvas.SaveSnapshot(file, Microsoft.VisualBasic.Imaging.ImageFormats.Png) Then
+                        Call Console.Out.WriteLine($"snapshot saved: {file} ({m_scene})")
+                    Else
+                        Call Console.Out.WriteLine($"snapshot failed: {m_canvas.LastError}")
+                    End If
+                Catch ex As Exception
+                    Call Console.Out.WriteLine($"snapshot failed: {ex.GetType().Name}: {ex.Message}")
+                End Try
+
+                Call Console.Out.Flush()
+                Call Environment.Exit(0)
+            End Sub))
     End Sub
 
     ''' <summary>
@@ -553,6 +602,10 @@ Public Partial Class FormMain
         ' 选中标记：在选中神经元周围画一个小十字，任何缩放下都看得见
         If m_focusNeuron >= 0 AndAlso m_focusNeuron < m_dataset.Units AndAlso m_dataset.HasPosition(m_focusNeuron) Then
             Call drawFocusMarker(m_focusNeuron)
+        End If
+
+        If m_snapshotPath IsNot Nothing Then
+            Call captureAndExit()
         End If
     End Sub
 
