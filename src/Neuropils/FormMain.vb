@@ -32,46 +32,16 @@ Public Class FormMain
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
-    Friend WithEvents m_canvas As DxScene3DCanvas
-    Private m_split As SplitContainer
-    Private m_legend As CheckedListBox
-    Private m_gradient As PictureBox
-    Private m_details As TextBox
-    Private m_dimensionBox As ToolStripComboBox
-    Private m_connectionBox As ToolStripComboBox
-    Private m_lineColorBox As ToolStripComboBox
-    Private m_renderModeBox As ToolStripComboBox
-    Private m_thresholdBox As NumericUpDown
-    Private m_pointSizeBox As NumericUpDown
-    Friend m_showConnections As ToolStripButton
-    Private m_showGround As ToolStripButton
-    Friend WithEvents m_progress As ToolStripProgressBar
-    Friend WithEvents m_statusText As ToolStripStatusLabel
-    Friend m_sceneText As ToolStripStatusLabel
-    ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
-    Friend m_chartLink As LinkLabel
-    ''' <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
-    Friend m_snakeLink As LinkLabel
+    ' 界面控件 (m_canvas / m_split / 工具条 / 状态栏 / 回放面板 ...) 由
+    ' FormMain.Designer.vb 的 InitializeComponent 建好，事件一律用 Handles 绑定。
+
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Friend m_chartForm As ResponseChartForm
-    ''' <summary>状态栏链接的悬停提示。</summary>
-    Private ReadOnly m_chartTip As New ToolTip()
 
-    ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
-    Friend m_stimulateMode As ToolStripButton
-    Friend m_stimStrengthBox As NumericUpDown
-    Friend m_stimStepsBox As NumericUpDown
-    Friend m_holdLabel As ToolStripLabel
-    Friend m_replayPanel As Control
-    Friend m_replayPlay As Button
-    Friend m_replayFirst As Button
-    Friend m_replayPrev As Button
-    Friend m_replayNext As Button
-    Friend m_replayLast As Button
-    Friend m_replayClear As Button
-    Friend m_replayTrack As TrackBar
-    Friend m_replaySpeed As NumericUpDown
-    Friend m_replayText As Label
+    ''' <summary>电刺激 / 回放（详见 Application\StimulationExperiment.vb）。</summary>
+    Friend m_experiment As StimulationExperiment
+    ''' <summary>果蝇大脑玩贪吃蛇（详见 Application\Snake.vb）。</summary>
+    Friend m_snake As Snake
 
     Friend m_dataset As BrainDataset
     Friend m_colorizer As NeuronColorizer
@@ -84,441 +54,30 @@ Public Class FormMain
     Friend m_cancel As CancellationTokenSource
     Friend m_busy As Boolean
 
-    Dim m_snake As Snake
-    Dim m_experiment As StimulationExperiment
-
-    ''' <summary>
-    ''' 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
-    ''' </summary>
-    ''' <remarks>
-    ''' 必须写全 System.Windows.Forms.Timer：System.Threading 里也有一个同名的 Timer
-    ''' (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
-    ''' </remarks>
-    Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
-
     Public Sub New()
-        ' Designer 生成的 InitializeComponent 目前是空实现，但按约定仍然先调用它
+        ' 控件与布局由 Designer 生成的 InitializeComponent 建好
         ' (WinForms 设计器与后续手工添加控件都依赖这个调用顺序)
         Call InitializeComponent()
         Call initializeUi()
-
-        m_rebuildTimer.Stop()
-        m_rebuildTimer.Interval = 260
-
-        AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
     End Sub
 
 #Region "ui construction"
 
+    ''' <summary>
+    ''' 控件之外的界面初始化。
+    ''' </summary>
+    ''' <remarks>
+    ''' 控件的实例化、摆放与事件声明都在 <see cref="InitializeComponent"/>
+    ''' (FormMain.Designer.vb) 里，这里只补三件"设计器写不了"的事：
+    ''' 建立电刺激 / 观战窗口这两个协作对象、刷新图例、启动回放面板的初始状态。
+    ''' </remarks>
     Private Sub initializeUi()
-        Me.Text = "Neuropils - Drosophila brain 3D viewer"
-        Me.ClientSize = New Size(1500, 900)
-        Me.StartPosition = FormStartPosition.CenterScreen
-        Me.MinimumSize = New Size(900, 600)
-
         m_experiment = New StimulationExperiment(Me)
-        ' 注意：3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
-        ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底。
-        ' 另外：VB 的对象初始化器里不能夹注释行 (会被当成语法错误)，因此这条说明写在这里。
-        m_canvas = New DxScene3DCanvas With {
-            .Dock = DockStyle.Fill,
-            .AutoClear = False,
-            .BackColor = Color.Black,
-            .BackgroundColor = Color.FromArgb(12, 12, 18),
-            .Renderer = m_renderer,
-            .RenderMode = SceneRenderMode.PointCloud,
-            .ColorScheme = "viridis",
-            .UseEmbeddedColor = True,
-            .ShowConnections = False,
-            .ShowGround = False,
-            .PointSize = 2,
-            .PointAlpha = 255,
-            .MultisampleCount = 1,
-            .CullBackFaces = False,
-            .EnableKeyboardShortcuts = True
-        }
-
-        ' 点击拾取：画布的鼠标事件先喂给相机控制器，这里只在"没有拖动"时当作点击
-        AddHandler m_canvas.MouseDown, AddressOf onCanvasMouseDown
-        AddHandler m_canvas.MouseUp, AddressOf onCanvasMouseUp
-
-        Dim sidebar As Control = createSidebar()
-
-        ' 注意：SplitterDistance / Panel*MinSize 必须在控件真正拿到尺寸之后再设置。
-        ' 在构造函数里直接赋值会因为"还没有完成布局"而抛
-        ' InvalidOperationException (SplitterDistance must be between ...)，
-        ' 这就是为什么它们被放到 FormMain_Load 的 adjustSplitter 里。
-        m_split = New SplitContainer With {
-            .Dock = DockStyle.Fill,
-            .Orientation = Orientation.Vertical,
-            .FixedPanel = FixedPanel.Panel2
-        }
-
-        m_split.Panel1.Controls.Add(m_canvas)
-        m_split.Panel2.Controls.Add(sidebar)
-
-        Me.Controls.Add(m_split)
-        Me.Controls.Add(createToolbar())
-        Me.Controls.Add(createMenu())
-        Me.Controls.Add(createStatusBar())
+        m_snake = New Snake(Me)
 
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
     End Sub
-
-    Private Function createMenu() As MenuStrip
-        Dim menu As New MenuStrip()
-
-        Dim fileMenu As New ToolStripMenuItem("文件 (&F)")
-        Dim openItem As New ToolStripMenuItem("打开数据目录 (&O)...")
-        Dim snapshotItem As New ToolStripMenuItem("保存截图 (&S)...")
-        Dim exitItem As New ToolStripMenuItem("退出 (&X)")
-
-        AddHandler openItem.Click, AddressOf onOpenDataDir
-        AddHandler snapshotItem.Click, AddressOf onSnapshot
-        AddHandler exitItem.Click, Sub(sender As Object, e As EventArgs) Call Me.Close()
-
-        Call fileMenu.DropDownItems.Add(openItem)
-        Call fileMenu.DropDownItems.Add(snapshotItem)
-        Call fileMenu.DropDownItems.Add(New ToolStripSeparator())
-        Call fileMenu.DropDownItems.Add(exitItem)
-
-        Dim viewMenu As New ToolStripMenuItem("视图 (&V)")
-        Dim resetItem As New ToolStripMenuItem("重置视角 (&R)")
-
-        AddHandler resetItem.Click, Sub(sender As Object, e As EventArgs) Call m_canvas.ResetView()
-
-        Call viewMenu.DropDownItems.Add(resetItem)
-
-        Dim helpMenu As New ToolStripMenuItem("帮助 (&H)")
-        Dim aboutItem As New ToolStripMenuItem("关于数据来源 (&A)")
-
-        AddHandler aboutItem.Click, AddressOf onAbout
-
-        Call helpMenu.DropDownItems.Add(aboutItem)
-
-        Call menu.Items.Add(fileMenu)
-        Call menu.Items.Add(viewMenu)
-        Call menu.Items.Add(helpMenu)
-
-        Return menu
-    End Function
-
-    Private Function createToolbar() As ToolStrip
-        Dim bar As New ToolStrip With {
-            .GripStyle = ToolStripGripStyle.Hidden,
-            .ImageScalingSize = New Size(16, 16)
-        }
-
-        m_dimensionBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 150}
-        Call m_dimensionBox.Items.AddRange(New Object() {
-            "主导脑区 (neuropil)", "神经递质", "细胞类型", "分类层级", "仿真活跃度"
-        })
-        m_dimensionBox.SelectedIndex = 0
-        AddHandler m_dimensionBox.SelectedIndexChanged, AddressOf onDimensionChanged
-
-        m_connectionBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 150}
-        Call m_connectionBox.Items.AddRange(New Object() {
-            "连接 (逐条)", "脑区宏连接", "选中神经元的连接"
-        })
-        m_connectionBox.SelectedIndex = 0
-        AddHandler m_connectionBox.SelectedIndexChanged, AddressOf onConnectionModeChanged
-
-        m_renderModeBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 110}
-        Call m_renderModeBox.Items.AddRange(New Object() {"点云", "线框", "实体"})
-        m_renderModeBox.SelectedIndex = 0
-        AddHandler m_renderModeBox.SelectedIndexChanged, AddressOf onRenderModeChanged
-
-        m_lineColorBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 130}
-        Call m_lineColorBox.Items.AddRange(New Object() {
-            "连线: 前突触颜色", "连线: 递质类型", "连线: 单色"
-        })
-        m_lineColorBox.SelectedIndex = 0
-        AddHandler m_lineColorBox.SelectedIndexChanged, AddressOf onLineColorChanged
-
-        ' WinForms 没有 ToolStripNumericUpDown：数值输入要自己用 ToolStripControlHost 托住
-        m_thresholdBox = New NumericUpDown With {
-            .Minimum = 1, .Maximum = 100000, .Increment = 10, .Value = m_buildOptions.SynapseThreshold, .Width = 80
-        }
-        AddHandler m_thresholdBox.ValueChanged, AddressOf onThresholdChanged
-
-        m_pointSizeBox = New NumericUpDown With {
-            .Minimum = 1, .Maximum = 12, .Increment = 1, .Value = 2, .Width = 56
-        }
-        AddHandler m_pointSizeBox.ValueChanged, AddressOf onPointSizeChanged
-
-        m_showConnections = New ToolStripButton("显示连接") With {.CheckOnClick = True, .Checked = False}
-        AddHandler m_showConnections.CheckedChanged, AddressOf onShowConnectionsChanged
-
-        m_showGround = New ToolStripButton("地面") With {.CheckOnClick = True, .Checked = False}
-        AddHandler m_showGround.CheckedChanged, AddressOf onShowGroundChanged
-
-        Dim snapshot As New ToolStripButton("截图")
-        AddHandler snapshot.Click, AddressOf onSnapshot
-
-        Dim reload As New ToolStripButton("重新载入")
-        AddHandler reload.Click, AddressOf onReload
-
-        ' ---- 电刺激模式 ----
-        m_stimulateMode = New ToolStripButton("电刺激模式") With {
-            .CheckOnClick = True,
-            .Checked = False,
-            .ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
-        }
-        AddHandler m_stimulateMode.CheckedChanged, AddressOf m_experiment.onStimulateModeChanged
-
-        m_stimStrengthBox = New NumericUpDown With {
-            .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20D, .Increment = 0.5D, .Value = 1D, .Width = 56
-        }
-
-        m_stimStepsBox = New NumericUpDown With {
-            .Minimum = 5, .Maximum = 200, .Increment = 5, .Value = 30, .Width = 56
-        }
-        AddHandler m_stimStepsBox.ValueChanged, AddressOf m_experiment.onStimulusStepsChanged
-
-        m_holdLabel = New ToolStripLabel("")
-
-        Call bar.Items.Add(New ToolStripLabel("着色:"))
-        Call bar.Items.Add(m_dimensionBox)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(New ToolStripLabel("模式:"))
-        Call bar.Items.Add(m_renderModeBox)
-        Call bar.Items.Add(New ToolStripLabel("连接:"))
-        Call bar.Items.Add(m_connectionBox)
-        Call bar.Items.Add(m_lineColorBox)
-        Call bar.Items.Add(New ToolStripLabel("≥突触:"))
-        Call bar.Items.Add(New ToolStripControlHost(m_thresholdBox))
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(New ToolStripLabel("点大小:"))
-        Call bar.Items.Add(New ToolStripControlHost(m_pointSizeBox))
-        Call bar.Items.Add(m_showConnections)
-        Call bar.Items.Add(m_showGround)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(snapshot)
-        Call bar.Items.Add(reload)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(m_stimulateMode)
-        Call bar.Items.Add(New ToolStripLabel("强度×"))
-        Call bar.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
-        Call bar.Items.Add(New ToolStripLabel("仿真步数"))
-        Call bar.Items.Add(New ToolStripControlHost(m_stimStepsBox))
-        Call bar.Items.Add(m_holdLabel)
-
-        Return bar
-    End Function
-
-    Private Function createSidebar() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 7,
-            .Padding = New Padding(6)
-        }
-
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 38))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 34))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 112))
-
-        Call panel.Controls.Add(newLabel("图例 / 筛选 (勾选控制显示)"), 0, 0)
-
-        m_gradient = New PictureBox With {.Dock = DockStyle.Fill, .Height = 20, .Visible = False, .SizeMode = PictureBoxSizeMode.StretchImage}
-
-        Call panel.Controls.Add(m_gradient, 0, 1)
-
-        m_legend = New CheckedListBox With {
-            .Dock = DockStyle.Fill,
-            .CheckOnClick = True,
-            .IntegralHeight = False
-        }
-        AddHandler m_legend.ItemCheck, AddressOf onLegendItemCheck
-
-        Call panel.Controls.Add(m_legend, 0, 2)
-        Call panel.Controls.Add(newLabel("神经元详情 (点击画布中的点)"), 0, 3)
-
-        m_details = New TextBox With {
-            .Dock = DockStyle.Fill,
-            .Multiline = True,
-            .ReadOnly = True,
-            .ScrollBars = ScrollBars.Vertical,
-            .Font = New System.Drawing.Font("Consolas", 9),
-            .BackColor = Color.FromArgb(250, 250, 250)
-        }
-
-        Call panel.Controls.Add(m_details, 0, 4)
-        Call panel.Controls.Add(newLabel("电刺激 / 回放"), 0, 5)
-
-        m_replayPanel = createReplayPanel()
-
-        Call panel.Controls.Add(m_replayPanel, 0, 6)
-
-        Return panel
-    End Function
-
-    ''' <summary>
-    ''' 回放控制面板：播放/暂停、单步、进度条、速度与状态。
-    ''' </summary>
-    Private Function createReplayPanel() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 3,
-            .Margin = New Padding(0)
-        }
-
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
-
-        Dim buttons As New FlowLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .FlowDirection = FlowDirection.LeftToRight,
-            .WrapContents = False,
-            .Margin = New Padding(0)
-        }
-
-        m_replayFirst = newReplayButton("|◀", AddressOf m_experiment.onReplayFirst)
-        m_replayPrev = newReplayButton("◀", AddressOf m_experiment.onReplayPrev)
-        m_replayPlay = newReplayButton("播放", AddressOf m_experiment.onReplayPlay, 52)
-        m_replayNext = newReplayButton("▶", AddressOf m_experiment.onReplayNext)
-        m_replayLast = newReplayButton("▶|", AddressOf m_experiment.onReplayLast)
-
-        Call buttons.Controls.Add(m_replayFirst)
-        Call buttons.Controls.Add(m_replayPrev)
-        Call buttons.Controls.Add(m_replayPlay)
-        Call buttons.Controls.Add(m_replayNext)
-        Call buttons.Controls.Add(m_replayLast)
-
-        m_replayTrack = New TrackBar With {
-            .Dock = DockStyle.Fill,
-            .Minimum = 0,
-            .Maximum = 0,
-            .TickStyle = TickStyle.None,
-            .SmallChange = 1,
-            .LargeChange = 5
-        }
-        AddHandler m_replayTrack.ValueChanged, AddressOf m_experiment.onReplayTrackScroll
-
-        Dim bottom As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 3,
-            .RowCount = 1,
-            .Margin = New Padding(0)
-        }
-
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 34))
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 86))
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
-
-        m_replaySpeed = New NumericUpDown With {
-            .Minimum = 30, .Maximum = 1000, .Increment = 20, .Value = 120, .Width = 62, .Margin = New Padding(0)
-        }
-        AddHandler m_replaySpeed.ValueChanged, AddressOf m_experiment.onReplaySpeedChanged
-
-        m_replayClear = New Button With {.Text = "清除", .Dock = DockStyle.Fill, .Margin = New Padding(4, 0, 0, 0)}
-        AddHandler m_replayClear.Click, AddressOf m_experiment.onReplayClear
-
-        m_replayText = New Label With {
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .AutoEllipsis = True,
-            .Margin = New Padding(6, 0, 0, 0)
-        }
-
-        Call bottom.Controls.Add(New Label With {.Text = "速度", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}, 0, 0)
-        Call bottom.Controls.Add(m_replaySpeed, 1, 0)
-        Call bottom.Controls.Add(m_replayText, 2, 0)
-
-        Call panel.Controls.Add(buttons, 0, 0)
-        Call panel.Controls.Add(m_replayTrack, 0, 1)
-        Call panel.Controls.Add(bottom, 0, 2)
-
-        ' 清除按钮与速度靠在一起放在按钮行的右侧
-        Call buttons.Controls.Add(m_replayClear)
-
-        Return panel
-    End Function
-
-    Private Shared Function newReplayButton(text As String, handler As EventHandler, Optional width As Integer = 40) As Button
-        Dim button As New Button With {
-            .Text = text,
-            .Width = width,
-            .Height = 26,
-            .Margin = New Padding(0, 0, 4, 0),
-            .TabStop = False
-        }
-
-        AddHandler button.Click, handler
-
-        Return button
-    End Function
-
-    Private Shared Function newLabel(text As String) As Label
-        Return New Label With {
-            .Text = text,
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
-        }
-    End Function
-
-    Private Function createStatusBar() As StatusStrip
-        Dim bar As New StatusStrip()
-
-        m_statusText = New ToolStripStatusLabel("就绪") With {.Spring = True, .TextAlign = ContentAlignment.MiddleLeft}
-        m_sceneText = New ToolStripStatusLabel("") With {.BorderSides = ToolStripStatusLabelBorderSides.Left}
-        m_progress = New ToolStripProgressBar With {.Visible = False, .Width = 220, .Style = ProgressBarStyle.Marquee}
-
-        Call bar.Items.Add(m_statusText)
-        Call bar.Items.Add(m_sceneText)
-        Call bar.Items.Add(m_progress)
-
-        ' ---- 右下角：电刺激响应曲线入口 ----
-        ' 用真正的 LinkLabel（WinForms 的 ToolStripStatusLabel 虽然也能做成链接样式，
-        ' 但这里要的是"一个可点击的链接控件"，因此用 ToolStripControlHost 把它托进状态栏）
-        m_chartLink = New LinkLabel With {
-            .Text = "响应曲线",
-            .AutoSize = True,
-            .LinkBehavior = LinkBehavior.HoverUnderline,
-            .LinkColor = Color.FromArgb(34, 211, 238),
-            .ActiveLinkColor = Color.White,
-            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
-            .DisabledLinkColor = Color.FromArgb(100, 116, 139),
-            .Margin = New Padding(6, 4, 6, 0),
-            .Enabled = False
-        }
-        AddHandler m_chartLink.LinkClicked, AddressOf onOpenResponseChart
-
-        ' ---- 右下角：果蝇大脑玩贪吃蛇的观战窗口 ----
-        m_snakeLink = New LinkLabel With {
-            .Text = "果蝇大脑玩贪吃蛇",
-            .AutoSize = True,
-            .LinkBehavior = LinkBehavior.HoverUnderline,
-            .LinkColor = Color.FromArgb(34, 211, 238),
-            .ActiveLinkColor = Color.White,
-            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
-            .Margin = New Padding(6, 4, 6, 0)
-        }
-        m_snake = New Snake(Me)
-
-        AddHandler m_snakeLink.LinkClicked, AddressOf m_snake.onOpenSnakeWindow
-
-        ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂
-        m_chartTip.SetToolTip(
-            m_chartLink,
-            "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
-        m_chartTip.SetToolTip(
-            m_snakeLink,
-            "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
-
-        Call bar.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
-        Call bar.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
-
-        Return bar
-    End Function
 
     ''' <summary>
     ''' 打开响应曲线窗口。
@@ -528,7 +87,7 @@ Public Class FormMain
     ''' 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
     ''' "记录下来的响应结果"也还能画出来。
     ''' </remarks>
-    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs)
+    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_chartLink.LinkClicked
         If m_dataset Is Nothing Then
             Return
         End If
@@ -829,7 +388,7 @@ Public Class FormMain
     End Function
 
     ''' <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
-    Private Sub onReload(sender As Object, e As EventArgs)
+    Private Sub onReload(sender As Object, e As EventArgs) Handles reloadButton.Click
         If m_busy Then Return
 
         Using dialog As New FolderBrowserDialog()
@@ -846,7 +405,7 @@ Public Class FormMain
         Call startLoad()
     End Sub
 
-    Private Sub onOpenDataDir(sender As Object, e As EventArgs)
+    Private Sub onOpenDataDir(sender As Object, e As EventArgs) Handles openMenuItem.Click
         Call onReload(sender, e)
     End Sub
 
@@ -1014,7 +573,7 @@ Public Class FormMain
         m_showConnections.Checked = True
     End Sub
 
-    Private Sub onRebuildTimerTick(sender As Object, e As EventArgs)
+    Private Sub onRebuildTimerTick(sender As Object, e As EventArgs) Handles m_rebuildTimer.Tick
         m_rebuildTimer.Stop()
         Call rebuildScene()
     End Sub
@@ -1029,7 +588,7 @@ Public Class FormMain
 
 #Region "toolbar events"
 
-    Private Sub onDimensionChanged(sender As Object, e As EventArgs)
+    Private Sub onDimensionChanged(sender As Object, e As EventArgs) Handles m_dimensionBox.SelectedIndexChanged
         If m_dataset Is Nothing Then Return
 
         Dim dimension As NeuronColorDimension = dimensionFromUi()
@@ -1046,7 +605,7 @@ Public Class FormMain
         Call rebuildScene()
     End Sub
 
-    Private Sub onRenderModeChanged(sender As Object, e As EventArgs)
+    Private Sub onRenderModeChanged(sender As Object, e As EventArgs) Handles m_renderModeBox.SelectedIndexChanged
         Select Case m_renderModeBox.SelectedIndex
             Case 1 : m_canvas.RenderMode = SceneRenderMode.Mesh
             Case 2 : m_canvas.RenderMode = SceneRenderMode.Surface
@@ -1054,7 +613,7 @@ Public Class FormMain
         End Select
     End Sub
 
-    Private Sub onConnectionModeChanged(sender As Object, e As EventArgs)
+    Private Sub onConnectionModeChanged(sender As Object, e As EventArgs) Handles m_connectionBox.SelectedIndexChanged
         Select Case m_connectionBox.SelectedIndex
             Case 1 : m_buildOptions.Mode = ConnectionRenderMode.NeuropilAggregate
             Case 2 : m_buildOptions.Mode = ConnectionRenderMode.SelectedNeuron
@@ -1064,7 +623,7 @@ Public Class FormMain
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onLineColorChanged(sender As Object, e As EventArgs)
+    Private Sub onLineColorChanged(sender As Object, e As EventArgs) Handles m_lineColorBox.SelectedIndexChanged
         Select Case m_lineColorBox.SelectedIndex
             Case 1 : m_buildOptions.LineColor = LineColorMode.Neurotransmitter
             Case 2 : m_buildOptions.LineColor = LineColorMode.Uniform
@@ -1074,26 +633,26 @@ Public Class FormMain
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onThresholdChanged(sender As Object, e As EventArgs)
+    Private Sub onThresholdChanged(sender As Object, e As EventArgs) Handles m_thresholdBox.ValueChanged
         m_buildOptions.SynapseThreshold = CInt(m_thresholdBox.Value)
 
         ' 阈值只影响连线，点云不动
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onPointSizeChanged(sender As Object, e As EventArgs)
+    Private Sub onPointSizeChanged(sender As Object, e As EventArgs) Handles m_pointSizeBox.ValueChanged
         m_canvas.PointSize = CInt(m_pointSizeBox.Value)
     End Sub
 
-    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs)
+    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs) Handles m_showConnections.CheckedChanged
         m_canvas.ShowConnections = m_showConnections.Checked
     End Sub
 
-    Private Sub onShowGroundChanged(sender As Object, e As EventArgs)
+    Private Sub onShowGroundChanged(sender As Object, e As EventArgs) Handles m_showGround.CheckedChanged
         m_canvas.ShowGround = m_showGround.Checked
     End Sub
 
-    Private Sub onSnapshot(sender As Object, e As EventArgs)
+    Private Sub onSnapshot(sender As Object, e As EventArgs) Handles snapshotButton.Click, snapshotMenuItem.Click
         If Not m_viewInitialized Then Return
 
         Using dialog As New SaveFileDialog()
@@ -1112,7 +671,7 @@ Public Class FormMain
         End Using
     End Sub
 
-    Private Sub onAbout(sender As Object, e As EventArgs)
+    Private Sub onAbout(sender As Object, e As EventArgs) Handles aboutMenuItem.Click
         Dim sb As New StringBuilder()
 
         Call sb.AppendLine("数据来源: FlyWire FAFB v783 (codex.flywire.ai)")
@@ -1174,7 +733,7 @@ Public Class FormMain
         Next
     End Sub
 
-    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs)
+    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs) Handles m_legend.ItemCheck
         If m_colorizer Is Nothing OrElse m_colorizer.IsHeatMap Then Return
         If e.Index < 0 OrElse e.Index >= m_legend.Items.Count Then Return
 
@@ -1237,7 +796,7 @@ Public Class FormMain
     Private m_mouseDown As Point
     Private m_mouseDownValid As Boolean
 
-    Private Sub onCanvasMouseDown(sender As Object, e As MouseEventArgs)
+    Private Sub onCanvasMouseDown(sender As Object, e As MouseEventArgs) Handles m_canvas.MouseDown
         If e.Button <> MouseButtons.Left Then Return
 
         m_mouseDown = New Point(e.X, e.Y)
@@ -1249,7 +808,7 @@ Public Class FormMain
         End If
     End Sub
 
-    Private Sub onCanvasMouseUp(sender As Object, e As MouseEventArgs)
+    Private Sub onCanvasMouseUp(sender As Object, e As MouseEventArgs) Handles m_canvas.MouseUp
         If e.Button <> MouseButtons.Left OrElse Not m_mouseDownValid Then Return
 
         m_mouseDownValid = False
@@ -1398,6 +957,85 @@ Public Class FormMain
 
         Return (outCount, outSynapses, inCount, inSynapses)
     End Function
+
+#End Region
+
+#Region "designer event bridges"
+
+    ''' <summary>
+    ''' 事件桥接。
+    ''' </summary>
+    ''' <remarks>
+    ''' Designer 里的控件用 <c>Handles</c> 把事件声明在窗体自己的方法上，而电刺激与观战窗口
+    ''' 的处理逻辑属于各自的协作对象（<see cref="StimulationExperiment"/> / <see cref="Snake"/>），
+    ''' 这里只做一次转发：绑定仍然是声明式的 <c>Handles</c>，逻辑也仍然留在它自己的类里。
+    ''' 
+    ''' <b>为什么 ValueChanged / CheckedChanged 要先判空</b>：InitializeComponent 给
+    ''' NumericUpDown / TrackBar 赋 Minimum、Maximum、Value 时会就地触发一次 ValueChanged，
+    ''' 那一刻 <see cref="m_experiment"/> 还是 Nothing（它由 initializeUi 在
+    ''' InitializeComponent 之后创建）。原先把 AddHandler 写在属性赋值之后，
+    ''' 同样不会收到这一次事件，所以跳过它正是原有行为。
+    ''' 点击与链接事件不可能在构造期间触发，因此不做判断。
+    ''' </remarks>
+    Private Sub exitMenuItem_Click(sender As Object, e As EventArgs) Handles exitMenuItem.Click
+        Call Me.Close()
+    End Sub
+
+    Private Sub resetViewMenuItem_Click(sender As Object, e As EventArgs) Handles resetViewMenuItem.Click
+        Call m_canvas.ResetView()
+    End Sub
+
+    Private Sub m_snakeLink_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_snakeLink.LinkClicked
+        Call m_snake.onOpenSnakeWindow(sender, e)
+    End Sub
+
+    Private Sub m_stimulateMode_CheckedChanged(sender As Object, e As EventArgs) Handles m_stimulateMode.CheckedChanged
+        If m_experiment Is Nothing Then Return
+
+        Call m_experiment.onStimulateModeChanged(sender, e)
+    End Sub
+
+    Private Sub m_stimStepsBox_ValueChanged(sender As Object, e As EventArgs) Handles m_stimStepsBox.ValueChanged
+        If m_experiment Is Nothing Then Return
+
+        Call m_experiment.onStimulusStepsChanged(sender, e)
+    End Sub
+
+    Private Sub m_replayTrack_ValueChanged(sender As Object, e As EventArgs) Handles m_replayTrack.ValueChanged
+        If m_experiment Is Nothing Then Return
+
+        Call m_experiment.onReplayTrackScroll(sender, e)
+    End Sub
+
+    Private Sub m_replaySpeed_ValueChanged(sender As Object, e As EventArgs) Handles m_replaySpeed.ValueChanged
+        If m_experiment Is Nothing Then Return
+
+        Call m_experiment.onReplaySpeedChanged(sender, e)
+    End Sub
+
+    Private Sub m_replayFirst_Click(sender As Object, e As EventArgs) Handles m_replayFirst.Click
+        Call m_experiment.onReplayFirst(sender, e)
+    End Sub
+
+    Private Sub m_replayPrev_Click(sender As Object, e As EventArgs) Handles m_replayPrev.Click
+        Call m_experiment.onReplayPrev(sender, e)
+    End Sub
+
+    Private Sub m_replayPlay_Click(sender As Object, e As EventArgs) Handles m_replayPlay.Click
+        Call m_experiment.onReplayPlay(sender, e)
+    End Sub
+
+    Private Sub m_replayNext_Click(sender As Object, e As EventArgs) Handles m_replayNext.Click
+        Call m_experiment.onReplayNext(sender, e)
+    End Sub
+
+    Private Sub m_replayLast_Click(sender As Object, e As EventArgs) Handles m_replayLast.Click
+        Call m_experiment.onReplayLast(sender, e)
+    End Sub
+
+    Private Sub m_replayClear_Click(sender As Object, e As EventArgs) Handles m_replayClear.Click
+        Call m_experiment.onReplayClear(sender, e)
+    End Sub
 
 #End Region
 
