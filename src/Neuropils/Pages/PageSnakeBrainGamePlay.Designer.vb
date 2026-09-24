@@ -209,6 +209,7 @@ Partial Class PageSnakeBrainGamePlay
         ' speedLabel
         ' 
         speedLabel.AutoSize = True
+        speedLabel.ForeColor = Color.Cyan
         speedLabel.Location = New Point(6, 40)
         speedLabel.Margin = New Padding(6, 8, 2, 0)
         speedLabel.Name = "speedLabel"
@@ -229,6 +230,7 @@ Partial Class PageSnakeBrainGamePlay
         ' tickLabel
         ' 
         tickLabel.AutoSize = True
+        tickLabel.ForeColor = Color.Cyan
         tickLabel.Location = New Point(139, 40)
         tickLabel.Margin = New Padding(6, 8, 2, 0)
         tickLabel.Name = "tickLabel"
