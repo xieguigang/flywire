@@ -19,6 +19,7 @@ namespace RibbonLib.Controls
         private static class Cmd
         {
             public const uint cmdButtonAbout = 2;
+            public const uint cmdButtonExit = 16;
             public const uint cmdNumIntensity = 11;
             public const uint cmdNumSimulationSteps = 12;
             public const uint cmdButtonOpenModelDir = 7;
@@ -38,6 +39,7 @@ namespace RibbonLib.Controls
 
         public Ribbon Ribbon { get; private set; }
         public RibbonButton ButtonAbout { get; private set; }
+        public RibbonButton ButtonExit { get; private set; }
         public RibbonSpinner NumIntensity { get; private set; }
         public RibbonSpinner NumSimulationSteps { get; private set; }
         public RibbonButton ButtonOpenModelDir { get; private set; }
@@ -58,6 +60,7 @@ namespace RibbonLib.Controls
                 throw new ArgumentNullException(nameof(ribbon), "Parameter is null");
             this.Ribbon = ribbon;
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
+            ButtonExit = new RibbonButton(ribbon, Cmd.cmdButtonExit);
             NumIntensity = new RibbonSpinner(ribbon, Cmd.cmdNumIntensity);
             NumSimulationSteps = new RibbonSpinner(ribbon, Cmd.cmdNumSimulationSteps);
             ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);

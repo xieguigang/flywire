@@ -16,6 +16,7 @@ Namespace RibbonLib.Controls
     Partial Class RibbonItems
         Private Class Cmd
             Public Const cmdButtonAbout As UInteger = 2
+            Public Const cmdButtonExit As UInteger = 16
             Public Const cmdNumIntensity As UInteger = 11
             Public Const cmdNumSimulationSteps As UInteger = 12
             Public Const cmdButtonOpenModelDir As UInteger = 7
@@ -43,6 +44,12 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property ButtonAbout As RibbonButton
             Get
                 Return _ButtonAbout
+            End Get
+        End Property
+        Private _ButtonExit As RibbonButton
+        Public ReadOnly Property ButtonExit As RibbonButton
+            Get
+                Return _ButtonExit
             End Get
         End Property
         Private _NumIntensity As RibbonSpinner
@@ -130,6 +137,7 @@ Namespace RibbonLib.Controls
             End If
             _ribbon = ribbon
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
+            _ButtonExit = New RibbonButton(_ribbon, Cmd.cmdButtonExit)
             _NumIntensity = New RibbonSpinner(_ribbon, Cmd.cmdNumIntensity)
             _NumSimulationSteps = New RibbonSpinner(_ribbon, Cmd.cmdNumSimulationSteps)
             _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)

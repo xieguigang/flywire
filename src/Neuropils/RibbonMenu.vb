@@ -82,6 +82,7 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
         AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
         AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, Sub() Workbench.flywire.DockState = DockState.Document
+        AddHandler RibbonMenu.ribbon.ButtonExit.ExecuteEvent, Sub() Call App.Exit()
 
         AddHandler RibbonMenu.ribbon.ToggleShowConnection.ExecuteEvent, AddressOf onShowConnectionsChanged
         AddHandler RibbonMenu.ribbon.ToggleShowGroundGrid.ExecuteEvent, AddressOf onShowGroundChanged
