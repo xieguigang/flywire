@@ -62,6 +62,22 @@
       <Platform Solution="*|x64" Project="x64" />
     </Project>
   </Folder>
+  <Folder Name="/galaxy/">
+    <Project Path="../galaxy/src/dockpanelsuite/Themes/ThemeVS2015.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="../galaxy/src/dockpanelsuite/VSDockPanel/VSDockPanel.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="../galaxy/src/GalaxyWorkbench/GalaxyWorkbench.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="../galaxy/src/Microsoft.Windows.FeatureAPI/Microsoft.Windows.FeatureAPI.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="../galaxy/src/RibbonEventBinding/RibbonEventBinding.shproj" Id="72a4c1ee-5cbf-4f72-9b71-c997d7e33c18" />
+    <Project Path="../galaxy/src/WebViewHelper/WebViewHelper.shproj" Id="ceb7782e-585a-48f5-95b9-4c01cead6b0c" />
+  </Folder>
   <Project Path="src/FlywireAI/FlywireAI.vbproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

@@ -35,6 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\galaxy\src\dockpanelsuite\Themes\ThemeVS2015.vbproj" />
+    <ProjectReference Include="..\..\..\galaxy\src\dockpanelsuite\VSDockPanel\VSDockPanel.vbproj" />
+    <ProjectReference Include="..\..\..\galaxy\src\GalaxyWorkbench\GalaxyWorkbench.vbproj" />
+    <ProjectReference Include="..\..\..\galaxy\src\Microsoft.Windows.FeatureAPI\Microsoft.Windows.FeatureAPI.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\cuda\ILCudaTensor\ILCudaTensor.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\cuda\ILCuda\ILCuda.vbproj" />
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Data\DataFrame\dataframework-netcore5.vbproj" />
@@ -66,6 +70,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Microsoft.Windows.Ribbon">
+      <HintPath>..\..\..\galaxy\third-party\ribbon\Microsoft.Windows.Ribbon.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="My Project\Application.Designer.vb">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -79,5 +89,9 @@
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
     </None>
   </ItemGroup>
+
+  <Import Project="..\..\..\galaxy\src\RibbonEventBinding\RibbonEventBinding.projitems" Label="Shared" />
+
+  <Import Project="..\..\..\galaxy\src\WebViewHelper\WebViewHelper.projitems" Label="Shared" />
 
 </Project>
