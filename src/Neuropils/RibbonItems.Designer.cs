@@ -19,18 +19,24 @@ namespace RibbonLib.Controls
         private static class Cmd
         {
             public const uint cmdButtonAbout = 2;
+            public const uint cmdButtonOpenModelDir = 7;
+            public const uint cmdButtonMakeScreenshot = 8;
             public const uint cmdButtonOpenResponseCharts = 3;
             public const uint cmdButtonOpenSnakeGame = 4;
             public const uint cmdToggleSimulationExperiment = 5;
+            public const uint cmdButtonResetView = 6;
         }
 
         // ContextPopup CommandName
 
         public Ribbon Ribbon { get; private set; }
         public RibbonButton ButtonAbout { get; private set; }
+        public RibbonButton ButtonOpenModelDir { get; private set; }
+        public RibbonButton ButtonMakeScreenshot { get; private set; }
         public RibbonButton ButtonOpenResponseCharts { get; private set; }
         public RibbonButton ButtonOpenSnakeGame { get; private set; }
         public RibbonToggleButton ToggleSimulationExperiment { get; private set; }
+        public RibbonButton ButtonResetView { get; private set; }
 
         public RibbonItems(Ribbon ribbon)
         {
@@ -38,9 +44,12 @@ namespace RibbonLib.Controls
                 throw new ArgumentNullException(nameof(ribbon), "Parameter is null");
             this.Ribbon = ribbon;
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
+            ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);
+            ButtonMakeScreenshot = new RibbonButton(ribbon, Cmd.cmdButtonMakeScreenshot);
             ButtonOpenResponseCharts = new RibbonButton(ribbon, Cmd.cmdButtonOpenResponseCharts);
             ButtonOpenSnakeGame = new RibbonButton(ribbon, Cmd.cmdButtonOpenSnakeGame);
             ToggleSimulationExperiment = new RibbonToggleButton(ribbon, Cmd.cmdToggleSimulationExperiment);
+            ButtonResetView = new RibbonButton(ribbon, Cmd.cmdButtonResetView);
         }
 
     }

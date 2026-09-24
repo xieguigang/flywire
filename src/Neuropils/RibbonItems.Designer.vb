@@ -16,9 +16,12 @@ Namespace RibbonLib.Controls
     Partial Class RibbonItems
         Private Class Cmd
             Public Const cmdButtonAbout As UInteger = 2
+            Public Const cmdButtonOpenModelDir As UInteger = 7
+            Public Const cmdButtonMakeScreenshot As UInteger = 8
             Public Const cmdButtonOpenResponseCharts As UInteger = 3
             Public Const cmdButtonOpenSnakeGame As UInteger = 4
             Public Const cmdToggleSimulationExperiment As UInteger = 5
+            Public Const cmdButtonResetView As UInteger = 6
         End Class
 
         ' ContextPopup CommandName
@@ -33,6 +36,18 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property ButtonAbout As RibbonButton
             Get
                 Return _ButtonAbout
+            End Get
+        End Property
+        Private _ButtonOpenModelDir As RibbonButton
+        Public ReadOnly Property ButtonOpenModelDir As RibbonButton
+            Get
+                Return _ButtonOpenModelDir
+            End Get
+        End Property
+        Private _ButtonMakeScreenshot As RibbonButton
+        Public ReadOnly Property ButtonMakeScreenshot As RibbonButton
+            Get
+                Return _ButtonMakeScreenshot
             End Get
         End Property
         Private _ButtonOpenResponseCharts As RibbonButton
@@ -53,6 +68,12 @@ Namespace RibbonLib.Controls
                 Return _ToggleSimulationExperiment
             End Get
         End Property
+        Private _ButtonResetView As RibbonButton
+        Public ReadOnly Property ButtonResetView As RibbonButton
+            Get
+                Return _ButtonResetView
+            End Get
+        End Property
 
         Public Sub New(ByVal ribbon As Ribbon)
             If ribbon Is Nothing Then
@@ -60,9 +81,12 @@ Namespace RibbonLib.Controls
             End If
             _ribbon = ribbon
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
+            _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)
+            _ButtonMakeScreenshot = New RibbonButton(_ribbon, Cmd.cmdButtonMakeScreenshot)
             _ButtonOpenResponseCharts = New RibbonButton(_ribbon, Cmd.cmdButtonOpenResponseCharts)
             _ButtonOpenSnakeGame = New RibbonButton(_ribbon, Cmd.cmdButtonOpenSnakeGame)
             _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
+            _ButtonResetView = New RibbonButton(_ribbon, Cmd.cmdButtonResetView)
         End Sub
 
     End Class

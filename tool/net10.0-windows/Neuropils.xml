@@ -1078,8 +1078,10 @@ Neuropils
  工具条上当前选中的着色维度（界面上唯一一处"维度 → 枚举"的映射）。
  </summary>
 </member>
-<member name="M:Neuropils.PageFlywireCanvas.onReload(System.Object,System.EventArgs)">
- <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
+<member name="M:Neuropils.PageFlywireCanvas.onReload">
+ <summary>
+ 重新载入数据目录 (可以在界面上换一台数据集)。
+ </summary>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.rebuildColorizer(Neuropils.Data.NeuronColorDimension,System.Boolean)">
  <summary>重建着色器与图例。</summary>
@@ -1107,12 +1109,6 @@ Neuropils
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.onStimulusStepsChanged(System.Object,System.EventArgs)">
  <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.onExitClick(System.Object,System.EventArgs)">
- <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.onResetViewClick(System.Object,System.EventArgs)">
- <summary>菜单「视图 → 重置视角」：把三维画布恢复到默认视角。</summary>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>

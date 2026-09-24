@@ -24,6 +24,9 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonOpenSnakeGame.ExecuteEvent, Sub() Call Workbench.m_snake.openSnakeWindow()
         AddHandler RibbonMenu.ribbon.ButtonOpenResponseCharts.ExecuteEvent, AddressOf onOpenResponseChart
         AddHandler RibbonMenu.ribbon.ButtonAbout.ExecuteEvent, Sub() Call InputDialog.ShowDialog(Of AboutForm)()
+        AddHandler RibbonMenu.ribbon.ButtonResetView.ExecuteEvent, Sub() Call Workbench.flywire.m_canvas.ResetView()
+        AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
+        AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
     End Sub
 
     ''' <summary>

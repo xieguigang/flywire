@@ -386,8 +386,10 @@ Public Class PageFlywireCanvas
         End Select
     End Function
 
-    ''' <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
-    Private Sub onReload(sender As Object, e As EventArgs) Handles m_reloadButton.Click
+    ''' <summary>
+    ''' 重新载入数据目录 (可以在界面上换一台数据集)。
+    ''' </summary>
+    Public Sub onReload() Handles m_reloadButton.Click
         If m_busy Then Return
 
         Using dialog As New FolderBrowserDialog()
@@ -402,10 +404,6 @@ Public Class PageFlywireCanvas
         End Using
 
         Call startLoad()
-    End Sub
-
-    Private Sub onOpenDataDir(sender As Object, e As EventArgs) Handles m_openItem.Click
-        Call onReload(sender, e)
     End Sub
 
 #End Region
@@ -663,7 +661,7 @@ Public Class PageFlywireCanvas
         End If
     End Sub
 
-    Private Sub onSnapshot(sender As Object, e As EventArgs) Handles m_snapshotItem.Click, m_snapshotButton.Click
+    Public Sub onSnapshot() Handles m_snapshotButton.Click
         If Not m_viewInitialized Then Return
 
         Using dialog As New SaveFileDialog()
@@ -674,24 +672,12 @@ Public Class PageFlywireCanvas
                 Return
             End If
 
-            If m_canvas.SaveSnapshot(dialog.FileName, Microsoft.VisualBasic.Imaging.ImageFormats.Png) Then
+            If m_canvas.SaveSnapshot(dialog.FileName, ImageFormats.Png) Then
                 CommonRuntime.StatusMessage($"截图已保存: {dialog.FileName}")
             Else
                 CommonRuntime.Warning($"截图保存失败: {m_canvas.LastError}")
             End If
         End Using
-    End Sub
-
-
-
-    ''' <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
-    Private Sub onExitClick(sender As Object, e As EventArgs) Handles m_exitItem.Click
-        Call Me.Close()
-    End Sub
-
-    ''' <summary>菜单「视图 → 重置视角」：把三维画布恢复到默认视角。</summary>
-    Private Sub onResetViewClick(sender As Object, e As EventArgs) Handles m_resetItem.Click
-        Call m_canvas.ResetView()
     End Sub
 
 #End Region
