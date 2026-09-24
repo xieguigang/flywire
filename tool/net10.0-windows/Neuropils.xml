@@ -1102,6 +1102,12 @@ Neuropils
 <member name="M:Neuropils.FormMain.scheduleRebuild">
  <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
 </member>
+<member name="M:Neuropils.FormMain.onExitClick(System.Object,System.EventArgs)">
+ <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
+</member>
+<member name="M:Neuropils.FormMain.onResetViewClick(System.Object,System.EventArgs)">
+ <summary>菜单「视图 → 重置视角」：把三维画布恢复到默认视角。</summary>
+</member>
 <member name="M:Neuropils.FormMain.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
 </member>

@@ -97,8 +97,8 @@ Public Class FormMain
     Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
 
     Public Sub New()
-        ' Designer 生成的 InitializeComponent 目前是空实现，但按约定仍然先调用它
-        ' (WinForms 设计器与后续手工添加控件都依赖这个调用顺序)
+        ' 先调用设计器生成的 InitializeComponent (顶部菜单栏等声明式布局在此完成)，
+        ' 再调用 initializeUi 完成其余需要运行时逻辑 (画布、工具条、状态栏、面板等) 的控件。
         Call InitializeComponent()
         Call initializeUi()
 
@@ -159,50 +159,12 @@ Public Class FormMain
 
         Me.Controls.Add(m_split)
         Me.Controls.Add(createToolbar())
-        Me.Controls.Add(createMenu())
+        Me.Controls.Add(m_menuStrip)
         Me.Controls.Add(createStatusBar())
 
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
     End Sub
-
-    Private Function createMenu() As MenuStrip
-        Dim menu As New MenuStrip()
-
-        Dim fileMenu As New ToolStripMenuItem("文件 (&F)")
-        Dim openItem As New ToolStripMenuItem("打开数据目录 (&O)...")
-        Dim snapshotItem As New ToolStripMenuItem("保存截图 (&S)...")
-        Dim exitItem As New ToolStripMenuItem("退出 (&X)")
-
-        AddHandler openItem.Click, AddressOf onOpenDataDir
-        AddHandler snapshotItem.Click, AddressOf onSnapshot
-        AddHandler exitItem.Click, Sub(sender As Object, e As EventArgs) Call Me.Close()
-
-        Call fileMenu.DropDownItems.Add(openItem)
-        Call fileMenu.DropDownItems.Add(snapshotItem)
-        Call fileMenu.DropDownItems.Add(New ToolStripSeparator())
-        Call fileMenu.DropDownItems.Add(exitItem)
-
-        Dim viewMenu As New ToolStripMenuItem("视图 (&V)")
-        Dim resetItem As New ToolStripMenuItem("重置视角 (&R)")
-
-        AddHandler resetItem.Click, Sub(sender As Object, e As EventArgs) Call m_canvas.ResetView()
-
-        Call viewMenu.DropDownItems.Add(resetItem)
-
-        Dim helpMenu As New ToolStripMenuItem("帮助 (&H)")
-        Dim aboutItem As New ToolStripMenuItem("关于数据来源 (&A)")
-
-        AddHandler aboutItem.Click, AddressOf onAbout
-
-        Call helpMenu.DropDownItems.Add(aboutItem)
-
-        Call menu.Items.Add(fileMenu)
-        Call menu.Items.Add(viewMenu)
-        Call menu.Items.Add(helpMenu)
-
-        Return menu
-    End Function
 
     Private Function createToolbar() As ToolStrip
         Dim bar As New ToolStrip With {
@@ -846,7 +808,7 @@ Public Class FormMain
         Call startLoad()
     End Sub
 
-    Private Sub onOpenDataDir(sender As Object, e As EventArgs)
+    Private Sub onOpenDataDir(sender As Object, e As EventArgs) Handles m_openItem.Click
         Call onReload(sender, e)
     End Sub
 
@@ -1093,7 +1055,7 @@ Public Class FormMain
         m_canvas.ShowGround = m_showGround.Checked
     End Sub
 
-    Private Sub onSnapshot(sender As Object, e As EventArgs)
+    Private Sub onSnapshot(sender As Object, e As EventArgs) Handles m_snapshotItem.Click
         If Not m_viewInitialized Then Return
 
         Using dialog As New SaveFileDialog()
@@ -1112,7 +1074,7 @@ Public Class FormMain
         End Using
     End Sub
 
-    Private Sub onAbout(sender As Object, e As EventArgs)
+    Private Sub onAbout(sender As Object, e As EventArgs) Handles m_aboutItem.Click
         Dim sb As New StringBuilder()
 
         Call sb.AppendLine("数据来源: FlyWire FAFB v783 (codex.flywire.ai)")
@@ -1146,6 +1108,16 @@ Public Class FormMain
         Call sb.AppendLine("      对单个神经元扫强度跑仿真，输出逐步激活规模并落盘回放数据")
 
         Call MessageBox.Show(Me, sb.ToString(), "关于 Neuropils", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ''' <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
+    Private Sub onExitClick(sender As Object, e As EventArgs) Handles m_exitItem.Click
+        Call Me.Close()
+    End Sub
+
+    ''' <summary>菜单「视图 → 重置视角」：把三维画布恢复到默认视角。</summary>
+    Private Sub onResetViewClick(sender As Object, e As EventArgs) Handles m_resetItem.Click
+        Call m_canvas.ResetView()
     End Sub
 
 #End Region
