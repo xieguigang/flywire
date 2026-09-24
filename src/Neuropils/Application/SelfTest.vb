@@ -22,7 +22,7 @@ Namespace AppLogics
         ''' 
         ''' 报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
         ''' </remarks>
-        Public Sub runSelfTest(main As FormMainOld, args As String())
+        Public Sub runSelfTest(main As PageFlywireCanvas, args As String())
             Dim report As New StringBuilder()
             Dim failures As Integer = 0
 

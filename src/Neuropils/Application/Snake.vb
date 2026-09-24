@@ -35,9 +35,9 @@ Namespace AppLogics
         ''' <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
         Private m_snakeMask As Double()
 
-        ReadOnly main As FormMainOld
+        ReadOnly main As PageFlywireCanvas
 
-        Sub New(main As FormMainOld)
+        Sub New(main As PageFlywireCanvas)
             Me.main = main
         End Sub
 

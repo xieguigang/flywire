@@ -26,7 +26,7 @@ Imports Neuropils.Rendering
 ''' (<see cref="BrainSceneBuilder"/>)：534 万条连接的过滤与连线构建需要数百毫秒，
 ''' 放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
 ''' </remarks>
-Public Class FormMainOld
+Public Class PageFlywireCanvas
 
     Friend ReadOnly m_config As New VisualizationConfig()
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()

@@ -13,9 +13,9 @@ Namespace AppLogics
 
     Public Class Chart
 
-        ReadOnly main As FormMainOld
+        ReadOnly main As PageFlywireCanvas
 
-        Sub New(main As FormMainOld)
+        Sub New(main As PageFlywireCanvas)
             Me.main = main
         End Sub
 
