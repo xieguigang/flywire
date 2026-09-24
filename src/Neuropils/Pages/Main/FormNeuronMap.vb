@@ -87,6 +87,8 @@ Public Class FormNeuronMap
     End Sub
 
     Private Sub FormNeuronMap_Load(sender As Object, e As EventArgs) Handles Me.Load
+        Width = 120
+
         Call refreshLegend()
     End Sub
 
