@@ -19,6 +19,8 @@ namespace RibbonLib.Controls
         private static class Cmd
         {
             public const uint cmdButtonAbout = 2;
+            public const uint cmdNumIntensity = 11;
+            public const uint cmdNumSimulationSteps = 12;
             public const uint cmdButtonOpenModelDir = 7;
             public const uint cmdButtonMakeScreenshot = 8;
             public const uint cmdButtonOpenCanvas = 9;
@@ -27,12 +29,17 @@ namespace RibbonLib.Controls
             public const uint cmdToggleSimulationExperiment = 5;
             public const uint cmdButtonResetView = 6;
             public const uint cmdToggleShowGroundGrid = 10;
+            public const uint cmdToggleShowConnection = 13;
+            public const uint cmdNumSynapseCutoff = 14;
+            public const uint cmdNumScatterSize = 15;
         }
 
         // ContextPopup CommandName
 
         public Ribbon Ribbon { get; private set; }
         public RibbonButton ButtonAbout { get; private set; }
+        public RibbonSpinner NumIntensity { get; private set; }
+        public RibbonSpinner NumSimulationSteps { get; private set; }
         public RibbonButton ButtonOpenModelDir { get; private set; }
         public RibbonButton ButtonMakeScreenshot { get; private set; }
         public RibbonButton ButtonOpenCanvas { get; private set; }
@@ -41,6 +48,9 @@ namespace RibbonLib.Controls
         public RibbonToggleButton ToggleSimulationExperiment { get; private set; }
         public RibbonButton ButtonResetView { get; private set; }
         public RibbonToggleButton ToggleShowGroundGrid { get; private set; }
+        public RibbonToggleButton ToggleShowConnection { get; private set; }
+        public RibbonSpinner NumSynapseCutoff { get; private set; }
+        public RibbonSpinner NumScatterSize { get; private set; }
 
         public RibbonItems(Ribbon ribbon)
         {
@@ -48,6 +58,8 @@ namespace RibbonLib.Controls
                 throw new ArgumentNullException(nameof(ribbon), "Parameter is null");
             this.Ribbon = ribbon;
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
+            NumIntensity = new RibbonSpinner(ribbon, Cmd.cmdNumIntensity);
+            NumSimulationSteps = new RibbonSpinner(ribbon, Cmd.cmdNumSimulationSteps);
             ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);
             ButtonMakeScreenshot = new RibbonButton(ribbon, Cmd.cmdButtonMakeScreenshot);
             ButtonOpenCanvas = new RibbonButton(ribbon, Cmd.cmdButtonOpenCanvas);
@@ -56,6 +68,9 @@ namespace RibbonLib.Controls
             ToggleSimulationExperiment = new RibbonToggleButton(ribbon, Cmd.cmdToggleSimulationExperiment);
             ButtonResetView = new RibbonButton(ribbon, Cmd.cmdButtonResetView);
             ToggleShowGroundGrid = new RibbonToggleButton(ribbon, Cmd.cmdToggleShowGroundGrid);
+            ToggleShowConnection = new RibbonToggleButton(ribbon, Cmd.cmdToggleShowConnection);
+            NumSynapseCutoff = new RibbonSpinner(ribbon, Cmd.cmdNumSynapseCutoff);
+            NumScatterSize = new RibbonSpinner(ribbon, Cmd.cmdNumScatterSize);
         }
 
     }

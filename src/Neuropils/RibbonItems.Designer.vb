@@ -16,6 +16,8 @@ Namespace RibbonLib.Controls
     Partial Class RibbonItems
         Private Class Cmd
             Public Const cmdButtonAbout As UInteger = 2
+            Public Const cmdNumIntensity As UInteger = 11
+            Public Const cmdNumSimulationSteps As UInteger = 12
             Public Const cmdButtonOpenModelDir As UInteger = 7
             Public Const cmdButtonMakeScreenshot As UInteger = 8
             Public Const cmdButtonOpenCanvas As UInteger = 9
@@ -24,6 +26,9 @@ Namespace RibbonLib.Controls
             Public Const cmdToggleSimulationExperiment As UInteger = 5
             Public Const cmdButtonResetView As UInteger = 6
             Public Const cmdToggleShowGroundGrid As UInteger = 10
+            Public Const cmdToggleShowConnection As UInteger = 13
+            Public Const cmdNumSynapseCutoff As UInteger = 14
+            Public Const cmdNumScatterSize As UInteger = 15
         End Class
 
         ' ContextPopup CommandName
@@ -38,6 +43,18 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property ButtonAbout As RibbonButton
             Get
                 Return _ButtonAbout
+            End Get
+        End Property
+        Private _NumIntensity As RibbonSpinner
+        Public ReadOnly Property NumIntensity As RibbonSpinner
+            Get
+                Return _NumIntensity
+            End Get
+        End Property
+        Private _NumSimulationSteps As RibbonSpinner
+        Public ReadOnly Property NumSimulationSteps As RibbonSpinner
+            Get
+                Return _NumSimulationSteps
             End Get
         End Property
         Private _ButtonOpenModelDir As RibbonButton
@@ -88,6 +105,24 @@ Namespace RibbonLib.Controls
                 Return _ToggleShowGroundGrid
             End Get
         End Property
+        Private _ToggleShowConnection As RibbonToggleButton
+        Public ReadOnly Property ToggleShowConnection As RibbonToggleButton
+            Get
+                Return _ToggleShowConnection
+            End Get
+        End Property
+        Private _NumSynapseCutoff As RibbonSpinner
+        Public ReadOnly Property NumSynapseCutoff As RibbonSpinner
+            Get
+                Return _NumSynapseCutoff
+            End Get
+        End Property
+        Private _NumScatterSize As RibbonSpinner
+        Public ReadOnly Property NumScatterSize As RibbonSpinner
+            Get
+                Return _NumScatterSize
+            End Get
+        End Property
 
         Public Sub New(ByVal ribbon As Ribbon)
             If ribbon Is Nothing Then
@@ -95,6 +130,8 @@ Namespace RibbonLib.Controls
             End If
             _ribbon = ribbon
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
+            _NumIntensity = New RibbonSpinner(_ribbon, Cmd.cmdNumIntensity)
+            _NumSimulationSteps = New RibbonSpinner(_ribbon, Cmd.cmdNumSimulationSteps)
             _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)
             _ButtonMakeScreenshot = New RibbonButton(_ribbon, Cmd.cmdButtonMakeScreenshot)
             _ButtonOpenCanvas = New RibbonButton(_ribbon, Cmd.cmdButtonOpenCanvas)
@@ -103,6 +140,9 @@ Namespace RibbonLib.Controls
             _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
             _ButtonResetView = New RibbonButton(_ribbon, Cmd.cmdButtonResetView)
             _ToggleShowGroundGrid = New RibbonToggleButton(_ribbon, Cmd.cmdToggleShowGroundGrid)
+            _ToggleShowConnection = New RibbonToggleButton(_ribbon, Cmd.cmdToggleShowConnection)
+            _NumSynapseCutoff = New RibbonSpinner(_ribbon, Cmd.cmdNumSynapseCutoff)
+            _NumScatterSize = New RibbonSpinner(_ribbon, Cmd.cmdNumScatterSize)
         End Sub
 
     End Class
