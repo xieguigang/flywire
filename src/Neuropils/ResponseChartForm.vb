@@ -19,7 +19,6 @@ Imports Neuropils.Data
 ''' 也可以随时打开任意一次历史实验的记录目录。
 ''' </remarks>
 Public Class ResponseChartForm
-    Inherits Form
 
 #Region "fields"
 
@@ -39,7 +38,11 @@ Public Class ResponseChartForm
     ''' <param name="data">响应数据（会话内结果或落盘记录）</param>
     ''' <param name="dataset">数据集（提供脑区 / 递质等标签）</param>
     Public Sub New(data As ResponseDataset, dataset As BrainDataset)
-        If data Is Nothing Then Throw New ArgumentNullException(NameOf(data))
+        Call Me.New
+
+        If data Is Nothing Then
+            Throw New ArgumentNullException(NameOf(data))
+        End If
 
         m_data = data
         m_dataset = dataset
@@ -48,7 +51,6 @@ Public Class ResponseChartForm
         Call PlotRuntime.EnsureRegistered()
 
         ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
-        Call InitializeComponent()
         Call bindSignalModes()
         Call refreshCategories()
         Call rebuildSeries()
