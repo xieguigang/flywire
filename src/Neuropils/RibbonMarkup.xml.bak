@@ -59,10 +59,10 @@
     </Command>
     <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas">
       <Command.SmallImages>
-        <Image MinDPI="192">Icons/TextEditor.png</Image>
+        <Image MinDPI="192">Icons/icons8-3d-objects-folder-96.png</Image>
       </Command.SmallImages>
       <Command.LargeImages>
-        <Image MinDPI="192">Icons/TextEditor.png</Image>
+        <Image MinDPI="192">Icons/icons8-3d-objects-folder-96.png</Image>
       </Command.LargeImages>
     </Command>
     <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" TooltipDescription="显示网格">
@@ -102,6 +102,7 @@
     <Command Name="cmdGroupExperimentParameters" Id="23" LabelTitle="Experiment Parameters" />
     <Command Name="cmdTabCanvasOptions" Id="24" LabelTitle="Canvas Options" />
     <Command Name="cmdMenuSimulationExperiment" Id="25" LabelTitle="Simulation Experiment" />
+    <Command Name="cmdTabExperiment" Id="26" LabelTitle="Experiment" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>
@@ -121,7 +122,7 @@
       </Ribbon.QuickAccessToolbar>
       <Ribbon.ContextualTabs>
         <TabGroup CommandName="cmdMenuSimulationExperiment">
-          <Tab>
+          <Tab CommandName="cmdTabExperiment">
             <Group CommandName="cmdGroupExperimentParameters">
               <Spinner CommandName="cmdNumIntensity" />
               <Spinner CommandName="cmdNumSimulationSteps" />

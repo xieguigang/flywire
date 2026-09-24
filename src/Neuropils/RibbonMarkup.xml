@@ -59,10 +59,10 @@
     </Command>
     <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas">
       <Command.SmallImages>
-        <Image MinDPI="192">Icons/TextEditor.png</Image>
+        <Image MinDPI="192">Icons/icons8-3d-objects-folder-96.png</Image>
       </Command.SmallImages>
       <Command.LargeImages>
-        <Image MinDPI="192">Icons/TextEditor.png</Image>
+        <Image MinDPI="192">Icons/icons8-3d-objects-folder-96.png</Image>
       </Command.LargeImages>
     </Command>
     <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" TooltipDescription="显示网格">
