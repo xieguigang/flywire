@@ -294,6 +294,7 @@ Partial Class ResponseChartForm
         ' 
         ' selectAll
         ' 
+        selectAll.ForeColor = Color.Black
         selectAll.Location = New Point(0, 2)
         selectAll.Margin = New Padding(0, 2, 4, 0)
         selectAll.Name = "selectAll"
@@ -303,6 +304,7 @@ Partial Class ResponseChartForm
         ' 
         ' clearAll
         ' 
+        clearAll.ForeColor = Color.Black
         clearAll.Location = New Point(66, 2)
         clearAll.Margin = New Padding(0, 2, 4, 0)
         clearAll.Name = "clearAll"
@@ -312,6 +314,7 @@ Partial Class ResponseChartForm
         ' 
         ' exportImage
         ' 
+        exportImage.ForeColor = Color.Black
         exportImage.Location = New Point(132, 2)
         exportImage.Margin = New Padding(0, 2, 0, 0)
         exportImage.Name = "exportImage"
