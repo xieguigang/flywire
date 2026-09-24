@@ -22,25 +22,27 @@ Partial Class ResponseChartForm
     'Required by the Windows Form Designer
     Private components As System.ComponentModel.IContainer
 
+    Dim WithEvents root As New TableLayoutPanel()
+    Dim WithEvents filterBar As New TableLayoutPanel()
+    Dim WithEvents dimensionLabel As New Label()
+    Dim WithEvents modeLabel As New Label()
+    Dim WithEvents aggregationLabel As New Label()
+    Dim WithEvents row3 As New FlowLayoutPanel()
+    Dim WithEvents limitLabel As New Label()
+    Dim WithEvents windowLabel As New Label()
+    Dim WithEvents valuePanel As New TableLayoutPanel()
+    Dim WithEvents buttons As New FlowLayoutPanel()
+    Dim WithEvents selectAll As New Button()
+    Dim WithEvents clearAll As New Button()
+    Dim WithEvents exportImage As New Button()
+    Dim WithEvents canvasPanel As New TableLayoutPanel()
+
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Dim root As New TableLayoutPanel()
-        Dim filterBar As New TableLayoutPanel()
-        Dim dimensionLabel As New Label()
-        Dim modeLabel As New Label()
-        Dim aggregationLabel As New Label()
-        Dim row3 As New FlowLayoutPanel()
-        Dim limitLabel As New Label()
-        Dim windowLabel As New Label()
-        Dim valuePanel As New TableLayoutPanel()
-        Dim buttons As New FlowLayoutPanel()
-        Dim selectAll As New Button()
-        Dim clearAll As New Button()
-        Dim exportImage As New Button()
-        Dim canvasPanel As New TableLayoutPanel()
+
 
         SuspendLayout()
         ' 
@@ -100,14 +102,14 @@ Partial Class ResponseChartForm
             "主导脑区", "神经递质", "细胞类型", "分类层级 super_class", "分类层级 class", "分类层级 group"
         })
         m_dimensionBox.SelectedIndex = 0
-        AddHandler m_dimensionBox.SelectedIndexChanged, AddressOf onDimensionChanged
+
         ' 
         ' m_modeBox：下拉项与数据有关，由 bindSignalModes 在数据就绪后填充
         ' 
         m_modeBox = New ComboBox()
         m_modeBox.DropDownStyle = ComboBoxStyle.DropDownList
         m_modeBox.Dock = DockStyle.Fill
-        AddHandler m_modeBox.SelectedIndexChanged, AddressOf onOptionChanged
+        '  AddHandler m_modeBox.SelectedIndexChanged, AddressOf onOptionChanged
         ' 
         ' m_aggregationBox
         ' 
@@ -116,7 +118,7 @@ Partial Class ResponseChartForm
         m_aggregationBox.Dock = DockStyle.Fill
         m_aggregationBox.Items.AddRange(New Object() {"逐个神经元", "组均值", "组均值 ± 包络"})
         m_aggregationBox.SelectedIndex = 0
-        AddHandler m_aggregationBox.SelectedIndexChanged, AddressOf onOptionChanged
+        ' AddHandler m_aggregationBox.SelectedIndexChanged, AddressOf onOptionChanged
         ' 
         ' row3：曲线上限 + 平滑窗
         ' 
@@ -141,14 +143,14 @@ Partial Class ResponseChartForm
         m_limitBox.Maximum = 200
         m_limitBox.Value = 24
         m_limitBox.Width = 60
-        AddHandler m_limitBox.ValueChanged, AddressOf onOptionChanged
+        ' AddHandler m_limitBox.ValueChanged, AddressOf onOptionChanged
 
         m_windowBox = New NumericUpDown()
         m_windowBox.Minimum = 1
         m_windowBox.Maximum = 21
         m_windowBox.Value = 3
         m_windowBox.Width = 50
-        AddHandler m_windowBox.ValueChanged, AddressOf onOptionChanged
+        ' AddHandler m_windowBox.ValueChanged, AddressOf onOptionChanged
 
         row3.Controls.Add(limitLabel)
         row3.Controls.Add(m_limitBox)
@@ -202,9 +204,9 @@ Partial Class ResponseChartForm
         exportImage.Height = 24
         exportImage.Margin = New Padding(0, 2, 0, 0)
 
-        AddHandler selectAll.Click, Sub() Call setAllValues(True)
-        AddHandler clearAll.Click, Sub() Call setAllValues(False)
-        AddHandler exportImage.Click, AddressOf onSaveImage
+        ' AddHandler selectAll.Click, Sub() Call setAllValues(True)
+        ' AddHandler clearAll.Click, Sub() Call setAllValues(False)
+        ' AddHandler exportImage.Click, AddressOf onSaveImage
 
         buttons.Controls.Add(selectAll)
         buttons.Controls.Add(clearAll)
@@ -219,7 +221,7 @@ Partial Class ResponseChartForm
         m_values.BackColor = Color.FromArgb(15, 22, 30)
         m_values.ForeColor = Color.FromArgb(226, 232, 240)
         m_values.BorderStyle = BorderStyle.FixedSingle
-        AddHandler m_values.ItemCheck, AddressOf onValueChecked
+        ' AddHandler m_values.ItemCheck, AddressOf onValueChecked
         ' 
         ' m_summary
         ' 
@@ -250,7 +252,7 @@ Partial Class ResponseChartForm
         m_canvas.Dock = DockStyle.Fill
         m_canvas.AutoClear = True
         m_canvas.BackgroundColor = m_theme.BackgroundColor
-        AddHandler m_canvas.Render, AddressOf onRender
+        ' AddHandler m_canvas.Render, AddressOf onRender
         ' 
         ' m_status
         ' 
@@ -275,4 +277,14 @@ Partial Class ResponseChartForm
         PerformLayout()
     End Sub
 
+    Private WithEvents m_canvas As DxCanvas
+    Private WithEvents m_dimensionBox As ComboBox
+    Private WithEvents m_modeBox As ComboBox
+    Private WithEvents m_aggregationBox As ComboBox
+    Private WithEvents m_limitBox As NumericUpDown
+    Private WithEvents m_windowBox As NumericUpDown
+    Private WithEvents m_values As CheckedListBox
+    Private WithEvents m_valueHint As Label
+    Private WithEvents m_status As Label
+    Private WithEvents m_summary As Label
 End Class

@@ -27,17 +27,6 @@ Public Class ResponseChartForm
     Private ReadOnly m_dataset As BrainDataset
     Private ReadOnly m_theme As PlotTheme
 
-    Private m_canvas As DxCanvas
-    Private m_dimensionBox As ComboBox
-    Private m_modeBox As ComboBox
-    Private m_aggregationBox As ComboBox
-    Private m_limitBox As NumericUpDown
-    Private m_windowBox As NumericUpDown
-    Private m_values As CheckedListBox
-    Private m_valueHint As Label
-    Private m_status As Label
-    Private m_summary As Label
-
     Private m_series As List(Of Series)
     Private m_description As String = ""
     Private m_loading As Boolean
@@ -190,22 +179,30 @@ Public Class ResponseChartForm
     End Function
 
     ''' <summary>取值列表项被勾选 / 取消勾选。</summary>
-    Private Sub onValueChecked(sender As Object, e As ItemCheckEventArgs)
+    Private Sub onValueChecked(sender As Object, e As ItemCheckEventArgs) Handles m_values.ItemCheck
         ' ItemCheck 触发时勾选状态还没提交，因此用 BeginInvoke 等到状态更新完再重画
         Call BeginInvoke(New Action(AddressOf rebuildSeries))
     End Sub
 
-    Private Sub onDimensionChanged(sender As Object, e As EventArgs)
+    Private Sub onDimensionChanged(sender As Object, e As EventArgs) Handles m_dimensionBox.SelectedIndexChanged
         If m_loading Then Return
 
         Call refreshCategories()
         Call rebuildSeries()
     End Sub
 
-    Private Sub onOptionChanged(sender As Object, e As EventArgs)
+    Private Sub onOptionChanged(sender As Object, e As EventArgs) Handles m_modeBox.SelectedIndexChanged, m_aggregationBox.SelectedIndexChanged, m_limitBox.ValueChanged, m_windowBox.ValueChanged
         If m_loading Then Return
 
         Call rebuildSeries()
+    End Sub
+
+    Private Sub selectAllEvt() Handles selectAll.Click
+        Call setAllValues(True)
+    End Sub
+
+    Private Sub clearAllEvt() Handles clearAll.Click
+        Call setAllValues(False)
     End Sub
 
     ''' <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
@@ -301,7 +298,7 @@ Public Class ResponseChartForm
     ''' 控件一旦缩放就需要按新尺寸重新排版，复用旧对象会画到旧尺寸上。
     ''' 因为画布是外部注入的，<c>Dispose</c> 不会关闭控件自己的绘图设备。
     ''' </remarks>
-    Private Sub onRender(sender As Object, e As DxRenderEventArgs)
+    Private Sub onRender(sender As Object, e As DxRenderEventArgs) Handles m_canvas.Render
         If e.Graphics Is Nothing Then Return
 
         Using plot As New LinePlot(e.Graphics, m_theme)
@@ -338,7 +335,7 @@ Public Class ResponseChartForm
         m_status.ForeColor = Color.FromArgb(148, 163, 184)
     End Sub
 
-    Private Sub onSaveImage(sender As Object, e As EventArgs)
+    Private Sub onSaveImage(sender As Object, e As EventArgs) Handles exportImage.Click
         Using dialog As New SaveFileDialog() With {
             .Filter = "PNG 图片|*.png",
             .FileName = $"stimulation_response_{m_data.TargetNeuron}_{DateTime.Now:yyyyMMdd_HHmmss}.png"
