@@ -1,7 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
   <Application.Commands>
-    <Command Name="cmdButtonAbout" Id="2" LabelTitle="About" />
+    <Command Name="cmdButtonAbout" Id="2" LabelTitle="About" LabelDescription="关于数据来源 (&amp;A)" TooltipTitle="About" TooltipDescription="关于数据来源 (&amp;A)">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/icons8-source-code-96.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/icons8-source-code-96.png</Image>
+      </Command.LargeImages>
+    </Command>
     <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" LabelDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" TooltipDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" />
     <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" LabelDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" TooltipDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" />
     <Command Name="cmdToggleSimulationExperiment" Id="5" LabelTitle="Simulation Experiment" />
@@ -25,7 +32,7 @@
             <Button CommandName="cmdButtonOpenSnakeGame" />
             <ToggleButton CommandName="cmdToggleSimulationExperiment" />
           </Group>
-          <Group>
+          <Group SizeDefinition="OneButton">
             <Button CommandName="cmdButtonAbout" />
           </Group>
         </Tab>
