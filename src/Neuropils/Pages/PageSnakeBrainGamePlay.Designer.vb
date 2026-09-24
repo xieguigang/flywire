@@ -283,17 +283,18 @@ Partial Class PageSnakeBrainGamePlay
         ' 
         ' PageSnakeBrainGamePlay
         ' 
-        AutoScaleDimensions = New SizeF(96.0F, 96.0F)
+        ' AutoScaleDimensions = New SizeF(96.0F, 96.0F)
         BackColor = Color.Black
         ClientSize = New Size(1181, 663)
         Controls.Add(SplitContainer1)
-        DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
-        DoubleBuffered = True
-        Font = New Font("Segoe UI", 9.0F)
+        ' DockState = Microsoft.VisualStudio.WinForms.Docking.DockState.Float
+        '  DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
+        '  DoubleBuffered = True
+        ' Font = New Font("Segoe UI", 9.0F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
         Icon = CType(resources.GetObject("$this.Icon"), Icon)
         Name = "PageSnakeBrainGamePlay"
-        ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown
+        '  ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown
         StartPosition = FormStartPosition.CenterParent
         TabPageContextMenuStrip = DockContextMenuStrip1
         Text = "果蝇大脑玩贪吃蛇 — 实时观战"
