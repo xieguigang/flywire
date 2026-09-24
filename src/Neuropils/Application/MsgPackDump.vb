@@ -1,7 +1,5 @@
-Imports System.Diagnostics
 Imports System.IO
 Imports System.Text
-Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Neuropils.Data
 

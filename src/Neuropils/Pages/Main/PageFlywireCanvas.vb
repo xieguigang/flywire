@@ -72,7 +72,7 @@ Public Class PageFlywireCanvas
 
         ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
         ' 这部分是运行时逻辑，保留在 initializeUi
-        m_snake = New Snake(Me)
+        m_snake = New Snake
         ' m_chartTip.SetToolTip(m_chartLink, "")
         ' m_chartTip.SetToolTip(m_snakeLink, "")
         Call openMap()
@@ -120,14 +120,14 @@ Public Class PageFlywireCanvas
 
         ' 响应曲线出图：把实验记录画成曲线图（与界面共用同一套装配与绘图代码）
         If args.Length > 2 AndAlso String.Equals(args(1), "--chart", StringComparison.OrdinalIgnoreCase) Then
-            Call New Chart(Me).runChartExport(args)
+            Call Chart.runChartExport(args)
 
             Return
         End If
 
         ' 响应曲线窗口自检：真的开窗、等首帧、抓帧写盘（验证"画在控件 GPU 画布上"这条路径）
         If args.Length > 2 AndAlso String.Equals(args(1), "--chart-window", StringComparison.OrdinalIgnoreCase) Then
-            Call New Chart(Me).runChartWindowProbe(args)
+            Call Chart.runChartWindowProbe(args)
 
             Return
         End If

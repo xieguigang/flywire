@@ -23,6 +23,104 @@ Microsoft.VisualBasic.Data.IO.MessagePack
  integers, fixed strings, fixed arrays and fixed maps.
  </summary>
 </member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO">
+ <summary>
+ 基础类型数组的<b>整块读写</b>：msgpack 序列化里最热的那条路径。
+ </summary>
+ <remarks>
+ 原实现是"逐元素"的，对数组来说每个元素都要付一遍这些代价：
+ 
+ * <b>写</b>：一次类型判断链 + <c>BitConverter.GetBytes</c> 分配一个临时数组 +
+   两次 <c>BinaryWriter</c> 调用（每个元素 2 次流写）；
+ * <b>读</b>：读一个格式头字节 + <c>ReadBytes</c> 分配一个临时数组 + 
+   <c>Array.Reverse</c> + <c>BitConverter</c> + <c>Convert.ChangeType</c> 装箱一次，
+   最后再 <c>array.SetValue</c>（又一次装箱）。
+ 
+ 单个元素看着不起眼，但一张 534 万行 × 5 列的连接表就是 2,670 万次 ——
+ 实测"反序列化二进制"竟然比"直接解析 csv"还慢一倍多，
+ 全被逐元素的分配与装箱吃掉了（GC 压力还很大）。
+ 
+ 这里做的三件事（<b>wire 格式完全不变</b>，旧文件照样能读，别的 msgpack 实现也照样能读）：
+ 
+ 1. <b>写</b>：先把元素编进一块字节缓冲（大端序按 msgpack 约定），攒够一块再整块写盘，
+    流调用次数从 <c>O(n)</c> 降到 <c>O(n / 块大小)</c>，且全程零分配；
+ 2. <b>读</b>：流可定位时（MemoryStream / FileStream）把整段字节一次读进来，
+    之后从字节数组里解码（没有流调用、没有分配），读完再把流位置按实际消费的字节数回正；
+    流不可定位时（例如 DeflateStream）退化为"逐元素但不分配"的路径；
+ 3. <b>不装箱</b>：直接写进 <c>Double() / Long() / Integer() / ...</c> 这类强类型数组，
+    不再走 <c>Convert.ChangeType</c> 与 <c>Array.SetValue</c>。
+ 
+ 能快多少取决于元素类型与流类型，参考实测（534 万行连接表 / 2,670 万个值）：
+ 逐元素路径 3.1 s，整块路径约 1.2 s。
+ </remarks>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.ChunkElements">
+ <summary>一块缓冲里最多放多少个元素（按 9 字节/元素估算，约 576 KB）。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.MaxElementSize">
+ <summary>单个元素最大字节数（1 个格式头 + 8 字节数据）。</summary>
+</member>
+<member name="F:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.scratch">
+ <summary>按线程的暂存区：逐元素路径里翻转字节序用，避免每个元素分配一个数组。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.IsPrimitiveElement(System.Type)">
+ <summary>
+ 这个数组的元素类型是不是"可以整块处理的基础类型"。
+ </summary>
+ <remarks>
+ 只列出有实际意义的类型；其余（字符串数组、对象数组、枚举数组…）继续走通用路径，
+ 结果完全一样，只是没有加速。
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.TryWriteArray(System.Array,System.IO.BinaryWriter)">
+ <summary>
+ 尝试把一个基础类型数组整块写出去；返回 False 表示"这个数组不该由我处理"。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.writeArrayHeader(System.IO.BinaryWriter,System.Int32)">
+ <summary>数组的格式头（与 <see cref="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackIO.SerializeValue(System.Object,System.IO.BinaryWriter,Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.SerializationMethod)"/> 里的一致）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.ensure(System.Byte[],System.Int32@,System.Int32,System.IO.BinaryWriter)">
+ <summary>缓冲不够放下一个元素就先刷盘。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.integerSize(System.Int64)">
+ <summary>整数需要几个字节（与 <see cref="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackIO.WriteMsgPack(System.IO.BinaryWriter,System.Int64)"/> 的取值规则一致）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.writeInteger(System.Byte[],System.Int32,System.Int64,System.Int32)">
+ <summary>把一个整数按 <paramref name="size"/> 指定的格式写进缓冲，返回实际写入的字节数。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.TryReadArray(System.Array,System.Int32,Microsoft.VisualBasic.Data.IO.BinaryDataReader)">
+ <summary>
+ 尝试整块读出一个基础类型数组；返回 False 表示"这个数组不该由我处理"。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.TryReadList(System.Collections.IList,System.Int32,Microsoft.VisualBasic.Data.IO.BinaryDataReader)">
+ <summary>
+ <c>List(Of Double)</c> 之类的泛型列表：先读成数组再 <c>AddRange</c>，
+ 比逐元素 <c>Add</c> 少掉百万级的接口调用。
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.tryDecodeInteger(System.Byte[],System.Int32,System.Byte[],System.Int64@,System.Int32@)">
+ <summary>
+ 从字节块里解出一个整数（不碰流、不分配），并把游标推到下一个元素。
+ </summary>
+ <returns>解不出来（格式不对 / 块不够）时返回 False，调用方退回通用路径。</returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.readBlock(Microsoft.VisualBasic.Data.IO.BinaryDataReader,System.Int64,System.Int64@)">
+ <summary>
+ 把接下来最多 <paramref name="maxBytes"/> 个字节一次读出来。
+ </summary>
+ <returns>
+ 流不可定位时返回 Nothing（不能多读，否则多出来的字节就丢了）。
+ 可定位时可能多读一点，调用方读完要用 <see cref="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.seekBack(Microsoft.VisualBasic.Data.IO.BinaryDataReader,System.Int64,System.Int32)"/> 把位置回正。
+ </returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.toSigned(System.Byte)">
+ <summary>字节 -> 有符号字节（0x80~0xFF 是负数）。</summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.MsgPackArrayIO.scratchOf(System.Int32)">
+ <summary>按线程的暂存区（够大就复用，避免每个元素分配一个数组）。</summary>
+</member>
 <member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.NamespaceDoc">
  <summary>
  MessagePack binary object serialization: serializes and deserializes .NET objects to and from

@@ -11,13 +11,7 @@ Namespace AppLogics
     ' 存在的意义有两个：把实验记录批量导出成图片；以及在无人值守的环境里验证绘图链路
     ' （离屏 <c>DxGraphics</c> 画布 + <c>LinePlot</c> 注入式构造函数）。
 
-    Public Class Chart
-
-        ReadOnly main As PageFlywireCanvas
-
-        Sub New(main As PageFlywireCanvas)
-            Me.main = main
-        End Sub
+    Public Module Chart
 
         ''' <summary>
         ''' ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
@@ -227,7 +221,7 @@ Namespace AppLogics
             Call Environment.Exit(If(failures = 0, 0, 1))
         End Sub
 
-        Private Shared Function parseDimension(text As String) As NeuronLabelDimension
+        Private Function parseDimension(text As String) As NeuronLabelDimension
             Select Case If(text, "").Trim.ToLowerInvariant
                 Case "nt", "neurotransmitter"
                     Return NeuronLabelDimension.Neurotransmitter
@@ -244,7 +238,7 @@ Namespace AppLogics
             End Select
         End Function
 
-        Private Shared Function parseSignal(text As String) As ResponseSignalMode
+        Private Function parseSignal(text As String) As ResponseSignalMode
             Select Case If(text, "").Trim.ToLowerInvariant
                 Case "rate", "spikerate"
                     Return ResponseSignalMode.SpikeRate
@@ -255,7 +249,7 @@ Namespace AppLogics
             End Select
         End Function
 
-        Private Shared Function parseAggregation(text As String) As CurveAggregation
+        Private Function parseAggregation(text As String) As CurveAggregation
             Select Case If(text, "").Trim.ToLowerInvariant
                 Case "mean", "group"
                     Return CurveAggregation.GroupMean
@@ -266,5 +260,5 @@ Namespace AppLogics
             End Select
         End Function
 
-    End Class
+    End Module
 End Namespace

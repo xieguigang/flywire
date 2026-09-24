@@ -36,12 +36,6 @@ Namespace AppLogics
         ''' <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
         Private m_snakeMask As Double()
 
-        ReadOnly main As PageFlywireCanvas
-
-        Sub New(main As PageFlywireCanvas)
-            Me.main = main
-        End Sub
-
         ''' <summary>打开观战窗口（链接与命令行自检共用）。</summary>
         Public Sub openSnakeWindow()
             If Workbench.m_dataset Is Nothing Then Return
@@ -57,6 +51,8 @@ Namespace AppLogics
 
                 Return
             End If
+
+            Dim main = Workbench.flywire
 
             CommonRuntime.StatusMessage("正在装配游戏用的果蝇大脑（连接组 → CSR，约 30 秒）...")
             progress.Visible = True
@@ -93,6 +89,7 @@ Namespace AppLogics
         Private Sub showSnakeWindow(playground As SnakePlayground)
             Dim brain As SnakeBrain = playground.CreateBrain()
             Dim decoder As SnakeDecoder = loadTrainedDecoder(brain)
+            Dim main = Workbench.flywire
 
             If m_snakeHighlighter Is Nothing AndAlso main.m_scene IsNot Nothing Then
                 m_snakeHighlighter = New ReplayHighlighter(main.m_scene, Workbench.m_dataset.Units, main.isHeatMap())
@@ -283,7 +280,11 @@ Namespace AppLogics
         ''' 可以直接更新画布而不用跨线程封送。
         ''' </remarks>
         Private Sub onSnakeBrainActivity(activeNeurons As Integer(), frame As SnakeStep)
-            If main.m_scene Is Nothing OrElse Workbench.m_dataset Is Nothing Then Return
+            Dim main = Workbench.flywire
+
+            If main.m_scene Is Nothing OrElse Workbench.m_dataset Is Nothing Then
+                Return
+            End If
 
             ' 关窗之后不该再点亮任何东西：高亮器是在这里按需重建的，
             ' 少了这道闸，残留事件会让刚被 Reset 的点云又亮起来（看起来"关掉了还在闪"）
