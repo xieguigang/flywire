@@ -45,6 +45,18 @@ Partial Class SnakeBrainForm
         components = New System.ComponentModel.Container()
 
         SuspendLayout()
+
+        m_gamePanel = New Panel()
+        side = New Panel()
+        sensorLabel = New Label()
+        motorLabel = New Label()
+        toolbar = New FlowLayoutPanel()
+        speedLabel = New Label()
+        tickLabel = New Label()
+        m_resetButton = New Button()
+        m_trainButton = New Button()
+        m_loadButton = New Button()
+
         ' 
         ' SnakeBrainForm
         ' 
@@ -198,16 +210,16 @@ Partial Class SnakeBrainForm
     End Sub
 
     ' ---- 只负责摆位的控件（声明即建好，属性在 InitializeComponent 里赋值）----
-    Dim WithEvents m_gamePanel As New Panel()
-    Dim WithEvents side As New Panel()
-    Dim WithEvents sensorLabel As New Label()
-    Dim WithEvents motorLabel As New Label()
-    Dim WithEvents toolbar As New FlowLayoutPanel()
-    Dim WithEvents speedLabel As New Label()
-    Dim WithEvents tickLabel As New Label()
-    Dim WithEvents m_resetButton As New Button()
-    Dim WithEvents m_trainButton As New Button()
-    Dim WithEvents m_loadButton As New Button()
+    Dim WithEvents m_gamePanel As Panel
+    Dim WithEvents side As Panel
+    Dim WithEvents sensorLabel As Label
+    Dim WithEvents motorLabel As Label
+    Dim WithEvents toolbar As FlowLayoutPanel
+    Dim WithEvents speedLabel As Label
+    Dim WithEvents tickLabel As Label
+    Dim WithEvents m_resetButton As Button
+    Dim WithEvents m_trainButton As Button
+    Dim WithEvents m_loadButton As Button
 
     Private WithEvents m_sensors As ChannelBars
     Private WithEvents m_motors As ChannelBars
