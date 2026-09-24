@@ -29,8 +29,8 @@ Partial Class FormMain
         Ribbon1 = New RibbonLib.Ribbon()
         StatusStrip1 = New StatusStrip()
         m_statusText = New ToolStripStatusLabel()
-        ToolStripProgressBar1 = New ToolStripProgressBar()
-        ToolStripStatusLabel3 = New ToolStripStatusLabel()
+        m_progress = New ToolStripProgressBar()
+        m_sceneText = New ToolStripStatusLabel()
         StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
@@ -58,7 +58,7 @@ Partial Class FormMain
         ' 
         ' StatusStrip1
         ' 
-        StatusStrip1.Items.AddRange(New ToolStripItem() {m_statusText, ToolStripProgressBar1, ToolStripStatusLabel3})
+        StatusStrip1.Items.AddRange(New ToolStripItem() {m_statusText, m_progress, m_sceneText})
         StatusStrip1.Location = New Point(0, 821)
         StatusStrip1.Name = "StatusStrip1"
         StatusStrip1.Size = New Size(1428, 22)
@@ -73,16 +73,16 @@ Partial Class FormMain
         m_statusText.Text = "Ready!"
         m_statusText.TextAlign = ContentAlignment.MiddleLeft
         ' 
-        ' ToolStripProgressBar1
+        ' m_progress
         ' 
-        ToolStripProgressBar1.Name = "ToolStripProgressBar1"
-        ToolStripProgressBar1.Size = New Size(100, 16)
+        m_progress.Name = "m_progress"
+        m_progress.Size = New Size(100, 16)
         ' 
-        ' ToolStripStatusLabel3
+        ' m_sceneText
         ' 
-        ToolStripStatusLabel3.Name = "ToolStripStatusLabel3"
-        ToolStripStatusLabel3.Size = New Size(46, 17)
-        ToolStripStatusLabel3.Text = "Loaded"
+        m_sceneText.Name = "m_sceneText"
+        m_sceneText.Size = New Size(46, 17)
+        m_sceneText.Text = "Loaded"
         ' 
         ' FormMain
         ' 
@@ -106,6 +106,6 @@ Partial Class FormMain
     Friend WithEvents Ribbon1 As Global.RibbonLib.Ribbon
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents m_statusText As ToolStripStatusLabel
-    Friend WithEvents ToolStripProgressBar1 As ToolStripProgressBar
-    Friend WithEvents ToolStripStatusLabel3 As ToolStripStatusLabel
+    Friend WithEvents m_progress As ToolStripProgressBar
+    Friend WithEvents m_sceneText As ToolStripStatusLabel
 End Class
