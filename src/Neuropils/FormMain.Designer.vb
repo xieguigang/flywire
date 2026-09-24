@@ -28,6 +28,10 @@ Partial Class FormMain
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
         Ribbon1 = New Global.RibbonLib.Ribbon()
         StatusStrip1 = New StatusStrip()
+        ToolStripStatusLabel1 = New ToolStripStatusLabel()
+        ToolStripProgressBar1 = New ToolStripProgressBar()
+        ToolStripStatusLabel2 = New ToolStripStatusLabel()
+        StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
         ' DockPanel1
@@ -54,11 +58,29 @@ Partial Class FormMain
         ' 
         ' StatusStrip1
         ' 
+        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel1, ToolStripStatusLabel2, ToolStripProgressBar1})
         StatusStrip1.Location = New Point(0, 821)
         StatusStrip1.Name = "StatusStrip1"
         StatusStrip1.Size = New Size(1428, 22)
         StatusStrip1.TabIndex = 2
         StatusStrip1.Text = "StatusStrip1"
+        ' 
+        ' ToolStripStatusLabel1
+        ' 
+        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        ToolStripStatusLabel1.Size = New Size(42, 17)
+        ToolStripStatusLabel1.Text = "Ready!"
+        ' 
+        ' ToolStripProgressBar1
+        ' 
+        ToolStripProgressBar1.Name = "ToolStripProgressBar1"
+        ToolStripProgressBar1.Size = New Size(100, 16)
+        ' 
+        ' ToolStripStatusLabel2
+        ' 
+        ToolStripStatusLabel2.Name = "ToolStripStatusLabel2"
+        ToolStripStatusLabel2.Size = New Size(1269, 17)
+        ToolStripStatusLabel2.Spring = True
         ' 
         ' FormMain
         ' 
@@ -70,6 +92,8 @@ Partial Class FormMain
         Controls.Add(Ribbon1)
         Name = "FormMain"
         Text = "Form1"
+        StatusStrip1.ResumeLayout(False)
+        StatusStrip1.PerformLayout()
         ResumeLayout(False)
         PerformLayout()
     End Sub
@@ -79,4 +103,7 @@ Partial Class FormMain
     Friend WithEvents VisualStudioToolStripExtender1 As Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender
     Friend WithEvents Ribbon1 As Global.RibbonLib.Ribbon
     Friend WithEvents StatusStrip1 As StatusStrip
+    Friend WithEvents ToolStripStatusLabel1 As ToolStripStatusLabel
+    Friend WithEvents ToolStripStatusLabel2 As ToolStripStatusLabel
+    Friend WithEvents ToolStripProgressBar1 As ToolStripProgressBar
 End Class
