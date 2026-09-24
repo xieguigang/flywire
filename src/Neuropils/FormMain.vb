@@ -25,12 +25,9 @@ Imports Neuropils.Rendering
 ''' </remarks>
 Public Class FormMain
 
-    ''' <summary>数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。</summary>
-    Private Const DefaultDataDir As String = "F:\flywire\FAFB-v783"
-
-    Private ReadOnly m_config As New VisualizationConfig()
-    Private ReadOnly m_renderer As New Direct3D11SceneRenderer()
-    Private ReadOnly m_buildOptions As New SceneBuildOptions()
+    Friend ReadOnly m_config As New VisualizationConfig()
+    Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
+    Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
     Private m_canvas As DxScene3DCanvas
     Private m_split As SplitContainer

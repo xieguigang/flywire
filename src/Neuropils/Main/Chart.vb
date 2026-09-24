@@ -8,7 +8,13 @@ Imports Neuropils.Data
 ' 存在的意义有两个：把实验记录批量导出成图片；以及在无人值守的环境里验证绘图链路
 ' （离屏 <c>DxGraphics</c> 画布 + <c>LinePlot</c> 注入式构造函数）。
 
-Partial Public Class FormMain
+Public Class Chart
+
+    ReadOnly main As FormMain
+
+    Sub New(main As FormMain)
+        Me.main = main
+    End Sub
 
     ''' <summary>
     ''' ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
@@ -26,12 +32,12 @@ Partial Public Class FormMain
         Dim failures As Integer = 0
         Dim png As String = args(2)
 
-        m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+        main.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
 
         Dim reportDir As String = If(args.Length > 4, args(4), "")
 
         If String.IsNullOrWhiteSpace(reportDir) OrElse String.Equals(reportDir, "latest", StringComparison.OrdinalIgnoreCase) Then
-            reportDir = StimulationArchive.Latest(Path.Combine(m_config.DataDir, "snn-output"))
+            reportDir = StimulationArchive.Latest(Path.Combine(main.m_config.DataDir, "snn-output"))
         End If
 
         Dim dimension As NeuronLabelDimension = parseDimension(If(args.Length > 5, args(5), "neuropil"))
@@ -54,7 +60,7 @@ Partial Public Class FormMain
 
         Try
             Call report.AppendLine("Neuropils stimulation response chart export")
-            Call report.AppendLine($"data dir   : {m_config.DataDir}")
+            Call report.AppendLine($"data dir   : {main.m_config.DataDir}")
             Call report.AppendLine($"record dir : {reportDir}")
             Call report.AppendLine($"canvas     : {width} x {height}")
             Call report.AppendLine()
@@ -64,7 +70,7 @@ Partial Public Class FormMain
             End If
 
             ' 数据集只为标签（脑区 / 递质 / 细胞类型 / 分类层级）服务；标签齐全时曲线图才有筛选意义
-            Dim loader As New BrainDatasetLoader(m_config)
+            Dim loader As New BrainDatasetLoader(main.m_config)
             Dim dataset As BrainDataset = loader.Load(Sub(message) Call report.AppendLine($"      {message}"))
 
             Call PlotRuntime.EnsureRegistered()
@@ -95,9 +101,9 @@ Partial Public Class FormMain
             Call report.AppendLine($"      curves: {description}")
             Call report.AppendLine($"      saved : {png} ({If(File.Exists(png), (New FileInfo(png)).Length \ 1024, 0):N0} KB)")
 
-            Call check(report, failures, "chart image written", File.Exists(png), True)
-            Call check(report, failures, "chart is not empty", If(File.Exists(png), (New FileInfo(png)).Length > 4096, False), True)
-            Call check(report, failures, "renderer returned success", ok, True)
+            Call main.check(report, failures, "chart image written", File.Exists(png), True)
+            Call main.check(report, failures, "chart is not empty", If(File.Exists(png), (New FileInfo(png)).Length > 4096, False), True)
+            Call main.check(report, failures, "renderer returned success", ok, True)
         Catch ex As Exception
             Call report.AppendLine()
             Call report.AppendLine($"[FATAL] {ex.GetType().Name}: {ex.Message}")
@@ -133,12 +139,12 @@ Partial Public Class FormMain
         Dim failures As Integer = 0
         Dim png As String = args(2)
 
-        m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+        main.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
 
         Dim reportDir As String = If(args.Length > 4, args(4), "")
 
         If String.IsNullOrWhiteSpace(reportDir) OrElse String.Equals(reportDir, "latest", StringComparison.OrdinalIgnoreCase) Then
-            reportDir = StimulationArchive.Latest(IO.Path.Combine(m_config.DataDir, "snn-output"))
+            reportDir = StimulationArchive.Latest(IO.Path.Combine(main.m_config.DataDir, "snn-output"))
         End If
 
         Dim dimension As NeuronLabelDimension = parseDimension(If(args.Length > 5, args(5), "neuropil"))
@@ -148,7 +154,7 @@ Partial Public Class FormMain
         Try
             Call PlotRuntime.EnsureRegistered()
 
-            Dim loader As New BrainDatasetLoader(m_config)
+            Dim loader As New BrainDatasetLoader(main.m_config)
             Dim dataset As BrainDataset = loader.Load(Sub(message) Trace.WriteLine(message))
 
             If String.IsNullOrWhiteSpace(reportDir) Then
@@ -176,12 +182,12 @@ Partial Public Class FormMain
             Call Threading.Thread.Sleep(300)
             Call Application.DoEvents()
 
-            Call check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
+            Call main.check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
 
             Dim ok As Boolean = form.CaptureTo(png)
 
-            Call check(report, failures, "captured the window frame", ok, True)
-            Call check(report, failures, "captured image written", File.Exists(png), True)
+            Call main.check(report, failures, "captured the window frame", ok, True)
+            Call main.check(report, failures, "captured image written", File.Exists(png), True)
 
             Call report.AppendLine($"      record dir : {reportDir}")
             Call report.AppendLine($"      responders : {data.Responders.Length:N0}, steps={data.Steps}, potential={data.HasPotential}")
@@ -197,7 +203,7 @@ Partial Public Class FormMain
                 Next
             Next
 
-            Call check(report, failures, "view switching did not throw", "ok", "ok")
+            Call main.check(report, failures, "view switching did not throw", "ok", "ok")
             Call form.Close()
         Catch ex As Exception
             Call report.AppendLine()

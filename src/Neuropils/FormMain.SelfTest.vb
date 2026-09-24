@@ -315,14 +315,6 @@ Partial Public Class FormMain
         Call report.AppendLine($"---- {title} ----")
     End Sub
 
-    Private Shared Sub check(report As StringBuilder, ByRef failures As Integer, label As String, actual As Object, expected As Object)
-        Dim ok As Boolean = String.Equals(Convert.ToString(actual), Convert.ToString(expected))
-
-        If Not ok Then failures += 1
-
-        Call report.AppendLine($"      {(If(ok, "[OK]  ", "[FAIL]"))} {label}: actual={actual}, expected={expected}")
-    End Sub
-
     ''' <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
     Private Shared Function connectionsResolved(dataset As BrainDataset) As Boolean
         If dataset.Pre Is Nothing OrElse dataset.Post Is Nothing Then Return False
