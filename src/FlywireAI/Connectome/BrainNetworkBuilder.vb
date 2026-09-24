@@ -1,4 +1,3 @@
-Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 
 Namespace Connectome

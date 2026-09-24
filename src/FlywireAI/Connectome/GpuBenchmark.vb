@@ -1,5 +1,3 @@
-Imports System.Diagnostics
-Imports System.Linq
 Imports System.Text
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.MachineLearning.TensorFlow

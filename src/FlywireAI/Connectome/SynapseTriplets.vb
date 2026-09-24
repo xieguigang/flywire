@@ -1,7 +1,6 @@
-Imports System.Linq
-Imports std = System.Math
 Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
+Imports std = System.Math
 
 Namespace Connectome
 

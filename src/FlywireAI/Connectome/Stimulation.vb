@@ -1,6 +1,5 @@
-Imports System.Linq
-Imports std = System.Math
 Imports Microsoft.VisualBasic.MachineLearning.TensorFlow
+Imports std = System.Math
 
 Namespace Connectome
 

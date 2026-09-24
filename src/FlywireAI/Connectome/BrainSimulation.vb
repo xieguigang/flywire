@@ -1,8 +1,6 @@
-Imports System.Diagnostics
-Imports System.Linq
-Imports std = System.Math
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.MachineLearning.TensorFlow
+Imports std = System.Math
 
 Namespace Connectome
 

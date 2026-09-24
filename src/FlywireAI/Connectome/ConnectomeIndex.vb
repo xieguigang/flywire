@@ -1,4 +1,3 @@
-Imports System.Linq
 Imports FlywireAI.FAFBv783
 
 Namespace Connectome
