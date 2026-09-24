@@ -1,4 +1,6 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿Imports RibbonLib
+
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormMain
     Inherits System.Windows.Forms.Form
 
@@ -26,7 +28,7 @@ Partial Class FormMain
         VS2015LightTheme1 = New ThemeVS2015.VS2015LightTheme()
         DockPanel1 = New Microsoft.VisualStudio.WinForms.Docking.DockPanel()
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
-        Ribbon1 = New RibbonLib.Ribbon()
+        Ribbon1 = New Ribbon()
         StatusStrip1 = New StatusStrip()
         m_statusText = New ToolStripStatusLabel()
         m_progress = New ToolStripProgressBar()
