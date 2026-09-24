@@ -1,14 +1,11 @@
-Imports System.Diagnostics
-Imports System.Drawing
 Imports System.IO
-Imports System.Linq
 Imports System.Text
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging.Drawing3D
 Imports Neuropils.Data
 Imports Neuropils.Rendering
 
-Partial Public Class FormMain
+Module SelfTest
 
     ''' <summary>
     ''' 自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
@@ -23,16 +20,16 @@ Partial Public Class FormMain
     ''' 
     ''' 报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
     ''' </remarks>
-    Private Sub runSelfTest(args As String())
+    Public Sub runSelfTest(main As FormMain, args As String())
         Dim report As New StringBuilder()
         Dim failures As Integer = 0
 
         Dim reportFile As String = If(args.Length > 2, args(2), Path.Combine(AppContext.BaseDirectory, "selftest-report.txt"))
 
-        m_config.DataDir = If(args.Length > 3, args(3), m_config.DataDir)
+        main.m_config.DataDir = If(args.Length > 3, args(3), main.m_config.DataDir)
 
         Call report.AppendLine("Neuropils self test")
-        Call report.AppendLine($"data dir : {m_config.DataDir}")
+        Call report.AppendLine($"data dir : {  main.m_config.DataDir}")
         Call report.AppendLine($"time     : {DateTime.Now:yyyy-MM-dd HH:mm:ss}")
         Call report.AppendLine()
 
@@ -40,7 +37,7 @@ Partial Public Class FormMain
             Call appendSection(report, "1. dataset loading")
 
             Dim loadTimer As Stopwatch = Stopwatch.StartNew()
-            Dim loader As New BrainDatasetLoader(m_config)
+            Dim loader As New BrainDatasetLoader(main.m_config)
             Dim dataset As BrainDataset = loader.Load(Sub(message) Call report.AppendLine($"      {message}"))
 
             loadTimer.Stop()
@@ -198,7 +195,7 @@ Partial Public Class FormMain
                 Dim delta As Double = mappingDelta(report, dataset, builtScene, cloud)
 
                 Call check(report, failures, "point -> neuron -> position mapping is consistent",
-                           delta >= 0 AndAlso delta <= 1.0E-03, True)
+                           delta >= 0 AndAlso delta <= 0.001, True)
                 Call report.AppendLine($"      mapping max |delta|: {delta:E3} nm")
             End If
 
@@ -258,7 +255,7 @@ Partial Public Class FormMain
 #Region "self test helpers"
 
     ''' <summary>构建冒烟测试用的场景 (点云 + 连线)。</summary>
-    Private Shared Function buildSmokeScene(built As BrainScene) As Scene
+    Private Function buildSmokeScene(built As BrainScene) As Scene
         Dim scene As New Scene()
 
         Call scene.LoadPointCloud(built.Points)
@@ -268,7 +265,7 @@ Partial Public Class FormMain
     End Function
 
     ''' <summary>挑一个"投影之后落回画布内"的点作为拾取探针。</summary>
-    Private Shared Function firstProbePoint(scene As Scene, camera As Camera) As Integer
+    Private Function firstProbePoint(scene As Scene, camera As Camera) As Integer
         For i As Integer = 0 To scene.PointCount - 1
             Dim screen As PointF
 
@@ -285,7 +282,7 @@ Partial Public Class FormMain
         Return -1
     End Function
 
-    Private Shared Function probeX(scene As Scene, camera As Camera, index As Integer) As Integer
+    Private Function probeX(scene As Scene, camera As Camera, index As Integer) As Integer
         Dim screen As PointF
 
         If index < 0 Then Return camera.Screen.Width \ 2
@@ -295,7 +292,7 @@ Partial Public Class FormMain
         Return CInt(screen.X)
     End Function
 
-    Private Shared Function probeY(scene As Scene, camera As Camera, index As Integer) As Integer
+    Private Function probeY(scene As Scene, camera As Camera, index As Integer) As Integer
         Dim screen As PointF
 
         If index < 0 Then Return camera.Screen.Height \ 2
@@ -305,18 +302,18 @@ Partial Public Class FormMain
         Return CInt(screen.Y)
     End Function
 
-    Private Shared Function toPoint3D(scene As Scene, index As Integer) As Point3D
+    Private Function toPoint3D(scene As Scene, index As Integer) As Point3D
         Dim p As PointCloudPoint = scene.Points(index)
 
         Return New Point3D(p.X, p.Y, p.Z)
     End Function
 
-    Private Shared Sub appendSection(report As StringBuilder, title As String)
+    Private Sub appendSection(report As StringBuilder, title As String)
         Call report.AppendLine($"---- {title} ----")
     End Sub
 
     ''' <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
-    Private Shared Function connectionsResolved(dataset As BrainDataset) As Boolean
+    Private Function connectionsResolved(dataset As BrainDataset) As Boolean
         If dataset.Pre Is Nothing OrElse dataset.Post Is Nothing Then Return False
 
         For c As Integer = 0 To dataset.ConnectionCount - 1
@@ -328,7 +325,7 @@ Partial Public Class FormMain
     End Function
 
     ''' <summary>某个类别里"有坐标且可见"的神经元数量。</summary>
-    Private Shared Function countVisiblePositioned(dataset As BrainDataset, colorizer As NeuronColorizer) As Integer
+    Private Function countVisiblePositioned(dataset As BrainDataset, colorizer As NeuronColorizer) As Integer
         Dim n As Integer = 0
 
         For i As Integer = 0 To dataset.Units - 1
@@ -348,7 +345,7 @@ Partial Public Class FormMain
     ''' 因此判据是 <c>数据层坐标 − 质心 == 场景点坐标</c>。
     ''' 抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
     ''' </remarks>
-    Private Shared Function mappingDelta(report As StringBuilder, dataset As BrainDataset, built As BrainScene, cloud As Scene) As Double
+    Private Function mappingDelta(report As StringBuilder, dataset As BrainDataset, built As BrainScene, cloud As Scene) As Double
         Dim center As Point3D = cloud.Center
         Dim samples As Integer() = {0, built.PointCount \ 3, built.PointCount \ 2, built.PointCount - 1}
         Dim worst As Double = 0
@@ -379,7 +376,7 @@ Partial Public Class FormMain
     End Function
 
     ''' <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
-    Private Shared Function categorySample(dataset As BrainDataset, colorizer As NeuronColorizer, item As ColorLegendItem) As Integer
+    Private Function categorySample(dataset As BrainDataset, colorizer As NeuronColorizer, item As ColorLegendItem) As Integer
         For i As Integer = 0 To dataset.Units - 1
             If String.Equals(colorizer.GetCategoryName(i), item.Key, StringComparison.Ordinal) Then
                 Return i
@@ -396,7 +393,7 @@ Partial Public Class FormMain
     ''' 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
     ''' 而计数数组只有 13 万个 ``Integer``。
     ''' </remarks>
-    Private Shared Function busiestNeuron(dataset As BrainDataset) As Integer
+    Private Function busiestNeuron(dataset As BrainDataset) As Integer
         If dataset.Pre Is Nothing Then Return -1
 
         Dim counts As Integer() = New Integer(dataset.Units - 1) {}
@@ -417,7 +414,7 @@ Partial Public Class FormMain
         Return best
     End Function
 
-    Private Shared Function coverage(values As Integer()) As String
+    Private Function coverage(values As Integer()) As String
         If values Is Nothing Then Return "0"
 
         Dim assigned As Integer = 0
@@ -431,4 +428,4 @@ Partial Public Class FormMain
 
 #End Region
 
-End Class
+End Module

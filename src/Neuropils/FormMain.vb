@@ -582,7 +582,7 @@ Public Class FormMain
 
         ' 自检模式：把数据层与场景装配的实测结果写成报告，便于无人值守的回归
         If args.Length > 1 AndAlso String.Equals(args(1), "--selftest", StringComparison.OrdinalIgnoreCase) Then
-            Call runSelfTest(args)
+            Call SelfTest.runSelfTest(Me, args)
 
             Return
         End If
@@ -661,7 +661,7 @@ Public Class FormMain
 
         m_snapshotPath = Nothing
 
-        Call BeginInvoke(New Action(
+        Call BeginInvoke(
             Sub()
                 Try
                     ' 抓帧内部会强制一次同步重绘，因此此刻的布局与首帧渲染都已经完成
@@ -676,7 +676,7 @@ Public Class FormMain
 
                 Call Console.Out.Flush()
                 Call Environment.Exit(0)
-            End Sub))
+            End Sub)
     End Sub
 
     ''' <summary>

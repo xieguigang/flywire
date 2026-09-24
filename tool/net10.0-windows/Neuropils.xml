@@ -286,6 +286,80 @@ Neuropils
 <member name="M:Neuropils.Analysis.StimulationArchive.Describe(System.String)">
  <summary>读一条实验记录的摘要（用于列表显示；读取失败时返回目录名）。</summary>
 </member>
+<member name="M:Neuropils.Chart.runChartExport(System.String[])">
+ <summary>
+ ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
+ </summary>
+ <remarks>
+ <list type="bullet">
+   <item>维度：``neuropil`` / ``nt`` / ``type`` / ``super`` / ``class`` / ``group``；</item>
+   <item>口径：``potential``（膜电位）/ ``rate``（放电率）/ ``spike``（0-1 脉冲）；</item>
+   <item>组织：``one``（逐个神经元）/ ``mean``（组均值）/ ``envelope``（组均值 ± 包络）；</item>
+   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
+ </list>
+ </remarks>
+</member>
+<member name="M:Neuropils.Chart.runChartWindowProbe(System.String[])">
+ <summary>
+ ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
+ </summary>
+ <remarks>
+ <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
+ 等首帧渲染完成后抓帧写盘再退出。
+ 
+ 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
+ "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
+ </remarks>
+</member>
+<member name="M:Neuropils.SelfTest.runSelfTest(Neuropils.FormMain,System.String[])">
+ <summary>
+ 自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
+ </summary>
+ <remarks>
+ 用真实数据把"读表 → 着色 → 装配 → 拾取"整条链路跑一遍，并把每一步的<b>实测耗时</b>
+ 与关键规模写入报告。设计目的有两个：
+ 
+ 1. 无人值守的回归 —— 三维界面本身很难自动断言，但数据链路可以；
+ 2. 性能基线 —— 534 万条连接的过滤/连线构建、13 万点的投影与拾取都必须保持在
+    可交互的量级 (报告里的毫秒数就是验收依据)。
+ 
+ 报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
+ </remarks>
+</member>
+<member name="M:Neuropils.SelfTest.buildSmokeScene(Neuropils.Rendering.BrainScene)">
+ <summary>构建冒烟测试用的场景 (点云 + 连线)。</summary>
+</member>
+<member name="M:Neuropils.SelfTest.firstProbePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+ <summary>挑一个"投影之后落回画布内"的点作为拾取探针。</summary>
+</member>
+<member name="M:Neuropils.SelfTest.connectionsResolved(Neuropils.Data.BrainDataset)">
+ <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
+</member>
+<member name="M:Neuropils.SelfTest.countVisiblePositioned(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer)">
+ <summary>某个类别里"有坐标且可见"的神经元数量。</summary>
+</member>
+<member name="M:Neuropils.SelfTest.mappingDelta(System.Text.StringBuilder,Neuropils.Data.BrainDataset,Neuropils.Rendering.BrainScene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+ <summary>
+ 校验"点索引 → 神经元索引 → 数据层坐标"这条映射链自洽。
+ </summary>
+ <remarks>
+ 场景里的点是被<b>平移过</b>的 (减去了点云质心，让模型绕自身中心旋转)，
+ 因此判据是 <c>数据层坐标 − 质心 == 场景点坐标</c>。
+ 抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
+ </remarks>
+</member>
+<member name="M:Neuropils.SelfTest.categorySample(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Data.ColorLegendItem)">
+ <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
+</member>
+<member name="M:Neuropils.SelfTest.busiestNeuron(Neuropils.Data.BrainDataset)">
+ <summary>
+ 出度最大的神经元 (用于验证"选中神经元的连接"这一模式)。
+ </summary>
+ <remarks>
+ 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
+ 而计数数组只有 13 万个 ``Integer``。
+ </remarks>
+</member>
 <member name="T:Neuropils.Data.BrainDataset">
  <summary>
  三维可视化所使用的果蝇大脑数据集：神经元索引与注释、三维坐标、主导脑区，
@@ -657,55 +731,6 @@ Neuropils
  两个后台线程分别负责"读表" (<see cref="T:Neuropils.Data.BrainDatasetLoader"/>) 与"装配场景"
  (<see cref="T:Neuropils.Rendering.BrainSceneBuilder"/>)：534 万条连接的过滤与连线构建需要数百毫秒，
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.runSelfTest(System.String[])">
- <summary>
- 自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
- </summary>
- <remarks>
- 用真实数据把"读表 → 着色 → 装配 → 拾取"整条链路跑一遍，并把每一步的<b>实测耗时</b>
- 与关键规模写入报告。设计目的有两个：
- 
- 1. 无人值守的回归 —— 三维界面本身很难自动断言，但数据链路可以；
- 2. 性能基线 —— 534 万条连接的过滤/连线构建、13 万点的投影与拾取都必须保持在
-    可交互的量级 (报告里的毫秒数就是验收依据)。
- 
- 报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.buildSmokeScene(Neuropils.Rendering.BrainScene)">
- <summary>构建冒烟测试用的场景 (点云 + 连线)。</summary>
-</member>
-<member name="M:Neuropils.FormMain.firstProbePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
- <summary>挑一个"投影之后落回画布内"的点作为拾取探针。</summary>
-</member>
-<member name="M:Neuropils.FormMain.connectionsResolved(Neuropils.Data.BrainDataset)">
- <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
-</member>
-<member name="M:Neuropils.FormMain.countVisiblePositioned(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer)">
- <summary>某个类别里"有坐标且可见"的神经元数量。</summary>
-</member>
-<member name="M:Neuropils.FormMain.mappingDelta(System.Text.StringBuilder,Neuropils.Data.BrainDataset,Neuropils.Rendering.BrainScene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
- <summary>
- 校验"点索引 → 神经元索引 → 数据层坐标"这条映射链自洽。
- </summary>
- <remarks>
- 场景里的点是被<b>平移过</b>的 (减去了点云质心，让模型绕自身中心旋转)，
- 因此判据是 <c>数据层坐标 − 质心 == 场景点坐标</c>。
- 抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.categorySample(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Data.ColorLegendItem)">
- <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
-</member>
-<member name="M:Neuropils.FormMain.busiestNeuron(Neuropils.Data.BrainDataset)">
- <summary>
- 出度最大的神经元 (用于验证"选中神经元的连接"这一模式)。
- </summary>
- <remarks>
- 用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
- 而计数数组只有 13 万个 ``Integer``。
  </remarks>
 </member>
 <member name="F:Neuropils.FormMain.m_snakeForm">
@@ -1103,31 +1128,6 @@ Neuropils
  <remarks>
  单次线性扫描 534 万条连接 (约 30 ms)，因此可以随点击实时计算，
  不需要预先为每个神经元建立邻接表 (那会多占用数百 MB 内存)。
- </remarks>
-</member>
-<member name="M:Neuropils.Chart.runChartExport(System.String[])">
- <summary>
- ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
- </summary>
- <remarks>
- <list type="bullet">
-   <item>维度：``neuropil`` / ``nt`` / ``type`` / ``super`` / ``class`` / ``group``；</item>
-   <item>口径：``potential``（膜电位）/ ``rate``（放电率）/ ``spike``（0-1 脉冲）；</item>
-   <item>组织：``one``（逐个神经元）/ ``mean``（组均值）/ ``envelope``（组均值 ± 包络）；</item>
-   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
- </list>
- </remarks>
-</member>
-<member name="M:Neuropils.Chart.runChartWindowProbe(System.String[])">
- <summary>
- ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
- </summary>
- <remarks>
- <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
- 等首帧渲染完成后抓帧写盘再退出。
- 
- 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
- "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
  </remarks>
 </member>
 <member name="T:Neuropils.Rendering.ConnectionRenderMode">
