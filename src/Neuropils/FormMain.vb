@@ -30,6 +30,7 @@ Public Class FormMain : Implements AppHost
         End If
 
         Call CommonRuntime.Hook(Me)
+        Call CommonRuntime.ShowSingleDocument(Of PageFlywireCanvas)()
     End Sub
 
     Public Sub SetWorkbenchVisible(visible As Boolean) Implements AppHost.SetWorkbenchVisible

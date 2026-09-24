@@ -1,9 +1,10 @@
-﻿Imports Microsoft.VisualBasic.Drawing.DirectX
+﻿Imports Galaxy.Workbench.DockDocument
+Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class PageFlywireCanvas
-    Inherits System.Windows.Forms.Form
+    Inherits DocumentWindow
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()>
