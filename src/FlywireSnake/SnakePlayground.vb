@@ -1,4 +1,5 @@
 Imports FlywireAI.Connectome
+Imports FlywireAI.Connectome.Network
 Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Snake2

@@ -441,7 +441,7 @@ FlywireSnake
 <member name="P:FlywireSnake.SnakePlayground.RlLearningRate">
  <summary>强化学习的学习率（按决策步数平摊后的每步步长）。</summary>
 </member>
-<member name="M:FlywireSnake.SnakePlayground.#ctor(FlywireAI.Connectome.SnnConfig,FlywireAI.Connectome.ConnectomeIndex,FlywireAI.Connectome.ConnectomeMatrix,System.Double,System.Int64)">
+<member name="M:FlywireSnake.SnakePlayground.#ctor(FlywireAI.Connectome.SnnConfig,FlywireAI.Connectome.ConnectomeIndex,FlywireAI.Connectome.Network.ConnectomeMatrix,System.Double,System.Int64)">
  <remarks>
  形参名刻意避开 <c>index</c> / <c>matrix</c> / <c>gain</c>：VB 不区分大小写，
  与同名属性（<see cref="P:FlywireSnake.SnakePlayground.Index"/> / <see cref="P:FlywireSnake.SnakePlayground.Matrix"/> / <see cref="P:FlywireSnake.SnakePlayground.Gain"/>）

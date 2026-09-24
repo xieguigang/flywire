@@ -1,3 +1,4 @@
+Imports FlywireAI.Connectome.Network
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.MachineLearning.TensorFlow
 Imports std = System.Math

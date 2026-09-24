@@ -1,10 +1,7 @@
-Imports System
-Imports System.Collections.Generic
-Imports System.Diagnostics
 Imports System.IO
-Imports System.Linq
-Imports FlywireAI.FAFBv783
 Imports FlywireAI.Connectome
+Imports FlywireAI.Connectome.Network
+Imports FlywireAI.FAFBv783
 Imports Microsoft.VisualBasic.Data.Framework.IO.Linq
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 ' 注意：TensorFlow 命名空间里也有一个 Math 模块，直接 Imports 会让 System.Math 产生二义性，
@@ -807,7 +804,7 @@ Module Program
             ' 逐位一致性：双精度常驻档的膜电位是 Double，脉冲计数必须是整数级一致
             Call check($"[{entry.Mode.Name}] spike counts identical to CPU ({entry.BaselineName})",
                        entry.DifferingNeurons, 0)
-            Call check($"[{entry.Mode.Name}] max|delta| <= 1e-9", entry.MaxAbsDelta <= 1.0E-9, True)
+            Call check($"[{entry.Mode.Name}] max|delta| <= 1e-9", entry.MaxAbsDelta <= 0.000000001, True)
         Next
 
         ' 加速比门槛：同一 keepHistory 配置下与 CPU 对比
@@ -902,11 +899,11 @@ Module Program
                                                          Call backend.SyncFromDevice(s)
                                                      End Sub)
             Dim tFresh As Double = timePerCall(iters, Sub()
-                                                           ' 每步一个全新的外部电流张量（非恒流编码 / 每步重新散射的代价）
-                                                           Dim stepExt = tf.Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
+                                                          ' 每步一个全新的外部电流张量（非恒流编码 / 每步重新散射的代价）
+                                                          Dim stepExt = tf.Tensor.Wrap(CType(extData.Clone(), Double()), New Integer() {1, units})
 
-                                                           Call backend.LifStep(csr, sPrev, stepExt, h, s, counts, config.Beta, config.Threshold, False)
-                                                       End Sub)
+                                                          Call backend.LifStep(csr, sPrev, stepExt, h, s, counts, config.Beta, config.Threshold, False)
+                                                      End Sub)
 
             Console.WriteLine($"      {If(useGpu, "GPU (CUDA)", "CPU (SIMD)"),-10} spmm={tSpmm,7:F3}  " &
                               $"lifStep={tStep,7:F3}  lif+sync={tSync,7:F3}  lif+freshExt={tFresh,7:F3}  ms/step")
