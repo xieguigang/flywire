@@ -23,13 +23,13 @@ Public Class PageResponseChart
 
 #Region "fields"
 
-    Private ReadOnly m_data As ResponseDataset
-    Private ReadOnly m_dataset As BrainDataset
-    Private ReadOnly m_theme As PlotTheme
+    Friend ReadOnly m_data As ResponseDataset
+    Friend ReadOnly m_dataset As BrainDataset
+    Friend ReadOnly m_theme As PlotTheme
 
-    Private m_series As List(Of Series)
-    Private m_description As String = ""
-    Private m_loading As Boolean
+    Dim m_series As List(Of Series)
+    Dim m_description As String = ""
+    Dim m_opt As FormChartData
 
 #End Region
 
@@ -46,38 +46,18 @@ Public Class PageResponseChart
         m_data = data
         m_dataset = dataset
         m_theme = PlotTheme.Dark()
+        m_opt = New FormChartData()
 
         Call InitializeComponent()
         Call PlotRuntime.EnsureRegistered()
 
         ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
-        Call bindSignalModes()
+        Call m_opt.bindSignalModes(Me)
         Call refreshCategories()
         Call rebuildSeries()
     End Sub
 
-    ''' <summary>
-    ''' 填充"响应信号"下拉框：只列出当前数据真正可用的口径
-    ''' (没有分析回放时就不给出"膜电位"这个选项)。
-    ''' </summary>
-    ''' <remarks>
-    ''' 下拉框本身在 Designer 的 <c>InitializeComponent</c> 里建好，
-    ''' 但可选项由数据决定，因此放到这里；<c>m_loading</c> 用来抑制
-    ''' 初始选中项触发的事件 —— 那时其余控件刚建好，还不该重建曲线。
-    ''' </remarks>
-    Private Sub bindSignalModes()
-        m_loading = True
 
-        Try
-            For Each mode As ResponseSignalMode In m_data.AvailableModes
-                Call m_modeBox.Items.Add(ResponseCurveBuilder.DescribeMode(mode))
-            Next
-
-            m_modeBox.SelectedIndex = 0
-        Finally
-            m_loading = False
-        End Try
-    End Sub
 
 #Region "数据装配"
 
@@ -88,19 +68,19 @@ Public Class PageResponseChart
                             mode As ResponseSignalMode,
                             aggregation As CurveAggregation)
 
-        m_loading = True
+        m_opt.m_loading = True
 
         Try
-            m_dimensionBox.SelectedIndex = dimensionIndex(dimension)
-            m_aggregationBox.SelectedIndex = aggregationIndex(aggregation)
+            m_opt.m_dimensionBox.SelectedIndex = dimensionIndex(dimension)
+            m_opt.m_aggregationBox.SelectedIndex = aggregationIndex(aggregation)
 
             ' 口径可能不在可用列表里（例如这份记录没有膜电位），此时退到第一个可用口径
             Dim modes As ResponseSignalMode() = m_data.AvailableModes
             Dim index As Integer = System.Array.IndexOf(modes, mode)
 
-            m_modeBox.SelectedIndex = If(index >= 0, index, 0)
+            m_opt.m_modeBox.SelectedIndex = If(index >= 0, index, 0)
         Finally
-            m_loading = False
+            m_opt.m_loading = False
         End Try
 
         Call refreshCategories()
@@ -136,7 +116,7 @@ Public Class PageResponseChart
     End Function
 
     Private Function currentDimension() As NeuronLabelDimension
-        Select Case m_dimensionBox.SelectedIndex
+        Select Case m_opt.m_dimensionBox.SelectedIndex
             Case 1
                 Return NeuronLabelDimension.Neurotransmitter
             Case 2
@@ -154,13 +134,13 @@ Public Class PageResponseChart
 
     Private Function currentMode() As ResponseSignalMode
         Dim modes As ResponseSignalMode() = m_data.AvailableModes
-        Dim index As Integer = System.Math.Max(0, System.Math.Min(m_modeBox.SelectedIndex, modes.Length - 1))
+        Dim index As Integer = System.Math.Max(0, System.Math.Min(m_opt.m_modeBox.SelectedIndex, modes.Length - 1))
 
         Return modes(index)
     End Function
 
     Private Function currentAggregation() As CurveAggregation
-        Select Case m_aggregationBox.SelectedIndex
+        Select Case m_opt.m_aggregationBox.SelectedIndex
             Case 1
                 Return CurveAggregation.GroupMean
             Case 2
@@ -173,39 +153,12 @@ Public Class PageResponseChart
     Private Function selectedValues() As String()
         Dim picked As New List(Of String)()
 
-        For i As Integer = 0 To m_values.CheckedItems.Count - 1
-            Call picked.Add(unwrap(m_values.CheckedItems(i).ToString))
+        For i As Integer = 0 To m_opt.m_values.CheckedItems.Count - 1
+            Call picked.Add(unwrap(m_opt.m_values.CheckedItems(i).ToString))
         Next
 
         Return picked.ToArray()
     End Function
-
-    ''' <summary>取值列表项被勾选 / 取消勾选。</summary>
-    Private Sub onValueChecked(sender As Object, e As ItemCheckEventArgs)
-        ' ItemCheck 触发时勾选状态还没提交，因此用 BeginInvoke 等到状态更新完再重画
-        BeginInvoke(New Action(AddressOf rebuildSeries))
-    End Sub
-
-    Private Sub onDimensionChanged(sender As Object, e As EventArgs)
-        If m_loading Then Return
-
-        refreshCategories()
-        rebuildSeries()
-    End Sub
-
-    Private Sub onOptionChanged(sender As Object, e As EventArgs)
-        If m_loading Then Return
-
-        rebuildSeries()
-    End Sub
-
-    Private Sub selectAllEvt()
-        setAllValues(True)
-    End Sub
-
-    Private Sub clearAllEvt()
-        setAllValues(False)
-    End Sub
 
     ''' <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
     Private Sub refreshCategories()
@@ -255,7 +208,7 @@ Public Class PageResponseChart
     End Function
 
     ''' <summary>重新装配曲线集合并请求重绘。</summary>
-    Private Sub rebuildSeries()
+    Friend Sub rebuildSeries()
         Dim options As New CurveOptions With {
             .Dimension = currentDimension(),
             .Selected = selectedValues(),
@@ -334,22 +287,6 @@ Public Class PageResponseChart
         End Using
 
         CommonRuntime.StatusMessage($"{m_description} · 画布 {e.Width}x{e.Height} px · {m_data.Source}")
-    End Sub
-
-    Private Sub onSaveImage(sender As Object, e As EventArgs)
-        Using dialog As New SaveFileDialogWith {
-            .Filter = "PNG 图片|*.png",
-            .FileName = $"stimulation_response_{m_data.TargetNeuron}_{Date.Now:yyyyMMdd_HHmmss}.png"
-        }
-
-            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
-
-            If CaptureTo(dialog.FileName) Then
-                StatusMessage($"已保存: {dialog.FileName}")
-            Else
-                Warning($"保存失败: {m_canvas.LastError}")
-            End If
-        End Using
     End Sub
 
     ''' <summary>把控件当前画面（也就是曲线图）抓成一帧写盘。</summary>

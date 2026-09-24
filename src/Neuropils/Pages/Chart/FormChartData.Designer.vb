@@ -334,24 +334,24 @@ Partial Class FormChartData
     End Sub
 
     Friend WithEvents TableLayoutPanel1 As TableLayoutPanel
-    Private WithEvents filterBar As TableLayoutPanel
-    Private WithEvents dimensionLabel As Label
-    Private WithEvents m_dimensionBox As ComboBox
-    Private WithEvents modeLabel As Label
-    Private WithEvents m_modeBox As ComboBox
-    Private WithEvents aggregationLabel As Label
-    Private WithEvents m_aggregationBox As ComboBox
-    Private WithEvents row3 As FlowLayoutPanel
-    Private WithEvents limitLabel As Label
-    Private WithEvents m_limitBox As NumericUpDown
-    Private WithEvents windowLabel As Label
-    Private WithEvents m_windowBox As NumericUpDown
-    Private WithEvents valuePanel As TableLayoutPanel
-    Private WithEvents m_valueHint As Label
-    Private WithEvents buttons As FlowLayoutPanel
-    Private WithEvents selectAll As Button
-    Private WithEvents clearAll As Button
-    Private WithEvents exportImage As Button
-    Private WithEvents m_values As CheckedListBox
-    Private WithEvents m_summary As Label
+    Friend WithEvents filterBar As TableLayoutPanel
+    Friend WithEvents dimensionLabel As Label
+    Friend WithEvents m_dimensionBox As ComboBox
+    Friend WithEvents modeLabel As Label
+    Friend WithEvents m_modeBox As ComboBox
+    Friend WithEvents aggregationLabel As Label
+    Friend WithEvents m_aggregationBox As ComboBox
+    Friend WithEvents row3 As FlowLayoutPanel
+    Friend WithEvents limitLabel As Label
+    Friend WithEvents m_limitBox As NumericUpDown
+    Friend WithEvents windowLabel As Label
+    Friend WithEvents m_windowBox As NumericUpDown
+    Friend WithEvents valuePanel As TableLayoutPanel
+    Friend WithEvents m_valueHint As Label
+    Friend WithEvents buttons As FlowLayoutPanel
+    Friend WithEvents selectAll As Button
+    Friend WithEvents clearAll As Button
+    Friend WithEvents exportImage As Button
+    Friend WithEvents m_values As CheckedListBox
+    Friend WithEvents m_summary As Label
 End Class
