@@ -72,6 +72,11 @@ Partial Class PageFlywireCanvas
     Dim sidebarPanel As TableLayoutPanel
     Dim replayButtonsPanel As FlowLayoutPanel
 
+    Dim vlabel As Label
+    Dim replayLabel As Label
+    Dim infoLabel As Label
+    Dim legendLabel As Label
+
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
     'Do not modify it using the code editor.
@@ -86,6 +91,8 @@ Partial Class PageFlywireCanvas
         ClientSize = New Size(1411, 818)
         Name = "FormMain"
         Text = "Neuropils"
+
+        vlabel = New Label
 
         replayBottomPanel = New TableLayoutPanel
         sidebarPanel = New TableLayoutPanel
@@ -290,12 +297,14 @@ Partial Class PageFlywireCanvas
         sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 34))
         sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
         sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 112))
-        Call sidebarPanel.Controls.Add(New Label() With {
-            .Text = "图例 / 筛选 (勾选控制显示)",
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
-        }, 0, 0)
+
+        legendLabel = New Label
+        legendLabel.Text = "图例 / 筛选 (勾选控制显示)"
+        legendLabel.Dock = DockStyle.Fill
+        legendLabel.TextAlign = ContentAlignment.MiddleLeft
+        legendLabel.Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+
+        Call sidebarPanel.Controls.Add(legendLabel, 0, 0)
         ' 
         ' m_gradient
         ' 
@@ -315,12 +324,14 @@ Partial Class PageFlywireCanvas
         m_legend.IntegralHeight = False
         m_legend.Name = "m_legend"
         Call sidebarPanel.Controls.Add(m_legend, 0, 2)
-        Call sidebarPanel.Controls.Add(New Label() With {
-            .Text = "神经元详情 (点击画布中的点)",
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
-        }, 0, 3)
+
+        infoLabel = New Label
+        infoLabel.Text = "神经元详情 (点击画布中的点)"
+        infoLabel.Dock = DockStyle.Fill
+        infoLabel.TextAlign = ContentAlignment.MiddleLeft
+        infoLabel.Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+
+        Call sidebarPanel.Controls.Add(infoLabel, 0, 3)
         ' 
         ' m_details
         ' 
@@ -333,12 +344,14 @@ Partial Class PageFlywireCanvas
         m_details.BackColor = Color.FromArgb(250, 250, 250)
         m_details.Name = "m_details"
         Call sidebarPanel.Controls.Add(m_details, 0, 4)
-        Call sidebarPanel.Controls.Add(New Label() With {
-            .Text = "电刺激 / 回放",
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
-        }, 0, 5)
+
+        replayLabel = New Label
+        replayLabel.Text = "电刺激 / 回放"
+        replayLabel.Dock = DockStyle.Fill
+        replayLabel.TextAlign = ContentAlignment.MiddleLeft
+        replayLabel.Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+
+        Call sidebarPanel.Controls.Add(replayLabel, 0, 5)
         ' 
         ' m_replayPanel (回放控制面板)
         ' 
@@ -465,11 +478,11 @@ Partial Class PageFlywireCanvas
         m_replayText.Margin = New Padding(6, 0, 0, 0)
         m_replayText.Name = "m_replayText"
 
-        Call replayBottomPanel.Controls.Add(New Label() With {
-            .Text = "速度",
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft
-        }, 0, 0)
+        vlabel.Text = "速度"
+        vlabel.Dock = DockStyle.Fill
+        vlabel.TextAlign = ContentAlignment.MiddleLeft
+
+        Call replayBottomPanel.Controls.Add(vlabel, 0, 0)
         Call replayBottomPanel.Controls.Add(m_replaySpeed, 1, 0)
         Call replayBottomPanel.Controls.Add(m_replayText, 2, 0)
 
