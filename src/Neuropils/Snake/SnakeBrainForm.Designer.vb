@@ -27,18 +27,6 @@ Partial Class SnakeBrainForm
     'Required by the Windows Form Designer
     Private components As System.ComponentModel.IContainer
 
-    ' ---- 只负责摆位的控件（声明即建好，属性在 InitializeComponent 里赋值）----
-    Dim WithEvents m_gamePanel As New Panel()
-    Dim WithEvents side As New Panel()
-    Dim WithEvents sensorLabel As New Label()
-    Dim WithEvents motorLabel As New Label()
-    Dim WithEvents toolbar As New FlowLayoutPanel()
-    Dim WithEvents speedLabel As New Label()
-    Dim WithEvents tickLabel As New Label()
-    Dim WithEvents m_resetButton As New Button()
-    Dim WithEvents m_trainButton As New Button()
-    Dim WithEvents m_loadButton As New Button()
-
     Sub New()
 
         ' This call is required by the designer.
@@ -209,6 +197,18 @@ Partial Class SnakeBrainForm
         ResumeLayout(False)
         PerformLayout()
     End Sub
+
+    ' ---- 只负责摆位的控件（声明即建好，属性在 InitializeComponent 里赋值）----
+    Dim WithEvents m_gamePanel As New Panel()
+    Dim WithEvents side As New Panel()
+    Dim WithEvents sensorLabel As New Label()
+    Dim WithEvents motorLabel As New Label()
+    Dim WithEvents toolbar As New FlowLayoutPanel()
+    Dim WithEvents speedLabel As New Label()
+    Dim WithEvents tickLabel As New Label()
+    Dim WithEvents m_resetButton As New Button()
+    Dim WithEvents m_trainButton As New Button()
+    Dim WithEvents m_loadButton As New Button()
 
     Private WithEvents m_sensors As ChannelBars
     Private WithEvents m_motors As ChannelBars
