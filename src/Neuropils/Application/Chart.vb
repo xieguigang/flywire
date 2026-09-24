@@ -3,7 +3,7 @@ Imports System.Text
 Imports Neuropils.Analysis
 Imports Neuropils.Data
 
-Namespace Application
+Namespace AppLogics
 
 
     ' 响应曲线的命令行出图（与窗口共用同一套数据装配与绘图代码）。

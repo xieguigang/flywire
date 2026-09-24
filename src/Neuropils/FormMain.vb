@@ -7,7 +7,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
-Imports Neuropils.Application
+Imports Neuropils.AppLogics
 Imports Neuropils.Data
 Imports Neuropils.Rendering
 
@@ -101,9 +101,8 @@ Public Class FormMain
         Call InitializeComponent()
         Call initializeUi()
 
-        Call m_rebuildTimer.Stop()
+        m_rebuildTimer.Stop()
 
-        m_snake = New Snake(Me)
         m_rebuildTimer.Interval = 260
 
         AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
@@ -502,6 +501,8 @@ Public Class FormMain
             .VisitedLinkColor = Color.FromArgb(34, 211, 238),
             .Margin = New Padding(6, 4, 6, 0)
         }
+        m_snake = New Snake(Me)
+
         AddHandler m_snakeLink.LinkClicked, AddressOf m_snake.onOpenSnakeWindow
 
         ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂

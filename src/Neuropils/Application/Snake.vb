@@ -4,7 +4,7 @@ Imports FlywireAI.Connectome
 Imports FlywireSnake
 Imports Neuropils.Rendering
 
-Namespace Application
+Namespace AppLogics
 
 
     ' "果蝇大脑玩贪吃蛇"的命令行自检：跑训练与评估，把三组对照的得分打出来。

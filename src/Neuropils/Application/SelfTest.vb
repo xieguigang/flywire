@@ -5,7 +5,7 @@ Imports Microsoft.VisualBasic.Imaging.Drawing3D
 Imports Neuropils.Data
 Imports Neuropils.Rendering
 
-Namespace Application
+Namespace AppLogics
 
     Module SelfTest
 
