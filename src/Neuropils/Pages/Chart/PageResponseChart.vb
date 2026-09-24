@@ -181,30 +181,30 @@ Public Class PageResponseChart
     End Function
 
     ''' <summary>取值列表项被勾选 / 取消勾选。</summary>
-    Private Sub onValueChecked(sender As Object, e As ItemCheckEventArgs) Handles m_values.ItemCheck
+    Private Sub onValueChecked(sender As Object, e As ItemCheckEventArgs)
         ' ItemCheck 触发时勾选状态还没提交，因此用 BeginInvoke 等到状态更新完再重画
-        Call BeginInvoke(New Action(AddressOf rebuildSeries))
+        BeginInvoke(New Action(AddressOf rebuildSeries))
     End Sub
 
-    Private Sub onDimensionChanged(sender As Object, e As EventArgs) Handles m_dimensionBox.SelectedIndexChanged
+    Private Sub onDimensionChanged(sender As Object, e As EventArgs)
         If m_loading Then Return
 
-        Call refreshCategories()
-        Call rebuildSeries()
+        refreshCategories()
+        rebuildSeries()
     End Sub
 
-    Private Sub onOptionChanged(sender As Object, e As EventArgs) Handles m_modeBox.SelectedIndexChanged, m_aggregationBox.SelectedIndexChanged, m_limitBox.ValueChanged, m_windowBox.ValueChanged
+    Private Sub onOptionChanged(sender As Object, e As EventArgs)
         If m_loading Then Return
 
-        Call rebuildSeries()
+        rebuildSeries()
     End Sub
 
-    Private Sub selectAllEvt() Handles selectAll.Click
-        Call setAllValues(True)
+    Private Sub selectAllEvt()
+        setAllValues(True)
     End Sub
 
-    Private Sub clearAllEvt() Handles clearAll.Click
-        Call setAllValues(False)
+    Private Sub clearAllEvt()
+        setAllValues(False)
     End Sub
 
     ''' <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
@@ -336,18 +336,18 @@ Public Class PageResponseChart
         CommonRuntime.StatusMessage($"{m_description} · 画布 {e.Width}x{e.Height} px · {m_data.Source}")
     End Sub
 
-    Private Sub onSaveImage(sender As Object, e As EventArgs) Handles exportImage.Click
-        Using dialog As New SaveFileDialog() With {
+    Private Sub onSaveImage(sender As Object, e As EventArgs)
+        Using dialog As New SaveFileDialogWith {
             .Filter = "PNG 图片|*.png",
-            .FileName = $"stimulation_response_{m_data.TargetNeuron}_{DateTime.Now:yyyyMMdd_HHmmss}.png"
+            .FileName = $"stimulation_response_{m_data.TargetNeuron}_{Date.Now:yyyyMMdd_HHmmss}.png"
         }
 
             If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
 
             If CaptureTo(dialog.FileName) Then
-                CommonRuntime.StatusMessage($"已保存: {dialog.FileName}")
+                StatusMessage($"已保存: {dialog.FileName}")
             Else
-                CommonRuntime.Warning($"保存失败: {m_canvas.LastError}")
+                Warning($"保存失败: {m_canvas.LastError}")
             End If
         End Using
     End Sub
