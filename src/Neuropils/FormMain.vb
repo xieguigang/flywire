@@ -529,39 +529,40 @@ Public Class FormMain
     ''' "记录下来的响应结果"也还能画出来。
     ''' </remarks>
     Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs)
-        If m_dataset Is Nothing Then Return
+        If m_dataset Is Nothing Then
+            Return
+        End If
 
-        Try
-            Dim data As Analysis.ResponseDataset
+        '  Try
+        Dim data As Analysis.ResponseDataset
 
-            If m_experiment.m_replay IsNot Nothing Then
-                data = Analysis.ResponseDataset.FromReplay(m_experiment.m_replay, m_dataset, m_config.Threshold)
-            Else
-                Dim dir As String = Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir())
+        If m_experiment.m_replay IsNot Nothing Then
+            data = Analysis.ResponseDataset.FromReplay(m_experiment.m_replay, m_dataset, m_config.Threshold)
+        Else
+            Dim dir As String = Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir())
 
-                If dir Is Nothing Then
-                    Call MessageBox.Show(Me,
-                                         "还没有任何电刺激实验记录。请先勾选「电刺激模式」，" &
-                                         "在神经元上按住左键做一次刺激，松开后即可查看响应曲线。",
-                                         "没有实验记录", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            If dir Is Nothing Then
+                Call MessageBox.Show(Me,
+                                     "还没有任何电刺激实验记录。请先勾选「电刺激模式」，" &
+                                     "在神经元上按住左键做一次刺激，松开后即可查看响应曲线。",
+                                     "没有实验记录", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
-                    Return
-                End If
-
-                data = Analysis.ResponseDataset.FromReport(dir, m_dataset)
+                Return
             End If
 
-            If m_chartForm IsNot Nothing AndAlso Not m_chartForm.IsDisposed Then
-                Call m_chartForm.Close()
-            End If
+            data = Analysis.ResponseDataset.FromReport(dir, m_dataset)
+        End If
 
-            m_chartForm = New ResponseChartForm(data, m_dataset)
-            Call m_chartForm.Show(Me)
-            Call m_chartForm.BringToFront()
-        Catch ex As Exception
-            Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",
-                                 MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        If m_chartForm IsNot Nothing AndAlso Not m_chartForm.IsDisposed Then
+            Call m_chartForm.Close()
+        End If
+
+        m_chartForm = New ResponseChartForm(data, m_dataset)
+        Call m_chartForm.Show(Me)
+        Call m_chartForm.BringToFront()
+        '  Catch ex As Exception
+        'Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",        MessageBoxButtons.OK, MessageBoxIcon.Error)
+        ' End Try
     End Sub
 
 #End Region
