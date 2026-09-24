@@ -201,7 +201,7 @@ Public Class SnakePlayground
         If pack IsNot Nothing Then
             Call report(reporter, $"loading cell names from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyNames)} ...")
 
-            names = readColumn(pack, FafbMsgPackStorage.KeyNames).ToRecords()
+            names = packNames(pack)
         Else
             Call report(reporter, $"loading cell names from {config.NamesCsv} ...")
 
@@ -222,10 +222,10 @@ Public Class SnakePlayground
 
             triplets = SynapseTriplets.Build(
                 index,
-                column(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPre)).Values,
-                column(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPost)).Values,
-                column(Of DoubleColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnSynapses)).Values,
-                column(Of IntegerColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnNt)).Values,
+                columnOf(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPre)).Values,
+                columnOf(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPost)).Values,
+                columnOf(Of DoubleColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnSynapses)).Values,
+                columnOf(Of IntegerColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnNt)).Values,
                 columnNtNames(pack),
                 config.ExcitatoryGain,
                 config.InhibitoryGain)
@@ -244,8 +244,8 @@ Public Class SnakePlayground
         ' 3) 注释（其中 classification 的 flow 列决定"感觉输入 / 运动输出"这两组神经元）
         Call index.AttachAnnotations(
             names,
-            packAnnotations(pack, FafbMsgPackStorage.KeyClassification),
-            packAnnotations(pack, FafbMsgPackStorage.KeyCellTypes),
+            packClassification(pack),
+            packCellTypes(pack),
             packNeurons(pack))
 
         Dim matrix As ConnectomeMatrix = BrainNetworkBuilder.BuildMatrix(triplets, reporter)
@@ -269,6 +269,57 @@ Public Class SnakePlayground
 
         Return New SnakePlayground(config, index, matrix, gain, timer.ElapsedMilliseconds)
     End Function
+
+#Region "msgpack 转储包"
+
+    ''' <summary>
+    ''' 读回一列；缺列视为致命错误（数据不完整，继续装配只会得到坏结果）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 局部变量不能叫 column（与函数同名），也不能叫 pack（与形参同名）：
+    ''' VB 不区分大小写，同名就等于把形参/函数本身遮蔽掉。
+    ''' </remarks>
+    Private Shared Function columnOf(Of T As Class)(pack As FafbPackReader, key As String) As T
+        Dim value As T = pack.Read(Of T)(key)
+
+        If value Is Nothing Then
+            Throw New System.IO.InvalidDataException($"msgpack 转储包缺少数据列: {key}")
+        End If
+
+        Return value
+    End Function
+
+    Private Shared Function packNames(pack As FafbPackReader) As List(Of CellNames)
+        Dim namesPack As CellNamesPack = pack.Read(Of CellNamesPack)(FafbMsgPackStorage.KeyNames)
+
+        Return If(namesPack Is Nothing, New List(Of CellNames)(), namesPack.ToRecords())
+    End Function
+
+    Private Shared Function packClassification(pack As FafbPackReader) As List(Of Classification)
+        Dim classificationPack As ClassificationPack = pack.Read(Of ClassificationPack)(FafbMsgPackStorage.KeyClassification)
+
+        Return If(classificationPack Is Nothing, New List(Of Classification)(), classificationPack.ToRecords())
+    End Function
+
+    Private Shared Function packCellTypes(pack As FafbPackReader) As List(Of CellTypes)
+        Dim cellTypesPack As CellTypesPack = pack.Read(Of CellTypesPack)(FafbMsgPackStorage.KeyCellTypes)
+
+        Return If(cellTypesPack Is Nothing, New List(Of CellTypes)(), cellTypesPack.ToRecords())
+    End Function
+
+    Private Shared Function packNeurons(pack As FafbPackReader) As List(Of Neurons)
+        Dim neuronsPack As NeuronsPack = pack.Read(Of NeuronsPack)(FafbMsgPackStorage.KeyNeurons)
+
+        Return If(neuronsPack Is Nothing, New List(Of Neurons)(), neuronsPack.ToRecords())
+    End Function
+
+    Private Shared Function columnNtNames(pack As FafbPackReader) As String()
+        Dim connectionsPack As ConnectionsPack = pack.Read(Of ConnectionsPack)(FafbMsgPackStorage.KeyConnections)
+
+        Return If(connectionsPack Is Nothing, Nothing, connectionsPack.NtNames)
+    End Function
+
+#End Region
 
     Private Shared Sub releaseDeviceBuffers(network As BrainNetwork)
         If network Is Nothing OrElse network.Network Is Nothing Then Return

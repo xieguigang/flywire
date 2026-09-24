@@ -611,10 +611,12 @@ Namespace FAFBv783
         End Function
 
         ''' <summary>
-        ''' 检查转储包能不能用：返回空串表示"新鲜可用"，否则返回原因。
+        ''' 检查转储包能不能用：返回空串表示"可用"，否则返回原因。
         ''' </summary>
         ''' <remarks>
-        ''' 源 csv 被替换/更新之后必须重新转储，否则界面读到的是一份过期的缓存。
+        ''' 源 csv 还在的时候会比对指纹（替换/更新过源数据就必须重新转储，
+        ''' 否则界面读到的是一份过期的缓存）；源 csv 已经不在了就以转储包为准 ——
+        ''' 它本身是自包含的数据源，缺的只是"没法和源文件核对新鲜度"。
         ''' </remarks>
         Public Shared Function Verify(config As SnnConfig, Optional packFile As String = Nothing) As String
             Dim target As String = ResolvePackFile(config, packFile)
@@ -641,7 +643,9 @@ Namespace FAFBv783
             For Each source As FafbPackSource In manifest.Sources
                 Dim path As String = config.ResolvePath(source.FileName)
 
-                If Not File.Exists(path) Then Return $"源文件已经不在了: {path}"
+                ' 源 csv 不在的时候不做指纹核对（转储包本身就是数据源），只核对还在的
+                If Not File.Exists(path) Then Continue For
+
                 If New FileInfo(path).Length <> source.Length Then Return $"源文件大小变了: {source.FileName}"
                 If File.GetLastWriteTimeUtc(path).Ticks <> source.LastWriteTicks Then Return $"源文件被改过: {source.FileName}"
             Next

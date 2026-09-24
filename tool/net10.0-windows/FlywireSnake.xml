@@ -449,12 +449,25 @@ FlywireSnake
  属性永远是 Nothing（第一次用到就炸）。
  </remarks>
 </member>
-<member name="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String})">
+<member name="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String},FlywireAI.FAFBv783.FafbPackReader)">
  <summary>
  装配连接组并标定一次增益（耗时数十秒：主要是读连接表与建 CSR）。
  </summary>
  <param name="config">SNN 配置（提供数据文件路径、增益标定参数、后端开关）</param>
  <param name="reporter">进度回调</param>
+ <param name="pack">
+ msgpack 转储包（<see cref="T:FlywireAI.FAFBv783.FafbMsgPackStorage"/>）：给了它就<b>只从包里取数</b>，
+ 不再读任何 csv。调用方负责打开与关闭（本函数不接管它的生命周期）。
+ </param>
+</member>
+<member name="M:FlywireSnake.SnakePlayground.columnOf``1(FlywireAI.FAFBv783.FafbPackReader,System.String)">
+ <summary>
+ 读回一列；缺列视为致命错误（数据不完整，继续装配只会得到坏结果）。
+ </summary>
+ <remarks>
+ 局部变量不能叫 column（与函数同名），也不能叫 pack（与形参同名）：
+ VB 不区分大小写，同名就等于把形参/函数本身遮蔽掉。
+ </remarks>
 </member>
 <member name="M:FlywireSnake.SnakePlayground.CreateBrain(System.Int32)">
  <summary>
@@ -463,7 +476,7 @@ FlywireSnake
  <param name="seed">挑选神经元的随机种子</param>
  <remarks>
  网络装配本身很轻（<c>AddSparseLayer</c> 只持有 CSR 引用），
- 因此"每局一份大脑"的代价可以忽略；真正的重活是连接组装配（见 <see cref="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String})"/>）。
+ 因此"每局一份大脑"的代价可以忽略；真正的重活是连接组装配（见 <see cref="M:FlywireSnake.SnakePlayground.Create(FlywireAI.Connectome.SnnConfig,System.Action{System.String},FlywireAI.FAFBv783.FafbPackReader)"/>）。
  
  "电极铺多大 / 注入多强 / 读出窗多宽"这三件事的口径统一由
  <see cref="P:FlywireSnake.SnakePlayground.SensorsPerChannel"/> / <see cref="P:FlywireSnake.SnakePlayground.SensorCurrent"/> / <see cref="P:FlywireSnake.SnakePlayground.FeatureWindow"/>

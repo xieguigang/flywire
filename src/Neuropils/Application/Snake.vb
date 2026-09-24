@@ -1,6 +1,7 @@
 Imports System.IO
 Imports System.Text
 Imports FlywireAI.Connectome
+Imports FlywireAI.FAFBv783
 Imports FlywireSnake
 Imports Galaxy.Workbench
 Imports Microsoft.VisualStudio.WinForms.Docking
@@ -63,7 +64,10 @@ Namespace AppLogics
                     ' 顺带把 GPU 后端注册上：逐 tick 推理用融合路径最快
                     Call GpuRuntime.TryRegister(Workbench.m_config, AddressOf main.onLoadProgress)
 
-                    Return SnakePlayground.Create(Workbench.m_config, AddressOf main.onLoadProgress)
+                    ' 数据源与主界面一致：msgpack 转储包（不读 csv）
+                    Using pack As FafbPackReader = FafbMsgPackStorage.Open(FafbMsgPackStorage.ResolvePackFile(Workbench.m_config))
+                        Return SnakePlayground.Create(Workbench.m_config, AddressOf main.onLoadProgress, pack)
+                    End Using
                 End Function) _
                 .ContinueWith(
                     Sub(task As Task(Of SnakePlayground))
@@ -373,9 +377,12 @@ Namespace AppLogics
                 Call report.AppendLine()
 
                 Using host As New Form() With {.ClientSize = New Size(1, 1)}
-                    Dim playground As SnakePlayground = SnakePlayground.Create(
-                         Workbench.m_config,
-                        Sub(message) Call report.AppendLine($"      [{timer.ElapsedMilliseconds,7:N0} ms] {message}"))
+                    Dim reporter As Action(Of String) =
+                        Sub(message) Call report.AppendLine($"      [{timer.ElapsedMilliseconds,7:N0} ms] {message}")
+
+                    ' 与主界面同源：连接组直接来自 msgpack 转储包
+                    Using pack As FafbPackReader = FafbMsgPackStorage.Open(FafbMsgPackStorage.ResolvePackFile(Workbench.m_config))
+                        Dim playground As SnakePlayground = SnakePlayground.Create(Workbench.m_config, reporter, pack)
 
                     ' 标定档位（没给就沿用 SnakePlayground 的默认值）
                     If sensorsPerChannel > 0 Then playground.SensorsPerChannel = sensorsPerChannel
@@ -486,6 +493,7 @@ Namespace AppLogics
 
                     Call report.AppendLine($"      解码器权重: {decoderFile}")
                     Call report.AppendLine($"      训练报告  : {summaryFile}")
+                    End Using
                 End Using
             Catch ex As Exception
                 Call report.AppendLine()
