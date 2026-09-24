@@ -3,6 +3,7 @@ Imports System.Text
 Imports FlywireAI.Connectome
 Imports FlywireSnake
 Imports Galaxy.Workbench
+Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.Rendering
 
 Namespace AppLogics
@@ -123,7 +124,8 @@ Namespace AppLogics
 
             m_snakeForm = brainForm
 
-            Call brainForm.Show(CommonRuntime.AppHost.GetDockPanel)
+            brainForm.Show(CommonRuntime.AppHost.GetDockPanel)
+            brainForm.DockState = DockState.Float
 
             CommonRuntime.StatusMessage($"观战窗口已打开：{brain.FlowSummary}")
 
