@@ -64,18 +64,24 @@ Partial Class PageSnakeBrainGamePlay
         tickLabel = New Label()
         m_tickBox = New NumericUpDown()
         m_timer = New Timer(components)
+        SplitContainer1 = New SplitContainer()
         side.SuspendLayout()
         toolbar.SuspendLayout()
         CType(m_speedBox, ComponentModel.ISupportInitialize).BeginInit()
         CType(m_tickBox, ComponentModel.ISupportInitialize).BeginInit()
+        CType(SplitContainer1, ComponentModel.ISupportInitialize).BeginInit()
+        SplitContainer1.Panel1.SuspendLayout()
+        SplitContainer1.Panel2.SuspendLayout()
+        SplitContainer1.SuspendLayout()
         SuspendLayout()
         ' 
         ' m_gamePanel
         ' 
         m_gamePanel.BackColor = Color.Black
+        m_gamePanel.Dock = DockStyle.Fill
         m_gamePanel.Location = New Point(0, 0)
         m_gamePanel.Name = "m_gamePanel"
-        m_gamePanel.Size = New Size(802, 656)
+        m_gamePanel.Size = New Size(807, 663)
         m_gamePanel.TabIndex = 0
         ' 
         ' side
@@ -89,14 +95,15 @@ Partial Class PageSnakeBrainGamePlay
         side.Controls.Add(m_detail)
         side.Controls.Add(m_training)
         side.Controls.Add(toolbar)
-        side.Location = New Point(808, 0)
+        side.Dock = DockStyle.Fill
+        side.Location = New Point(0, 0)
         side.Name = "side"
-        side.Size = New Size(368, 656)
+        side.Size = New Size(370, 663)
         side.TabIndex = 1
         ' 
         ' m_status
         ' 
-        m_status.Font = New Font("Consolas", 10F, FontStyle.Bold)
+        m_status.Font = New Font("Consolas", 10.0F, FontStyle.Bold)
         m_status.ForeColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
         m_status.Location = New Point(8, 8)
         m_status.Name = "m_status"
@@ -251,16 +258,35 @@ Partial Class PageSnakeBrainGamePlay
         ' m_timer
         ' 
         ' 
+        ' SplitContainer1
+        ' 
+        SplitContainer1.Dock = DockStyle.Fill
+        SplitContainer1.FixedPanel = FixedPanel.Panel2
+        SplitContainer1.IsSplitterFixed = True
+        SplitContainer1.Location = New Point(0, 0)
+        SplitContainer1.Name = "SplitContainer1"
+        ' 
+        ' SplitContainer1.Panel1
+        ' 
+        SplitContainer1.Panel1.Controls.Add(m_gamePanel)
+        ' 
+        ' SplitContainer1.Panel2
+        ' 
+        SplitContainer1.Panel2.Controls.Add(side)
+        SplitContainer1.Panel2MinSize = 370
+        SplitContainer1.Size = New Size(1181, 663)
+        SplitContainer1.SplitterDistance = 807
+        SplitContainer1.TabIndex = 2
+        ' 
         ' PageSnakeBrainGamePlay
         ' 
-        AutoScaleDimensions = New SizeF(96F, 96F)
+        AutoScaleDimensions = New SizeF(96.0F, 96.0F)
         BackColor = Color.Black
         ClientSize = New Size(1181, 663)
-        Controls.Add(m_gamePanel)
-        Controls.Add(side)
+        Controls.Add(SplitContainer1)
         DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
         DoubleBuffered = True
-        Font = New Font("Segoe UI", 9F)
+        Font = New Font("Segoe UI", 9.0F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
         Icon = CType(resources.GetObject("$this.Icon"), Icon)
         Name = "PageSnakeBrainGamePlay"
@@ -273,6 +299,10 @@ Partial Class PageSnakeBrainGamePlay
         toolbar.PerformLayout()
         CType(m_speedBox, ComponentModel.ISupportInitialize).EndInit()
         CType(m_tickBox, ComponentModel.ISupportInitialize).EndInit()
+        SplitContainer1.Panel1.ResumeLayout(False)
+        SplitContainer1.Panel2.ResumeLayout(False)
+        CType(SplitContainer1, ComponentModel.ISupportInitialize).EndInit()
+        SplitContainer1.ResumeLayout(False)
         ResumeLayout(False)
     End Sub
 
@@ -297,4 +327,5 @@ Partial Class PageSnakeBrainGamePlay
     Private WithEvents m_speedBox As NumericUpDown
     Private WithEvents m_tickBox As NumericUpDown
     Private WithEvents m_timer As Timer
+    Friend WithEvents SplitContainer1 As SplitContainer
 End Class

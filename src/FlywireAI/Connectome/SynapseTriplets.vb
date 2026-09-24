@@ -165,7 +165,7 @@ Namespace Connectome
         End Sub
 
         ''' <summary>
-        ''' 流式扫描连接表并且构建突触三元组。
+        ''' 流式扫描连接表 (``connections_princeton.csv``) 并且构建突触三元组。
         ''' </summary>
         ''' <param name="index">
         ''' 连接组索引表；扫描过程中出现的未知 root_id 会被追加到索引之中，因此调用方需要在
@@ -175,6 +175,11 @@ Namespace Connectome
         ''' <param name="excitatoryGain">兴奋性突触的极性增益 (调整 E/I 比例)。</param>
         ''' <param name="inhibitoryGain">抑制性突触的极性增益 (调整 E/I 比例)。</param>
         ''' <param name="progress">进度回调 (每 100 万行调用一次，参数为已处理的行数)。</param>
+        ''' <remarks>
+        ''' 只用于"还没有 msgpack 转储包"的场景（例如 ``--dump`` 本身）。
+        ''' 应用侧应当走 <see cref="Build(ConnectomeIndex, Long(), Long(), Double(), Integer(), String(), Double, Double, Action(Of Long))"/>
+        ''' 或 <see cref="BuildFromIndices"/>，直接用已经解析好的连接列。
+        ''' </remarks>
         Public Shared Function Build(index As ConnectomeIndex,
                                      csvPath As String,
                                      Optional excitatoryGain As Double = 1.0,
@@ -187,6 +192,138 @@ Namespace Connectome
             If String.IsNullOrWhiteSpace(csvPath) Then
                 Throw New ArgumentNullException(NameOf(csvPath))
             End If
+
+            Return build(index, iterateCsv(csvPath), excitatoryGain, inhibitoryGain, progress)
+        End Function
+
+        ''' <summary>
+        ''' 用<b>已经解析好的连接列</b>构建突触三元组（数据源是 msgpack 转储包，不再接触 csv）。
+        ''' </summary>
+        ''' <param name="preRoots">突触前 root_id。</param>
+        ''' <param name="postRoots">突触后 root_id。</param>
+        ''' <param name="synCount">突触数 (原始值)。</param>
+        ''' <param name="ntCodes">递质类型的字典编号（下标指向 <paramref name="ntNames"/>）；没有就当空值处理。</param>
+        ''' <param name="ntNames">递质类型名称表。</param>
+        Public Shared Function Build(index As ConnectomeIndex,
+                                     preRoots As Long(),
+                                     postRoots As Long(),
+                                     synCount As Double(),
+                                     Optional ntCodes As Integer() = Nothing,
+                                     Optional ntNames As String() = Nothing,
+                                     Optional excitatoryGain As Double = 1.0,
+                                     Optional inhibitoryGain As Double = 1.0,
+                                     Optional progress As Action(Of Long) = Nothing) As SynapseTriplets
+
+            If index Is Nothing Then
+                Throw New ArgumentNullException(NameOf(index))
+            End If
+            If preRoots Is Nothing OrElse postRoots Is Nothing OrElse synCount Is Nothing Then
+                Throw New ArgumentNullException("连接列不能为空")
+            End If
+
+            Return build(index, iterateColumns(preRoots, postRoots, synCount, ntCodes, ntNames),
+                         excitatoryGain, inhibitoryGain, progress)
+        End Function
+
+        ''' <summary>
+        ''' 用<b>已经解析成神经元下标</b>的连接构建突触三元组（连 root_id 查表都省掉）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 三维可视化端加载完数据集之后，<c>Pre / Post / SynCount / ConnectionNtType</c>
+        ''' 已经是下标形式并已经按索引过滤过了，电刺激仿真直接复用它们即可 ——
+        ''' 既不必再读一遍连接表，也不会出现"两端点不在索引里"的行。
+        ''' </remarks>
+        Public Shared Function BuildFromIndices(index As ConnectomeIndex,
+                                                pre As Integer(),
+                                                post As Integer(),
+                                                synCount As Double(),
+                                                Optional ntCodes As Integer() = Nothing,
+                                                Optional ntNames As String() = Nothing,
+                                                Optional excitatoryGain As Double = 1.0,
+                                                Optional inhibitoryGain As Double = 1.0,
+                                                Optional progress As Action(Of Long) = Nothing) As SynapseTriplets
+
+            If index Is Nothing Then
+                Throw New ArgumentNullException(NameOf(index))
+            End If
+            If pre Is Nothing OrElse post Is Nothing OrElse synCount Is Nothing Then
+                Throw New ArgumentNullException("连接列不能为空")
+            End If
+
+            Return build(index, iterateIndexed(index, pre, post, synCount, ntCodes, ntNames),
+                         excitatoryGain, inhibitoryGain, progress)
+        End Function
+
+        ''' <summary>csv 行 -> 统一的行形状。</summary>
+        Private Shared Iterator Function iterateCsv(csvPath As String) As IEnumerable(Of SynapseRow)
+            For Each row As Connections In csvPath.StreamConnections()
+                Yield New SynapseRow With {
+                    .PreRoot = row.PreRootId,
+                    .PostRoot = row.PostRootId,
+                    .SynCount = row.SynCount,
+                    .NtType = If(row.NtType, "")
+                }
+            Next
+        End Function
+
+        ''' <summary>root_id 列 -> 统一的行形状。</summary>
+        Private Shared Iterator Function iterateColumns(preRoots As Long(), postRoots As Long(),
+                                                        synCount As Double(),
+                                                        ntCodes As Integer(), ntNames As String()) As IEnumerable(Of SynapseRow)
+            Dim count As Integer = System.Math.Min(preRoots.Length, System.Math.Min(postRoots.Length, synCount.Length))
+
+            For i As Integer = 0 To count - 1
+                Yield New SynapseRow With {
+                    .PreRoot = preRoots(i),
+                    .PostRoot = postRoots(i),
+                    .SynCount = synCount(i),
+                    .NtType = neurotransmitterOf(ntCodes, ntNames, i)
+                }
+            Next
+        End Function
+
+        ''' <summary>下标列 -> 统一的行形状（顺带把下标换回 root_id，交给核心统一解析）。</summary>
+        Private Shared Iterator Function iterateIndexed(index As ConnectomeIndex,
+                                                        pre As Integer(), post As Integer(),
+                                                        synCount As Double(),
+                                                        ntCodes As Integer(), ntNames As String()) As IEnumerable(Of SynapseRow)
+            Dim count As Integer = System.Math.Min(pre.Length, System.Math.Min(post.Length, synCount.Length))
+
+            For i As Integer = 0 To count - 1
+                Yield New SynapseRow With {
+                    .PreRoot = index.GetRootId(pre(i)),
+                    .PostRoot = index.GetRootId(post(i)),
+                    .SynCount = synCount(i),
+                    .NtType = neurotransmitterOf(ntCodes, ntNames, i)
+                }
+            Next
+        End Function
+
+        Private Shared Function neurotransmitterOf(ntCodes As Integer(), ntNames As String(), i As Integer) As String
+            If ntCodes Is Nothing OrElse ntNames Is Nothing Then Return ""
+            If i < 0 OrElse i >= ntCodes.Length Then Return ""
+
+            Dim code As Integer = ntCodes(i)
+
+            If code < 0 OrElse code >= ntNames.Length Then Return ""
+
+            Return If(ntNames(code), "")
+        End Function
+
+        ''' <summary>连接行的统一形状（结构而不是类：534 万行不能每行一个对象）。</summary>
+        Private Structure SynapseRow
+            Public PreRoot As Long
+            Public PostRoot As Long
+            Public SynCount As Double
+            Public NtType As String
+        End Structure
+
+        ''' <summary>三种数据源共用的构建核心。</summary>
+        Private Shared Function build(index As ConnectomeIndex,
+                                      rows As IEnumerable(Of SynapseRow),
+                                      excitatoryGain As Double,
+                                      inhibitoryGain As Double,
+                                      progress As Action(Of Long)) As SynapseTriplets
 
             Const progressEvery As Long = 1000000
 
@@ -202,26 +339,25 @@ Namespace Connectome
             Dim unresolved As Long = 0
             Dim frozen As Boolean = index.Frozen
 
-            ' 流式读取：不把 534 万行 Connections 对象常驻内存
-            For Each row As Connections In csvPath.StreamConnections()
+            For Each row As SynapseRow In rows
                 csvRows += 1L
 
                 Dim preIndex As Integer
                 Dim postIndex As Integer
 
-                ' 索引已经冻结时不能再追加神经元。这是"可视化端先用 names.csv 建好索引、
+                ' 索引已经冻结时不能再追加神经元。这是"可视化端先建好索引、
                 ' 再交给仿真端"的用法：此时连接表里若出现索引之外的 root_id，只能跳过并计数
-                ' （本数据集里连接表的端点全部落在 names.csv 内，所以正常情况下不会命中）。
+                ' （本数据集里连接表的端点全部落在主索引内，所以正常情况下不会命中）。
                 If frozen Then
-                    If Not index.IndexOf(row.PreRootId, preIndex) OrElse
-                       Not index.IndexOf(row.PostRootId, postIndex) Then
+                    If Not index.IndexOf(row.PreRoot, preIndex) OrElse
+                       Not index.IndexOf(row.PostRoot, postIndex) Then
                         unresolved += 1L
 
                         Continue For
                     End If
                 Else
-                    preIndex = index.GetOrAddIndex(row.PreRootId)
-                    postIndex = index.GetOrAddIndex(row.PostRootId)
+                    preIndex = index.GetOrAddIndex(row.PreRoot)
+                    postIndex = index.GetOrAddIndex(row.PostRoot)
                 End If
 
                 Dim ntType As String = If(row.NtType, "").Trim

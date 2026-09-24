@@ -8,22 +8,28 @@ Imports Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection
 Namespace Data
 
     ''' <summary>
-    ''' 把 FAFB v783 的表格装配成 <see cref="BrainDataset"/>。
+    ''' 把 FAFB v783 的 <b>msgpack 转储包</b>装配成 <see cref="BrainDataset"/>。
     ''' </summary>
     ''' <remarks>
-    ''' 全部表格都以<b>流式</b>方式读取（``Stream*`` 扩展方法，惰性迭代、O(1) 内存），
-    ''' 因为其中连接表有 261 MB / 534 万行、脑区表有 321 列。整个加载过程可以在后台线程
-    ''' 上运行，并通过 <see cref="Load"/> 函数的 "progress" 与 "cancel" 参数进行反馈进度
-    ''' 与响应取消。
+    ''' <b>数据源只有一个：msgpack 转储包</b>（见 <see cref="FafbMsgPackStorage"/>，
+    ''' 默认位于 ``&lt;DataDir&gt;\fafb-v783.msgpack.zip``）。本加载器<b>不再读任何 csv</b>：
+    ''' 包里已经是解析好的定型数组（root_id / 坐标 / 脑区计数 / 连接列），
+    ''' 读回来只剩二进制解码，没有 ASCII 文本解析（实测 2.5 s vs csv 路径的 7.6 s）。
     ''' 
-    ''' 数据来源与用途：
+    ''' 包不存在 / 损坏 / 版本不对 / 源 csv 被改过（过期）时<b>直接抛异常</b>并给出
+    ''' ``Neuropils.exe --dump`` 的提示，而不是悄悄回退到 csv ——
+    ''' 静默回退会让"到底读的是哪一份数据"变得无法确定。
     ''' 
-    ''' * ``names.csv`` → 神经元主索引 (<see cref="ConnectomeIndex"/>)；
-    ''' * ``classification.csv`` / ``consolidated_cell_types.csv`` / ``neurons.csv`` → 注释；
-    ''' * ``coordinates.csv`` → 每个神经元的三维坐标 (点云的位置)；
-    ''' * ``neuropil_synapse_table.csv`` → 每个神经元的主导脑区 (颜色维度之一)；
-    ''' * ``connections_princeton.csv`` → 突触连接 (三维连线)；
-    ''' * ``neuron_activity_*.csv`` → 仿真活跃度 (可选，找不到时界面可以现场重跑仿真)。
+    ''' 包内的条目与用途：
+    ''' 
+    ''' * ``names`` → 神经元主索引 (<see cref="ConnectomeIndex"/>)；
+    ''' * ``classification`` / ``cell_types`` / ``neurons`` → 注释；
+    ''' * ``coordinates`` → 每个神经元的三维坐标 (点云的位置)；
+    ''' * ``neuropil`` + 321 个列项 → 每个神经元的主导脑区 (颜色维度之一)；
+    ''' * ``connections`` + 5 个列项 → 突触连接 (三维连线，也是电刺激仿真的连接组)。
+    ''' 
+    ''' 仿真活跃度 (``neuron_activity_*.csv``) 是仿真产生的<b>结果</b>而不是数据源，
+    ''' 因此仍然按原来的方式从 ``snn-output`` 里读；找不到时界面可以现场重跑一次仿真。
     ''' </remarks>
     Public Class BrainDatasetLoader
 
@@ -41,113 +47,35 @@ Namespace Data
         ''' <summary>连接表的读取上限 (超过之后截断，并在进度里报告)。</summary>
         Public Property MaxConnections As Integer = DefaultMaxConnections
 
-        ''' <summary>
-        ''' 是否优先使用 msgpack 转储包 (<see cref="FafbMsgPackStorage"/>)。
-        ''' </summary>
-        ''' <remarks>
-        ''' 默认开启：转储包存在且没过期时，整条加载路径<b>完全不解析 ASCII 文本</b>。
-        ''' 包不存在 / 过期 / 损坏 / 版本不对时自动回退到 csv（见 <see cref="FafbMsgPackStorage.Verify"/>）。
-        ''' </remarks>
-        Public Property PreferMsgPack As Boolean = True
-
         ''' <summary>转储包的路径；为空时落到 <see cref="FafbMsgPackStorage.ResolvePackFile"/> 的默认位置。</summary>
         Public Property PackFile As String = Nothing
 
         ''' <summary>
-        ''' 加载整个数据集：优先走 msgpack 转储包，没有包就回退到 csv。
+        ''' 从 msgpack 转储包加载整个数据集（唯一的数据源）。
         ''' </summary>
         ''' <param name="progress">进度回调 (已经格式化的文本)</param>
         ''' <param name="cancel">取消标记</param>
-        ''' <exception cref="FileNotFoundException">必需的表格不存在</exception>
+        ''' <exception cref="InvalidDataException">转储包不存在 / 损坏 / 版本不对 / 已过期</exception>
         ''' <exception cref="OperationCanceledException">调用方取消了加载</exception>
         Public Function Load(Optional progress As Action(Of String) = Nothing,
                              Optional cancel As CancellationToken = Nothing) As BrainDataset
 
-            If PreferMsgPack Then
-                Dim packPath As String = FafbMsgPackStorage.ResolvePackFile(m_config, PackFile)
-                Dim reason As String = FafbMsgPackStorage.Verify(m_config, PackFile)
+            Dim packPath As String = FafbMsgPackStorage.ResolvePackFile(m_config, PackFile)
+            Dim reason As String = FafbMsgPackStorage.Verify(m_config, PackFile)
 
-                If String.IsNullOrEmpty(reason) Then
-                    Call report(progress, $"loading from the msgpack archive {packPath} ...")
-
-                    Using reader As FafbPackReader = FafbMsgPackStorage.Open(packPath)
-                        Return loadFromPack(reader, progress, cancel)
-                    End Using
-                Else
-                    Call report(progress, $"msgpack archive not usable ({reason}), falling back to csv ...")
-                End If
+            If Not String.IsNullOrEmpty(reason) Then
+                Throw New InvalidDataException(
+                    $"无法使用 msgpack 转储包：{reason}{Environment.NewLine}" &
+                    $"  转储包: {packPath}{Environment.NewLine}" &
+                    $"  请先执行一次转储（这一句只读一次 csv，之后界面就只认转储包）：{Environment.NewLine}" &
+                    $"    Neuropils.exe --dump ""{packPath}"" ""{m_config.DataDir}""")
             End If
 
-            Return loadFromCsv(progress, cancel)
-        End Function
+            Call report(progress, $"loading from the msgpack archive {packPath} ...")
 
-        ''' <summary>从 csv 装配数据集 (没有转储包时走的原始路径)。</summary>
-        Private Function loadFromCsv(progress As Action(Of String), cancel As CancellationToken) As BrainDataset
-
-            Call validateFiles()
-
-            Dim dataset As New BrainDataset With {
-                .Source = m_config.DataDir
-            }
-            Dim clock As Diagnostics.Stopwatch = Diagnostics.Stopwatch.StartNew()
-            Dim stage As Long = 0
-
-            ' 1) 神经元主索引 + 注释
-            Call report(progress, $"loading neuron index from {m_config.NamesCsv} ...")
-
-            Dim names As List(Of CellNames) = m_config.ResolvePath(m_config.NamesCsv).LoadCellNames()
-            Dim index As New ConnectomeIndex()
-
-            For Each cell As CellNames In names
-                Call index.Add(cell.RootId)
-            Next
-
-            Call index.Freeze()
-
-            Call report(progress, $"  {index.Size} neurons, attaching annotations ...")
-
-            Call index.AttachAnnotations(names,
-                                         m_config.ResolvePath(m_config.ClassificationCsv).LoadClassification(),
-                                         m_config.ResolvePath(m_config.CellTypesCsv).LoadCellTypes(),
-                                         m_config.ResolvePath(m_config.NeuronsCsv).LoadNeurons())
-
-            dataset.Index = index
-
-            ' 2) 递质类型 (ConnectomeIndex 只保留了"是否抑制性"，着色需要类型本身)
-            Call throwIfCancelled(cancel)
-
-            dataset.Neurotransmitters = loadNeurotransmitters(index, cancel)
-            Call reportStage(progress, "neuron index + annotations", clock, stage)
-
-            ' 3) 三维坐标
-            Call throwIfCancelled(cancel)
-            Call report(progress, $"loading coordinates from {m_config.CoordinatesCsv} ...")
-
-            Call loadPositions(dataset, progress, cancel)
-            Call reportStage(progress, "coordinates", clock, stage)
-
-            ' 4) 主导脑区
-            Call throwIfCancelled(cancel)
-            Call report(progress, $"loading neuropil assignments from {m_config.NeuropilTableCsv} ...")
-
-            Call loadNeuropils(dataset, progress, cancel)
-            Call reportStage(progress, "neuropil assignment", clock, stage)
-
-            ' 5) 连接表
-            Call throwIfCancelled(cancel)
-            Call report(progress, $"loading connections from {m_config.ConnectionsCsv} ...")
-
-            Call loadConnections(dataset, progress, cancel)
-            Call reportStage(progress, "connections", clock, stage)
-
-            ' 6) 仿真活跃度 (可选)
-            Call throwIfCancelled(cancel)
-            Call loadActivity(dataset, progress)
-            Call reportStage(progress, "activity (optional)", clock, stage)
-
-            Call report(progress, $"dataset ready: {dataset}")
-
-            Return dataset
+            Using reader As FafbPackReader = FafbMsgPackStorage.Open(packPath)
+                Return loadFromPack(reader, progress, cancel)
+            End Using
         End Function
 
         ''' <summary>报告一个阶段的耗时 (同时也把逐阶段耗时写进自检报告)。</summary>
@@ -162,14 +90,7 @@ Namespace Data
 
 #Region "loading steps"
 
-        ''' <summary>每神经元的递质类型 (``neurons.csv``)。</summary>
-        Private Function loadNeurotransmitters(index As ConnectomeIndex, cancel As CancellationToken) As String()
-            Call throwIfCancelled(cancel)
-
-            Return neurotransmittersOf(index, m_config.ResolvePath(m_config.NeuronsCsv).LoadNeurons())
-        End Function
-
-        ''' <summary>``neurons.csv`` 的记录 → 每神经元一个递质字符串 (csv 与 msgpack 两条路径共用)。</summary>
+        ''' <summary>转储包里 ``neurons`` 的记录 → 每神经元一个递质字符串。</summary>
         Private Shared Function neurotransmittersOf(index As ConnectomeIndex, rows As List(Of Neurons)) As String()
             Dim types As String() = New String(index.Size - 1) {}
             Dim i As Integer
@@ -196,21 +117,7 @@ Namespace Data
         ''' 每个神经元的三维坐标：``coordinates.csv`` 对同一个神经元可能有多条标记位置，
         ''' 这里取它们的算术平均 (并记录标记条数)。
         ''' </summary>
-        Private Sub loadPositions(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)
-            Dim rows As New List(Of Coordinates)()
-
-            For Each cell As Coordinates In m_config.ResolvePath(m_config.CoordinatesCsv).StreamCoordinates()
-                Call throwIfCancelled(cancel)
-
-                If cell IsNot Nothing Then
-                    Call rows.Add(cell)
-                End If
-            Next
-
-            Call applyPositions(dataset, rows, progress)
-        End Sub
-
-        ''' <summary>坐标记录 → 每神经元一个平均位置 (csv 与 msgpack 两条路径共用)。</summary>
+        ''' <summary>转储包里的坐标记录 → 每神经元一个平均位置。</summary>
         Private Shared Sub applyPositions(dataset As BrainDataset, rows As List(Of Coordinates), progress As Action(Of String))
             Dim units As Integer = dataset.Units
             Dim index As ConnectomeIndex = dataset.Index
@@ -270,119 +177,7 @@ Namespace Data
         End Sub
 
         ''' <summary>
-        ''' 每个神经元的主导脑区：在 321 列的脑区表里取"输入+输出突触数最多"的脑区。
-        ''' </summary>
-        ''' <remarks>
-        ''' 列名通过 <see cref="ColumnAttribute"/> 反射得到（``input synapses in AL_L`` 之类），
-        ''' 属性名本身被简写成 VB 标识符，只有列名保留着脑区前缀。取值走
-        ''' <see cref="System.Delegate.CreateDelegate"/> 绑定出来的委托而不是
-        ''' ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
-        ''' </remarks>
-        Private Sub loadNeuropils(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)
-            Dim path As String = m_config.ResolvePath(m_config.NeuropilTableCsv)
-            Dim units As Integer = dataset.Units
-            Dim assignment As Integer() = New Integer(units - 1) {}
-            Dim strength As Double() = New Double(units - 1) {}
-            Dim rows As Long = 0
-            Dim assigned As Integer = 0
-            Dim canceled As Boolean = False
-
-            For k As Integer = 0 To assignment.Length - 1
-                assignment(k) = -1
-            Next
-
-            ' 表头 -> 需要的列位置 (321 列里只取 input/output synapses in <region> 这 160 列)
-            Dim header As String() = Nothing
-            Dim columnPositions As Integer() = Nothing
-            Dim regionSlots As Integer() = Nothing
-            Dim regionNames As String() = Nothing
-            Dim rootColumn As Integer = 0
-
-            For Each line As String In IO.File.ReadLines(path)
-                If header Is Nothing Then
-                    header = line.Split(","c)
-
-                    Dim parsed = parseNeuropilHeader(header)
-
-                    columnPositions = parsed.Columns
-                    regionSlots = parsed.Regions
-                    regionNames = parsed.Names
-                    rootColumn = parsed.RootColumn
-
-                    Exit For
-                End If
-            Next
-
-            If regionNames Is Nothing OrElse regionNames.Length = 0 Then
-                Throw New InvalidDataException($"脑区表缺少 ``... synapses in <region>`` 列: {path}")
-            End If
-
-            Dim totals As Double() = New Double(regionNames.Length - 1) {}
-            Dim firstLine As Boolean = True
-
-            For Each line As String In IO.File.ReadLines(path)
-                If canceled Then Exit For
-
-                If firstLine Then
-                    firstLine = False
-                    Continue For
-                End If
-
-                rows += 1
-
-                If (rows Mod 20000) = 0 Then
-                    If cancel.IsCancellationRequested Then
-                        canceled = True
-                        Exit For
-                    End If
-
-                    Call report(progress, $"  {rows} neuropil rows ...")
-                End If
-
-                If line.Length = 0 Then Continue For
-
-                Dim parts As String() = line.Split(","c)
-
-                If parts.Length <= rootColumn Then Continue For
-
-                Dim rootId As Long
-
-                If Not Long.TryParse(parts(rootColumn), rootId) Then Continue For
-
-                Dim i As Integer
-
-                If Not dataset.Index.IndexOf(rootId, i) Then Continue For
-
-                Array.Clear(totals, 0, totals.Length)
-
-                For c As Integer = 0 To columnPositions.Length - 1
-                    Dim value As Double
-
-                    If Double.TryParse(parts(columnPositions(c)), NumberStyles.Float, CultureInfo.InvariantCulture, value) Then
-                        totals(regionSlots(c)) += value
-                    End If
-                Next
-
-                Dim best As (Region As Integer, Value As Double) = dominantRegion(totals)
-
-                If best.Region >= 0 Then
-                    assignment(i) = best.Region
-                    strength(i) = best.Value
-                    assigned += 1
-                End If
-            Next
-
-            If canceled Then Throw New OperationCanceledException(cancel)
-
-            dataset.Neuropil = assignment
-            dataset.NeuropilNames = regionNames
-            dataset.NeuropilSynapses = strength
-
-            Call report(progress, $"  {rows} rows -> {assigned}/{units} neurons assigned to {regionNames.Length} neuropils")
-        End Sub
-
-        ''' <summary>
-        ''' 在"各脑区的输入+输出突触数"里挑出最大的那个脑区 (csv 与 msgpack 两条路径共用)。
+        ''' 在"各脑区的输入+输出突触数"里挑出最大的那个脑区（转储包路径使用）。
         ''' </summary>
         ''' <returns>脑区下标与它的突触数；全部为 0 时返回 <c>-1</c>。</returns>
         Private Shared Function dominantRegion(totals As Double()) As (Region As Integer, Value As Double)
@@ -451,116 +246,6 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' 连接表：``pre_root_id, post_root_id, neuropil, syn_count, nt_type``。
-        ''' </summary>
-        Private Sub loadConnections(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)
-            Dim index As ConnectomeIndex = dataset.Index
-            Dim capacity As Integer = System.Math.Min(MaxConnections, 5400000)
-
-            Dim pre As New List(Of Integer)(capacity)
-            Dim post As New List(Of Integer)(capacity)
-            Dim synapses As New List(Of Integer)(capacity)
-            Dim neuropils As New List(Of Integer)(capacity)
-            Dim types As New List(Of Integer)(capacity)
-
-            Dim neuropilNames As New List(Of String)()
-            Dim neuropilIds As New Dictionary(Of String, Integer)(StringComparer.Ordinal)
-            Dim ntNames As New List(Of String)()
-            Dim ntIds As New Dictionary(Of String, Integer)(StringComparer.Ordinal)
-
-            Dim rows As Long = 0
-            Dim skipped As Long = 0
-            Dim truncated As Boolean = False
-            Dim firstLine As Boolean = True
-            Dim canceled As Boolean = False
-
-            ' 逐行按字段位置取值，而不是走框架的反射映射：
-            ' 534 万行 × 5 列在反射映射下实测 32 s，这里约 4 s。
-            ' 该表的字段都是整数与短标识符 (没有引号包裹的逗号)，因此按位置切分是安全的。
-            For Each line As String In IO.File.ReadLines(m_config.ResolvePath(m_config.ConnectionsCsv))
-                If firstLine Then
-                    firstLine = False
-                    Continue For
-                End If
-
-                rows += 1
-
-                If (rows Mod 200000) = 0 Then
-                    If cancel.IsCancellationRequested Then
-                        canceled = True
-                        Exit For
-                    End If
-
-                    Call report(progress, $"  {rows} connection rows, {pre.Count} accepted ... ({m_config.ConnectionsCsv})")
-                End If
-
-                If line.Length = 0 Then
-                    Continue For
-                End If
-
-                Dim parts As String() = line.Split(","c)
-
-                If parts.Length < 5 Then
-                    skipped += 1
-                    Continue For
-                End If
-
-                Dim preRoot As Long
-                Dim postRoot As Long
-
-                If Not Long.TryParse(parts(0), preRoot) OrElse Not Long.TryParse(parts(1), postRoot) Then
-                    skipped += 1
-                    Continue For
-                End If
-
-                Dim preIndex As Integer
-                Dim postIndex As Integer
-
-                ' 索引在注释表建立之后已经冻结，连接表里出现的其它 root_id 只能跳过
-                If Not index.IndexOf(preRoot, preIndex) Then
-                    skipped += 1
-                    Continue For
-                End If
-                If Not index.IndexOf(postRoot, postIndex) Then
-                    skipped += 1
-                    Continue For
-                End If
-
-                Dim synCount As Double
-
-                Call Double.TryParse(parts(3), NumberStyles.Float, CultureInfo.InvariantCulture, synCount)
-
-                Call pre.Add(preIndex)
-                Call post.Add(postIndex)
-                Call synapses.Add(CInt(System.Math.Max(0, System.Math.Min(Integer.MaxValue, synCount))))
-                Call neuropils.Add(intern(parts(2), neuropilNames, neuropilIds))
-                Call types.Add(intern(parts(4), ntNames, ntIds))
-
-                If pre.Count >= MaxConnections Then
-                    truncated = True
-                    Exit For
-                End If
-            Next
-
-            If canceled Then Throw New OperationCanceledException(cancel)
-
-            dataset.Pre = pre.ToArray()
-            dataset.Post = post.ToArray()
-            dataset.SynCount = synapses.ToArray()
-            dataset.ConnectionNeuropil = neuropils.ToArray()
-            dataset.ConnectionNtType = types.ToArray()
-            dataset.ConnectionNeuropils = neuropilNames.ToArray()
-            dataset.ConnectionNeurotransmitters = ntNames.ToArray()
-
-            Call report(progress, $"  {rows} rows -> {dataset.ConnectionCount} connections " &
-                                  $"({skipped} skipped, {neuropilNames.Count} neuropils, {ntNames.Count} neurotransmitters)")
-
-            If truncated Then
-                Call report(progress, $"  [WARN] the connection table was truncated at {MaxConnections} rows")
-            End If
-        End Sub
-
-        ''' <summary>
         ''' 仿真活跃度：读取 ``neuron_activity_*.csv`` (全量逐神经元脉冲计数)。
         ''' </summary>
         ''' <remarks>
@@ -622,15 +307,14 @@ Namespace Data
 
 #End Region
 
-#Region "msgpack 快路径"
+#Region "从 msgpack 转储包装配"
 
         ''' <summary>
-        ''' 从 msgpack 转储包装配数据集：结果与 csv 路径一致，只是全程不再解析 ASCII 文本。
+        ''' 从 msgpack 转储包装配数据集 —— 这是<b>唯一</b>的装配路径。
         ''' </summary>
         ''' <remarks>
-        ''' 每一步都与 <see cref="loadFromCsv"/> 里对应的步骤使用<b>同一段</b>语义代码
-        ''' (索引、坐标平均、脑区取最大值、连接过滤)，区别只在于"记录从哪儿来"：
-        ''' 这里是从转储包里读回来的定型数组，那边是逐行切分 csv。
+        ''' 每一步的语义（神经元主索引、坐标取平均、脑区取最大值、连接按索引过滤）
+        ''' 与原来读 csv 时完全一致，只是"记录从哪儿来"换成了转储包里读回来的定型数组。
         ''' </remarks>
         Private Function loadFromPack(reader As FafbPackReader,
                                       progress As Action(Of String),
@@ -716,8 +400,8 @@ Namespace Data
         End Function
 
         ''' <summary>
-        ''' 主导脑区：与 csv 路径同一套表头解析 (``input/output synapses in &lt;region&gt;``)
-        ''' 与同一个取最大值逻辑，只是数值直接来自转储包的列式数组。
+        ''' 主导脑区：按 ``input/output synapses in &lt;region&gt;`` 挑出需要的列，
+        ''' 再取每个神经元"输入+输出突触数"最大的那个脑区；数值来自转储包的列式数组。
         ''' </summary>
         Private Shared Sub assignNeuropilsFromPack(dataset As BrainDataset, reader As FafbPackReader,
                                                    pack As NeuropilTablePack, progress As Action(Of String))
@@ -889,34 +573,6 @@ Namespace Data
 
             Return id
         End Function
-
-        Private Sub validateFiles()
-            Dim required As String() = {
-                m_config.NamesCsv,
-                m_config.ClassificationCsv,
-                m_config.CellTypesCsv,
-                m_config.NeuronsCsv,
-                m_config.CoordinatesCsv,
-                m_config.NeuropilTableCsv,
-                m_config.ConnectionsCsv
-            }
-            Dim missing As New List(Of String)()
-
-            For Each name As String In required
-                Dim path As String = m_config.ResolvePath(name)
-
-                ' 注意：循环变量不能叫 file，否则会遮蔽 System.IO.File (VB 不区分大小写)
-                If Not IO.File.Exists(path) Then
-                    Call missing.Add(path)
-                End If
-            Next
-
-            If missing.Count > 0 Then
-                Throw New FileNotFoundException(
-                    $"数据文件缺失 (DataDir = {m_config.DataDir}):{Environment.NewLine}  " &
-                    String.Join(Environment.NewLine & "  ", missing))
-            End If
-        End Sub
 
         Private Shared Sub throwIfCancelled(cancel As CancellationToken)
             If cancel.IsCancellationRequested Then
