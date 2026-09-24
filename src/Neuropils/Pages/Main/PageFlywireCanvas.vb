@@ -319,20 +319,38 @@ Public Class PageFlywireCanvas
     End Function
 
     ''' <summary>
-    ''' 重新载入数据目录 (可以在界面上换一台数据集)。
+    ''' 手工选中 msgpack 转储包并重新载入模型数据。
     ''' </summary>
+    ''' <remarks>
+    ''' 启动时按 <see cref="FafbMsgPackStorage.CandidatePackPaths"/> 的顺序自动找包
+    ''' （穷尽之后不会再自动尝试）；一个都没找到时，用户唯一的选择就是这里的
+    ''' 文件对话框 —— 选中 <c>fafb-v783.msgpack.zip</c> 之后写进
+    ''' <see cref="SnnConfig.PackFile"/>，之后主界面与贪吃蛇等所有数据消费方都用这一份。
+    ''' 
+    ''' 数据目录 (csv 所在目录) 不在这里改：它只影响"新鲜度指纹核对"（源 csv 不在就跳过）
+    ''' 与活动结果文件的搜索，与转储包在哪里无关。
+    ''' </remarks>
     Public Sub onReload()
         If m_busy Then Return
 
-        Using dialog As New FolderBrowserDialog()
-            dialog.Description = "选择 FAFB v783 数据目录"
-            dialog.SelectedPath = m_config.DataDir
+        Using dialog As New OpenFileDialog()
+            dialog.Title = "选择 msgpack 模型数据包 (fafb-v783.msgpack.zip)"
+            dialog.Filter = "msgpack 模型数据包 (*.zip)|*.zip|全部文件 (*.*)|*.*"
+            dialog.FileName = FafbMsgPackStorage.DefaultPackName
+            dialog.CheckFileExists = True
+
+            ' 默认落在上一次用过的位置；第一次就落在自动查找的第一个候选目录
+            Dim initial As String = FafbMsgPackStorage.CandidatePackPaths().FirstOrDefault
+
+            If Not String.IsNullOrWhiteSpace(initial) Then
+                dialog.InitialDirectory = IO.Path.GetDirectoryName(initial)
+            End If
 
             If dialog.ShowDialog(Me) <> DialogResult.OK Then
                 Return
             End If
 
-            m_config.DataDir = dialog.SelectedPath
+            m_config.PackFile = dialog.FileName
         End Using
 
         Call startLoad()

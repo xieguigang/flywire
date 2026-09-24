@@ -57,6 +57,16 @@ Namespace Connectome
         ''' </remarks>
         Public Property NeuropilTableCsv As String = "neuropil_synapse_table.csv"
 
+        ''' <summary>
+        ''' msgpack 转储包的<b>显式路径</b>（空串 = 按 <see cref="FafbMsgPackStorage.ResolvePackFile"/>
+        ''' 的候选顺序自动查找）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 界面上"打开模型包"的按钮选中文件之后写到这里，之后主界面与贪吃蛇等
+        ''' 所有数据消费方都会用这一份。
+        ''' </remarks>
+        Public Property PackFile As String = ""
+
 #End Region
 
 #Region "网络与仿真参数"

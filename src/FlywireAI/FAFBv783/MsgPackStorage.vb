@@ -250,12 +250,55 @@ Namespace FAFBv783
 #End Region
 
         ''' <summary>
-        ''' 转储包的路径：显式给了就用它，否则放在数据目录下 (<see cref="DefaultPackName"/>)。
+        ''' 自动查找转储包时依次尝试的位置。
+        ''' </summary>
+        ''' <remarks>
+        ''' <see cref="App.Home"/> 是宿主程序的目录（即 ``tool\net10.0-windows``），
+        ''' 由它出发依次试：程序目录本身、以及向上最多三级目录里的 ``data`` 子目录。
+        ''' <b>这个枚举穷尽之后就不再自动尝试了</b>——剩余的唯一途径是用户在 ribbon 菜单里
+        ''' 用"打开"按钮手工选中转储包文件。
+        ''' </remarks>
+        Public Shared Function CandidatePackPaths() As String()
+            Dim home As String = App.Home
+            Dim candidates As New List(Of String)
+
+            If Not String.IsNullOrWhiteSpace(home) Then
+                Call candidates.Add(Path.Combine(home, DefaultPackName))
+                Call candidates.Add(Path.GetFullPath(Path.Combine(home, "data", DefaultPackName)))
+                Call candidates.Add(Path.GetFullPath(Path.Combine(home, "..", "data", DefaultPackName)))
+                Call candidates.Add(Path.GetFullPath(Path.Combine(home, "..", "..", "data", DefaultPackName)))
+                Call candidates.Add(Path.GetFullPath(Path.Combine(home, "..", "..", "..", "data", DefaultPackName)))
+            End If
+
+            Return candidates.ToArray()
+        End Function
+
+        ''' <summary>
+        ''' 转储包的路径解析：
+        ''' <list type="number">
+        ''' <item>显式参数（命令行 / 文件对话框选中的文件）优先；</item>
+        ''' <item>其次 <see cref="SnnConfig.PackFile"/>（界面"打开"按钮写入的显式路径）；</item>
+        ''' <item>然后按 <see cref="CandidatePackPaths"/> 的顺序取<b>第一个实际存在</b>的；</item>
+        ''' <item>一个都不存在时返回 <see cref="App.Home"/> 下的默认位置 ——
+        '''       这是"转储应该写到哪里"的答案：写在这里，下次启动的第 1 个候选就能命中。
+        '''       此时并不代表包存在，调用方要用 <see cref="File.Exists"/> / <see cref="Verify"/> 判断。</item>
+        ''' </list>
         ''' </summary>
         Public Shared Function ResolvePackFile(config As SnnConfig, Optional packFile As String = Nothing) As String
             If config Is Nothing Then Throw New ArgumentNullException(NameOf(config))
 
             If Not String.IsNullOrWhiteSpace(packFile) Then Return packFile
+            If Not String.IsNullOrWhiteSpace(config.PackFile) Then Return config.PackFile
+
+            For Each candidate As String In CandidatePackPaths()
+                If File.Exists(candidate) Then Return candidate
+            Next
+
+            Dim home As String = App.Home
+
+            If Not String.IsNullOrWhiteSpace(home) Then
+                Return Path.Combine(home, DefaultPackName)
+            End If
 
             Return Path.Combine(config.DataDir, DefaultPackName)
         End Function
@@ -626,7 +669,15 @@ Namespace FAFBv783
         Public Shared Function Verify(config As SnnConfig, Optional packFile As String = Nothing) As String
             Dim target As String = ResolvePackFile(config, packFile)
 
-            If Not File.Exists(target) Then Return $"转储包不存在: {target}"
+            If Not File.Exists(target) Then
+                Dim looked As String = String.Join(Environment.NewLine,
+                    CandidatePackPaths().Select(Function(p) $"  - {p}"))
+
+                Return $"转储包不存在: {target}{Environment.NewLine}" &
+                       $"已按顺序尝试过以下位置:{Environment.NewLine}{looked}{Environment.NewLine}" &
+                       "请把 fafb-v783.msgpack.zip 放到上述任一位置，或用主界面 ribbon 菜单里的" &
+                       """打开模型包""按钮手工选中这个文件。"
+            End If
 
             Dim manifest As FafbPackManifest
 

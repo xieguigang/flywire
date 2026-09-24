@@ -66,8 +66,7 @@ Namespace Data
             If Not String.IsNullOrEmpty(reason) Then
                 Throw New InvalidDataException(
                     $"无法使用 msgpack 转储包：{reason}{Environment.NewLine}" &
-                    $"  转储包: {packPath}{Environment.NewLine}" &
-                    $"  请先执行一次转储（这一句只读一次 csv，之后界面就只认转储包）：{Environment.NewLine}" &
+                    $"  若还没有转储包，可以先执行一次转储（这一句只读一次 csv，之后界面就只认转储包）：{Environment.NewLine}" &
                     $"    Neuropils.exe --dump ""{packPath}"" ""{m_config.DataDir}""")
             End If
 
