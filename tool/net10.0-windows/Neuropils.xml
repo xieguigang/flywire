@@ -311,7 +311,7 @@ Neuropils
  "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
  </remarks>
 </member>
-<member name="M:Neuropils.AppLogics.SelfTest.runSelfTest(Neuropils.FormMain,System.String[])">
+<member name="M:Neuropils.AppLogics.SelfTest.runSelfTest(Neuropils.FormMainOld,System.String[])">
  <summary>
  自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
  </summary>
@@ -1005,7 +1005,7 @@ Neuropils
 <member name="M:Neuropils.Data.VisualizationConfig.ResolveActivityDir">
  <summary>解析活动表所在目录。</summary>
 </member>
-<member name="T:Neuropils.FormMain">
+<member name="T:Neuropils.FormMainOld">
  <summary>
  果蝇大脑三维可视化主窗体。
  </summary>
@@ -1022,18 +1022,18 @@ Neuropils
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
  </remarks>
 </member>
-<member name="F:Neuropils.FormMain.m_chartForm">
+<member name="F:Neuropils.FormMainOld.m_chartForm">
  <summary>响应曲线窗口（单实例复用）。</summary>
 </member>
-<member name="F:Neuropils.FormMain.m_chartTip">
+<member name="F:Neuropils.FormMainOld.m_chartTip">
  <summary>状态栏链接的悬停提示。</summary>
 </member>
-<member name="F:Neuropils.FormMain.m_snapshotPath">
+<member name="F:Neuropils.FormMainOld.m_snapshotPath">
  <summary>
  出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。
  </summary>
 </member>
-<member name="F:Neuropils.FormMain.m_rebuildTimer">
+<member name="F:Neuropils.FormMainOld.m_rebuildTimer">
  <summary>
  拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
  </summary>
@@ -1042,13 +1042,13 @@ Neuropils
  (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.onReplayFirst(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onReplayFirst(System.Object,System.EventArgs)">
  <summary>
  回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
  这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
  </summary>
 </member>
-<member name="M:Neuropils.FormMain.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
+<member name="M:Neuropils.FormMainOld.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
  <summary>
  打开响应曲线窗口。
  </summary>
@@ -1058,13 +1058,13 @@ Neuropils
  "记录下来的响应结果"也还能画出来。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.onSnakeLinkClick(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
+<member name="M:Neuropils.FormMainOld.onSnakeLinkClick(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
  <summary>状态栏"果蝇大脑玩贪吃蛇"链接：转交给 Snake 实例打开观战窗口。</summary>
 </member>
-<member name="M:Neuropils.FormMain.captureAndExit">
+<member name="M:Neuropils.FormMainOld.captureAndExit">
  <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.adjustSplitter">
+<member name="M:Neuropils.FormMainOld.adjustSplitter">
  <summary>
  把右侧栏固定成一个便于阅读的宽度。
  </summary>
@@ -1073,21 +1073,21 @@ Neuropils
  (硬设一个不合法的 SplitterDistance 会直接抛异常)。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.dimensionFromUi">
+<member name="M:Neuropils.FormMainOld.dimensionFromUi">
  <summary>
  工具条上当前选中的着色维度（界面上唯一一处"维度 → 枚举"的映射）。
  </summary>
 </member>
-<member name="M:Neuropils.FormMain.onReload(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onReload(System.Object,System.EventArgs)">
  <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.rebuildColorizer(Neuropils.Data.NeuronColorDimension,System.Boolean)">
+<member name="M:Neuropils.FormMainOld.rebuildColorizer(Neuropils.Data.NeuronColorDimension,System.Boolean)">
  <summary>重建着色器与图例。</summary>
 </member>
-<member name="M:Neuropils.FormMain.rebuildScene(System.Boolean)">
+<member name="M:Neuropils.FormMainOld.rebuildScene(System.Boolean)">
  <summary>重建点云与连线并送进画布。</summary>
 </member>
-<member name="M:Neuropils.FormMain.applyScene(System.Boolean)">
+<member name="M:Neuropils.FormMainOld.applyScene(System.Boolean)">
  <summary>
  把装配好的场景交给画布。
  </summary>
@@ -1096,34 +1096,34 @@ Neuropils
  <c>UpdatePointCloud</c>：用户在交互中调好的视角不应该被一次重新着色重置。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.drawFocusMarker(System.Int32)">
+<member name="M:Neuropils.FormMainOld.drawFocusMarker(System.Int32)">
  <summary>在选中神经元周围补三根短十字线 (与连线一起提交)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.scheduleRebuild">
+<member name="M:Neuropils.FormMainOld.scheduleRebuild">
  <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.onStimulateModeChanged(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onStimulateModeChanged(System.Object,System.EventArgs)">
  <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
 </member>
-<member name="M:Neuropils.FormMain.onStimulusStepsChanged(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onStimulusStepsChanged(System.Object,System.EventArgs)">
  <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
 </member>
-<member name="M:Neuropils.FormMain.onExitClick(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onExitClick(System.Object,System.EventArgs)">
  <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
 </member>
-<member name="M:Neuropils.FormMain.onResetViewClick(System.Object,System.EventArgs)">
+<member name="M:Neuropils.FormMainOld.onResetViewClick(System.Object,System.EventArgs)">
  <summary>菜单「视图 → 重置视角」：把三维画布恢复到默认视角。</summary>
 </member>
-<member name="M:Neuropils.FormMain.refreshLegend">
+<member name="M:Neuropils.FormMainOld.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.showGradient">
+<member name="M:Neuropils.FormMainOld.showGradient">
  <summary>画出当前配色方案的色标 (热力图维度)。</summary>
 </member>
-<member name="M:Neuropils.FormMain.pickAt(System.Int32,System.Int32)">
+<member name="M:Neuropils.FormMainOld.pickAt(System.Int32,System.Int32)">
  <summary>在画布的给定位置拾取神经元，并在详情面板里显示它的注释。</summary>
 </member>
-<member name="M:Neuropils.FormMain.isHeatMap">
+<member name="M:Neuropils.FormMainOld.isHeatMap">
  <summary>
  当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
  </summary>
@@ -1132,10 +1132,10 @@ Neuropils
  放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.showNeuronDetails(System.Int32)">
+<member name="M:Neuropils.FormMainOld.showNeuronDetails(System.Int32)">
  <summary>显示一个神经元的全部注释与连接统计。</summary>
 </member>
-<member name="M:Neuropils.FormMain.countConnections(System.Int32)">
+<member name="M:Neuropils.FormMainOld.countConnections(System.Int32)">
  <summary>
  统计一个神经元的出/入连接数与突触总数。
  </summary>
@@ -1935,6 +1935,27 @@ Neuropils
  <summary>
  数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。
  </summary>
+</member>
+<member name="F:Neuropils.RibbonEventBinding.evt">
+ <summary>
+ binding an instance event to static ribbon event
+ </summary>
+</member>
+<member name="F:Neuropils.HostMessage.JsonOptions">
+ <summary>
+ 序列化选项：忽略 Nothing 成员，使成功响应不出现多余的 "error": null。
+ 属性名保持原样（已是小写），以匹配 JS 侧的 { ok, data, error } 契约。
+ </summary>
+</member>
+<member name="T:Neuropils.HostMessage.ApiResult">
+ <summary>统一的返回体：{ "ok": ..., "data": ..., "error": ... }。</summary>
+</member>
+<member name="M:Neuropils.WebViewLoader.Init(Microsoft.Web.WebView2.WinForms.WebView2,System.Boolean,System.Boolean)">
+ <summary>
+ just call this function in form load event
+ </summary>
+ <param name="WebView21"></param>
+ <param name="enableDevTool"></param>
 </member>
 </members>
 </doc>

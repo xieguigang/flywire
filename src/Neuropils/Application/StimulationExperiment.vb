@@ -97,9 +97,9 @@ Namespace AppLogics
 
 #End Region
 
-        ReadOnly main As FormMain
+        ReadOnly main As FormMainOld
 
-        Sub New(main As FormMain)
+        Sub New(main As FormMainOld)
             Me.main = main
         End Sub
 

@@ -8,8 +8,10 @@
     ".NETCoreApp,Version=v10.0": {
       "Neuropils/1.0.0": {
         "dependencies": {
+          "DockPanelSuite": "3.1.1",
           "FlywireAI": "1.0.0",
           "FlywireSnake": "1.0.0",
+          "Galaxy.Workbench": "1.0.0",
           "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio": "1.0.9762.11310",
           "Microsoft.VisualBasic.Computing.ILCuda": "1.0.9762.11310",
           "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor": "1.0.9762.11310",
@@ -26,7 +28,10 @@
           "Microsoft.VisualBasic.MachineLearning.TensorFlow": "1.0.9762.11310",
           "Microsoft.VisualBasic.Math.Core": "5.0.9762.11310",
           "Microsoft.VisualBasic.Runtime": "10.5.9762.11310",
+          "Microsoft.Windows.FeatureAPI": "1.0.0",
           "Snake2": "1.0.0",
+          "ThemeVS2015": "1.0.0",
+          "Galaxy.Workbench.Reference": "1.0.0.0",
           "Microsoft.VisualBasic.ApplicationServices.Development.VisualStudio.Reference": "1.0.9762.11310",
           "Microsoft.VisualBasic.Computing.ILCuda.Reference": "1.0.9762.11310",
           "Microsoft.VisualBasic.Computing.ILCuda.GPUTensor.Reference": "1.0.9762.11310",
@@ -43,10 +48,34 @@
           "Microsoft.VisualBasic.MachineLearning.TensorFlow.Reference": "1.0.9762.11310",
           "Microsoft.VisualBasic.Math.Core.Reference": "1.0.9762.11310",
           "Microsoft.VisualBasic.MIME.Html.Reference": "1.0.9762.11310",
-          "Microsoft.VisualBasic.Runtime.Reference": "5.33.9762.11310"
+          "Microsoft.VisualBasic.Runtime.Reference": "5.33.9762.11310",
+          "Microsoft.VisualStudio.Windows.Form": "1.0.0.0",
+          "Microsoft.Web.WebView2.Core": "1.0.4191.47",
+          "Microsoft.Web.WebView2.WinForms": "1.0.4191.47",
+          "Microsoft.Web.WebView2.Wpf": "1.0.4191.47",
+          "Microsoft.Windows.Ribbon": "4.0.0.0"
         },
         "runtime": {
           "Neuropils.dll": {}
+        }
+      },
+      "Microsoft.Web.WebView2/1.0.4191.47": {
+        "runtimeTargets": {
+          "runtimes/win-arm64/native/WebView2Loader.dll": {
+            "rid": "win-arm64",
+            "assetType": "native",
+            "fileVersion": "1.0.4191.47"
+          },
+          "runtimes/win-x64/native/WebView2Loader.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "1.0.4191.47"
+          },
+          "runtimes/win-x86/native/WebView2Loader.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "1.0.4191.47"
+          }
         }
       },
       "System.Composition/10.0.12": {
@@ -109,11 +138,38 @@
           }
         }
       },
+      "System.Management/10.0.12": {
+        "runtime": {
+          "lib/net10.0/System.Management.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net10.0/System.Management.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
       "System.Reflection.MetadataLoadContext/10.0.12": {
         "runtime": {
           "lib/net10.0/System.Reflection.MetadataLoadContext.dll": {
             "assemblyVersion": "10.0.0.12",
             "fileVersion": "10.0.1226.42308"
+          }
+        }
+      },
+      "DockPanelSuite/3.1.1": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Drawing.Windows": "1.0.9762.29476",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.VisualStudio.Windows.Form.dll": {
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -151,6 +207,32 @@
           "FlywireSnake.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Galaxy.Workbench/1.0.0": {
+        "dependencies": {
+          "DockPanelSuite": "3.1.1",
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310",
+          "Microsoft.Web.WebView2": "1.0.4191.47",
+          "Microsoft.Windows.FeatureAPI": "1.0.0",
+          "System.Management": "10.0.12",
+          "ThemeVS2015": "1.0.0"
+        },
+        "runtime": {
+          "Galaxy.Workbench.dll": {
+            "fileVersion": "0.0.0.0"
+          }
+        },
+        "resources": {
+          "en-US/Galaxy.Workbench.resources.dll": {
+            "locale": "en-US"
+          },
+          "zh-HK/Galaxy.Workbench.resources.dll": {
+            "locale": "zh-HK"
+          },
+          "zh-Hans/Galaxy.Workbench.resources.dll": {
+            "locale": "zh-Hans"
           }
         }
       },
@@ -351,11 +433,52 @@
           }
         }
       },
+      "Microsoft.Windows.FeatureAPI/1.0.0": {
+        "dependencies": {
+          "Microsoft.VisualBasic.Runtime": "10.5.9762.11310"
+        },
+        "runtime": {
+          "Microsoft.Windows.FeatureAPI.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "Snake2/1.0.0": {
         "runtime": {
           "Snake2.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ThemeVS2015/1.0.0": {
+        "dependencies": {
+          "DockPanelSuite": "3.1.1"
+        },
+        "runtime": {
+          "ThemeVS2015.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Galaxy.Workbench.Reference/1.0.0.0": {
+        "runtime": {
+          "Galaxy.Workbench.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        },
+        "resources": {
+          "en-US/Galaxy.Workbench.resources.dll": {
+            "locale": "en-US"
+          },
+          "zh-HK/Galaxy.Workbench.resources.dll": {
+            "locale": "zh-HK"
+          },
+          "zh-Hans/Galaxy.Workbench.resources.dll": {
+            "locale": "zh-Hans"
           }
         }
       },
@@ -494,6 +617,46 @@
             "fileVersion": "5.33.9762.11310"
           }
         }
+      },
+      "Microsoft.VisualStudio.Windows.Form/1.0.0.0": {
+        "runtime": {
+          "Microsoft.VisualStudio.Windows.Form.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "3.1.1.0"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Core/1.0.4191.47": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Core.dll": {
+            "assemblyVersion": "1.0.4191.47",
+            "fileVersion": "1.0.4191.47"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.WinForms/1.0.4191.47": {
+        "runtime": {
+          "Microsoft.Web.WebView2.WinForms.dll": {
+            "assemblyVersion": "1.0.4191.47",
+            "fileVersion": "1.0.4191.47"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Wpf/1.0.4191.47": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Wpf.dll": {
+            "assemblyVersion": "1.0.4191.47",
+            "fileVersion": "1.0.4191.47"
+          }
+        }
+      },
+      "Microsoft.Windows.Ribbon/4.0.0.0": {
+        "runtime": {
+          "Microsoft.Windows.Ribbon.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "2.16.2.0"
+          }
+        }
       }
     }
   },
@@ -502,6 +665,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Microsoft.Web.WebView2/1.0.4191.47": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Snb6mlTpuz6ZFjWMwIdg28Xp6kAUMy3zaLUyGbFSaw+/AJKlwoX8EiaWJ1eUMfKyJHksPkFjJHl1LIB7kX+0AQ==",
+      "path": "microsoft.web.webview2/1.0.4191.47",
+      "hashPath": "microsoft.web.webview2.1.0.4191.47.nupkg.sha512"
     },
     "System.Composition/10.0.12": {
       "type": "package",
@@ -545,6 +715,13 @@
       "path": "system.composition.typedparts/10.0.12",
       "hashPath": "system.composition.typedparts.10.0.12.nupkg.sha512"
     },
+    "System.Management/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ApUsYmsNG8aPiMxsO6ROGZnqJwSZY8zeMlAQcuQg+ilPFUcIyBUC0BL8qA6wmPLNVsvL4nyhUrhhxh6qn0cx0Q==",
+      "path": "system.management/10.0.12",
+      "hashPath": "system.management.10.0.12.nupkg.sha512"
+    },
     "System.Reflection.MetadataLoadContext/10.0.12": {
       "type": "package",
       "serviceable": true,
@@ -552,12 +729,22 @@
       "path": "system.reflection.metadataloadcontext/10.0.12",
       "hashPath": "system.reflection.metadataloadcontext.10.0.12.nupkg.sha512"
     },
+    "DockPanelSuite/3.1.1": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "FlywireAI/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
     "FlywireSnake/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Galaxy.Workbench/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -647,8 +834,23 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Microsoft.Windows.FeatureAPI/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Snake2/1.0.0": {
       "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ThemeVS2015/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Galaxy.Workbench.Reference/1.0.0.0": {
+      "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
@@ -733,6 +935,31 @@
       "sha512": ""
     },
     "Microsoft.VisualBasic.Runtime.Reference/5.33.9762.11310": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.VisualStudio.Windows.Form/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Core/1.0.4191.47": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.WinForms/1.0.4191.47": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Wpf/1.0.4191.47": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Windows.Ribbon/4.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
