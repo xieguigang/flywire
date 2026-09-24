@@ -68,6 +68,10 @@ Partial Class PageFlywireCanvas
 
     End Sub
 
+    Dim replayBottomPanel As TableLayoutPanel
+    Dim sidebarPanel As TableLayoutPanel
+    Dim replayButtonsPanel As FlowLayoutPanel
+
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
     'Do not modify it using the code editor.
@@ -82,7 +86,10 @@ Partial Class PageFlywireCanvas
         ClientSize = New Size(1411, 818)
         Name = "FormMain"
         Text = "Neuropils"
-        '' 
+
+        replayBottomPanel = New TableLayoutPanel
+        sidebarPanel = New TableLayoutPanel
+        replayButtonsPanel = New FlowLayoutPanel
         '' m_menuStrip
         '' 顶部菜单栏：停靠在窗体顶端，宽度取窗体客户区宽度 (1500, 见 initializeUi 的 ClientSize)，高度 24 为单排菜单的标准高度
         '' 
@@ -271,7 +278,7 @@ Partial Class PageFlywireCanvas
         ' 
         ' sidebarPanel (侧边栏容器)
         ' 
-        Dim sidebarPanel As New TableLayoutPanel()
+
         sidebarPanel.Dock = DockStyle.Fill
         sidebarPanel.ColumnCount = 1
         sidebarPanel.RowCount = 7
@@ -346,7 +353,7 @@ Partial Class PageFlywireCanvas
         ' 
         ' replayButtonsPanel (回放按钮行)
         ' 
-        Dim replayButtonsPanel As New FlowLayoutPanel()
+
         replayButtonsPanel.Dock = DockStyle.Fill
         replayButtonsPanel.FlowDirection = FlowDirection.LeftToRight
         replayButtonsPanel.WrapContents = False
@@ -421,7 +428,7 @@ Partial Class PageFlywireCanvas
         ' 
         ' replayBottomPanel (速度 + 清除 + 状态文本)
         ' 
-        Dim replayBottomPanel As New TableLayoutPanel()
+
         replayBottomPanel.Dock = DockStyle.Fill
         replayBottomPanel.ColumnCount = 3
         replayBottomPanel.RowCount = 1
