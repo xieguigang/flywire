@@ -28,9 +28,9 @@ Partial Class FormNeuronMap
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(432, 892)
+        ClientSize = New Size(444, 889)
         Name = "FormNeuronMap"
-        Text = "Form1"
+        Text = "Neuron Map"
         ResumeLayout(False)
     End Sub
 End Class
