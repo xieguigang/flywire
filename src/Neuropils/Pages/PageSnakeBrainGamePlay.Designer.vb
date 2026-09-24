@@ -80,6 +80,7 @@ Partial Class PageSnakeBrainGamePlay
         m_gamePanel.BackColor = Color.Black
         m_gamePanel.Dock = DockStyle.Fill
         m_gamePanel.Location = New Point(0, 0)
+        m_gamePanel.MinimumSize = New Size(807, 663)
         m_gamePanel.Name = "m_gamePanel"
         m_gamePanel.Size = New Size(807, 663)
         m_gamePanel.TabIndex = 0
@@ -97,6 +98,7 @@ Partial Class PageSnakeBrainGamePlay
         side.Controls.Add(toolbar)
         side.Dock = DockStyle.Fill
         side.Location = New Point(0, 0)
+        side.MinimumSize = New Size(370, 663)
         side.Name = "side"
         side.Size = New Size(370, 663)
         side.TabIndex = 1
@@ -264,6 +266,7 @@ Partial Class PageSnakeBrainGamePlay
         SplitContainer1.FixedPanel = FixedPanel.Panel2
         SplitContainer1.IsSplitterFixed = True
         SplitContainer1.Location = New Point(0, 0)
+        SplitContainer1.MinimumSize = New Size(1181, 663)
         SplitContainer1.Name = "SplitContainer1"
         ' 
         ' SplitContainer1.Panel1

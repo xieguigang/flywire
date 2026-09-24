@@ -286,6 +286,11 @@ Namespace FAFBv783
 
             Call report(progress, $"dumping FAFB v783 into {target} ...")
 
+            ' ZipArchiveMode.Create 不允许写到已存在的文件：重新转储就是完整覆盖
+            If File.Exists(target) Then
+                Call File.Delete(target)
+            End If
+
             Using archive As ZipArchive = Compression.ZipFile.Open(target, ZipArchiveMode.Create)
                 Call sources.Add(dumpTable(archive, config, KeyNames, config.NamesCsv, progress,
                                            Function(path) CellNamesPack.FromRecords(path.LoadCellNames())))
