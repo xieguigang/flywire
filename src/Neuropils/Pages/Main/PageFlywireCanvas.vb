@@ -56,11 +56,12 @@ Public Class PageFlywireCanvas
     ''' 必须写全 System.Windows.Forms.Timer：System.Threading 里也有一个同名的 Timer
     ''' (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
     ''' </remarks>
-    Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
+    Dim WithEvents m_rebuildTimer As New System.Windows.Forms.Timer()
 
-#Region "ui construction"
+#Region "life cycle"
 
-    Private Sub initializeUi()
+    Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        m_experiment = New StimulationExperiment(Me)
 
 
 
@@ -71,62 +72,11 @@ Public Class PageFlywireCanvas
         ' m_chartTip.SetToolTip(m_chartLink, "")
         ' m_chartTip.SetToolTip(m_snakeLink, "")
 
-        Call refreshLegend()
+
         Call m_experiment.initializeStimulation()
-    End Sub
-
-    ''' <summary>
-    ''' 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
-    ''' 这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
-    ''' </summary>
-    Private Sub onReplayFirst(sender As Object, e As EventArgs) Handles m_replayFirst.Click
-        Call m_experiment.onReplayFirst(sender, e)
-    End Sub
-
-    Private Sub onReplayPrev(sender As Object, e As EventArgs) Handles m_replayPrev.Click
-        Call m_experiment.onReplayPrev(sender, e)
-    End Sub
-
-    Private Sub onReplayPlay(sender As Object, e As EventArgs) Handles m_replayPlay.Click
-        Call m_experiment.onReplayPlay(sender, e)
-    End Sub
-
-    Private Sub onReplayNext(sender As Object, e As EventArgs) Handles m_replayNext.Click
-        Call m_experiment.onReplayNext(sender, e)
-    End Sub
-
-    Private Sub onReplayLast(sender As Object, e As EventArgs) Handles m_replayLast.Click
-        Call m_experiment.onReplayLast(sender, e)
-    End Sub
-
-    Private Sub onReplayClear(sender As Object, e As EventArgs) Handles m_replayClear.Click
-        Call m_experiment.onReplayClear(sender, e)
-    End Sub
-
-    Private Sub onReplayTrackScroll(sender As Object, e As EventArgs) Handles m_replayTrack.ValueChanged
-        Call m_experiment.onReplayTrackScroll(sender, e)
-    End Sub
-
-    Private Sub onReplaySpeedChanged(sender As Object, e As EventArgs) Handles m_replaySpeed.ValueChanged
-        If m_experiment IsNot Nothing Then
-            Call m_experiment.onReplaySpeedChanged(sender, e)
-        End If
-    End Sub
-
-#End Region
-
-#Region "life cycle"
-
-    Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        m_experiment = New StimulationExperiment(Me)
-
-        Call initializeUi()
 
         m_rebuildTimer.Stop()
         m_rebuildTimer.Interval = 260
-
-        AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
-
         m_config.DataDir = DefaultDataDir
 
         ' 电刺激仿真默认尝试 GPU。注册失败会自动回退 CPU（GpuRuntime.TryRegister 的契约：
@@ -140,8 +90,6 @@ Public Class PageFlywireCanvas
         m_config.KeepHistory = True
         m_config.UseFusedStep = True
         m_config.ResidentPrecision = LifResidentPrecision.Double64
-
-        Call adjustSplitter()
 
         Dim args As String() = Environment.GetCommandLineArgs()
 
@@ -219,6 +167,7 @@ Public Class PageFlywireCanvas
             m_config.DataDir = args(1)
         End If
 
+        Call ApplyVsTheme(m_toolStrip)
         Call startLoad()
     End Sub
 
@@ -244,30 +193,6 @@ Public Class PageFlywireCanvas
                 Call Console.Out.Flush()
                 Call Environment.Exit(0)
             End Sub)
-    End Sub
-
-    ''' <summary>
-    ''' 把右侧栏固定成一个便于阅读的宽度。
-    ''' </summary>
-    ''' <remarks>
-    ''' 只在控件已经完成布局之后调用；布局中或尺寸过小时保持默认位置
-    ''' (硬设一个不合法的 SplitterDistance 会直接抛异常)。
-    ''' </remarks>
-    Private Sub adjustSplitter()
-        If m_split Is Nothing Then Return
-
-        Try
-            m_split.Panel1MinSize = 240
-            m_split.Panel2MinSize = 300
-
-            Dim width As Integer = m_split.Width
-
-            If width > 600 Then
-                m_split.SplitterDistance = System.Math.Max(320, width - 400)
-            End If
-        Catch ex As Exception
-            Trace.WriteLine($"unable to place the splitter: {ex.Message}")
-        End Try
     End Sub
 
     Protected Overrides Sub OnFormClosed(e As FormClosedEventArgs)
@@ -569,7 +494,7 @@ Public Class PageFlywireCanvas
         RibbonMenu.ToggleConnection = True
     End Sub
 
-    Private Sub onRebuildTimerTick(sender As Object, e As EventArgs)
+    Private Sub onRebuildTimerTick(sender As Object, e As EventArgs) Handles m_rebuildTimer.Tick
         m_rebuildTimer.Stop()
         Call rebuildScene()
     End Sub
@@ -646,88 +571,6 @@ Public Class PageFlywireCanvas
                 CommonRuntime.Warning($"截图保存失败: {m_canvas.LastError}")
             End If
         End Using
-    End Sub
-
-#End Region
-
-#Region "legend"
-
-    ''' <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
-    Private Sub refreshLegend()
-        Call m_legend.Items.Clear()
-
-        If m_colorizer Is Nothing Then Return
-
-        If m_colorizer.IsHeatMap Then
-            m_legend.Enabled = False
-            Call m_legend.Items.Add($"活跃度热力图 (最小 {minActivity():F0} / 最大 {maxActivity():F0} 脉冲)")
-
-            Return
-        End If
-
-        m_legend.Enabled = True
-
-        For Each item As ColorLegendItem In m_colorizer.Legend
-            Dim index As Integer = m_legend.Items.Add(item)
-
-            m_legend.SetItemChecked(index, item.Visible)
-        Next
-    End Sub
-
-    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs) Handles m_legend.ItemCheck
-        If m_colorizer Is Nothing OrElse m_colorizer.IsHeatMap Then Return
-        If e.Index < 0 OrElse e.Index >= m_legend.Items.Count Then Return
-
-        Dim item As ColorLegendItem = TryCast(m_legend.Items(e.Index), ColorLegendItem)
-
-        If item Is Nothing Then Return
-
-        Call m_colorizer.SetVisible(item, e.NewValue = CheckState.Checked)
-
-        ' 勾选状态在事件返回之后才生效，因此重建延后到消息循环的空闲时刻
-        Call BeginInvoke(New Action(AddressOf scheduleRebuild))
-    End Sub
-
-    Private Function minActivity() As Double
-        Return activityRange().Item1
-    End Function
-
-    Private Function maxActivity() As Double
-        Return activityRange().Item2
-    End Function
-
-    Private Function activityRange() As (Double, Double)
-        If m_dataset Is Nothing OrElse Not m_dataset.HasActivity Then Return (0.0, 0.0)
-
-        Dim min As Double = Double.MaxValue
-        Dim max As Double = Double.MinValue
-
-        For Each value As Double In m_dataset.Activity
-            If value < min Then min = value
-            If value > max Then max = value
-        Next
-
-        Return (min, max)
-    End Function
-
-    ''' <summary>画出当前配色方案的色标 (热力图维度)。</summary>
-    Private Sub showGradient()
-        Dim colors As Color() = Designer.GetColors("viridis", 256, 255)
-        Dim bitmap As New Bitmap(256, 1)
-
-        For i As Integer = 0 To 255
-            bitmap.SetPixel(i, 0, colors(i))
-        Next
-
-        ' 旧的位图要主动释放：切换维度会反复生成色标
-        Dim stale As System.Drawing.Image = m_gradient.Image
-
-        m_gradient.Image = bitmap.CTypeGdiImage
-        m_gradient.Visible = True
-
-        If stale IsNot Nothing Then
-            stale.Dispose()
-        End If
     End Sub
 
 #End Region
