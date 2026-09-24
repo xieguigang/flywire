@@ -7,6 +7,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
+Imports Neuropils.Application
 Imports Neuropils.Data
 Imports Neuropils.Rendering
 
@@ -83,6 +84,8 @@ Public Class FormMain
     Private m_cancel As CancellationTokenSource
     Private m_busy As Boolean
 
+    Dim m_snake As Snake
+
     ''' <summary>
     ''' 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
     ''' </summary>
@@ -100,7 +103,9 @@ Public Class FormMain
 
         Call m_rebuildTimer.Stop()
 
+        m_snake = New Snake(Me)
         m_rebuildTimer.Interval = 260
+
         AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
     End Sub
 
@@ -497,7 +502,7 @@ Public Class FormMain
             .VisitedLinkColor = Color.FromArgb(34, 211, 238),
             .Margin = New Padding(6, 4, 6, 0)
         }
-        AddHandler m_snakeLink.LinkClicked, AddressOf onOpenSnakeWindow
+        AddHandler m_snakeLink.LinkClicked, AddressOf m_snake.onOpenSnakeWindow
 
         ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂
         m_chartTip.SetToolTip(
@@ -610,17 +615,19 @@ Public Class FormMain
 
         ' 果蝇大脑玩贪吃蛇：训练 + 三组对照评估（与观战窗口共用同一套代码）
         If args.Length > 2 AndAlso String.Equals(args(1), "--snake", StringComparison.OrdinalIgnoreCase) Then
-            Call runSnakeProbe(args)
+            Call m_snake.runSnakeProbe(args)
 
             Return
         End If
 
         ' 观战窗口自检：正常载入数据 → 自动开窗 → 跑若干 tick → 抓屏退出
         If args.Length > 2 AndAlso String.Equals(args(1), "--snake-window", StringComparison.OrdinalIgnoreCase) Then
-            m_snakeProbePng = args(2)
-            m_snakeProbeTicks = If(args.Length > 4, CInt(Val(args(4))), 12)
+            m_snake.m_snakeProbePng = args(2)
+            m_snake.m_snakeProbeTicks = If(args.Length > 4, CInt(Val(args(4))), 12)
 
-            If m_snakeProbeTicks <= 0 Then m_snakeProbeTicks = 12
+            If m_snake.m_snakeProbeTicks <= 0 Then
+                m_snake.m_snakeProbeTicks = 12
+            End If
         End If
 
         ' 出图模式：载入 → 装配 → 抓一帧写成 png → 退出。
@@ -748,7 +755,7 @@ Public Class FormMain
             .ContinueWith(AddressOf onLoadCompleted, TaskScheduler.FromCurrentSynchronizationContext())
     End Sub
 
-    Private Sub onLoadProgress(message As String)
+    Friend Sub onLoadProgress(message As String)
         If Me.IsDisposed OrElse Not Me.IsHandleCreated Then Return
 
         Call BeginInvoke(New Action(
@@ -795,8 +802,8 @@ Public Class FormMain
         End If
 
         ' 观战窗口自检：数据就绪后自动开窗
-        If m_snakeProbePng IsNot Nothing Then
-            Call openSnakeWindow()
+        If m_snake.m_snakeProbePng IsNot Nothing Then
+            Call m_snake.openSnakeWindow()
         End If
     End Sub
 

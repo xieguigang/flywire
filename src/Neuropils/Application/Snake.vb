@@ -44,12 +44,12 @@ Namespace Application
         ''' <summary>
         ''' 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
         ''' </summary>
-        Private Sub onOpenSnakeWindow(sender As Object, e As LinkLabelLinkClickedEventArgs)
+        Public Sub onOpenSnakeWindow(sender As Object, e As LinkLabelLinkClickedEventArgs)
             Call openSnakeWindow()
         End Sub
 
         ''' <summary>打开观战窗口（链接与命令行自检共用）。</summary>
-        Private Sub openSnakeWindow()
+        Public Sub openSnakeWindow()
             If main.m_dataset Is Nothing Then Return
 
             If m_snakeForm IsNot Nothing AndAlso Not m_snakeForm.IsDisposed Then
@@ -145,10 +145,10 @@ Namespace Application
 #Region "观战窗口的自动化验证"
 
         ''' <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
-        Private m_snakeProbePng As String = Nothing
-        Private m_snakeProbeTicks As Integer
-        Private m_snakeProbeSeen As Integer
-        Private m_snakeProbeCaptured As Boolean
+        Friend m_snakeProbePng As String = Nothing
+        Friend m_snakeProbeTicks As Integer
+        Friend m_snakeProbeSeen As Integer
+        Friend m_snakeProbeCaptured As Boolean
 
         ''' <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
         ''' <remarks>
@@ -333,7 +333,7 @@ Namespace Application
         ''' <c>GitBashEnvironment.GetCommandLineArgs</c> 里的命令行解析），
         ''' 整个进程的日志与 CSV 加载都会跟着失效。
         ''' </remarks>
-        Private Sub runSnakeProbe(args As String())
+        Public Sub runSnakeProbe(args As String())
             Dim report As New StringBuilder()
             Dim failures As Integer = 0
             Dim reportFile As String = args(2)

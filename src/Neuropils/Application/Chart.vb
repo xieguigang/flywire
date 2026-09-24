@@ -173,17 +173,19 @@ Namespace Application
                 Call form.Show()
 
                 For i As Integer = 1 To 80
-                    Call Application.DoEvents()
+                    Call System.Windows.Forms.Application.DoEvents()
 
-                    If form.CanvasReady Then Exit For
+                    If form.CanvasReady Then
+                        Exit For
+                    End If
 
                     Call Threading.Thread.Sleep(50)
                 Next
 
                 ' 首帧之后再抓两帧：控件尺寸定下来之后布局才是最终的样子
-                Call Application.DoEvents()
+                Call System.Windows.Forms.Application.DoEvents()
                 Call Threading.Thread.Sleep(300)
-                Call Application.DoEvents()
+                Call System.Windows.Forms.Application.DoEvents()
 
                 Call check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
 
@@ -201,7 +203,7 @@ Namespace Application
                     Call form.ApplyOptions(dimension, mode, candidate)
 
                     For i As Integer = 1 To 12
-                        Call Application.DoEvents()
+                        Call System.Windows.Forms.Application.DoEvents()
                         Call Threading.Thread.Sleep(30)
                     Next
                 Next

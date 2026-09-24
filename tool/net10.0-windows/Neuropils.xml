@@ -286,7 +286,7 @@ Neuropils
 <member name="M:Neuropils.Analysis.StimulationArchive.Describe(System.String)">
  <summary>读一条实验记录的摘要（用于列表显示；读取失败时返回目录名）。</summary>
 </member>
-<member name="M:Neuropils.Chart.runChartExport(System.String[])">
+<member name="M:Neuropils.Application.Chart.runChartExport(System.String[])">
  <summary>
  ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
  </summary>
@@ -299,7 +299,7 @@ Neuropils
  </list>
  </remarks>
 </member>
-<member name="M:Neuropils.Chart.runChartWindowProbe(System.String[])">
+<member name="M:Neuropils.Application.Chart.runChartWindowProbe(System.String[])">
  <summary>
  ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
  </summary>
@@ -311,7 +311,7 @@ Neuropils
  "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
  </remarks>
 </member>
-<member name="M:Neuropils.SelfTest.runSelfTest(Neuropils.FormMain,System.String[])">
+<member name="M:Neuropils.Application.SelfTest.runSelfTest(Neuropils.FormMain,System.String[])">
  <summary>
  自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
  </summary>
@@ -326,19 +326,19 @@ Neuropils
  报告里的每一条 ``[OK]`` / ``[FAIL]`` 都是硬断言，失败会以退出码 1 结束进程。
  </remarks>
 </member>
-<member name="M:Neuropils.SelfTest.buildSmokeScene(Neuropils.Rendering.BrainScene)">
+<member name="M:Neuropils.Application.SelfTest.buildSmokeScene(Neuropils.Rendering.BrainScene)">
  <summary>构建冒烟测试用的场景 (点云 + 连线)。</summary>
 </member>
-<member name="M:Neuropils.SelfTest.firstProbePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
+<member name="M:Neuropils.Application.SelfTest.firstProbePoint(Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene,Microsoft.VisualBasic.Imaging.Drawing3D.Camera)">
  <summary>挑一个"投影之后落回画布内"的点作为拾取探针。</summary>
 </member>
-<member name="M:Neuropils.SelfTest.connectionsResolved(Neuropils.Data.BrainDataset)">
+<member name="M:Neuropils.Application.SelfTest.connectionsResolved(Neuropils.Data.BrainDataset)">
  <summary>连接表里是否所有端点都能落到神经元索引上 (加载器已过滤，这里复核)。</summary>
 </member>
-<member name="M:Neuropils.SelfTest.countVisiblePositioned(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer)">
+<member name="M:Neuropils.Application.SelfTest.countVisiblePositioned(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer)">
  <summary>某个类别里"有坐标且可见"的神经元数量。</summary>
 </member>
-<member name="M:Neuropils.SelfTest.mappingDelta(System.Text.StringBuilder,Neuropils.Data.BrainDataset,Neuropils.Rendering.BrainScene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
+<member name="M:Neuropils.Application.SelfTest.mappingDelta(System.Text.StringBuilder,Neuropils.Data.BrainDataset,Neuropils.Rendering.BrainScene,Microsoft.VisualBasic.Drawing.DirectX.Scene3D.Scene)">
  <summary>
  校验"点索引 → 神经元索引 → 数据层坐标"这条映射链自洽。
  </summary>
@@ -348,16 +348,109 @@ Neuropils
  抽样若干点即可：这张表是逐点顺序写入的，错位会立刻暴露。
  </remarks>
 </member>
-<member name="M:Neuropils.SelfTest.categorySample(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Data.ColorLegendItem)">
+<member name="M:Neuropils.Application.SelfTest.categorySample(Neuropils.Data.BrainDataset,Neuropils.Data.NeuronColorizer,Neuropils.Data.ColorLegendItem)">
  <summary>返回图例项对应的一个神经元索引 (用于验证该类别的颜色确实存在)。</summary>
 </member>
-<member name="M:Neuropils.SelfTest.busiestNeuron(Neuropils.Data.BrainDataset)">
+<member name="M:Neuropils.Application.SelfTest.busiestNeuron(Neuropils.Data.BrainDataset)">
  <summary>
  出度最大的神经元 (用于验证"选中神经元的连接"这一模式)。
  </summary>
  <remarks>
  用"下标即神经元索引"的计数数组而不是字典：534 万次字典写入会慢一个数量级，
  而计数数组只有 13 万个 ``Integer``。
+ </remarks>
+</member>
+<member name="F:Neuropils.Application.Snake.m_snakeForm">
+ <summary>果蝇大脑玩贪吃蛇的观战窗口（单实例复用）。</summary>
+</member>
+<member name="F:Neuropils.Application.Snake.m_snakePlayground">
+ <summary>装配好的游戏用大脑环境（连接组 + CSR + 标定，约 30 秒，只做一次）。</summary>
+</member>
+<member name="F:Neuropils.Application.Snake.m_snakeHighlighter">
+ <summary>把三维点云切换成"喂给蛇的大脑活动"的高亮器。</summary>
+</member>
+<member name="F:Neuropils.Application.Snake.m_snakeMask">
+ <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
+</member>
+<member name="M:Neuropils.Application.Snake.onOpenSnakeWindow(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
+ <summary>
+ 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
+ </summary>
+</member>
+<member name="M:Neuropils.Application.Snake.openSnakeWindow">
+ <summary>打开观战窗口（链接与命令行自检共用）。</summary>
+</member>
+<member name="M:Neuropils.Application.Snake.showSnakeWindow(FlywireSnake.SnakePlayground)">
+ <summary>创建观战窗口并接上"三维活动可视化"。</summary>
+</member>
+<member name="F:Neuropils.Application.Snake.m_snakeProbePng">
+ <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
+</member>
+<member name="M:Neuropils.Application.Snake.startSnakeProbeCapture(Neuropils.SnakeBrainForm)">
+ <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
+ <remarks>
+ 抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
+ 因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
+ </remarks>
+</member>
+<member name="M:Neuropils.Application.Snake.verifySnakeShutdown(Neuropils.SnakeBrainForm)">
+ <summary>
+ 抓完屏把观战窗口关掉，验证"关窗 = 停机"：不该再有脑活动事件，点云也该恢复原色。
+ </summary>
+ <remarks>
+ 停机前定时器是活的，每 tick 都会推一次脑活动；停机后如果还能数到事件，
+ 说明定时器没被真正停掉 —— 那就是用户看到的"关了窗口大脑还在闪"。
+ </remarks>
+</member>
+<member name="M:Neuropils.Application.Snake.captureWindow(System.Windows.Forms.Form,System.String)">
+ <summary>
+ 把观战窗口<b>自身</b>画成一张图。
+ </summary>
+ <remarks>
+ 与 <see cref="M:Neuropils.Application.Snake.captureScreen(System.String)"/> 的区别是它与屏幕上的 z 序无关：
+ 窗口被别人挡着也照样能拿到内容，因此适合在自动化里核对
+ "右侧的感觉通道 / 运动读出到底有没有画出数据"。
+ </remarks>
+</member>
+<member name="M:Neuropils.Application.Snake.environmentInteger(System.String,System.Int32)">
+ <summary>
+ 从环境变量读一个整数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+ 约定 -1 表示"沿用默认档位"）。
+ </summary>
+</member>
+<member name="M:Neuropils.Application.Snake.environmentDouble(System.String,System.Double)">
+ <summary>
+ 从环境变量读一个浮点数（没设 / 解析不了时返回 <paramref name="fallback"/>，
+ 约定负数表示"沿用默认档位"）。
+ </summary>
+</member>
+<member name="M:Neuropils.Application.Snake.captureScreen(System.String)">
+ <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
+</member>
+<member name="M:Neuropils.Application.Snake.loadTrainedDecoder(FlywireSnake.SnakeBrain)">
+ <summary>尽量用已训练好的解码器开局（没有就用随机读出）。</summary>
+</member>
+<member name="M:Neuropils.Application.Snake.onSnakeBrainActivity(System.Int32[],FlywireSnake.SnakeStep)">
+ <summary>
+ 把"果蝇大脑此刻发放的神经元"实时点亮到三维点云上。
+ </summary>
+ <remarks>
+ 与本窗口的响应对齐：会话在 UI 线程上推进，因此这个回调也在 UI 线程，
+ 可以直接更新画布而不用跨线程封送。
+ </remarks>
+</member>
+<member name="M:Neuropils.Application.Snake.runSnakeProbe(System.String[])">
+ <summary>
+ ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``
+ </summary>
+ <remarks>
+ "感觉 / 读出标定"那三个档位（<c>FLYWIRE_SNAKE_SENSORS_PER_CHANNEL</c> /
+ <c>FLYWIRE_SNAKE_SENSOR_CURRENT</c> / <c>FLYWIRE_SNAKE_FEATURE_WINDOW</c>）
+ 走<b>环境变量</b>而不是第 7 个命令行参数：本仓库的
+ <c>Microsoft.VisualBasic.App</c> 类型在"命令行参数多于 6 个"时会直接抛
+ <c>TypeInitializationException</c>（Core 的 <c>App.CommandLine</c> 字段初始化，
+ <c>GitBashEnvironment.GetCommandLineArgs</c> 里的命令行解析），
+ 整个进程的日志与 CSV 加载都会跟着失效。
  </remarks>
 </member>
 <member name="T:Neuropils.Data.BrainDataset">
@@ -731,99 +824,6 @@ Neuropils
  两个后台线程分别负责"读表" (<see cref="T:Neuropils.Data.BrainDatasetLoader"/>) 与"装配场景"
  (<see cref="T:Neuropils.Rendering.BrainSceneBuilder"/>)：534 万条连接的过滤与连线构建需要数百毫秒，
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
- </remarks>
-</member>
-<member name="F:Neuropils.FormMain.m_snakeForm">
- <summary>果蝇大脑玩贪吃蛇的观战窗口（单实例复用）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snakePlayground">
- <summary>装配好的游戏用大脑环境（连接组 + CSR + 标定，约 30 秒，只做一次）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snakeHighlighter">
- <summary>把三维点云切换成"喂给蛇的大脑活动"的高亮器。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snakeMask">
- <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.onOpenSnakeWindow(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
- <summary>
- 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
- </summary>
-</member>
-<member name="M:Neuropils.FormMain.openSnakeWindow">
- <summary>打开观战窗口（链接与命令行自检共用）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.showSnakeWindow(FlywireSnake.SnakePlayground)">
- <summary>创建观战窗口并接上"三维活动可视化"。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snakeProbePng">
- <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
-</member>
-<member name="M:Neuropils.FormMain.startSnakeProbeCapture(Neuropils.SnakeBrainForm)">
- <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
- <remarks>
- 抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
- 因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.verifySnakeShutdown(Neuropils.SnakeBrainForm)">
- <summary>
- 抓完屏把观战窗口关掉，验证"关窗 = 停机"：不该再有脑活动事件，点云也该恢复原色。
- </summary>
- <remarks>
- 停机前定时器是活的，每 tick 都会推一次脑活动；停机后如果还能数到事件，
- 说明定时器没被真正停掉 —— 那就是用户看到的"关了窗口大脑还在闪"。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.captureWindow(System.Windows.Forms.Form,System.String)">
- <summary>
- 把观战窗口<b>自身</b>画成一张图。
- </summary>
- <remarks>
- 与 <see cref="M:Neuropils.FormMain.captureScreen(System.String)"/> 的区别是它与屏幕上的 z 序无关：
- 窗口被别人挡着也照样能拿到内容，因此适合在自动化里核对
- "右侧的感觉通道 / 运动读出到底有没有画出数据"。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.environmentInteger(System.String,System.Int32)">
- <summary>
- 从环境变量读一个整数（没设 / 解析不了时返回 <paramref name="fallback"/>，
- 约定 -1 表示"沿用默认档位"）。
- </summary>
-</member>
-<member name="M:Neuropils.FormMain.environmentDouble(System.String,System.Double)">
- <summary>
- 从环境变量读一个浮点数（没设 / 解析不了时返回 <paramref name="fallback"/>，
- 约定负数表示"沿用默认档位"）。
- </summary>
-</member>
-<member name="M:Neuropils.FormMain.captureScreen(System.String)">
- <summary>把整个虚拟屏幕抓成一张图（两个窗口都在上面）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.loadTrainedDecoder(FlywireSnake.SnakeBrain)">
- <summary>尽量用已训练好的解码器开局（没有就用随机读出）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.onSnakeBrainActivity(System.Int32[],FlywireSnake.SnakeStep)">
- <summary>
- 把"果蝇大脑此刻发放的神经元"实时点亮到三维点云上。
- </summary>
- <remarks>
- 与本窗口的响应对齐：会话在 UI 线程上推进，因此这个回调也在 UI 线程，
- 可以直接更新画布而不用跨线程封送。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.runSnakeProbe(System.String[])">
- <summary>
- ``--snake &lt;报告.txt&gt; [数据目录] [训练局数] [每局 tick 数] [评估局数]``
- </summary>
- <remarks>
- "感觉 / 读出标定"那三个档位（<c>FLYWIRE_SNAKE_SENSORS_PER_CHANNEL</c> /
- <c>FLYWIRE_SNAKE_SENSOR_CURRENT</c> / <c>FLYWIRE_SNAKE_FEATURE_WINDOW</c>）
- 走<b>环境变量</b>而不是第 7 个命令行参数：本仓库的
- <c>Microsoft.VisualBasic.App</c> 类型在"命令行参数多于 6 个"时会直接抛
- <c>TypeInitializationException</c>（Core 的 <c>App.CommandLine</c> 字段初始化，
- <c>GitBashEnvironment.GetCommandLineArgs</c> 里的命令行解析），
- 整个进程的日志与 CSV 加载都会跟着失效。
  </remarks>
 </member>
 <member name="F:Neuropils.FormMain.HoldFloorMs">
