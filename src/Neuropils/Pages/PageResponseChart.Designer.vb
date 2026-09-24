@@ -36,6 +36,7 @@ Partial Class PageResponseChart
     Dim WithEvents selectAll As Button
     Dim WithEvents clearAll As Button
     Dim WithEvents exportImage As Button
+    Dim WithEvents canvasPanel As TableLayoutPanel
 
     Sub New()
 
@@ -51,7 +52,6 @@ Partial Class PageResponseChart
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(PageResponseChart))
         root = New TableLayoutPanel()
         filterBar = New TableLayoutPanel()
         dimensionLabel = New Label()
@@ -73,11 +73,9 @@ Partial Class PageResponseChart
         exportImage = New Button()
         m_values = New CheckedListBox()
         m_summary = New Label()
+        canvasPanel = New TableLayoutPanel()
         m_canvas = New DxCanvas()
-        Panel1 = New Panel()
-        StatusStrip1 = New StatusStrip()
-        m_status = New ToolStripStatusLabel()
-        SplitContainer1 = New SplitContainer()
+        m_status = New Label()
         root.SuspendLayout()
         filterBar.SuspendLayout()
         row3.SuspendLayout()
@@ -85,36 +83,32 @@ Partial Class PageResponseChart
         CType(m_windowBox, ComponentModel.ISupportInitialize).BeginInit()
         valuePanel.SuspendLayout()
         buttons.SuspendLayout()
-        Panel1.SuspendLayout()
-        StatusStrip1.SuspendLayout()
-        CType(SplitContainer1, ComponentModel.ISupportInitialize).BeginInit()
-        SplitContainer1.Panel1.SuspendLayout()
-        SplitContainer1.Panel2.SuspendLayout()
-        SplitContainer1.SuspendLayout()
+        canvasPanel.SuspendLayout()
         SuspendLayout()
         ' 
         ' root
         ' 
         root.BackColor = SystemColors.Control
-        root.ColumnCount = 1
-        root.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 298F))
-        root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100F))
+        root.ColumnCount = 2
+        root.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 298.0F))
+        root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
         root.Controls.Add(filterBar, 0, 0)
         root.Controls.Add(valuePanel, 0, 1)
+        root.Controls.Add(canvasPanel, 1, 0)
         root.Dock = DockStyle.Fill
         root.Location = New Point(0, 0)
         root.Name = "root"
         root.RowCount = 2
-        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 138F))
-        root.RowStyles.Add(New RowStyle(SizeType.Percent, 100F))
-        root.Size = New Size(365, 764)
+        root.RowStyles.Add(New RowStyle(SizeType.Absolute, 124.0F))
+        root.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        root.Size = New Size(1270, 764)
         root.TabIndex = 0
         ' 
         ' filterBar
         ' 
         filterBar.ColumnCount = 2
-        filterBar.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 84F))
-        filterBar.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100F))
+        filterBar.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 84.0F))
+        filterBar.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
         filterBar.Controls.Add(dimensionLabel, 0, 0)
         filterBar.Controls.Add(m_dimensionBox, 1, 0)
         filterBar.Controls.Add(modeLabel, 0, 1)
@@ -127,11 +121,11 @@ Partial Class PageResponseChart
         filterBar.Name = "filterBar"
         filterBar.Padding = New Padding(8, 6, 8, 0)
         filterBar.RowCount = 4
-        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 21F))
-        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 19F))
-        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
-        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 8F))
-        filterBar.Size = New Size(359, 132)
+        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 21.0F))
+        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 19.0F))
+        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
+        filterBar.RowStyles.Add(New RowStyle(SizeType.Absolute, 8.0F))
+        filterBar.Size = New Size(292, 118)
         filterBar.TabIndex = 0
         ' 
         ' dimensionLabel
@@ -152,7 +146,7 @@ Partial Class PageResponseChart
         m_dimensionBox.Items.AddRange(New Object() {"主导脑区", "神经递质", "细胞类型", "分类层级 super_class", "分类层级 class", "分类层级 group"})
         m_dimensionBox.Location = New Point(95, 9)
         m_dimensionBox.Name = "m_dimensionBox"
-        m_dimensionBox.Size = New Size(253, 23)
+        m_dimensionBox.Size = New Size(186, 23)
         m_dimensionBox.TabIndex = 1
         ' 
         ' modeLabel
@@ -172,7 +166,7 @@ Partial Class PageResponseChart
         m_modeBox.DropDownStyle = ComboBoxStyle.DropDownList
         m_modeBox.Location = New Point(95, 30)
         m_modeBox.Name = "m_modeBox"
-        m_modeBox.Size = New Size(253, 23)
+        m_modeBox.Size = New Size(186, 23)
         m_modeBox.TabIndex = 3
         ' 
         ' aggregationLabel
@@ -193,7 +187,7 @@ Partial Class PageResponseChart
         m_aggregationBox.Items.AddRange(New Object() {"逐个神经元", "组均值", "组均值 ± 包络"})
         m_aggregationBox.Location = New Point(95, 49)
         m_aggregationBox.Name = "m_aggregationBox"
-        m_aggregationBox.Size = New Size(253, 23)
+        m_aggregationBox.Size = New Size(186, 23)
         m_aggregationBox.TabIndex = 5
         ' 
         ' row3
@@ -206,7 +200,7 @@ Partial Class PageResponseChart
         row3.Location = New Point(92, 78)
         row3.Margin = New Padding(0)
         row3.Name = "row3"
-        row3.Size = New Size(259, 54)
+        row3.Size = New Size(192, 40)
         row3.TabIndex = 6
         row3.WrapContents = False
         ' 
@@ -258,21 +252,21 @@ Partial Class PageResponseChart
         ' 
         valuePanel.BackColor = SystemColors.Control
         valuePanel.ColumnCount = 1
-        valuePanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 20F))
+        valuePanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 20.0F))
         valuePanel.Controls.Add(m_valueHint, 0, 0)
         valuePanel.Controls.Add(buttons, 0, 1)
         valuePanel.Controls.Add(m_values, 0, 2)
         valuePanel.Controls.Add(m_summary, 0, 3)
         valuePanel.Dock = DockStyle.Fill
-        valuePanel.Location = New Point(3, 141)
+        valuePanel.Location = New Point(3, 127)
         valuePanel.Name = "valuePanel"
         valuePanel.Padding = New Padding(8, 0, 4, 8)
         valuePanel.RowCount = 4
-        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 34F))
-        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30F))
-        valuePanel.RowStyles.Add(New RowStyle(SizeType.Percent, 100F))
-        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 62F))
-        valuePanel.Size = New Size(359, 620)
+        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 34.0F))
+        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30.0F))
+        valuePanel.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        valuePanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 62.0F))
+        valuePanel.Size = New Size(292, 634)
         valuePanel.TabIndex = 1
         ' 
         ' m_valueHint
@@ -282,7 +276,7 @@ Partial Class PageResponseChart
         m_valueHint.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
         m_valueHint.Location = New Point(11, 0)
         m_valueHint.Name = "m_valueHint"
-        m_valueHint.Size = New Size(341, 34)
+        m_valueHint.Size = New Size(274, 34)
         m_valueHint.TabIndex = 0
         m_valueHint.Text = "勾选 = 只看这些；不勾选 = 全部响应神经元"
         ' 
@@ -295,7 +289,7 @@ Partial Class PageResponseChart
         buttons.Location = New Point(8, 34)
         buttons.Margin = New Padding(0)
         buttons.Name = "buttons"
-        buttons.Size = New Size(347, 30)
+        buttons.Size = New Size(280, 30)
         buttons.TabIndex = 1
         buttons.WrapContents = False
         ' 
@@ -339,7 +333,7 @@ Partial Class PageResponseChart
         m_values.IntegralHeight = False
         m_values.Location = New Point(11, 67)
         m_values.Name = "m_values"
-        m_values.Size = New Size(341, 480)
+        m_values.Size = New Size(274, 494)
         m_values.TabIndex = 2
         ' 
         ' m_summary
@@ -347,79 +341,59 @@ Partial Class PageResponseChart
         m_summary.AutoEllipsis = True
         m_summary.Dock = DockStyle.Fill
         m_summary.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
-        m_summary.Location = New Point(11, 550)
+        m_summary.Location = New Point(11, 564)
         m_summary.Name = "m_summary"
-        m_summary.Size = New Size(341, 62)
+        m_summary.Size = New Size(274, 62)
         m_summary.TabIndex = 3
+        ' 
+        ' canvasPanel
+        ' 
+        canvasPanel.BackColor = SystemColors.Control
+        canvasPanel.ColumnCount = 1
+        canvasPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 20.0F))
+        canvasPanel.Controls.Add(m_canvas, 0, 0)
+        canvasPanel.Controls.Add(m_status, 0, 1)
+        canvasPanel.Dock = DockStyle.Fill
+        canvasPanel.Location = New Point(301, 3)
+        canvasPanel.Name = "canvasPanel"
+        canvasPanel.Padding = New Padding(0, 6, 8, 8)
+        canvasPanel.RowCount = 2
+        root.SetRowSpan(canvasPanel, 2)
+        canvasPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        canvasPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26.0F))
+        canvasPanel.Size = New Size(966, 758)
+        canvasPanel.TabIndex = 2
         ' 
         ' m_canvas
         ' 
         m_canvas.BackColor = Color.LightSkyBlue
         m_canvas.Dock = DockStyle.Fill
-        m_canvas.Location = New Point(0, 0)
+        m_canvas.Location = New Point(3, 9)
         m_canvas.Name = "m_canvas"
-        m_canvas.Size = New Size(901, 742)
+        m_canvas.Size = New Size(952, 712)
         m_canvas.TabIndex = 0
-        ' 
-        ' Panel1
-        ' 
-        Panel1.Controls.Add(m_canvas)
-        Panel1.Controls.Add(StatusStrip1)
-        Panel1.Dock = DockStyle.Fill
-        Panel1.Location = New Point(0, 0)
-        Panel1.Name = "Panel1"
-        Panel1.Size = New Size(901, 764)
-        Panel1.TabIndex = 2
-        ' 
-        ' StatusStrip1
-        ' 
-        StatusStrip1.Items.AddRange(New ToolStripItem() {m_status})
-        StatusStrip1.Location = New Point(0, 742)
-        StatusStrip1.Name = "StatusStrip1"
-        StatusStrip1.Size = New Size(901, 22)
-        StatusStrip1.TabIndex = 0
-        StatusStrip1.Text = "StatusStrip1"
         ' 
         ' m_status
         ' 
-        m_status.ForeColor = Color.PaleTurquoise
+        m_status.AutoEllipsis = True
+        m_status.Dock = DockStyle.Fill
+        m_status.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
+        m_status.Location = New Point(3, 724)
         m_status.Name = "m_status"
-        m_status.Size = New Size(42, 17)
-        m_status.Text = "Ready!"
+        m_status.Size = New Size(952, 26)
+        m_status.TabIndex = 1
+        m_status.TextAlign = ContentAlignment.MiddleLeft
         ' 
-        ' SplitContainer1
+        ' ResponseChartForm
         ' 
-        SplitContainer1.Dock = DockStyle.Fill
-        SplitContainer1.Location = New Point(0, 0)
-        SplitContainer1.Name = "SplitContainer1"
-        ' 
-        ' SplitContainer1.Panel1
-        ' 
-        SplitContainer1.Panel1.Controls.Add(root)
-        ' 
-        ' SplitContainer1.Panel2
-        ' 
-        SplitContainer1.Panel2.Controls.Add(Panel1)
-        SplitContainer1.Size = New Size(1270, 764)
-        SplitContainer1.SplitterDistance = 365
-        SplitContainer1.TabIndex = 3
-        ' 
-        ' PageResponseChart
-        ' 
-        AutoScaleDimensions = New SizeF(96F, 96F)
         BackColor = Color.FromArgb(CByte(21), CByte(29), CByte(38))
         ClientSize = New Size(1270, 764)
-        Controls.Add(SplitContainer1)
-        DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
-        DoubleBuffered = True
-        Font = New Font("Segoe UI", 9F)
+        Controls.Add(root)
+        Font = New Font("Segoe UI", 9.0F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
-        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MinimumSize = New Size(820, 520)
-        Name = "PageResponseChart"
-        ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown
+        Name = "ResponseChartForm"
         StartPosition = FormStartPosition.CenterParent
-        TabPageContextMenuStrip = DockContextMenuStrip1
         Text = "电刺激响应曲线"
         root.ResumeLayout(False)
         filterBar.ResumeLayout(False)
@@ -429,14 +403,7 @@ Partial Class PageResponseChart
         CType(m_windowBox, ComponentModel.ISupportInitialize).EndInit()
         valuePanel.ResumeLayout(False)
         buttons.ResumeLayout(False)
-        Panel1.ResumeLayout(False)
-        Panel1.PerformLayout()
-        StatusStrip1.ResumeLayout(False)
-        StatusStrip1.PerformLayout()
-        SplitContainer1.Panel1.ResumeLayout(False)
-        SplitContainer1.Panel2.ResumeLayout(False)
-        CType(SplitContainer1, ComponentModel.ISupportInitialize).EndInit()
-        SplitContainer1.ResumeLayout(False)
+        canvasPanel.ResumeLayout(False)
         ResumeLayout(False)
     End Sub
 
@@ -448,9 +415,6 @@ Partial Class PageResponseChart
     Private WithEvents m_windowBox As NumericUpDown
     Private WithEvents m_values As CheckedListBox
     Private WithEvents m_valueHint As Label
+    Private WithEvents m_status As Label
     Private WithEvents m_summary As Label
-    Friend WithEvents Panel1 As Panel
-    Friend WithEvents StatusStrip1 As StatusStrip
-    Friend WithEvents m_status As ToolStripStatusLabel
-    Friend WithEvents SplitContainer1 As SplitContainer
 End Class
