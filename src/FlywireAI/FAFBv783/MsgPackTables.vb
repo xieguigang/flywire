@@ -370,13 +370,42 @@ Namespace FAFBv783
     End Class
 
     ''' <summary>
+    ''' 脑区表的<b>单列</b>数值 (``Values(行号)``)。
+    ''' </summary>
+    ''' <remarks>
+    ''' 单独成类是为了让"一列"能独立成为一个 msgpack 项：
+    ''' 用方只读它需要的那几列，不必整张 321 列的表都过一遍。
+    ''' </remarks>
+    Public Class DoubleColumnPack
+
+        <MessagePackMember(1)>
+        Public Property Values As Double()
+
+    End Class
+
+    ''' <summary>一整列 Long（连接表的 root_id 列）。</summary>
+    Public Class LongColumnPack
+
+        <MessagePackMember(1)>
+        Public Property Values As Long()
+
+    End Class
+
+    ''' <summary>一整列 Integer（连接表字典化之后的编号列）。</summary>
+    Public Class IntegerColumnPack
+
+        <MessagePackMember(1)>
+        Public Property Values As Integer()
+
+    End Class
+
+    ''' <summary>
     ''' ``connections_princeton.csv``：534 万行突触连接。
     ''' </summary>
     ''' <remarks>
     ''' 这一项里只有<b>元数据</b>（行数 + 两个名称表），5 个数据列各自独立成项
-    ''' (见 <see cref="FafbMsgPackStorage.ConnectionColumnKey"/>) 并走
-    ''' <see cref="MsgPackArrayCodec"/> 的快通道 —— 反射序列化器逐元素反序列化
-    ''' 2,670 万个值要 3.1 s，比直接解析 csv 还慢。
+    ''' (见 <see cref="FafbMsgPackStorage.ConnectionColumnKey"/>)：
+    ''' 用方按需取列，而"一列"这种形状也正好落在 msgpack 库的基础类型数组快路径上。
     ''' 
     ''' 两个分类列 (``neuropil`` / ``nt_type``) 在转储时<b>已经字典化</b>：
     ''' 存的是整数编号 + 名称表，而不是 1,068 万个字符串对象。

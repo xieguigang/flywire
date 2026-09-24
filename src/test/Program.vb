@@ -8,6 +8,27 @@ Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 ' 因此这里统一使用别名（与 SNN / ILCudaTensor 测试工程的写法保持一致）
 Imports tf = Microsoft.VisualBasic.MachineLearning.TensorFlow
 Imports tfCompute = Microsoft.VisualBasic.MachineLearning.TensorFlow.Compute
+Imports Microsoft.VisualBasic.Data.IO.MessagePack
+Imports Microsoft.VisualBasic.Data.IO.MessagePack.Serialization
+
+''' <summary>
+''' 测试用的"单列"包装：基础类型数组必须挂在对象属性上才会被 msgpack 序列化
+''' （直接序列化一个裸数组只会得到一个空文档：数组类型本身没有可读写的属性）。
+''' </summary>
+Public Class Pack(Of T)
+
+    <MessagePackMember(1)>
+    Public Property Values As T()
+
+End Class
+
+''' <summary>同上，但列用的是 <c>List(Of T)</c>：走的是 <c>DeserializeCollection</c> 那条路径。</summary>
+Public Class ListPack
+
+    <MessagePackMember(1)>
+    Public Property Values As List(Of Double)
+
+End Class
 
 ''' <summary>
 ''' FAFB v783 数据模型以及加载模块的演示测试程序。
@@ -38,9 +59,21 @@ Module Program
     Dim _connectomeIndex As ConnectomeIndex
     Dim _connectomeMatrix As ConnectomeMatrix
 
+    ''' <summary>
+    ''' 只跑指定的章节：命令行第一个参数给章节号（例如 ``11`` 就只跑第 11 节），为空则跑全部。
+    ''' 单独跑某一节在改了库之后很省时间（前面的章节要把几百万行数据重读一遍）。
+    ''' </summary>
+    Dim onlySection As String = ""
+
     Sub Main(args As String())
         Console.WriteLine("FAFB v783 data model and loader demo")
         Console.WriteLine($"data directory: {DATA_DIR}")
+
+        onlySection = If(args.Length > 0 AndAlso args(0).Length > 0, args(0).Trim, "")
+
+        If onlySection <> "" Then
+            Console.WriteLine($"only running section: {onlySection}")
+        End If
 
         If Not Directory.Exists(DATA_DIR) Then
             Console.WriteLine($"[FATAL] the data directory does not exist: {DATA_DIR}")
@@ -57,6 +90,7 @@ Module Program
         Call run("8. SWC skeleton parser + zip archive", AddressOf testSwcSkeleton)
         Call run("9. Drosophila brain SNN simulation", AddressOf testBrainSnn)
         Call run("10. full brain SNN: CPU vs GPU acceleration", AddressOf testGpuAcceleration)
+        Call run("11. msgpack round trip (primitive arrays)", AddressOf testMsgPackRoundTrip)
 
         Console.WriteLine()
         Console.WriteLine($"pass: {totalCount - failCount} / {totalCount}, fail: {failCount}")
@@ -919,6 +953,108 @@ Module Program
         tfCompute.SIMDTensor.Register()
     End Sub
 
+    ''' <summary>
+    ''' msgpack 的往返一致性回归：重点覆盖<b>基础类型数组</b>这条新增的整块快路径。
+    ''' </summary>
+    ''' <remarks>
+    ''' 快路径改的是"怎么读写"，wire 格式必须<b>一个字节都不变</b>（旧文件照样要能读），
+    ''' 因此除了往返一致，这里还直接断言几个代表性序列的字节，并用一个 100 万元素的数组
+    ''' 覆盖"跨块"的分支（写是一块一块刷盘的，读是一次读一整段之后再按实际消费量回正流位置）。
+    ''' </remarks>
+    Private Sub testMsgPackRoundTrip()
+        Console.WriteLine()
+        Console.WriteLine("=== 11. msgpack round trip (primitive arrays) ===")
+
+        Call roundTrip("Double()", New Double() {0, 1.5, -2.25, 1.0E+300, 123456.789, Double.MinValue})
+        Call roundTrip("Long()", New Long() {0, 1, -1, 127, 128, -128, 32767, 32768, -32768,
+                                             Integer.MaxValue, Long.MinValue, 720575940599457990L})
+        Call roundTrip("Integer()", New Integer() {0, -1, 127, 255, 256, -32768, 65535, 65536,
+                                                   Integer.MinValue, Integer.MaxValue})
+        Call roundTrip("Short()", New Short() {0, -1, 127, -128, 255, 256, Short.MinValue, Short.MaxValue})
+        Call roundTrip("Byte()", New Byte() {0, 1, 127, 255})
+        Call roundTrip("Boolean()", New Boolean() {True, False, True, True})
+        Call roundTrip("Single()", New Single() {0, 1.5F, -3.25F, Single.MaxValue})
+        Call roundTrip("String()", New String() {"", "abc", "中文", "a,b"})
+
+        ' 边界：空数组与单元素
+        Call roundTrip("empty Double()", New Double() {})
+        Call roundTrip("single Long()", New Long() {42})
+
+        ' 跨块：100 万个元素（写缓冲一块 65536 个，读是一次读一整段）
+        Dim big As Double() = New Double(1000000 - 1) {}
+
+        For i As Integer = 0 To big.Length - 1
+            big(i) = i * 0.5 - 1000
+        Next
+
+        Dim timer As Stopwatch = Stopwatch.StartNew()
+        Dim bytes As Byte() = MsgPackSerializer.SerializeObject(New Pack(Of Double) With {.Values = big})
+        Dim restored As Pack(Of Double) = MsgPackSerializer.Deserialize(Of Pack(Of Double))(bytes)
+
+        timer.Stop()
+
+        Dim diff As Integer = 0
+
+        For i As Integer = 0 To big.Length - 1
+            If restored.Values(i) <> big(i) Then diff += 1
+        Next
+
+        Call check("1M Double() round trip is identical", diff, 0)
+        Console.WriteLine($"    {big.Length:N0} doubles: {bytes.Length / 1024 / 1024:F1} MB, {timer.ElapsedMilliseconds} ms")
+
+        ' ---------------------------------------------------------------- wire 格式断言
+        ' 91 = 1 个属性的对象(数组布局)，92 = 2 元素数组，01 = 正整数 1，CD 012C = uint16 300
+        Call checkBytes("Integer() {1, 300}",
+                        MsgPackSerializer.SerializeObject(New Pack(Of Integer) With {.Values = New Integer() {1, 300}}),
+                        "91-92-01-CD-01-2C")
+
+        ' CB = float64，3FF8000000000000 = 1.5
+        Call checkBytes("Double() {1.5}",
+                        MsgPackSerializer.SerializeObject(New Pack(Of Double) With {.Values = New Double() {1.5}}),
+                        "91-91-CB-3F-F8-00-00-00-00-00-00")
+
+        ' D3 = int64，8000000000000000 = Long.MinValue
+        Call checkBytes("Long() {Long.MinValue}",
+                        MsgPackSerializer.SerializeObject(New Pack(Of Long) With {.Values = New Long() {Long.MinValue}}),
+                        "91-91-D3-80-00-00-00-00-00-00-00")
+
+        ' List(Of Double)：走 DeserializeCollection 那条路径
+        Dim list As New List(Of Double)()
+
+        For i As Integer = 0 To 99999
+            Call list.Add(i * 1.25 - 500)
+        Next
+
+        Dim listRestored As ListPack = MsgPackSerializer.Deserialize(Of ListPack)(
+            MsgPackSerializer.SerializeObject(New ListPack With {.Values = list}))
+        Dim listDiff As Integer = 0
+
+        For i As Integer = 0 To list.Count - 1
+            If listRestored.Values(i) <> list(i) Then listDiff += 1
+        Next
+
+        Call check("List(Of Double) round trip is identical", listDiff, 0)
+        Call check("List(Of Double) count", listRestored.Values.Count, list.Count)
+    End Sub
+
+    ''' <summary>一个"只有一列"的包装：让基础类型数组成为 msgpack 文档里的一个属性。</summary>
+    Private Sub roundTrip(Of T)(name As String, values As T())
+        Dim bytes As Byte() = MsgPackSerializer.SerializeObject(New Pack(Of T) With {.Values = values})
+        Dim restored As Pack(Of T) = MsgPackSerializer.Deserialize(Of Pack(Of T))(bytes)
+
+        Call check($"{name} round trip", join(restored.Values), join(values))
+    End Sub
+
+    Private Function join(Of T)(values As T()) As String
+        If values Is Nothing Then Return "(nothing)"
+
+        Return String.Join(",", values.Select(Function(v) Convert.ToString(v, Globalization.CultureInfo.InvariantCulture)))
+    End Function
+
+    Private Sub checkBytes(label As String, bytes As Byte(), expected As String)
+        Call check(label, BitConverter.ToString(bytes), expected)
+    End Sub
+
     ''' <summary>把一段动作重复执行若干次并返回单次平均耗时 (毫秒)。</summary>
     Private Function timePerCall(iters As Integer, body As Action) As Double
         Dim timer As Stopwatch = Stopwatch.StartNew()
@@ -1040,6 +1176,10 @@ Module Program
     End Sub
 
     Private Sub run(name As String, test As Action)
+        If onlySection <> "" AndAlso Not name.StartsWith(onlySection & ".") Then
+            Return
+        End If
+
         Try
             Call test()
         Catch ex As Exception

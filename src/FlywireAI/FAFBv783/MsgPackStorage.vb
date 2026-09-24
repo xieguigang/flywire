@@ -130,37 +130,25 @@ Namespace FAFBv783
             Return FafbMsgPackStorage.Deserialize(Of T)(entry.Open(), True)
         End Function
 
-        ''' <summary>读回一列 Double (快通道，见 <see cref="MsgPackArrayCodec"/>)。</summary>
+        ''' <summary>读回一列 Double。</summary>
         Public Function ReadDoubles(key As String) As Double()
-            Dim entry As ZipArchiveEntry = m_zip.GetEntry(FafbMsgPackStorage.EntryNameOf(key))
+            Dim column As DoubleColumnPack = Read(Of DoubleColumnPack)(key)
 
-            If entry Is Nothing Then Return Nothing
-
-            Using stream As Stream = entry.Open()
-                Return MsgPackArrayCodec.ReadDoubles(stream)
-            End Using
+            Return If(column Is Nothing, Nothing, column.Values)
         End Function
 
-        ''' <summary>读回一列 Long (快通道)。</summary>
+        ''' <summary>读回一列 Long。</summary>
         Public Function ReadLongs(key As String) As Long()
-            Dim entry As ZipArchiveEntry = m_zip.GetEntry(FafbMsgPackStorage.EntryNameOf(key))
+            Dim column As LongColumnPack = Read(Of LongColumnPack)(key)
 
-            If entry Is Nothing Then Return Nothing
-
-            Using stream As Stream = entry.Open()
-                Return MsgPackArrayCodec.ReadLongs(stream)
-            End Using
+            Return If(column Is Nothing, Nothing, column.Values)
         End Function
 
-        ''' <summary>读回一列 Integer (快通道)。</summary>
+        ''' <summary>读回一列 Integer。</summary>
         Public Function ReadIntegers(key As String) As Integer()
-            Dim entry As ZipArchiveEntry = m_zip.GetEntry(FafbMsgPackStorage.EntryNameOf(key))
+            Dim column As IntegerColumnPack = Read(Of IntegerColumnPack)(key)
 
-            If entry Is Nothing Then Return Nothing
-
-            Using stream As Stream = entry.Open()
-                Return MsgPackArrayCodec.ReadIntegers(stream)
-            End Using
+            Return If(column Is Nothing, Nothing, column.Values)
         End Function
 
         Protected Overridable Sub Dispose(disposing As Boolean)
@@ -677,23 +665,17 @@ Namespace FAFBv783
             End Using
         End Sub
 
-        ''' <summary>把一列数值写成包里的一个 msgpack 项（快通道：整段写，不做逐元素反射）。</summary>
+        ''' <summary>把一列数值写成包里的一个 msgpack 项（基础类型数组，库会走整块快路径）。</summary>
         Private Shared Sub writeDoubles(archive As ZipArchive, key As String, values As Double())
-            Using stream As Stream = archive.CreateEntry(EntryNameOf(key), CompressionLevel.Optimal).Open()
-                Call MsgPackArrayCodec.WriteDoubles(stream, values)
-            End Using
+            Call write(archive, EntryNameOf(key), New DoubleColumnPack With {.Values = values})
         End Sub
 
         Private Shared Sub writeLongs(archive As ZipArchive, key As String, values As Long())
-            Using stream As Stream = archive.CreateEntry(EntryNameOf(key), CompressionLevel.Optimal).Open()
-                Call MsgPackArrayCodec.WriteLongs(stream, values)
-            End Using
+            Call write(archive, EntryNameOf(key), New LongColumnPack With {.Values = values})
         End Sub
 
         Private Shared Sub writeIntegers(archive As ZipArchive, key As String, values As Integer())
-            Using stream As Stream = archive.CreateEntry(EntryNameOf(key), CompressionLevel.Optimal).Open()
-                Call MsgPackArrayCodec.WriteIntegers(stream, values)
-            End Using
+            Call write(archive, EntryNameOf(key), New IntegerColumnPack With {.Values = values})
         End Sub
 
         ''' <summary>源文件指纹。</summary>
