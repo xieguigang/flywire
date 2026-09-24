@@ -72,7 +72,7 @@ Partial Class SnakeBrainForm
         m_gamePanel.BackColor = Color.Black
         m_gamePanel.Location = New Point(0, 0)
         m_gamePanel.Name = "m_gamePanel"
-        m_gamePanel.Size = New Size(800, 600)
+        m_gamePanel.Size = New Size(802, 656)
         m_gamePanel.TabIndex = 0
         ' 
         ' side
@@ -88,12 +88,12 @@ Partial Class SnakeBrainForm
         side.Controls.Add(toolbar)
         side.Location = New Point(808, 0)
         side.Name = "side"
-        side.Size = New Size(368, 600)
+        side.Size = New Size(368, 656)
         side.TabIndex = 1
         ' 
         ' m_status
         ' 
-        m_status.Font = New Font("Consolas", 10F, FontStyle.Bold)
+        m_status.Font = New Font("Consolas", 10.0F, FontStyle.Bold)
         m_status.ForeColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
         m_status.Location = New Point(8, 8)
         m_status.Name = "m_status"
@@ -140,7 +140,7 @@ Partial Class SnakeBrainForm
         ' 
         m_detail.Font = New Font("Consolas", 8.5F)
         m_detail.ForeColor = Color.FromArgb(CByte(203), CByte(213), CByte(225))
-        m_detail.Location = New Point(8, 428)
+        m_detail.Location = New Point(8, 437)
         m_detail.Name = "m_detail"
         m_detail.Size = New Size(352, 62)
         m_detail.TabIndex = 5
@@ -149,7 +149,7 @@ Partial Class SnakeBrainForm
         ' 
         m_training.Font = New Font("Consolas", 8.5F)
         m_training.ForeColor = Color.FromArgb(CByte(250), CByte(204), CByte(21))
-        m_training.Location = New Point(8, 494)
+        m_training.Location = New Point(8, 520)
         m_training.Name = "m_training"
         m_training.Size = New Size(352, 60)
         m_training.TabIndex = 6
@@ -166,7 +166,7 @@ Partial Class SnakeBrainForm
         toolbar.Controls.Add(tickLabel)
         toolbar.Controls.Add(m_tickBox)
         toolbar.ForeColor = SystemColors.ControlText
-        toolbar.Location = New Point(4, 526)
+        toolbar.Location = New Point(3, 583)
         toolbar.Name = "toolbar"
         toolbar.Size = New Size(360, 70)
         toolbar.TabIndex = 7
@@ -249,10 +249,10 @@ Partial Class SnakeBrainForm
         ' SnakeBrainForm
         ' 
         BackColor = Color.Black
-        ClientSize = New Size(1266, 698)
+        ClientSize = New Size(1181, 663)
         Controls.Add(m_gamePanel)
         Controls.Add(side)
-        Font = New Font("Segoe UI", 9F)
+        Font = New Font("Segoe UI", 9.0F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
         Name = "SnakeBrainForm"
         StartPosition = FormStartPosition.CenterParent
