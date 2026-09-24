@@ -3,6 +3,7 @@ Imports System.Text
 Imports Galaxy.Workbench
 Imports Neuropils.AppLogics
 Imports Neuropils.Data
+Imports Neuropils.Rendering
 
 Module Workbench
 
@@ -15,6 +16,7 @@ Module Workbench
     Friend m_config As New VisualizationConfig
     Friend m_experiment As StimulationExperiment
     Friend m_snake As Snake
+    Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
     Friend flywire As PageFlywireCanvas
 

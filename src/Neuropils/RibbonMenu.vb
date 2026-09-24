@@ -50,7 +50,30 @@ Module RibbonMenu
         _ribbon.NumSimulationSteps.MaxValue = 250
         _ribbon.NumSimulationSteps.DecimalValue = 30
 
+        _ribbon.NumSynapseCutoff.MinValue = 1
+        _ribbon.NumSynapseCutoff.MaxValue = 100000
+        _ribbon.NumSynapseCutoff.Increment = 1
+        _ribbon.NumSynapseCutoff.DecimalValue = m_buildOptions.SynapseThreshold
+
+        _ribbon.NumScatterSize.MinValue = 1
+        _ribbon.NumScatterSize.MaxValue = 12
+        _ribbon.NumScatterSize.Increment = 1
+        _ribbon.NumScatterSize.DecimalValue = 2
+
         AddHandler RibbonMenu.ribbon.NumSimulationSteps.ExecuteEvent, AddressOf onStimulusStepsChanged
+        AddHandler RibbonMenu.ribbon.NumSynapseCutoff.ExecuteEvent, AddressOf onThresholdChanged
+        AddHandler RibbonMenu.ribbon.NumScatterSize.ExecuteEvent, AddressOf onPointSizeChanged
+    End Sub
+
+    Private Sub onThresholdChanged(sender As Object, e As EventArgs)
+        m_buildOptions.SynapseThreshold = CInt(RibbonMenu.ribbon.NumSynapseCutoff.DecimalValue)
+
+        ' 阈值只影响连线，点云不动
+        Call Workbench.flywire.scheduleRebuild()
+    End Sub
+
+    Private Sub onPointSizeChanged(sender As Object, e As EventArgs)
+        Workbench.flywire.m_canvas.PointSize = CInt(RibbonMenu.ribbon.NumScatterSize.DecimalValue)
     End Sub
 
     ''' <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>

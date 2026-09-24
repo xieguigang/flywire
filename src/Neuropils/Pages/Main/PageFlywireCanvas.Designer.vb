@@ -30,8 +30,7 @@ Partial Class PageFlywireCanvas
     Private WithEvents m_connectionBox As ToolStripComboBox
     Private WithEvents m_lineColorBox As ToolStripComboBox
     Private WithEvents m_renderModeBox As ToolStripComboBox
-    Private WithEvents m_thresholdBox As NumericUpDown
-    Private WithEvents m_pointSizeBox As NumericUpDown
+
     Friend WithEvents m_showConnections As ToolStripButton
     Private WithEvents m_showGround As ToolStripButton
     Friend WithEvents m_stimulateMode As ToolStripButton
@@ -541,23 +540,23 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_thresholdBox
         ' 
-        m_thresholdBox = New NumericUpDown()
-        m_thresholdBox.Minimum = 1
-        m_thresholdBox.Maximum = 100000
-        m_thresholdBox.Increment = 10
-        m_thresholdBox.Value = m_buildOptions.SynapseThreshold
-        m_thresholdBox.Name = "m_thresholdBox"
-        m_thresholdBox.Size = New Size(80, 23)
+        'm_thresholdBox = New NumericUpDown()
+        'm_thresholdBox.Minimum = 1
+        'm_thresholdBox.Maximum = 100000
+        'm_thresholdBox.Increment = 10
+        'm_thresholdBox.Value = m_buildOptions.SynapseThreshold
+        'm_thresholdBox.Name = "m_thresholdBox"
+        'm_thresholdBox.Size = New Size(80, 23)
         ' 
         ' m_pointSizeBox
         ' 
-        m_pointSizeBox = New NumericUpDown()
-        m_pointSizeBox.Minimum = 1
-        m_pointSizeBox.Maximum = 12
-        m_pointSizeBox.Increment = 1
-        m_pointSizeBox.Value = 2
-        m_pointSizeBox.Name = "m_pointSizeBox"
-        m_pointSizeBox.Size = New Size(56, 23)
+        'm_pointSizeBox = New NumericUpDown()
+        'm_pointSizeBox.Minimum = 1
+        'm_pointSizeBox.Maximum = 12
+        'm_pointSizeBox.Increment = 1
+        'm_pointSizeBox.Value = 2
+        'm_pointSizeBox.Name = "m_pointSizeBox"
+        'm_pointSizeBox.Size = New Size(56, 23)
         ' 
         ' m_showConnections
         ' 
@@ -641,10 +640,10 @@ Partial Class PageFlywireCanvas
         m_toolStrip.Items.Add(m_connectionBox)
         m_toolStrip.Items.Add(m_lineColorBox)
         m_toolStrip.Items.Add(New ToolStripLabel("≥突触:"))
-        m_toolStrip.Items.Add(New ToolStripControlHost(m_thresholdBox))
+        'm_toolStrip.Items.Add(New ToolStripControlHost(m_thresholdBox))
         m_toolStrip.Items.Add(New ToolStripSeparator())
         m_toolStrip.Items.Add(New ToolStripLabel("点大小:"))
-        m_toolStrip.Items.Add(New ToolStripControlHost(m_pointSizeBox))
+        ' m_toolStrip.Items.Add(New ToolStripControlHost(m_pointSizeBox))
         m_toolStrip.Items.Add(m_showConnections)
         m_toolStrip.Items.Add(m_showGround)
         m_toolStrip.Items.Add(New ToolStripSeparator())

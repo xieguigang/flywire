@@ -33,7 +33,6 @@ Public Class PageFlywireCanvas
 
 
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
-    Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
@@ -576,7 +575,7 @@ Public Class PageFlywireCanvas
     End Sub
 
     ''' <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
-    Private Sub scheduleRebuild()
+    Public Sub scheduleRebuild()
         m_rebuildTimer.Stop()
         m_rebuildTimer.Start()
     End Sub
@@ -628,17 +627,6 @@ Public Class PageFlywireCanvas
         End Select
 
         Call scheduleRebuild()
-    End Sub
-
-    Private Sub onThresholdChanged(sender As Object, e As EventArgs) Handles m_thresholdBox.ValueChanged
-        m_buildOptions.SynapseThreshold = CInt(m_thresholdBox.Value)
-
-        ' 阈值只影响连线，点云不动
-        Call scheduleRebuild()
-    End Sub
-
-    Private Sub onPointSizeChanged(sender As Object, e As EventArgs) Handles m_pointSizeBox.ValueChanged
-        m_canvas.PointSize = CInt(m_pointSizeBox.Value)
     End Sub
 
     Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs) Handles m_showConnections.CheckedChanged
