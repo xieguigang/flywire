@@ -162,6 +162,7 @@ Public Class PageSnakeBrainGamePlay
                 Call m_brain.Dispose()
             Catch ex As Exception
                 System.Diagnostics.Debug.WriteLine($"unable to release the game brain: {ex.Message}")
+                App.LogException(ex)
             End Try
 
             m_brain = Nothing
@@ -272,10 +273,7 @@ Public Class PageSnakeBrainGamePlay
 
         m_training.Text = "正在训练解码器（后台）..."
 
-        Call Task.Run(
-            Function() As SnakeTrainingReport
-                Return m_playground.Train(episodes, ticks, Sub(message) reportTraining(message))
-            End Function) _
+        Call Task.Run(Function() m_playground.Train(episodes, ticks, Sub(message) reportTraining(message))) _
             .ContinueWith(
                 Sub(task As Task(Of SnakeTrainingReport))
                     If task.IsFaulted Then
@@ -292,8 +290,7 @@ Public Class PageSnakeBrainGamePlay
 
                     m_training.Text = training.Describe()
                     Call saveTrained(training.TrainedDecoder)
-                End Sub,
-                TaskScheduler.FromCurrentSynchronizationContext())
+                End Sub, TaskScheduler.FromCurrentSynchronizationContext())
     End Sub
 
     Private Sub reportTraining(message As String)
