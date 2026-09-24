@@ -418,6 +418,10 @@ Public Class ResponseChartForm
         End Using
     End Function
 
+    Private Sub filterBar_Paint(sender As Object, e As PaintEventArgs) Handles filterBar.Paint
+
+    End Sub
+
 #End Region
 
 End Class
