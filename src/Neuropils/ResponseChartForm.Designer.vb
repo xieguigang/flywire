@@ -1,13 +1,8 @@
 Imports Microsoft.VisualBasic.Drawing.DirectX
 
-''' <summary>
-''' <see cref="ResponseChartForm"/> 的界面布局（Windows 窗体设计器维护的声明式代码）。
-''' </summary>
-''' <remarks>
-''' 这里只放"控件怎么摆"的代码：控件实例化、属性赋值、容器装配与事件挂接。
-''' 数据装配与绘制逻辑（<c>refreshCategories</c> / <c>rebuildSeries</c> / <c>onRender</c> 等）
-''' 仍然留在 <c>ResponseChartForm.vb</c> 中。
-''' </remarks>
+' ResponseChartForm 的界面布局（Windows 窗体设计器维护的声明式代码）。
+' 这里只放"控件怎么摆"的代码：控件实例化、属性赋值、容器装配与事件挂接；
+' 数据装配与绘制逻辑 (refreshCategories / rebuildSeries / onRender 等) 仍然留在 ResponseChartForm.vb 里。
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class ResponseChartForm
     Inherits System.Windows.Forms.Form

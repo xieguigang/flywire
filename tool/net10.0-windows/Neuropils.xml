@@ -1395,6 +1395,23 @@ Neuropils
 <member name="F:Neuropils.Rendering.ReplayHighlighter.SizeBoost">
  <summary>当前步的激活点在全局点大小基础上的放大倍数。</summary>
 </member>
+<member name="T:Neuropils.ResponseChartForm">
+ <summary>
+ 电刺激响应曲线窗口：把一次刺激实验记录下来的响应结果画成曲线。
+ </summary>
+ <remarks>
+ <b>横轴</b>是时间步，<b>纵轴</b>是神经元的响应电信号强度（默认取触发前膜电位）。
+ 曲线可以逐神经元画，也可以按「脑区 / 神经递质 / 细胞类型 / 分类层级」筛选出的
+ 神经元集合聚合后画（组均值 ± 包络）。
+ 
+ 曲线<b>直接绘制在 <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas"/> 控件上</b>（Direct2D/D3D11 GPU 画布）：
+ <c>LinePlot</c> 通过注入 <c>IGraphics</c> 的方式使用控件自己的绘图设备，
+ 中间不需要位图，也不存在"先画到 Bitmap 再贴到控件"的拷贝。
+ 
+ 数据来源是<b>记录下来的响应结果</b>：会话内刚跑完的结果直接画，
+ 也可以随时打开任意一次历史实验的记录目录。
+ </remarks>
+</member>
 <member name="M:Neuropils.ResponseChartForm.#ctor(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset)">
  <summary>
  构造响应曲线窗口。
