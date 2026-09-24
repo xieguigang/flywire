@@ -539,6 +539,10 @@ Public Class ResponseChartForm
         Return m_canvas.SaveImage(file)
     End Function
 
+    Private Sub InitializeComponent()
+
+    End Sub
+
     ''' <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
     Public ReadOnly Property CanvasReady As Boolean
         Get
