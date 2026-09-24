@@ -47,8 +47,8 @@ Public Class FormMain : Implements AppHost
     End Sub
 
     Public Sub StatusMessage(msg As String, Optional icon As Image = Nothing) Implements AppHost.StatusMessage
-        ToolStripStatusLabel1.Text = msg
-        ToolStripStatusLabel1.Image = icon
+        m_statusText.Text = msg
+        m_statusText.Image = icon
     End Sub
 
     Public Sub Warning(msg As String) Implements AppHost.Warning

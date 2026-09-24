@@ -26,11 +26,11 @@ Partial Class FormMain
         VS2015LightTheme1 = New ThemeVS2015.VS2015LightTheme()
         DockPanel1 = New Microsoft.VisualStudio.WinForms.Docking.DockPanel()
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
-        Ribbon1 = New Global.RibbonLib.Ribbon()
+        Ribbon1 = New RibbonLib.Ribbon()
         StatusStrip1 = New StatusStrip()
-        ToolStripStatusLabel1 = New ToolStripStatusLabel()
+        m_statusText = New ToolStripStatusLabel()
         ToolStripProgressBar1 = New ToolStripProgressBar()
-        ToolStripStatusLabel2 = New ToolStripStatusLabel()
+        ToolStripStatusLabel3 = New ToolStripStatusLabel()
         StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
@@ -58,29 +58,31 @@ Partial Class FormMain
         ' 
         ' StatusStrip1
         ' 
-        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel1, ToolStripStatusLabel2, ToolStripProgressBar1})
+        StatusStrip1.Items.AddRange(New ToolStripItem() {m_statusText, ToolStripProgressBar1, ToolStripStatusLabel3})
         StatusStrip1.Location = New Point(0, 821)
         StatusStrip1.Name = "StatusStrip1"
         StatusStrip1.Size = New Size(1428, 22)
         StatusStrip1.TabIndex = 2
         StatusStrip1.Text = "StatusStrip1"
         ' 
-        ' ToolStripStatusLabel1
+        ' m_statusText
         ' 
-        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        ToolStripStatusLabel1.Size = New Size(42, 17)
-        ToolStripStatusLabel1.Text = "Ready!"
+        m_statusText.Name = "m_statusText"
+        m_statusText.Size = New Size(1234, 17)
+        m_statusText.Spring = True
+        m_statusText.Text = "Ready!"
+        m_statusText.TextAlign = ContentAlignment.MiddleLeft
         ' 
         ' ToolStripProgressBar1
         ' 
         ToolStripProgressBar1.Name = "ToolStripProgressBar1"
         ToolStripProgressBar1.Size = New Size(100, 16)
         ' 
-        ' ToolStripStatusLabel2
+        ' ToolStripStatusLabel3
         ' 
-        ToolStripStatusLabel2.Name = "ToolStripStatusLabel2"
-        ToolStripStatusLabel2.Size = New Size(1269, 17)
-        ToolStripStatusLabel2.Spring = True
+        ToolStripStatusLabel3.Name = "ToolStripStatusLabel3"
+        ToolStripStatusLabel3.Size = New Size(46, 17)
+        ToolStripStatusLabel3.Text = "Loaded"
         ' 
         ' FormMain
         ' 
@@ -103,7 +105,7 @@ Partial Class FormMain
     Friend WithEvents VisualStudioToolStripExtender1 As Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender
     Friend WithEvents Ribbon1 As Global.RibbonLib.Ribbon
     Friend WithEvents StatusStrip1 As StatusStrip
-    Friend WithEvents ToolStripStatusLabel1 As ToolStripStatusLabel
-    Friend WithEvents ToolStripStatusLabel2 As ToolStripStatusLabel
+    Friend WithEvents m_statusText As ToolStripStatusLabel
     Friend WithEvents ToolStripProgressBar1 As ToolStripProgressBar
+    Friend WithEvents ToolStripStatusLabel3 As ToolStripStatusLabel
 End Class
