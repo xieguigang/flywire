@@ -37,24 +37,10 @@ Public Class FormMain
     Private m_legend As CheckedListBox
     Private m_gradient As PictureBox
     Private m_details As TextBox
-    Private m_dimensionBox As ToolStripComboBox
-    Private m_connectionBox As ToolStripComboBox
-    Private m_lineColorBox As ToolStripComboBox
-    Private m_renderModeBox As ToolStripComboBox
-    Private m_thresholdBox As NumericUpDown
-    Private m_pointSizeBox As NumericUpDown
-    Friend m_showConnections As ToolStripButton
-    Private m_showGround As ToolStripButton
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Friend m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
-
-    ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
-    Friend m_stimulateMode As ToolStripButton
-    Friend m_stimStrengthBox As NumericUpDown
-    Friend m_stimStepsBox As NumericUpDown
-    Friend m_holdLabel As ToolStripLabel
     Friend m_replayPanel As Control
     Friend m_replayPlay As Button
     Friend m_replayFirst As Button
@@ -151,7 +137,7 @@ Public Class FormMain
         m_split.Panel2.Controls.Add(sidebar)
 
         Me.Controls.Add(m_split)
-        Me.Controls.Add(createToolbar())
+        Me.Controls.Add(m_toolStrip)
         Me.Controls.Add(m_menuStrip)
         Me.Controls.Add(m_statusStrip)
 
@@ -165,108 +151,7 @@ Public Class FormMain
         Call m_experiment.initializeStimulation()
     End Sub
 
-    Private Function createToolbar() As ToolStrip
-        Dim bar As New ToolStrip With {
-            .GripStyle = ToolStripGripStyle.Hidden,
-            .ImageScalingSize = New Size(16, 16)
-        }
 
-        m_dimensionBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 150}
-        Call m_dimensionBox.Items.AddRange(New Object() {
-            "主导脑区 (neuropil)", "神经递质", "细胞类型", "分类层级", "仿真活跃度"
-        })
-        m_dimensionBox.SelectedIndex = 0
-        AddHandler m_dimensionBox.SelectedIndexChanged, AddressOf onDimensionChanged
-
-        m_connectionBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 150}
-        Call m_connectionBox.Items.AddRange(New Object() {
-            "连接 (逐条)", "脑区宏连接", "选中神经元的连接"
-        })
-        m_connectionBox.SelectedIndex = 0
-        AddHandler m_connectionBox.SelectedIndexChanged, AddressOf onConnectionModeChanged
-
-        m_renderModeBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 110}
-        Call m_renderModeBox.Items.AddRange(New Object() {"点云", "线框", "实体"})
-        m_renderModeBox.SelectedIndex = 0
-        AddHandler m_renderModeBox.SelectedIndexChanged, AddressOf onRenderModeChanged
-
-        m_lineColorBox = New ToolStripComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Width = 130}
-        Call m_lineColorBox.Items.AddRange(New Object() {
-            "连线: 前突触颜色", "连线: 递质类型", "连线: 单色"
-        })
-        m_lineColorBox.SelectedIndex = 0
-        AddHandler m_lineColorBox.SelectedIndexChanged, AddressOf onLineColorChanged
-
-        ' WinForms 没有 ToolStripNumericUpDown：数值输入要自己用 ToolStripControlHost 托住
-        m_thresholdBox = New NumericUpDown With {
-            .Minimum = 1, .Maximum = 100000, .Increment = 10, .Value = m_buildOptions.SynapseThreshold, .Width = 80
-        }
-        AddHandler m_thresholdBox.ValueChanged, AddressOf onThresholdChanged
-
-        m_pointSizeBox = New NumericUpDown With {
-            .Minimum = 1, .Maximum = 12, .Increment = 1, .Value = 2, .Width = 56
-        }
-        AddHandler m_pointSizeBox.ValueChanged, AddressOf onPointSizeChanged
-
-        m_showConnections = New ToolStripButton("显示连接") With {.CheckOnClick = True, .Checked = False}
-        AddHandler m_showConnections.CheckedChanged, AddressOf onShowConnectionsChanged
-
-        m_showGround = New ToolStripButton("地面") With {.CheckOnClick = True, .Checked = False}
-        AddHandler m_showGround.CheckedChanged, AddressOf onShowGroundChanged
-
-        Dim snapshot As New ToolStripButton("截图")
-        AddHandler snapshot.Click, AddressOf onSnapshot
-
-        Dim reload As New ToolStripButton("重新载入")
-        AddHandler reload.Click, AddressOf onReload
-
-        ' ---- 电刺激模式 ----
-        m_stimulateMode = New ToolStripButton("电刺激模式") With {
-            .CheckOnClick = True,
-            .Checked = False,
-            .ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
-        }
-        AddHandler m_stimulateMode.CheckedChanged, AddressOf m_experiment.onStimulateModeChanged
-
-        m_stimStrengthBox = New NumericUpDown With {
-            .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20D, .Increment = 0.5D, .Value = 1D, .Width = 56
-        }
-
-        m_stimStepsBox = New NumericUpDown With {
-            .Minimum = 5, .Maximum = 200, .Increment = 5, .Value = 30, .Width = 56
-        }
-        AddHandler m_stimStepsBox.ValueChanged, AddressOf m_experiment.onStimulusStepsChanged
-
-        m_holdLabel = New ToolStripLabel("")
-
-        Call bar.Items.Add(New ToolStripLabel("着色:"))
-        Call bar.Items.Add(m_dimensionBox)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(New ToolStripLabel("模式:"))
-        Call bar.Items.Add(m_renderModeBox)
-        Call bar.Items.Add(New ToolStripLabel("连接:"))
-        Call bar.Items.Add(m_connectionBox)
-        Call bar.Items.Add(m_lineColorBox)
-        Call bar.Items.Add(New ToolStripLabel("≥突触:"))
-        Call bar.Items.Add(New ToolStripControlHost(m_thresholdBox))
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(New ToolStripLabel("点大小:"))
-        Call bar.Items.Add(New ToolStripControlHost(m_pointSizeBox))
-        Call bar.Items.Add(m_showConnections)
-        Call bar.Items.Add(m_showGround)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(snapshot)
-        Call bar.Items.Add(reload)
-        Call bar.Items.Add(New ToolStripSeparator())
-        Call bar.Items.Add(m_stimulateMode)
-        Call bar.Items.Add(New ToolStripLabel("强度×"))
-        Call bar.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
-        Call bar.Items.Add(New ToolStripLabel("仿真步数"))
-        Call bar.Items.Add(New ToolStripControlHost(m_stimStepsBox))
-        Call bar.Items.Add(m_holdLabel)
-
-        Return bar
-    End Function
 
     Private Function createSidebar() As Control
         Dim panel As New TableLayoutPanel With {
@@ -740,7 +625,7 @@ Public Class FormMain
     End Function
 
     ''' <summary>重新载入数据目录 (可以在界面上换一台数据集)。</summary>
-    Private Sub onReload(sender As Object, e As EventArgs)
+    Private Sub onReload(sender As Object, e As EventArgs) Handles m_reloadButton.Click
         If m_busy Then Return
 
         Using dialog As New FolderBrowserDialog()
@@ -940,7 +825,7 @@ Public Class FormMain
 
 #Region "toolbar events"
 
-    Private Sub onDimensionChanged(sender As Object, e As EventArgs)
+    Private Sub onDimensionChanged(sender As Object, e As EventArgs) Handles m_dimensionBox.SelectedIndexChanged
         If m_dataset Is Nothing Then Return
 
         Dim dimension As NeuronColorDimension = dimensionFromUi()
@@ -957,7 +842,7 @@ Public Class FormMain
         Call rebuildScene()
     End Sub
 
-    Private Sub onRenderModeChanged(sender As Object, e As EventArgs)
+    Private Sub onRenderModeChanged(sender As Object, e As EventArgs) Handles m_renderModeBox.SelectedIndexChanged
         Select Case m_renderModeBox.SelectedIndex
             Case 1 : m_canvas.RenderMode = SceneRenderMode.Mesh
             Case 2 : m_canvas.RenderMode = SceneRenderMode.Surface
@@ -965,7 +850,7 @@ Public Class FormMain
         End Select
     End Sub
 
-    Private Sub onConnectionModeChanged(sender As Object, e As EventArgs)
+    Private Sub onConnectionModeChanged(sender As Object, e As EventArgs) Handles m_connectionBox.SelectedIndexChanged
         Select Case m_connectionBox.SelectedIndex
             Case 1 : m_buildOptions.Mode = ConnectionRenderMode.NeuropilAggregate
             Case 2 : m_buildOptions.Mode = ConnectionRenderMode.SelectedNeuron
@@ -975,7 +860,7 @@ Public Class FormMain
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onLineColorChanged(sender As Object, e As EventArgs)
+    Private Sub onLineColorChanged(sender As Object, e As EventArgs) Handles m_lineColorBox.SelectedIndexChanged
         Select Case m_lineColorBox.SelectedIndex
             Case 1 : m_buildOptions.LineColor = LineColorMode.Neurotransmitter
             Case 2 : m_buildOptions.LineColor = LineColorMode.Uniform
@@ -985,26 +870,36 @@ Public Class FormMain
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onThresholdChanged(sender As Object, e As EventArgs)
+    Private Sub onThresholdChanged(sender As Object, e As EventArgs) Handles m_thresholdBox.ValueChanged
         m_buildOptions.SynapseThreshold = CInt(m_thresholdBox.Value)
 
         ' 阈值只影响连线，点云不动
         Call scheduleRebuild()
     End Sub
 
-    Private Sub onPointSizeChanged(sender As Object, e As EventArgs)
+    Private Sub onPointSizeChanged(sender As Object, e As EventArgs) Handles m_pointSizeBox.ValueChanged
         m_canvas.PointSize = CInt(m_pointSizeBox.Value)
     End Sub
 
-    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs)
+    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs) Handles m_showConnections.CheckedChanged
         m_canvas.ShowConnections = m_showConnections.Checked
     End Sub
 
-    Private Sub onShowGroundChanged(sender As Object, e As EventArgs)
+    Private Sub onShowGroundChanged(sender As Object, e As EventArgs) Handles m_showGround.CheckedChanged
         m_canvas.ShowGround = m_showGround.Checked
     End Sub
 
-    Private Sub onSnapshot(sender As Object, e As EventArgs) Handles m_snapshotItem.Click
+    ''' <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
+    Private Sub onStimulateModeChanged(sender As Object, e As EventArgs) Handles m_stimulateMode.CheckedChanged
+        Call m_experiment.onStimulateModeChanged(sender, e)
+    End Sub
+
+    ''' <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
+    Private Sub onStimulusStepsChanged(sender As Object, e As EventArgs) Handles m_stimStepsBox.ValueChanged
+        Call m_experiment.onStimulusStepsChanged(sender, e)
+    End Sub
+
+    Private Sub onSnapshot(sender As Object, e As EventArgs) Handles m_snapshotItem.Click, m_snapshotButton.Click
         If Not m_viewInitialized Then Return
 
         Using dialog As New SaveFileDialog()

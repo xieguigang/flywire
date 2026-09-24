@@ -1099,6 +1099,12 @@ Neuropils
 <member name="M:Neuropils.FormMain.scheduleRebuild">
  <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
 </member>
+<member name="M:Neuropils.FormMain.onStimulateModeChanged(System.Object,System.EventArgs)">
+ <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
+</member>
+<member name="M:Neuropils.FormMain.onStimulusStepsChanged(System.Object,System.EventArgs)">
+ <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
+</member>
 <member name="M:Neuropils.FormMain.onExitClick(System.Object,System.EventArgs)">
  <summary>菜单「文件 → 退出」：关闭主窗体。</summary>
 </member>

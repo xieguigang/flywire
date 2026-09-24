@@ -41,6 +41,25 @@ Partial Class FormMain
     Friend WithEvents m_chartLink As LinkLabel
     Friend WithEvents m_snakeLink As LinkLabel
 
+    ' ---- 工具条（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
+    ' 被其它类 (StimulationExperiment) 通过 FormMain 实例访问的保持 Friend；
+    ' 事件源用 WithEvents 以便 Handles 绑定，替代原 createToolbar 里的 AddHandler。
+    Dim m_toolStrip As ToolStrip
+    Private WithEvents m_dimensionBox As ToolStripComboBox
+    Private WithEvents m_connectionBox As ToolStripComboBox
+    Private WithEvents m_lineColorBox As ToolStripComboBox
+    Private WithEvents m_renderModeBox As ToolStripComboBox
+    Private WithEvents m_thresholdBox As NumericUpDown
+    Private WithEvents m_pointSizeBox As NumericUpDown
+    Friend WithEvents m_showConnections As ToolStripButton
+    Private WithEvents m_showGround As ToolStripButton
+    Friend WithEvents m_stimulateMode As ToolStripButton
+    Friend m_stimStrengthBox As NumericUpDown
+    Friend WithEvents m_stimStepsBox As NumericUpDown
+    Friend m_holdLabel As ToolStripLabel
+    Private WithEvents m_snapshotButton As ToolStripButton
+    Private WithEvents m_reloadButton As ToolStripButton
+
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
     'Do not modify it using the code editor.
@@ -211,6 +230,174 @@ Partial Class FormMain
         m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.ResumeLayout(False)
+        ' 
+        ' m_toolStrip
+        ' 工具条：停靠在窗体顶端，位于菜单栏 (y=0, 高 24) 之下，故 y=24；高度 25 为 16x16 图标的标准工具条高度
+        ' 
+        m_toolStrip = New ToolStrip()
+        m_toolStrip.Dock = DockStyle.Top
+        m_toolStrip.GripStyle = ToolStripGripStyle.Hidden
+        m_toolStrip.ImageScalingSize = New Size(16, 16)
+        m_toolStrip.Location = New Point(0, 24)
+        m_toolStrip.Name = "m_toolStrip"
+        m_toolStrip.Size = New Size(1500, 25)
+        m_toolStrip.TabIndex = 2
+        ' 
+        ' m_dimensionBox
+        ' 
+        m_dimensionBox = New ToolStripComboBox()
+        m_dimensionBox.DropDownStyle = ComboBoxStyle.DropDownList
+        m_dimensionBox.Name = "m_dimensionBox"
+        m_dimensionBox.Size = New Size(150, 23)
+        m_dimensionBox.Items.AddRange(New Object() {"主导脑区 (neuropil)", "神经递质", "细胞类型", "分类层级", "仿真活跃度"})
+        m_dimensionBox.SelectedIndex = 0
+        ' 
+        ' m_connectionBox
+        ' 
+        m_connectionBox = New ToolStripComboBox()
+        m_connectionBox.DropDownStyle = ComboBoxStyle.DropDownList
+        m_connectionBox.Name = "m_connectionBox"
+        m_connectionBox.Size = New Size(150, 23)
+        m_connectionBox.Items.AddRange(New Object() {"连接 (逐条)", "脑区宏连接", "选中神经元的连接"})
+        m_connectionBox.SelectedIndex = 0
+        ' 
+        ' m_renderModeBox
+        ' 
+        m_renderModeBox = New ToolStripComboBox()
+        m_renderModeBox.DropDownStyle = ComboBoxStyle.DropDownList
+        m_renderModeBox.Name = "m_renderModeBox"
+        m_renderModeBox.Size = New Size(110, 23)
+        m_renderModeBox.Items.AddRange(New Object() {"点云", "线框", "实体"})
+        m_renderModeBox.SelectedIndex = 0
+        ' 
+        ' m_lineColorBox
+        ' 
+        m_lineColorBox = New ToolStripComboBox()
+        m_lineColorBox.DropDownStyle = ComboBoxStyle.DropDownList
+        m_lineColorBox.Name = "m_lineColorBox"
+        m_lineColorBox.Size = New Size(130, 23)
+        m_lineColorBox.Items.AddRange(New Object() {"连线: 前突触颜色", "连线: 递质类型", "连线: 单色"})
+        m_lineColorBox.SelectedIndex = 0
+        ' 
+        ' m_thresholdBox
+        ' 
+        m_thresholdBox = New NumericUpDown()
+        m_thresholdBox.Minimum = 1
+        m_thresholdBox.Maximum = 100000
+        m_thresholdBox.Increment = 10
+        m_thresholdBox.Value = m_buildOptions.SynapseThreshold
+        m_thresholdBox.Name = "m_thresholdBox"
+        m_thresholdBox.Size = New Size(80, 23)
+        ' 
+        ' m_pointSizeBox
+        ' 
+        m_pointSizeBox = New NumericUpDown()
+        m_pointSizeBox.Minimum = 1
+        m_pointSizeBox.Maximum = 12
+        m_pointSizeBox.Increment = 1
+        m_pointSizeBox.Value = 2
+        m_pointSizeBox.Name = "m_pointSizeBox"
+        m_pointSizeBox.Size = New Size(56, 23)
+        ' 
+        ' m_showConnections
+        ' 
+        m_showConnections = New ToolStripButton()
+        m_showConnections.CheckOnClick = True
+        m_showConnections.Checked = False
+        m_showConnections.Name = "m_showConnections"
+        m_showConnections.Size = New Size(75, 22)
+        m_showConnections.Text = "显示连接"
+        ' 
+        ' m_showGround
+        ' 
+        m_showGround = New ToolStripButton()
+        m_showGround.CheckOnClick = True
+        m_showGround.Checked = False
+        m_showGround.Name = "m_showGround"
+        m_showGround.Size = New Size(45, 22)
+        m_showGround.Text = "地面"
+        ' 
+        ' m_snapshotButton
+        ' 
+        m_snapshotButton = New ToolStripButton()
+        m_snapshotButton.Name = "m_snapshotButton"
+        m_snapshotButton.Size = New Size(45, 22)
+        m_snapshotButton.Text = "截图"
+        ' 
+        ' m_reloadButton
+        ' 
+        m_reloadButton = New ToolStripButton()
+        m_reloadButton.Name = "m_reloadButton"
+        m_reloadButton.Size = New Size(60, 22)
+        m_reloadButton.Text = "重新载入"
+        ' 
+        ' m_stimulateMode
+        ' 
+        m_stimulateMode = New ToolStripButton()
+        m_stimulateMode.CheckOnClick = True
+        m_stimulateMode.Checked = False
+        m_stimulateMode.Name = "m_stimulateMode"
+        m_stimulateMode.Size = New Size(75, 22)
+        m_stimulateMode.Text = "电刺激模式"
+        m_stimulateMode.ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
+        ' 
+        ' m_stimStrengthBox
+        ' 
+        m_stimStrengthBox = New NumericUpDown()
+        m_stimStrengthBox.DecimalPlaces = 1
+        m_stimStrengthBox.Minimum = CDec(0.2)
+        m_stimStrengthBox.Maximum = CDec(20)
+        m_stimStrengthBox.Increment = CDec(0.5)
+        m_stimStrengthBox.Value = CDec(1)
+        m_stimStrengthBox.Name = "m_stimStrengthBox"
+        m_stimStrengthBox.Size = New Size(56, 23)
+        ' 
+        ' m_stimStepsBox
+        ' 
+        m_stimStepsBox = New NumericUpDown()
+        m_stimStepsBox.Minimum = 5
+        m_stimStepsBox.Maximum = 200
+        m_stimStepsBox.Increment = 5
+        m_stimStepsBox.Value = 30
+        m_stimStepsBox.Name = "m_stimStepsBox"
+        m_stimStepsBox.Size = New Size(56, 23)
+        ' 
+        ' m_holdLabel
+        ' 
+        m_holdLabel = New ToolStripLabel()
+        m_holdLabel.Name = "m_holdLabel"
+        m_holdLabel.Size = New Size(39, 22)
+        m_holdLabel.Text = ""
+        ' 
+        ' m_toolStrip 容器装配
+        ' 
+        m_toolStrip.SuspendLayout()
+        m_toolStrip.Items.Add(New ToolStripLabel("着色:"))
+        m_toolStrip.Items.Add(m_dimensionBox)
+        m_toolStrip.Items.Add(New ToolStripSeparator())
+        m_toolStrip.Items.Add(New ToolStripLabel("模式:"))
+        m_toolStrip.Items.Add(m_renderModeBox)
+        m_toolStrip.Items.Add(New ToolStripLabel("连接:"))
+        m_toolStrip.Items.Add(m_connectionBox)
+        m_toolStrip.Items.Add(m_lineColorBox)
+        m_toolStrip.Items.Add(New ToolStripLabel("≥突触:"))
+        m_toolStrip.Items.Add(New ToolStripControlHost(m_thresholdBox))
+        m_toolStrip.Items.Add(New ToolStripSeparator())
+        m_toolStrip.Items.Add(New ToolStripLabel("点大小:"))
+        m_toolStrip.Items.Add(New ToolStripControlHost(m_pointSizeBox))
+        m_toolStrip.Items.Add(m_showConnections)
+        m_toolStrip.Items.Add(m_showGround)
+        m_toolStrip.Items.Add(New ToolStripSeparator())
+        m_toolStrip.Items.Add(m_snapshotButton)
+        m_toolStrip.Items.Add(m_reloadButton)
+        m_toolStrip.Items.Add(New ToolStripSeparator())
+        m_toolStrip.Items.Add(m_stimulateMode)
+        m_toolStrip.Items.Add(New ToolStripLabel("强度×"))
+        m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
+        m_toolStrip.Items.Add(New ToolStripLabel("仿真步数"))
+        m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStepsBox))
+        m_toolStrip.Items.Add(m_holdLabel)
+        m_toolStrip.ResumeLayout(False)
         ResumeLayout(False)
     End Sub
 
