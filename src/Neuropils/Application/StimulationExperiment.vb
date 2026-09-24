@@ -23,7 +23,7 @@ Namespace AppLogics
     ' 4. <b>回放</b>：定时器逐步推进，把每一步被激活的神经元<b>点亮并放大</b>，
     '    前几步的神经元按权重留下余辉，形成"一波激活扩散出去"的观感。
 
-    Public Class Stimulation
+    Public Class StimulationExperiment
 
 #Region "constants"
 
@@ -65,10 +65,10 @@ Namespace AppLogics
         Private ReadOnly m_holdWatch As New Stopwatch()
 
         ''' <summary>按住过程中的强度回显定时器。</summary>
-        Private m_holdTimer As System.Windows.Forms.Timer
+        Friend m_holdTimer As System.Windows.Forms.Timer
 
         ''' <summary>回放时钟。</summary>
-        Private ReadOnly m_replayTimer As New System.Windows.Forms.Timer()
+        Friend ReadOnly m_replayTimer As New System.Windows.Forms.Timer()
 
         ''' <summary>按住期间命中的神经元（-1 表示还没命中）。</summary>
         Private m_holdNeuron As Integer = -1
@@ -80,11 +80,11 @@ Namespace AppLogics
         Private m_stimBusy As Boolean
 
         ''' <summary>刺激仿真专用的工作线程与其任务队列。</summary>
-        Private m_stimWorker As Thread
-        Private m_stimWork As BlockingCollection(Of Action)
+        Friend m_stimWorker As Thread
+        Friend m_stimWork As BlockingCollection(Of Action)
 
         ''' <summary>最近一次刺激的结果。</summary>
-        Private m_replay As StimulationReplay
+        Friend m_replay As StimulationReplay
 
         ''' <summary>把回放状态映射到点云颜色/尺寸的高亮器。</summary>
         Private m_highlighter As ReplayHighlighter
@@ -108,7 +108,7 @@ Namespace AppLogics
         ''' <summary>
         ''' 初始化电刺激/回放相关的定时器与面板（由 <c>initializeUi</c> 在控件建好之后调用）。
         ''' </summary>
-        Private Sub initializeStimulation()
+        Friend Sub initializeStimulation()
             m_holdTimer = New System.Windows.Forms.Timer With {.Interval = 60}
             AddHandler m_holdTimer.Tick, AddressOf onHoldTimerTick
 
@@ -138,7 +138,7 @@ Namespace AppLogics
             If t < 0 Then t = 0
             If t > 1 Then t = 1
 
-            Dim scale As Double = CDbl(m_stimStrengthBox.Value)
+            Dim scale As Double = CDbl(main.m_stimStrengthBox.Value)
 
             If scale <= 0 Then scale = 1
 
@@ -152,24 +152,24 @@ Namespace AppLogics
 
 #Region "hold interaction"
 
-        Private Sub onStimulateModeChanged(sender As Object, e As EventArgs)
-            If m_stimulateMode.Checked Then
-                m_statusText.Text = "电刺激模式：在神经元上按住左键（越久越强），松开后自动运行全脑仿真并回放"
-                m_holdLabel.Text = ""
+        Friend Sub onStimulateModeChanged(sender As Object, e As EventArgs)
+            If main.m_stimulateMode.Checked Then
+                main.m_statusText.Text = "电刺激模式：在神经元上按住左键（越久越强），松开后自动运行全脑仿真并回放"
+                main.m_holdLabel.Text = ""
 
                 ' 回放时先收掉连线：几十万根半透明线会把点亮的神经元淹掉
-                m_showConnections.Checked = False
+                main.m_showConnections.Checked = False
             Else
                 Call cancelStimulationHold()
                 Call stopReplay(clearHighlight:=True)
 
-                m_statusText.Text = "就绪"
+                main.m_statusText.Text = "就绪"
             End If
         End Sub
 
         ''' <summary>鼠标按下：开始计时并进入按住预览。</summary>
-        Private Sub beginStimulationHold(x As Integer, y As Integer)
-            If m_dataset Is Nothing OrElse m_scene Is Nothing Then Return
+        Friend Sub beginStimulationHold(x As Integer, y As Integer)
+            If main.m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
             If m_stimBusy Then Return
 
             m_holdNeuron = -1
@@ -185,7 +185,7 @@ Namespace AppLogics
                 Return
             End If
 
-            Dim position As Point = m_canvas.PointToClient(Cursor.Position)
+            Dim position As Point = main.m_canvas.PointToClient(Cursor.Position)
 
             Call updateHoldPreview(position.X, position.Y)
         End Sub
@@ -197,29 +197,29 @@ Namespace AppLogics
             Dim target As String = ""
 
             ' 每次预览都做一次拾取：13 万点的拾取约 6 ms，60 ms 一次完全够用
-            Dim hit As SceneHitTest = m_canvas.HitTest(x, y, radius:=8)
+            Dim hit As SceneHitTest = main.m_canvas.HitTest(x, y, radius:=8)
 
             If hit.HasHit AndAlso hit.Kind = SceneHitKind.Point Then
-                m_holdNeuron = m_scene.PointNeurons(hit.Index)
+                m_holdNeuron = main.m_scene.PointNeurons(hit.Index)
 
-                Dim rootId As Long = m_dataset.Index.GetRootId(m_holdNeuron)
+                Dim rootId As Long = main.m_dataset.Index.GetRootId(m_holdNeuron)
 
                 ' 顺便实测一次"这一下会募集多少个神经元"：一次线性扫描约 1 ms
-                Dim recruited As Integer() = BrainStimulator.Recruit(m_dataset, m_holdNeuron, stimulus.RadiusNm)
+                Dim recruited As Integer() = BrainStimulator.Recruit(main.m_dataset, m_holdNeuron, stimulus.RadiusNm)
 
-                target = $" · 目标 #{m_holdNeuron} ({m_dataset.GetNeuropilName(m_holdNeuron)}, root_id {rootId})" &
+                target = $" · 目标 #{m_holdNeuron} ({ main.m_dataset.GetNeuropilName(m_holdNeuron)}, root_id {rootId})" &
                      $" · 募集 {recruited.Length:N0} 个"
             Else
                 m_holdNeuron = -1
                 target = " · (未命中神经元)"
             End If
 
-            m_holdLabel.Text = $"按住 {holdMs / 1000.0:F1}s → 半径 {stimulus.RadiusNm / 1000.0:F0}μm / " &
+            main.m_holdLabel.Text = $"按住 {holdMs / 1000.0:F1}s → 半径 {stimulus.RadiusNm / 1000.0:F0}μm / " &
                            $"电流 {stimulus.Current:F1}{target}"
         End Sub
 
         ''' <summary>结束按住计时，返回按住时长（毫秒）。</summary>
-        Private Function endStimulationHold() As Long
+        Friend Function endStimulationHold() As Long
             Dim elapsed As Long = m_holdWatch.ElapsedMilliseconds
 
             m_holdWatch.Stop()
@@ -228,65 +228,54 @@ Namespace AppLogics
             Return elapsed
         End Function
 
-        Private Sub cancelStimulationHold()
+        Friend Sub cancelStimulationHold()
             m_holdWatch.Reset()
             m_holdTimer.Stop()
             m_holdNeuron = -1
-            m_holdLabel.Text = ""
+            main.m_holdLabel.Text = ""
         End Sub
 
 #End Region
 
 #Region "stimulation"
 
-        ''' <summary>
-        ''' 当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
-        ''' </summary>
-        ''' <remarks>
-        ''' 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
-        ''' 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
-        ''' </remarks>
-        Public Function isHeatMap() As Boolean
-            Return m_colorizer IsNot Nothing AndAlso m_colorizer.IsHeatMap
-        End Function
-
         ''' <summary>在指定位置施加电刺激（点击命中神经元时）。</summary>
-        Private Sub stimulateAt(x As Integer, y As Integer, holdMs As Long)
-            If m_dataset Is Nothing OrElse m_scene Is Nothing Then Return
+        Friend Sub stimulateAt(x As Integer, y As Integer, holdMs As Long)
+            If main.m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
 
             If m_stimBusy Then
-                m_statusText.Text = "上一次电刺激还在运行，请稍等"
+                main.m_statusText.Text = "上一次电刺激还在运行，请稍等"
 
                 Return
             End If
 
-            Dim hit As SceneHitTest = m_canvas.HitTest(x, y, radius:=8)
+            Dim hit As SceneHitTest = main.m_canvas.HitTest(x, y, radius:=8)
 
             If Not hit.HasHit OrElse hit.Kind <> SceneHitKind.Point Then
-                m_statusText.Text = "电刺激：这里没有神经元（把点大小调大一点更容易点中）"
+                main.m_statusText.Text = "电刺激：这里没有神经元（把点大小调大一点更容易点中）"
 
                 Return
             End If
 
-            Dim neuron As Integer = m_scene.PointNeurons(hit.Index)
+            Dim neuron As Integer = main.m_scene.PointNeurons(hit.Index)
             Dim stimulus As HoldStimulus = stimulusFromHold(holdMs)
 
-            m_focusNeuron = neuron
+            main.m_focusNeuron = neuron
 
-            Call showNeuronDetails(neuron)
+            Call main.showNeuronDetails(neuron)
             Call startStimulation(neuron, stimulus, holdMs)
         End Sub
 
         ''' <summary>在后台装配（首次）并运行一次刺激仿真，完成后自动进入回放。</summary>
         Private Sub startStimulation(neuron As Integer, stimulus As HoldStimulus, holdMs As Long)
             If m_stimulator Is Nothing Then
-                m_stimulator = New BrainStimulator(m_config, m_dataset)
+                m_stimulator = New BrainStimulator(main.m_config, main.m_dataset)
             End If
 
             Call stopReplay(clearHighlight:=True)
             Call cancelStimulationHold()
 
-            m_stimulateMode.Checked = True
+            main.m_stimulateMode.Checked = True
 
             Dim stimulator As BrainStimulator = m_stimulator
             Dim index As Integer = neuron
@@ -294,9 +283,9 @@ Namespace AppLogics
             Dim current As Double = stimulus.Current
 
             m_stimBusy = True
-            m_progress.Visible = True
-            m_progress.Style = ProgressBarStyle.Marquee
-            m_statusText.Text = $"电刺激 #{neuron}：半径 {radius / 1000.0:F0}μm / 电流 {current:F1}，正在运行全脑仿真 ..."
+            main.m_progress.Visible = True
+            main.m_progress.Style = ProgressBarStyle.Marquee
+            main.m_statusText.Text = $"电刺激 #{neuron}：半径 {radius / 1000.0:F0}μm / 电流 {current:F1}，正在运行全脑仿真 ..."
 
             Call setStimulusMarker(neuron)
             Call ensureStimWorker()
@@ -305,22 +294,22 @@ Namespace AppLogics
             Call m_stimWork.Add(
             Sub()
                 Try
-                    Dim prepared As Boolean = stimulator.Prepare(AddressOf onLoadProgress, CancellationToken.None)
+                    Dim prepared As Boolean = stimulator.Prepare(AddressOf main.onLoadProgress, CancellationToken.None)
 
                     If Not prepared Then
                         Throw New InvalidOperationException($"刺激引擎装配失败: {stimulator.LastError}")
                     End If
 
-                    Dim result As StimulationReplay = stimulator.Stimulate(index, radius, current, holdMs, AddressOf onLoadProgress)
+                    Dim result As StimulationReplay = stimulator.Stimulate(index, radius, current, holdMs, AddressOf main.onLoadProgress)
 
                     ' 记录仿真结果（逐步激活清单 + 统计 + 活跃度快照）
-                    Call StimulationReport.Write(result, m_config.ResolveActivityDir(), m_dataset.Index)
+                    Call StimulationReport.Write(result, main.m_config.ResolveActivityDir(), main.m_dataset.Index)
 
-                    Call BeginInvoke(New Action(Sub() onStimulationCompleted(result)))
+                    Call main.BeginInvoke(New Action(Sub() onStimulationCompleted(result)))
                 Catch ex As Exception
                     Dim reason As String = $"{ex.GetType().Name}: {ex.Message}"
 
-                    Call BeginInvoke(New Action(Sub() onStimulationFailed(reason)))
+                    Call main.BeginInvoke(New Action(Sub() onStimulationFailed(reason)))
                 End Try
             End Sub)
         End Sub
@@ -363,24 +352,24 @@ Namespace AppLogics
 
         Private Sub onStimulationCompleted(replay As StimulationReplay)
             m_stimBusy = False
-            m_progress.Visible = False
-            m_progress.Style = ProgressBarStyle.Continuous
+            main.m_progress.Visible = False
+            main.m_progress.Style = ProgressBarStyle.Continuous
 
             m_replay = replay
 
             ' 把这次刺激的逐神经元计数接进"仿真活跃度"着色：点一次就能直接看全脑的热力分布
-            If m_dataset IsNot Nothing AndAlso replay.Counts IsNot Nothing AndAlso replay.Counts.Length = m_dataset.Units Then
-                m_dataset.Activity = replay.Counts
-                m_dataset.ActivitySource = $"电刺激 #{replay.Neuron} (强度 {replay.Strength:F2})"
+            If main.m_dataset IsNot Nothing AndAlso replay.Counts IsNot Nothing AndAlso replay.Counts.Length = main.m_dataset.Units Then
+                main.m_dataset.Activity = replay.Counts
+                main.m_dataset.ActivitySource = $"电刺激 #{replay.Neuron} (强度 {replay.Strength:F2})"
 
-                If m_colorizer IsNot Nothing AndAlso m_colorizer.Dimension = NeuronColorDimension.Activity Then
-                    Call rebuildColorizer(NeuronColorDimension.Activity, resetUi:=True)
-                    Call rebuildScene()
+                If main.m_colorizer IsNot Nothing AndAlso main.m_colorizer.Dimension = NeuronColorDimension.Activity Then
+                    Call main.rebuildColorizer(NeuronColorDimension.Activity, resetUi:=True)
+                    Call main.rebuildScene()
                 End If
             End If
 
             m_replayStep = 0
-            m_highlighter = New ReplayHighlighter(m_scene, m_dataset.Units, isHeatMap())
+            m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
 
             Call updateReplayPanel()
             Call updateReplayFrame()
@@ -388,22 +377,22 @@ Namespace AppLogics
             m_replayPlaying = True
             m_replayTimer.Start()
 
-            m_statusText.Text = $"电刺激完成 ({replay.WallMs} ms, {replay.Backend}/{replay.StepPath}): {replay.Describe()}"
+            main.m_statusText.Text = $"电刺激完成 ({replay.WallMs} ms, {replay.Backend}/{replay.StepPath}): {replay.Describe()}"
 
             If Not String.IsNullOrEmpty(replay.ReportDir) Then
-                m_sceneText.Text = $"结果已记录: {replay.ReportDir}"
+                main.m_sceneText.Text = $"结果已记录: {replay.ReportDir}"
             End If
 
             ' 刺激完成 → 右下角的"响应曲线"链接可用
-            m_chartLink.Enabled = True
+            main.m_chartLink.Enabled = True
         End Sub
 
         ''' <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
         Private Sub onStimulationFailed(reason As String)
             m_stimBusy = False
-            m_progress.Visible = False
-            m_progress.Style = ProgressBarStyle.Continuous
-            m_statusText.Text = "电刺激失败"
+            main.m_progress.Visible = False
+            main.m_progress.Style = ProgressBarStyle.Continuous
+            main.m_statusText.Text = "电刺激失败"
 
             Call MessageBox.Show(Me, reason, "电刺激仿真失败", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Sub
@@ -484,7 +473,7 @@ Namespace AppLogics
             main.m_replayPlay.Text = If(m_replayPlaying, "暂停", "播放")
         End Sub
 
-        Private Sub onReplayPlay(sender As Object, e As EventArgs)
+        Friend Sub onReplayPlay(sender As Object, e As EventArgs)
             If m_replay Is Nothing Then Return
 
             If m_replayPlaying Then
@@ -505,36 +494,36 @@ Namespace AppLogics
             Call updateReplayPanel()
         End Sub
 
-        Private Sub onReplaySpeedChanged(sender As Object, e As EventArgs)
+        Friend Sub onReplaySpeedChanged(sender As Object, e As EventArgs)
             m_replayTimer.Interval = CInt(System.Math.Max(20, main.m_replaySpeed.Value))
         End Sub
 
-        Private Sub onReplayTrackScroll(sender As Object, e As EventArgs)
+        Friend Sub onReplayTrackScroll(sender As Object, e As EventArgs)
             If m_replay Is Nothing Then Return
 
             m_replayStep = main.m_replayTrack.Value
             Call updateReplayFrame()
         End Sub
 
-        Private Sub onReplayFirst(sender As Object, e As EventArgs)
+        Friend Sub onReplayFirst(sender As Object, e As EventArgs)
             Call seekReplay(0)
         End Sub
 
-        Private Sub onReplayPrev(sender As Object, e As EventArgs)
+        Friend Sub onReplayPrev(sender As Object, e As EventArgs)
             Call seekReplay(m_replayStep - 1)
         End Sub
 
-        Private Sub onReplayNext(sender As Object, e As EventArgs)
+        Friend Sub onReplayNext(sender As Object, e As EventArgs)
             Call seekReplay(m_replayStep + 1)
         End Sub
 
-        Private Sub onReplayLast(sender As Object, e As EventArgs)
+        Friend Sub onReplayLast(sender As Object, e As EventArgs)
             If m_replay Is Nothing Then Return
 
             Call seekReplay(m_replay.Steps - 1)
         End Sub
 
-        Private Sub seekReplay(stepIndex As Integer)
+        Friend Sub seekReplay(stepIndex As Integer)
             If m_replay Is Nothing Then Return
 
             m_replayPlaying = False
@@ -544,7 +533,7 @@ Namespace AppLogics
             Call updateReplayFrame()
         End Sub
 
-        Private Sub onReplayClear(sender As Object, e As EventArgs)
+        Friend Sub onReplayClear(sender As Object, e As EventArgs)
             Call stopReplay(clearHighlight:=True)
 
             main.m_replayText.Text = "已清除回放高亮"
@@ -614,7 +603,7 @@ Namespace AppLogics
         End Sub
 
         ''' <summary>仿真步数改变（下一次刺激生效）。</summary>
-        Private Sub onStimulusStepsChanged(sender As Object, e As EventArgs)
+        Friend Sub onStimulusStepsChanged(sender As Object, e As EventArgs)
             main.m_config.TimeSteps = CInt(main.m_stimStepsBox.Value)
         End Sub
 
@@ -625,10 +614,10 @@ Namespace AppLogics
         ''' 切换着色维度、改筛选条件都会重建点云，此时基准颜色已经变了 ——
         ''' 继续用旧的高亮器会把"上一套配色下的颜色"写进新点云。
         ''' </remarks>
-        Private Sub rebindHighlighter()
+        Friend Sub rebindHighlighter()
             If main.m_scene Is Nothing OrElse main.m_dataset Is Nothing OrElse m_replay Is Nothing Then Return
 
-            m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, isHeatMap())
+            m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
 
             If m_replayStep < 0 Then m_replayStep = 0
 
@@ -639,16 +628,8 @@ Namespace AppLogics
 
 #Region "offline snapshot"
 
-        ''' <summary>出图模式下的电刺激规格（离线验证回放渲染）。</summary>
-        Private Structure SnapshotStimulus
-            Public Neuron As Integer
-            Public RadiusNm As Double
-            Public Current As Double
-            Public StepIndex As Integer
-        End Structure
-
         ''' <summary>出图模式下的刺激规格（``Nothing`` 表示这次出图不做刺激）。</summary>
-        Private m_snapshotStimulus As SnapshotStimulus?
+        Friend m_snapshotStimulus As SnapshotStimulus?
 
         ''' <summary>
         ''' 解析 ``stim=&lt;neuron>:&lt;radiusUm>:&lt;current>:&lt;step>`` 形式的出图参数。
@@ -656,7 +637,7 @@ Namespace AppLogics
         ''' <remarks>
         ''' ``neuron`` 为 -1 时取"出度最大的神经元"，``step`` 为 -1 时取"最活跃的那一步"。
         ''' </remarks>
-        Private Sub parseSnapshotStimulus(spec As String)
+        Friend Sub parseSnapshotStimulus(spec As String)
             Dim parts As String() = spec.Split(":"c)
 
             If parts.Length < 3 Then
@@ -690,7 +671,7 @@ Namespace AppLogics
         ''' 不追求交互速度 —— 但仿真本身与交互模式走的是<b>同一段代码</b>
         ''' （<see cref="BrainStimulator"/>），所以出图结果能代表交互观感。
         ''' </remarks>
-        Private Sub applySnapshotStimulus()
+        Friend Sub applySnapshotStimulus()
             If Not m_snapshotStimulus.HasValue Then Return
 
             Dim spec As SnapshotStimulus = m_snapshotStimulus.Value
@@ -739,13 +720,13 @@ Namespace AppLogics
                         m_replayStep = If(spec.StepIndex >= 0,
                                           System.Math.Min(spec.StepIndex, replay.Steps - 1),
                                           replay.PeakStep)
-                        m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, isHeatMap())
+                        m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
 
                         Call updateReplayFrame()
                         Call updateReplayPanel()
 
                         Call Console.Out.WriteLine($"stimulation: {replay.Describe()}")
-                        Call Console.Out.WriteLine($"replay highlight mode: heatMap={isHeatMap()}, " &
+                        Call Console.Out.WriteLine($"replay highlight mode: heatMap={ main.isHeatMap()}, " &
                                                    $"dimension={If(main.m_colorizer Is Nothing, "none", main.m_colorizer.Dimension.ToString)}, " &
                                                    $"embeddedColor={ main.m_canvas.UseEmbeddedColor}")
                         Call Console.Out.WriteLine($"rendering replay step {m_replayStep + 1}/{replay.Steps}, " &
@@ -778,7 +759,7 @@ Namespace AppLogics
         '''    就是据此定的；
         ''' 2. <b>验证回放数据链路</b>：运行、取逐步激活、落盘、并断言逐步清单与统计一致。
         ''' </remarks>
-        Private Sub runStimulationProbe(args As String())
+        Friend Sub runStimulationProbe(args As String())
             Dim report As New StringBuilder()
             Dim failures As Integer = 0
             Dim reportFile As String = If(args.Length > 2, args(2), Path.Combine(AppContext.BaseDirectory, "stimulation-report.txt"))

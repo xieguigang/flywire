@@ -453,6 +453,202 @@ Neuropils
  整个进程的日志与 CSV 加载都会跟着失效。
  </remarks>
 </member>
+<member name="T:Neuropils.AppLogics.SnapshotStimulus">
+ <summary>
+ 出图模式下的电刺激规格（离线验证回放渲染）。
+ </summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.HoldFloorMs">
+ <summary>低于这个按住时长就按最弱刺激处理。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.HoldCeilingMs">
+ <summary>按住到这个时长即达到映射区间的上界。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.RadiusFloorNm">
+ <summary>募集半径的下界（纳米）：约 25 微米，电极尖端的最近一圈。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.RadiusCeilingNm">
+ <summary>募集半径的上界（纳米）：约 140 微米，一个局部脑区尺度的微刺激。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.CurrentFloor">
+ <summary>注入电流的下界（略高于阈值 1.0，保证被募集的神经元会发放）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.CurrentCeiling">
+ <summary>注入电流的上界。</summary>
+</member>
+<member name="T:Neuropils.AppLogics.StimulationExperiment.HoldStimulus">
+ <summary>一次"按住"映射出来的刺激参数。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.HoldStimulus.RadiusNm">
+ <summary>募集半径（纳米）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.HoldStimulus.Current">
+ <summary>注入电流强度。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.ReplayTrail">
+ <summary>回放时的余辉长度（之前多少步仍然可见）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_holdWatch">
+ <summary>按住计时（鼠标左键）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_holdTimer">
+ <summary>按住过程中的强度回显定时器。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_replayTimer">
+ <summary>回放时钟。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_holdNeuron">
+ <summary>按住期间命中的神经元（-1 表示还没命中）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_stimulator">
+ <summary>刺激引擎（首次使用时装配）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_stimBusy">
+ <summary>是否正在跑刺激仿真。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_stimWorker">
+ <summary>刺激仿真专用的工作线程与其任务队列。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_replay">
+ <summary>最近一次刺激的结果。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_highlighter">
+ <summary>把回放状态映射到点云颜色/尺寸的高亮器。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_replayStep">
+ <summary>当前回放到的步号（0 基，-1 表示没有回放）。</summary>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_replayPlaying">
+ <summary>回放是否在自动播放。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.initializeStimulation">
+ <summary>
+ 初始化电刺激/回放相关的定时器与面板（由 <c>initializeUi</c> 在控件建好之后调用）。
+ </summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.stimulusFromHold(System.Int64)">
+ <summary>按住时长 → 刺激参数（募集半径 + 注入电流）。</summary>
+ <remarks>
+ <b>为什么"按住越久"映射成"募集的神经元越多"</b>
+ 
+ 初版按"电流强度"映射，实测发现：本数据集的权重经过结构归一化，单个神经元即使
+ 持续注入 16 倍阈值电流也只能激活它自己（全脑 139,255 神经元 / 373 万突触下实测
+ active = 1，零传播）。这是网络动力学的正确结果 —— 单个突触前神经元对突触后的
+ 贡献只有 1/扇入 量级，靠"一个神经元"无论如何也点不着网络。
+ 
+ 真实电刺激也是如此：电流从电极尖端扩散，兴奋的是<b>一片</b>神经元，
+ 微刺激实验里"强度"指的就是被募集的组织范围。因此这里把按住时长映射成
+ 「募集半径（25 → 140 微米）」与「注入电流（1.2 → 2.5）」，
+ 工具条上的"强度×"再整体缩放半径。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.beginStimulationHold(System.Int32,System.Int32)">
+ <summary>鼠标按下：开始计时并进入按住预览。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.updateHoldPreview(System.Int32,System.Int32)">
+ <summary>刷新"目标 + 当前刺激参数"的回显。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.endStimulationHold">
+ <summary>结束按住计时，返回按住时长（毫秒）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.stimulateAt(System.Int32,System.Int32,System.Int64)">
+ <summary>在指定位置施加电刺激（点击命中神经元时）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.startStimulation(System.Int32,Neuropils.AppLogics.StimulationExperiment.HoldStimulus,System.Int64)">
+ <summary>在后台装配（首次）并运行一次刺激仿真，完成后自动进入回放。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.ensureStimWorker">
+ <summary>
+ 刺激仿真专用的工作线程。
+ </summary>
+ <remarks>
+ <b>为什么不用线程池</b>：CUDA 的"当前上下文"是<b>线程局部</b>状态，上下文在创建它的
+ 那条线程上绑定。把整个刺激流程固定在同一条线程上执行，上下文就始终"属于"这条线程：
+ 
+ * 不会再出现"第一次刺激正常、第二次点击报
+   <c>cuMemAlloc_v2 failed: CUDA_ERROR_INVALID_CONTEXT (201)</c>"——
+   那是线程池把第二次任务调度到另一条线程上的结果
+   （ILCuda 侧也已修好：<c>CudaRuntime.EnsureCurrent</c> 会在每个底层调用前自动为当前线程
+   绑定上下文，这里是双保险）；
+ * 同一时刻只有一次仿真在碰 GPU（配合 <c>m_stimBusy</c> 的界面侧互斥）。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.onStimulationFailed(System.String)">
+ <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.updateReplayFrame">
+ <summary>把当前回放帧刷到点云上。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.updateReplayPanel">
+ <summary>刷新回放面板的可用状态与进度条位置。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.stopReplay(System.Boolean)">
+ <summary>停止回放（可选把点云恢复成未高亮状态）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.setStimulusMarker(System.Int32)">
+ <summary>把"电极位置"用一个大号十字标出来。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.clearStimulusMarker">
+ <summary>撤掉电极标记（回放高亮不清除，那是点云的颜色）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.onStimulusStepsChanged(System.Object,System.EventArgs)">
+ <summary>仿真步数改变（下一次刺激生效）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.rebindHighlighter">
+ <summary>
+ 场景被重建之后重新绑定高亮器。
+ </summary>
+ <remarks>
+ 切换着色维度、改筛选条件都会重建点云，此时基准颜色已经变了 ——
+ 继续用旧的高亮器会把"上一套配色下的颜色"写进新点云。
+ </remarks>
+</member>
+<member name="F:Neuropils.AppLogics.StimulationExperiment.m_snapshotStimulus">
+ <summary>出图模式下的刺激规格（``Nothing`` 表示这次出图不做刺激）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.parseSnapshotStimulus(System.String)">
+ <summary>
+ 解析 ``stim=&lt;neuron>:&lt;radiusUm>:&lt;current>:&lt;step>`` 形式的出图参数。
+ </summary>
+ <remarks>
+ ``neuron`` 为 -1 时取"出度最大的神经元"，``step`` 为 -1 时取"最活跃的那一步"。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.applySnapshotStimulus">
+ <summary>
+ 出图模式：在后台跑一次电刺激，随后在 UI 线程把指定步的高亮画出来并抓帧。
+ </summary>
+ <remarks>
+ 这是唯一能<b>离线验证回放渲染</b>的入口：自检模式（--stimulate）只覆盖数据链路，
+ 不碰 GPU；而回放的"点亮 + 放大"最终要落到顶点着色器上，只能靠出图来确认。
+ 
+ 首次运行需要装配连接组（读 261 MB 连接表，约 30 s），因此它是离线诊断模式，
+ 不追求交互速度 —— 但仿真本身与交互模式走的是<b>同一段代码</b>
+ （<see cref="T:Neuropils.Simulation.BrainStimulator"/>），所以出图结果能代表交互观感。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.runStimulationProbe(System.String[])">
+ <summary>
+ 电刺激自检（``--stimulate &lt;报告.txt&gt; [数据目录] [神经元] [强度列表]``）。
+ </summary>
+ <remarks>
+ 目的有两个：
+ 
+ 1. <b>标定强度映射</b>：全脑的权重经过结构归一化，单个神经元的持续放电能扩散多远
+    只能实测 —— 这里对同一神经元扫一串强度，把"注入强度 → 逐步激活规模"打出来，
+    界面上的按住时长映射区间（"StrengthFloor" ~ "StrengthCeiling"）
+    就是据此定的；
+ 2. <b>验证回放数据链路</b>：运行、取逐步激活、落盘、并断言逐步清单与统计一致。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.checkStepConsistency(System.Text.StringBuilder,System.Int32@,Neuropils.Simulation.StimulationReplay)">
+ <summary>逐步激活清单必须与实际脉冲数一致（回放数据的正确性底线）。</summary>
+</member>
+<member name="M:Neuropils.AppLogics.StimulationExperiment.fileLineCount(System.String)">
+ <remarks>
+ 形参不能叫 ``file``：会遮蔽 <see cref="T:System.IO.File"/>（VB 不区分大小写）。
+ </remarks>
+</member>
 <member name="T:Neuropils.Data.BrainDataset">
  <summary>
  三维可视化所使用的果蝇大脑数据集：神经元索引与注释、三维坐标、主导脑区，
@@ -826,209 +1022,6 @@ Neuropils
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
  </remarks>
 </member>
-<member name="F:Neuropils.FormMain.HoldFloorMs">
- <summary>低于这个按住时长就按最弱刺激处理。</summary>
-</member>
-<member name="F:Neuropils.FormMain.HoldCeilingMs">
- <summary>按住到这个时长即达到映射区间的上界。</summary>
-</member>
-<member name="F:Neuropils.FormMain.RadiusFloorNm">
- <summary>募集半径的下界（纳米）：约 25 微米，电极尖端的最近一圈。</summary>
-</member>
-<member name="F:Neuropils.FormMain.RadiusCeilingNm">
- <summary>募集半径的上界（纳米）：约 140 微米，一个局部脑区尺度的微刺激。</summary>
-</member>
-<member name="F:Neuropils.FormMain.CurrentFloor">
- <summary>注入电流的下界（略高于阈值 1.0，保证被募集的神经元会发放）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.CurrentCeiling">
- <summary>注入电流的上界。</summary>
-</member>
-<member name="T:Neuropils.FormMain.HoldStimulus">
- <summary>一次"按住"映射出来的刺激参数。</summary>
-</member>
-<member name="F:Neuropils.FormMain.HoldStimulus.RadiusNm">
- <summary>募集半径（纳米）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.HoldStimulus.Current">
- <summary>注入电流强度。</summary>
-</member>
-<member name="F:Neuropils.FormMain.ReplayTrail">
- <summary>回放时的余辉长度（之前多少步仍然可见）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_holdWatch">
- <summary>按住计时（鼠标左键）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_holdTimer">
- <summary>按住过程中的强度回显定时器。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_replayTimer">
- <summary>回放时钟。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_holdNeuron">
- <summary>按住期间命中的神经元（-1 表示还没命中）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_stimulator">
- <summary>刺激引擎（首次使用时装配）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_stimBusy">
- <summary>是否正在跑刺激仿真。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_stimWorker">
- <summary>刺激仿真专用的工作线程与其任务队列。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_replay">
- <summary>最近一次刺激的结果。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_highlighter">
- <summary>把回放状态映射到点云颜色/尺寸的高亮器。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_replayStep">
- <summary>当前回放到的步号（0 基，-1 表示没有回放）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_replayPlaying">
- <summary>回放是否在自动播放。</summary>
-</member>
-<member name="M:Neuropils.FormMain.initializeStimulation">
- <summary>
- 初始化电刺激/回放相关的定时器与面板（由 <c>initializeUi</c> 在控件建好之后调用）。
- </summary>
-</member>
-<member name="M:Neuropils.FormMain.stimulusFromHold(System.Int64)">
- <summary>按住时长 → 刺激参数（募集半径 + 注入电流）。</summary>
- <remarks>
- <b>为什么"按住越久"映射成"募集的神经元越多"</b>
- 
- 初版按"电流强度"映射，实测发现：本数据集的权重经过结构归一化，单个神经元即使
- 持续注入 16 倍阈值电流也只能激活它自己（全脑 139,255 神经元 / 373 万突触下实测
- active = 1，零传播）。这是网络动力学的正确结果 —— 单个突触前神经元对突触后的
- 贡献只有 1/扇入 量级，靠"一个神经元"无论如何也点不着网络。
- 
- 真实电刺激也是如此：电流从电极尖端扩散，兴奋的是<b>一片</b>神经元，
- 微刺激实验里"强度"指的就是被募集的组织范围。因此这里把按住时长映射成
- 「募集半径（25 → 140 微米）」与「注入电流（1.2 → 2.5）」，
- 工具条上的"强度×"再整体缩放半径。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.beginStimulationHold(System.Int32,System.Int32)">
- <summary>鼠标按下：开始计时并进入按住预览。</summary>
-</member>
-<member name="M:Neuropils.FormMain.updateHoldPreview(System.Int32,System.Int32)">
- <summary>刷新"目标 + 当前刺激参数"的回显。</summary>
-</member>
-<member name="M:Neuropils.FormMain.endStimulationHold">
- <summary>结束按住计时，返回按住时长（毫秒）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.isHeatMap">
- <summary>
- 当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
- </summary>
- <remarks>
- 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
- 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.stimulateAt(System.Int32,System.Int32,System.Int64)">
- <summary>在指定位置施加电刺激（点击命中神经元时）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.startStimulation(System.Int32,Neuropils.FormMain.HoldStimulus,System.Int64)">
- <summary>在后台装配（首次）并运行一次刺激仿真，完成后自动进入回放。</summary>
-</member>
-<member name="M:Neuropils.FormMain.ensureStimWorker">
- <summary>
- 刺激仿真专用的工作线程。
- </summary>
- <remarks>
- <b>为什么不用线程池</b>：CUDA 的"当前上下文"是<b>线程局部</b>状态，上下文在创建它的
- 那条线程上绑定。把整个刺激流程固定在同一条线程上执行，上下文就始终"属于"这条线程：
- 
- * 不会再出现"第一次刺激正常、第二次点击报
-   <c>cuMemAlloc_v2 failed: CUDA_ERROR_INVALID_CONTEXT (201)</c>"——
-   那是线程池把第二次任务调度到另一条线程上的结果
-   （ILCuda 侧也已修好：<c>CudaRuntime.EnsureCurrent</c> 会在每个底层调用前自动为当前线程
-   绑定上下文，这里是双保险）；
- * 同一时刻只有一次仿真在碰 GPU（配合 <c>m_stimBusy</c> 的界面侧互斥）。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.onStimulationFailed(System.String)">
- <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.updateReplayFrame">
- <summary>把当前回放帧刷到点云上。</summary>
-</member>
-<member name="M:Neuropils.FormMain.updateReplayPanel">
- <summary>刷新回放面板的可用状态与进度条位置。</summary>
-</member>
-<member name="M:Neuropils.FormMain.stopReplay(System.Boolean)">
- <summary>停止回放（可选把点云恢复成未高亮状态）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.setStimulusMarker(System.Int32)">
- <summary>把"电极位置"用一个大号十字标出来。</summary>
-</member>
-<member name="M:Neuropils.FormMain.clearStimulusMarker">
- <summary>撤掉电极标记（回放高亮不清除，那是点云的颜色）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.onStimulusStepsChanged(System.Object,System.EventArgs)">
- <summary>仿真步数改变（下一次刺激生效）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.rebindHighlighter">
- <summary>
- 场景被重建之后重新绑定高亮器。
- </summary>
- <remarks>
- 切换着色维度、改筛选条件都会重建点云，此时基准颜色已经变了 ——
- 继续用旧的高亮器会把"上一套配色下的颜色"写进新点云。
- </remarks>
-</member>
-<member name="T:Neuropils.FormMain.SnapshotStimulus">
- <summary>出图模式下的电刺激规格（离线验证回放渲染）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snapshotStimulus">
- <summary>出图模式下的刺激规格（``Nothing`` 表示这次出图不做刺激）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.parseSnapshotStimulus(System.String)">
- <summary>
- 解析 ``stim=&lt;neuron>:&lt;radiusUm>:&lt;current>:&lt;step>`` 形式的出图参数。
- </summary>
- <remarks>
- ``neuron`` 为 -1 时取"出度最大的神经元"，``step`` 为 -1 时取"最活跃的那一步"。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.applySnapshotStimulus">
- <summary>
- 出图模式：在后台跑一次电刺激，随后在 UI 线程把指定步的高亮画出来并抓帧。
- </summary>
- <remarks>
- 这是唯一能<b>离线验证回放渲染</b>的入口：自检模式（--stimulate）只覆盖数据链路，
- 不碰 GPU；而回放的"点亮 + 放大"最终要落到顶点着色器上，只能靠出图来确认。
- 
- 首次运行需要装配连接组（读 261 MB 连接表，约 30 s），因此它是离线诊断模式，
- 不追求交互速度 —— 但仿真本身与交互模式走的是<b>同一段代码</b>
- （<see cref="T:Neuropils.Simulation.BrainStimulator"/>），所以出图结果能代表交互观感。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.runStimulationProbe(System.String[])">
- <summary>
- 电刺激自检（``--stimulate &lt;报告.txt&gt; [数据目录] [神经元] [强度列表]``）。
- </summary>
- <remarks>
- 目的有两个：
- 
- 1. <b>标定强度映射</b>：全脑的权重经过结构归一化，单个神经元的持续放电能扩散多远
-    只能实测 —— 这里对同一神经元扫一串强度，把"注入强度 → 逐步激活规模"打出来，
-    界面上的按住时长映射区间（"StrengthFloor" ~ "StrengthCeiling"）
-    就是据此定的；
- 2. <b>验证回放数据链路</b>：运行、取逐步激活、落盘、并断言逐步清单与统计一致。
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.checkStepConsistency(System.Text.StringBuilder,System.Int32@,Neuropils.Simulation.StimulationReplay)">
- <summary>逐步激活清单必须与实际脉冲数一致（回放数据的正确性底线）。</summary>
-</member>
-<member name="M:Neuropils.FormMain.fileLineCount(System.String)">
- <remarks>
- 形参不能叫 ``file``：会遮蔽 <see cref="T:System.IO.File"/>（VB 不区分大小写）。
- </remarks>
-</member>
 <member name="F:Neuropils.FormMain.m_chartLink">
  <summary>状态栏右下角的"响应曲线"链接。</summary>
 </member>
@@ -1117,6 +1110,15 @@ Neuropils
 </member>
 <member name="M:Neuropils.FormMain.pickAt(System.Int32,System.Int32)">
  <summary>在画布的给定位置拾取神经元，并在详情面板里显示它的注释。</summary>
+</member>
+<member name="M:Neuropils.FormMain.isHeatMap">
+ <summary>
+ 当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
+ </summary>
+ <remarks>
+ 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
+ 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
+ </remarks>
 </member>
 <member name="M:Neuropils.FormMain.showNeuronDetails(System.Int32)">
  <summary>显示一个神经元的全部注释与连接统计。</summary>

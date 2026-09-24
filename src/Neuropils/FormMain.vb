@@ -47,44 +47,45 @@ Public Class FormMain
     Private m_showGround As ToolStripButton
     Friend WithEvents m_progress As ToolStripProgressBar
     Friend WithEvents m_statusText As ToolStripStatusLabel
-    Private m_sceneText As ToolStripStatusLabel
+    Friend m_sceneText As ToolStripStatusLabel
     ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
-    Private m_chartLink As LinkLabel
+    Friend m_chartLink As LinkLabel
     ''' <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
-    Private m_snakeLink As LinkLabel
+    Friend m_snakeLink As LinkLabel
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
-    Private m_chartForm As ResponseChartForm
+    Friend m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
 
     ' ---- 电刺激 / 回放 (详见 FormMain.Stimulation.vb) ----
-    Private m_stimulateMode As ToolStripButton
-    Private m_stimStrengthBox As NumericUpDown
-    Private m_stimStepsBox As NumericUpDown
-    Private m_holdLabel As ToolStripLabel
-    Private m_replayPanel As Control
-    Private m_replayPlay As Button
-    Private m_replayFirst As Button
-    Private m_replayPrev As Button
-    Private m_replayNext As Button
-    Private m_replayLast As Button
-    Private m_replayClear As Button
-    Private m_replayTrack As TrackBar
-    Private m_replaySpeed As NumericUpDown
-    Private m_replayText As Label
+    Friend m_stimulateMode As ToolStripButton
+    Friend m_stimStrengthBox As NumericUpDown
+    Friend m_stimStepsBox As NumericUpDown
+    Friend m_holdLabel As ToolStripLabel
+    Friend m_replayPanel As Control
+    Friend m_replayPlay As Button
+    Friend m_replayFirst As Button
+    Friend m_replayPrev As Button
+    Friend m_replayNext As Button
+    Friend m_replayLast As Button
+    Friend m_replayClear As Button
+    Friend m_replayTrack As TrackBar
+    Friend m_replaySpeed As NumericUpDown
+    Friend m_replayText As Label
 
     Friend m_dataset As BrainDataset
-    Private m_colorizer As NeuronColorizer
+    Friend m_colorizer As NeuronColorizer
     Friend m_scene As BrainScene
-    Private m_lookup As Integer()
-    Private m_focusNeuron As Integer = -1
-    Private m_viewInitialized As Boolean = False
+    Friend m_lookup As Integer()
+    Friend m_focusNeuron As Integer = -1
+    Friend m_viewInitialized As Boolean = False
     ''' <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
-    Private m_snapshotPath As String = Nothing
-    Private m_cancel As CancellationTokenSource
-    Private m_busy As Boolean
+    Friend m_snapshotPath As String = Nothing
+    Friend m_cancel As CancellationTokenSource
+    Friend m_busy As Boolean
 
     Dim m_snake As Snake
+    Dim m_experiment As StimulationExperiment
 
     ''' <summary>
     ''' 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
@@ -102,7 +103,6 @@ Public Class FormMain
         Call initializeUi()
 
         m_rebuildTimer.Stop()
-
         m_rebuildTimer.Interval = 260
 
         AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
@@ -161,8 +161,10 @@ Public Class FormMain
         Me.Controls.Add(createMenu())
         Me.Controls.Add(createStatusBar())
 
+        m_experiment = New StimulationExperiment(Me)
+
         Call refreshLegend()
-        Call initializeStimulation()
+        Call m_experiment.initializeStimulation()
     End Sub
 
     Private Function createMenu() As MenuStrip
@@ -264,7 +266,7 @@ Public Class FormMain
             .Checked = False,
             .ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
         }
-        AddHandler m_stimulateMode.CheckedChanged, AddressOf onStimulateModeChanged
+        AddHandler m_stimulateMode.CheckedChanged, AddressOf m_experiment.onStimulateModeChanged
 
         m_stimStrengthBox = New NumericUpDown With {
             .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20D, .Increment = 0.5D, .Value = 1D, .Width = 56
@@ -273,7 +275,7 @@ Public Class FormMain
         m_stimStepsBox = New NumericUpDown With {
             .Minimum = 5, .Maximum = 200, .Increment = 5, .Value = 30, .Width = 56
         }
-        AddHandler m_stimStepsBox.ValueChanged, AddressOf onStimulusStepsChanged
+        AddHandler m_stimStepsBox.ValueChanged, AddressOf m_experiment.onStimulusStepsChanged
 
         m_holdLabel = New ToolStripLabel("")
 
@@ -379,11 +381,11 @@ Public Class FormMain
             .Margin = New Padding(0)
         }
 
-        m_replayFirst = newReplayButton("|◀", AddressOf onReplayFirst)
-        m_replayPrev = newReplayButton("◀", AddressOf onReplayPrev)
-        m_replayPlay = newReplayButton("播放", AddressOf onReplayPlay, 52)
-        m_replayNext = newReplayButton("▶", AddressOf onReplayNext)
-        m_replayLast = newReplayButton("▶|", AddressOf onReplayLast)
+        m_replayFirst = newReplayButton("|◀", AddressOf m_experiment.onReplayFirst)
+        m_replayPrev = newReplayButton("◀", AddressOf m_experiment.onReplayPrev)
+        m_replayPlay = newReplayButton("播放", AddressOf m_experiment.onReplayPlay, 52)
+        m_replayNext = newReplayButton("▶", AddressOf m_experiment.onReplayNext)
+        m_replayLast = newReplayButton("▶|", AddressOf m_experiment.onReplayLast)
 
         Call buttons.Controls.Add(m_replayFirst)
         Call buttons.Controls.Add(m_replayPrev)
@@ -399,7 +401,7 @@ Public Class FormMain
             .SmallChange = 1,
             .LargeChange = 5
         }
-        AddHandler m_replayTrack.ValueChanged, AddressOf onReplayTrackScroll
+        AddHandler m_replayTrack.ValueChanged, AddressOf m_experiment.onReplayTrackScroll
 
         Dim bottom As New TableLayoutPanel With {
             .Dock = DockStyle.Fill,
@@ -415,10 +417,10 @@ Public Class FormMain
         m_replaySpeed = New NumericUpDown With {
             .Minimum = 30, .Maximum = 1000, .Increment = 20, .Value = 120, .Width = 62, .Margin = New Padding(0)
         }
-        AddHandler m_replaySpeed.ValueChanged, AddressOf onReplaySpeedChanged
+        AddHandler m_replaySpeed.ValueChanged, AddressOf m_experiment.onReplaySpeedChanged
 
         m_replayClear = New Button With {.Text = "清除", .Dock = DockStyle.Fill, .Margin = New Padding(4, 0, 0, 0)}
-        AddHandler m_replayClear.Click, AddressOf onReplayClear
+        AddHandler m_replayClear.Click, AddressOf m_experiment.onReplayClear
 
         m_replayText = New Label With {
             .Dock = DockStyle.Fill,
@@ -533,8 +535,8 @@ Public Class FormMain
         Try
             Dim data As Analysis.ResponseDataset
 
-            If m_replay IsNot Nothing Then
-                data = Analysis.ResponseDataset.FromReplay(m_replay, m_dataset, m_config.Threshold)
+            If m_experiment.m_replay IsNot Nothing Then
+                data = Analysis.ResponseDataset.FromReplay(m_experiment.m_replay, m_dataset, m_config.Threshold)
             Else
                 Dim dir As String = Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir())
 
@@ -595,7 +597,7 @@ Public Class FormMain
 
         ' 电刺激探针：扫强度跑仿真并落盘回放数据（用于标定"按住时长 → 强度"的映射）
         If args.Length > 2 AndAlso String.Equals(args(1), "--stimulate", StringComparison.OrdinalIgnoreCase) Then
-            Call runStimulationProbe(args)
+            Call m_experiment.runStimulationProbe(args)
 
             Return
         End If
@@ -654,7 +656,7 @@ Public Class FormMain
 
             ' 可选：先跑一次电刺激再把指定步的高亮画出来（离线验证回放渲染）
             If args.Length > 6 AndAlso args(6).StartsWith("stim=", StringComparison.OrdinalIgnoreCase) Then
-                Call parseSnapshotStimulus(args(6).Substring("stim=".Length))
+                Call m_experiment.parseSnapshotStimulus(args(6).Substring("stim=".Length))
             End If
         ElseIf args.Length > 1 AndAlso Directory.Exists(args(1)) Then
             m_config.DataDir = args(1)
@@ -664,7 +666,7 @@ Public Class FormMain
     End Sub
 
     ''' <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
-    Private Sub captureAndExit()
+    Friend Sub captureAndExit()
         Dim file As String = m_snapshotPath
 
         m_snapshotPath = Nothing
@@ -713,16 +715,16 @@ Public Class FormMain
 
     Protected Overrides Sub OnFormClosed(e As FormClosedEventArgs)
         m_rebuildTimer.Stop()
-        m_replayTimer.Stop()
-        m_holdTimer.Stop()
+        m_experiment.m_replayTimer.Stop()
+        m_experiment.m_holdTimer.Stop()
 
         If m_cancel IsNot Nothing Then
             Call m_cancel.Cancel()
         End If
 
         ' 让刺激工作线程退出循环（后台线程本来就不会阻止进程结束，这里只是把收尾做干净）
-        If m_stimWork IsNot Nothing AndAlso Not m_stimWork.IsAddingCompleted Then
-            Call m_stimWork.CompleteAdding()
+        If m_experiment.m_stimWork IsNot Nothing AndAlso Not m_experiment.m_stimWork.IsAddingCompleted Then
+            Call m_experiment.m_stimWork.CompleteAdding()
         End If
 
         Call MyBase.OnFormClosed(e)
@@ -853,7 +855,7 @@ Public Class FormMain
 #Region "scene assembly"
 
     ''' <summary>重建着色器与图例。</summary>
-    Private Sub rebuildColorizer(dimension As NeuronColorDimension, resetUi As Boolean)
+    Friend Sub rebuildColorizer(dimension As NeuronColorDimension, resetUi As Boolean)
         If m_dataset Is Nothing Then Return
 
         m_colorizer = NeuronColorizer.Create(m_dataset, dimension)
@@ -876,7 +878,7 @@ Public Class FormMain
     End Sub
 
     ''' <summary>重建点云与连线并送进画布。</summary>
-    Private Sub rebuildScene(Optional resetView As Boolean = False)
+    Friend Sub rebuildScene(Optional resetView As Boolean = False)
         If m_dataset Is Nothing OrElse m_colorizer Is Nothing Then Return
         If m_busy Then Return
 
@@ -961,11 +963,11 @@ Public Class FormMain
 
         ' 场景换了（着色维度 / 筛选 / 连接档位变化都会换）：回放高亮器要重新绑定，
         ' 否则它会把旧配色下的颜色写进新点云
-        Call rebindHighlighter()
+        Call m_experiment.rebindHighlighter()
 
         ' 出图模式若带刺激规格：先跑仿真并高亮，抓帧交给它自己完成
-        If m_snapshotStimulus.HasValue Then
-            Call applySnapshotStimulus()
+        If m_experiment.m_snapshotStimulus.HasValue Then
+            Call m_experiment.applySnapshotStimulus()
 
             Return
         End If
@@ -1243,7 +1245,7 @@ Public Class FormMain
 
         ' 电刺激模式下同时开始"按住计时"：强度由按住时长决定，因此在按下期间就要回显
         If m_stimulateMode.Checked Then
-            Call beginStimulationHold(e.X, e.Y)
+            Call m_experiment.beginStimulationHold(e.X, e.Y)
         End If
     End Sub
 
@@ -1253,19 +1255,19 @@ Public Class FormMain
         m_mouseDownValid = False
 
         ' 先取按住时长再判断是不是点击：无论走哪条分支都要把计时停下来
-        Dim holdMs As Long = endStimulationHold()
+        Dim holdMs As Long = m_experiment.endStimulationHold()
 
         ' 拖动 (旋转视角) 不是点击：位移超过几个像素就忽略
         If System.Math.Abs(e.X - m_mouseDown.X) > 4 OrElse System.Math.Abs(e.Y - m_mouseDown.Y) > 4 Then
-            Call cancelStimulationHold()
+            Call m_experiment.cancelStimulationHold()
 
             Return
         End If
 
         If m_stimulateMode.Checked Then
-            Call stimulateAt(e.X, e.Y, holdMs)
+            Call m_experiment.stimulateAt(e.X, e.Y, holdMs)
         Else
-            Call cancelStimulationHold()
+            Call m_experiment.cancelStimulationHold()
             Call pickAt(e.X, e.Y)
         End If
     End Sub
@@ -1315,8 +1317,19 @@ Public Class FormMain
         End If
     End Sub
 
+    ''' <summary>
+    ''' 当前点云是否由调色板着色（即"仿真活跃度"热力图维度）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
+    ''' 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
+    ''' </remarks>
+    Public Function isHeatMap() As Boolean
+        Return m_colorizer IsNot Nothing AndAlso m_colorizer.IsHeatMap
+    End Function
+
     ''' <summary>显示一个神经元的全部注释与连接统计。</summary>
-    Private Sub showNeuronDetails(neuron As Integer)
+    Friend Sub showNeuronDetails(neuron As Integer)
         Dim index = m_dataset.Index
         Dim text As New StringBuilder()
         Dim position As FlywireAI.FAFBv783.NeuronPosition = m_dataset.GetPosition(neuron)
