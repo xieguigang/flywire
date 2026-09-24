@@ -7,6 +7,10 @@ Module RibbonMenu
 
     Public ReadOnly Property ribbon As RibbonItems
 
+    ''' <summary>
+    ''' 是否进入针对大脑神经元的电刺激实验模式
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property ToggleSimulationExperiment As Boolean
         Get
             Return ribbon.ToggleSimulationExperiment.BooleanValue
