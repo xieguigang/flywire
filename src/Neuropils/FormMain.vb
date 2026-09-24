@@ -60,20 +60,6 @@ Public Class FormMain
     ''' </remarks>
     Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
 
-    Public Sub New()
-        m_experiment = New StimulationExperiment(Me)
-
-        ' 先调用设计器生成的 InitializeComponent (顶部菜单栏等声明式布局在此完成)，
-        ' 再调用 initializeUi 完成其余需要运行时逻辑 (画布、工具条、状态栏、面板等) 的控件。
-        Call InitializeComponent()
-        Call initializeUi()
-
-        m_rebuildTimer.Stop()
-        m_rebuildTimer.Interval = 260
-
-        AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
-    End Sub
-
 #Region "ui construction"
 
     Private Sub initializeUi()
@@ -132,7 +118,9 @@ Public Class FormMain
     End Sub
 
     Private Sub onReplaySpeedChanged(sender As Object, e As EventArgs) Handles m_replaySpeed.ValueChanged
-        Call m_experiment.onReplaySpeedChanged(sender, e)
+        If m_experiment IsNot Nothing Then
+            Call m_experiment.onReplaySpeedChanged(sender, e)
+        End If
     End Sub
 
     ''' <summary>
@@ -190,6 +178,15 @@ Public Class FormMain
 #Region "life cycle"
 
     Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        m_experiment = New StimulationExperiment(Me)
+
+        Call initializeUi()
+
+        m_rebuildTimer.Stop()
+        m_rebuildTimer.Interval = 260
+
+        AddHandler m_rebuildTimer.Tick, AddressOf onRebuildTimerTick
+
         m_config.DataDir = DefaultDataDir
 
         ' 电刺激仿真默认尝试 GPU。注册失败会自动回退 CPU（GpuRuntime.TryRegister 的契约：
@@ -720,7 +717,9 @@ Public Class FormMain
 
     ''' <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
     Private Sub onStimulusStepsChanged(sender As Object, e As EventArgs) Handles m_stimStepsBox.ValueChanged
-        Call m_experiment.onStimulusStepsChanged(sender, e)
+        If m_experiment IsNot Nothing Then
+            Call m_experiment.onStimulusStepsChanged(sender, e)
+        End If
     End Sub
 
     Private Sub onSnapshot(sender As Object, e As EventArgs) Handles m_snapshotItem.Click, m_snapshotButton.Click
