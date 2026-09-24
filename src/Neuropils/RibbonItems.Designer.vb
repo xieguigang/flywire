@@ -18,6 +18,7 @@ Namespace RibbonLib.Controls
             Public Const cmdButtonAbout As UInteger = 2
             Public Const cmdButtonOpenResponseCharts As UInteger = 3
             Public Const cmdButtonOpenSnakeGame As UInteger = 4
+            Public Const cmdToggleSimulationExperiment As UInteger = 5
         End Class
 
         ' ContextPopup CommandName
@@ -46,6 +47,12 @@ Namespace RibbonLib.Controls
                 Return _ButtonOpenSnakeGame
             End Get
         End Property
+        Private _ToggleSimulationExperiment As RibbonToggleButton
+        Public ReadOnly Property ToggleSimulationExperiment As RibbonToggleButton
+            Get
+                Return _ToggleSimulationExperiment
+            End Get
+        End Property
 
         Public Sub New(ByVal ribbon As Ribbon)
             If ribbon Is Nothing Then
@@ -55,6 +62,7 @@ Namespace RibbonLib.Controls
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
             _ButtonOpenResponseCharts = New RibbonButton(_ribbon, Cmd.cmdButtonOpenResponseCharts)
             _ButtonOpenSnakeGame = New RibbonButton(_ribbon, Cmd.cmdButtonOpenSnakeGame)
+            _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
         End Sub
 
     End Class

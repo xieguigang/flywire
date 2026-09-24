@@ -15,7 +15,9 @@
 #define cmdButtonOpenSnakeGame_LabelTitle_RESID 60005
 #define cmdButtonOpenSnakeGame_LabelDescription_RESID 60006
 #define cmdButtonOpenSnakeGame_TooltipDescription_RESID 60007
-#define InternalCmd2_LabelTitle_RESID 60008
-#define InternalCmd6_LabelTitle_RESID 60009
-#define InternalCmd8_LabelTitle_RESID 60010
-#define InternalCmd10_LabelTitle_RESID 60011
+#define cmdToggleSimulationExperiment 5 
+#define cmdToggleSimulationExperiment_LabelTitle_RESID 60008
+#define InternalCmd2_LabelTitle_RESID 60009
+#define InternalCmd6_LabelTitle_RESID 60010
+#define InternalCmd8_LabelTitle_RESID 60011
+#define InternalCmd10_LabelTitle_RESID 60012

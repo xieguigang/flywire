@@ -2,8 +2,8 @@
 <Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
   <Application.Commands>
     <Command Name="cmdButtonAbout" Id="2" LabelTitle="About" />
-    <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" LabelDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" />
-    <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" LabelDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" />
+    <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" LabelDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" TooltipDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" />
+    <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" LabelDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" TooltipDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>

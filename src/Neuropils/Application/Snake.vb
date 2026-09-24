@@ -7,7 +7,6 @@ Imports Neuropils.Rendering
 
 Namespace AppLogics
 
-
     ' "果蝇大脑玩贪吃蛇"的命令行自检：跑训练与评估，把三组对照的得分打出来。
     ' 
     ' 与观战窗口共用同一套装配 / 会话 / 解码器代码，因此这里量出来的分数

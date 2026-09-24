@@ -7,6 +7,12 @@ Module RibbonMenu
 
     Public ReadOnly Property ribbon As RibbonItems
 
+    Public ReadOnly Property ToggleSimulationExperiment As Boolean
+        Get
+
+        End Get
+    End Property
+
     Public Sub Load(ribbon As Ribbon)
         _ribbon = New RibbonItems(ribbon)
 
