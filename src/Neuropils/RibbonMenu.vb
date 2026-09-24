@@ -9,7 +9,7 @@ Module RibbonMenu
 
     Public ReadOnly Property ToggleSimulationExperiment As Boolean
         Get
-
+            Return ribbon.ToggleSimulationExperiment.BooleanValue
         End Get
     End Property
 
@@ -17,6 +17,7 @@ Module RibbonMenu
         _ribbon = New RibbonItems(ribbon)
 
         AddHandler RibbonMenu.ribbon.ButtonOpenSnakeGame.ExecuteEvent, Sub() Call Workbench.m_snake.openSnakeWindow()
+        AddHandler RibbonMenu.ribbon.ButtonOpenResponseCharts.ExecuteEvent, AddressOf onOpenResponseChart
     End Sub
 
     ''' <summary>
