@@ -9,14 +9,28 @@
         <Image MinDPI="192">Icons/icons8-source-code-96.png</Image>
       </Command.LargeImages>
     </Command>
-    <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" LabelDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" TooltipDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" />
-    <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" LabelDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" TooltipDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" />
-    <Command Name="cmdToggleSimulationExperiment" Id="5" LabelTitle="Simulation Experiment" TooltipTitle="电刺激模式" TooltipDescription="勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程">
+    <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" LabelDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）" TooltipDescription="把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）">
       <Command.SmallImages>
-        <Image MinDPI="192">Icons/icons8-run-command-96.png</Image>
+        <Image MinDPI="192">Icons/icons8-rgb-histogram-96.png</Image>
       </Command.SmallImages>
       <Command.LargeImages>
-        <Image MinDPI="192">Icons/icons8-run-command-96.png</Image>
+        <Image MinDPI="192">Icons/icons8-rgb-histogram-96.png</Image>
+      </Command.LargeImages>
+    </Command>
+    <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" LabelDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）" TooltipDescription="让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/icons8-ai-96.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/icons8-ai-96.png</Image>
+      </Command.LargeImages>
+    </Command>
+    <Command Name="cmdToggleSimulationExperiment" Id="5" LabelTitle="Simulation Experiment" TooltipTitle="电刺激模式" TooltipDescription="勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/icons8-goto-96.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/icons8-goto-96.png</Image>
       </Command.LargeImages>
     </Command>
     <Command Name="cmdButtonResetView" Id="6" LabelTitle="Reset View" LabelDescription="重置视角 (&amp;R)" TooltipDescription="菜单「视图 → 重置视角」：把三维画布恢复到默认视角。">
@@ -35,12 +49,40 @@
         <Image MinDPI="192">Icons/icons8-file-explorer-new-96.png</Image>
       </Command.LargeImages>
     </Command>
-    <Command Name="cmdButtonMakeScreenshot" Id="8" LabelTitle="Screenshot" TooltipDescription="保存截图 (&amp;S)..." />
-    <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas" />
-    <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" TooltipDescription="显示网格" />
+    <Command Name="cmdButtonMakeScreenshot" Id="8" LabelTitle="Screenshot" TooltipDescription="保存截图 (&amp;S)...">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/applets-screenshooter.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/applets-screenshooter.png</Image>
+      </Command.LargeImages>
+    </Command>
+    <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/TextEditor.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/TextEditor.png</Image>
+      </Command.LargeImages>
+    </Command>
+    <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" TooltipDescription="显示网格">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/icons8-layers-96.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/icons8-layers-96.png</Image>
+      </Command.LargeImages>
+    </Command>
     <Command Name="cmdNumIntensity" Id="11" LabelTitle="Intensity: " />
     <Command Name="cmdNumSimulationSteps" Id="12" LabelTitle="Steps: " />
-    <Command Name="cmdToggleShowConnection" Id="13" LabelTitle="Show Connection" TooltipDescription="显示神经元连接" />
+    <Command Name="cmdToggleShowConnection" Id="13" LabelTitle="Show Connection" TooltipDescription="显示神经元连接">
+      <Command.SmallImages>
+        <Image MinDPI="192">Icons/icons8-mind-map-96.png</Image>
+      </Command.SmallImages>
+      <Command.LargeImages>
+        <Image MinDPI="192">Icons/icons8-mind-map-96.png</Image>
+      </Command.LargeImages>
+    </Command>
     <Command Name="cmdNumSynapseCutoff" Id="14" LabelTitle="Synapse: " />
     <Command Name="cmdNumScatterSize" Id="15" LabelTitle="Scatter Size: " />
     <Command Name="cmdButtonExit" Id="16" LabelTitle="Exit">
@@ -51,6 +93,11 @@
         <Image MinDPI="192">Icons/icons8-exit-96.png</Image>
       </Command.LargeImages>
     </Command>
+    <Command Name="cmd_2" Id="17" />
+    <Command Name="cmd_3" Id="18" />
+    <Command Name="cmd_4" Id="19" />
+    <Command Name="cmd_5" Id="20" />
+    <Command Name="cmd_6" Id="21" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>
