@@ -1870,6 +1870,12 @@ Neuropils
 <member name="P:Neuropils.SnakeBrainForm.Session">
  <summary>本窗口所用的游戏会话（主窗口也用它拿活动读数）。</summary>
 </member>
+<member name="M:Neuropils.SnakeBrainForm.onGamePaint(System.Object,System.Windows.Forms.PaintEventArgs)">
+ <summary>游戏画面的绘制（左半屏）。</summary>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.onSpeedChanged(System.Object,System.EventArgs)">
+ <summary>速度（定时器间隔）改动后立即生效。</summary>
+</member>
 <member name="M:Neuropils.SnakeBrainForm.PauseForProbe">
  <summary>
  供命令行自检抓屏前调用：先停表，抓到的才是"恰好跑了 N 帧"的那一帧。
@@ -1892,14 +1898,21 @@ Neuropils
  也就继续被脑活动点亮（看起来"关不掉地一直闪"）。
  </remarks>
 </member>
-<member name="M:Neuropils.SnakeBrainForm.Dispose(System.Boolean)">
- <remarks>
- 兜底再停一次：即使窗体是被 Dispose 掉的（没走 Close），也不该留下一个
- 还在后台推进游戏与仿真的定时器。重复调用由 <see cref="F:Neuropils.SnakeBrainForm.m_stopped"/> 挡住。
- </remarks>
-</member>
 <member name="P:Neuropils.SnakeBrainForm.Stopped">
  <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
+ <remarks>
+ 兜底再停一次由 Designer 文件里的 <c>Dispose</c> 重载负责（见
+ SnakeBrainForm.Designer.vb）：即使窗体是被 Dispose 掉的（没走 Close），
+ 也不该留下一个还在后台推进游戏与仿真的定时器。重复调用由
+ <see cref="F:Neuropils.SnakeBrainForm.m_stopped"/> 挡住。
+ </remarks>
+</member>
+<member name="M:Neuropils.SnakeBrainForm.onTimerTick(System.Object,System.EventArgs)">
+ <remarks>
+ Tick 只挂一次：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
+ 而且 --snake-window 自检永远等不到帧）。挂接由 Designer 的 WithEvents 字段承担，
+ 这里用 Handles 声明即可，不要再另外 AddHandler。
+ </remarks>
 </member>
 <member name="M:Neuropils.SnakeBrainForm.updateReadouts(FlywireSnake.SnakeStep)">
  <summary>刷新右侧读数（感觉通道 / 运动读出 / 统计）。</summary>

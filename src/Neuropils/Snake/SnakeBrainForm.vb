@@ -28,16 +28,8 @@ Public Class SnakeBrainForm
     Private m_brain As SnakeBrain
     Private m_session As SnakeSession
 
-    Private m_gamePanel As Panel
-    Private m_sensors As ChannelBars
-    Private m_motors As ChannelBars
-    Private m_status As Label
-    Private m_detail As Label
-    Private m_training As Label
-    Private ReadOnly m_timer As New Timer()
-    Private m_speedBox As NumericUpDown
-    Private m_tickBox As NumericUpDown
-    Private m_playButton As Button
+    ' 控件实例与界面布局都在 Designer 文件里（见 SnakeBrainForm.Designer.vb）：
+    ' 这里只留"数据 + 逻辑"，控件由 InitializeComponent 建好后直接使用。
 
     ''' <summary>大脑活动事件：&lt;本 tick 发放的神经元, 本 tick 的完整读数&gt;。</summary>
     Public Event BrainActivityChanged(activeNeurons As Integer(), frame As SnakeStep)
@@ -54,141 +46,21 @@ Public Class SnakeBrainForm
                    decoder As SnakeDecoder,
                    Optional autoStart As Boolean = True)
 
+        ' 控件布局在 Designer 文件里生成（与 ResponseChartForm 一致），随后再接数据
+        Call Me.New()
+
         If playground Is Nothing Then Throw New ArgumentNullException(NameOf(playground))
 
         m_playground = playground
         m_brain = brain
 
-        Call initializeUi()
         Call resetSession(decoder, autoStart)
     End Sub
 
 #Region "界面"
 
-    Private Sub initializeUi()
-        Me.Text = "果蝇大脑玩贪吃蛇 — 实时观战"
-        Me.StartPosition = FormStartPosition.CenterParent
-        Me.BackColor = Color.Black
-        Me.ForeColor = Color.FromArgb(226, 232, 240)
-        Me.Font = New Font("Segoe UI", 9)
-
-        ' 必须先接上 Tick：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
-        ' 而且 --snake-window 自检永远等不到帧）。Tick 只在这里挂一次。
-        AddHandler m_timer.Tick, AddressOf onTimerTick
-
-        Dim width As Integer = Snake2.Game.ViewCols * Snake2.Game.CellSize
-        Dim height As Integer = Snake2.Game.ViewRows * Snake2.Game.CellSize
-
-        Me.ClientSize = New Size(width + 380, height + 64)
-
-        m_gamePanel = New Panel With {
-            .Location = New Point(0, 0),
-            .Size = New Size(width, height),
-            .BackColor = Color.Black
-        }
-        AddHandler m_gamePanel.Paint, AddressOf onGamePaint
-
-        Dim side As New Panel With {
-            .Location = New Point(width + 8, 0),
-            .Size = New Size(368, height),
-            .BackColor = Color.FromArgb(15, 22, 30)
-        }
-
-        m_status = New Label With {
-            .Location = New Point(8, 8),
-            .Size = New Size(352, 46),
-            .ForeColor = Color.FromArgb(34, 211, 238),
-            .Font = New Font("Consolas", 10, FontStyle.Bold)
-        }
-
-        Dim sensorLabel As New Label With {
-            .Text = "感觉通道（大脑看到了什么）",
-            .Location = New Point(8, 58),
-            .Size = New Size(352, 20),
-            .ForeColor = Color.FromArgb(148, 163, 184)
-        }
-
-        m_sensors = New ChannelBars With {
-            .Location = New Point(8, 80),
-            .Size = New Size(352, 220)
-        }
-
-        Dim motorLabel As New Label With {
-            .Text = "运动读出（大脑命令往哪走）",
-            .Location = New Point(8, 306),
-            .Size = New Size(352, 20),
-            .ForeColor = Color.FromArgb(148, 163, 184)
-        }
-
-        m_motors = New ChannelBars With {
-            .Location = New Point(8, 328),
-            .Size = New Size(352, 96)
-        }
-
-        m_detail = New Label With {
-            .Location = New Point(8, 428),
-            .Size = New Size(352, 62),
-            .ForeColor = Color.FromArgb(203, 213, 225),
-            .Font = New Font("Consolas", 8.5)
-        }
-
-        m_training = New Label With {
-            .Location = New Point(8, 494),
-            .Size = New Size(352, 60),
-            .ForeColor = Color.FromArgb(250, 204, 21),
-            .Font = New Font("Consolas", 8.5)
-        }
-
-        Call side.Controls.Add(m_status)
-        Call side.Controls.Add(sensorLabel)
-        Call side.Controls.Add(m_sensors)
-        Call side.Controls.Add(motorLabel)
-        Call side.Controls.Add(m_motors)
-        Call side.Controls.Add(m_detail)
-        Call side.Controls.Add(m_training)
-        Call side.Controls.Add(createToolbar(side, height))
-
-        Call Me.Controls.Add(m_gamePanel)
-        Call Me.Controls.Add(side)
-    End Sub
-
-    Private Function createToolbar(parent As Panel, height As Integer) As Control
-        Dim panel As New FlowLayoutPanel With {
-            .Location = New Point(4, height - 74),
-            .Size = New Size(360, 70),
-            .WrapContents = True,
-            .BackColor = Color.Transparent,
-            .ForeColor = Me.ForeColor
-        }
-
-        m_playButton = New Button With {.Text = "暂停", .Width = 62, .Height = 26}
-        Dim reset As New Button With {.Text = "新一局", .Width = 62, .Height = 26}
-        Dim train As New Button With {.Text = "训练解码器", .Width = 96, .Height = 26}
-        Dim loadTrained As New Button With {.Text = "载入已训练", .Width = 92, .Height = 26}
-
-        AddHandler m_playButton.Click, Sub() togglePlay()
-        AddHandler reset.Click, Sub() startNewEpisode()
-        AddHandler train.Click, Sub() trainDecoder()
-        AddHandler loadTrained.Click, Sub() loadTrainedDecoder()
-
-        m_speedBox = New NumericUpDown With {.Minimum = 30, .Maximum = 1000, .Value = 120, .Width = 62}
-        m_tickBox = New NumericUpDown With {.Minimum = 1, .Maximum = 20, .Value = 1, .Width = 46}
-
-        AddHandler m_speedBox.ValueChanged, Sub() m_timer.Interval = CInt(m_speedBox.Value)
-
-        Call panel.Controls.Add(m_playButton)
-        Call panel.Controls.Add(reset)
-        Call panel.Controls.Add(train)
-        Call panel.Controls.Add(loadTrained)
-        Call panel.Controls.Add(New Label With {.Text = "间隔(ms)", .AutoSize = True, .Margin = New Padding(6, 8, 2, 0)})
-        Call panel.Controls.Add(m_speedBox)
-        Call panel.Controls.Add(New Label With {.Text = "每帧步数", .AutoSize = True, .Margin = New Padding(6, 8, 2, 0)})
-        Call panel.Controls.Add(m_tickBox)
-
-        Return panel
-    End Function
-
-    Private Sub onGamePaint(sender As Object, e As PaintEventArgs)
+    ''' <summary>游戏画面的绘制（左半屏）。</summary>
+    Private Sub onGamePaint(sender As Object, e As PaintEventArgs) Handles m_gamePanel.Paint
         Dim g As Graphics = e.Graphics
 
         g.SmoothingMode = SmoothingMode.None
@@ -197,6 +69,11 @@ Public Class SnakeBrainForm
         If m_session IsNot Nothing Then
             Call m_session.Render.Draw(g)
         End If
+    End Sub
+
+    ''' <summary>速度（定时器间隔）改动后立即生效。</summary>
+    Private Sub onSpeedChanged(sender As Object, e As EventArgs) Handles m_speedBox.ValueChanged
+        m_timer.Interval = CInt(m_speedBox.Value)
     End Sub
 
 #End Region
@@ -255,21 +132,13 @@ Public Class SnakeBrainForm
         Call MyBase.OnFormClosed(e)
     End Sub
 
-    ''' <remarks>
-    ''' 兜底再停一次：即使窗体是被 Dispose 掉的（没走 Close），也不该留下一个
-    ''' 还在后台推进游戏与仿真的定时器。重复调用由 <see cref="m_stopped"/> 挡住。
-    ''' </remarks>
-    Protected Overrides Sub Dispose(disposing As Boolean)
-        Call shutdown()
-
-        If disposing Then
-            m_timer.Dispose()
-        End If
-
-        Call MyBase.Dispose(disposing)
-    End Sub
-
     ''' <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
+    ''' <remarks>
+    ''' 兜底再停一次由 Designer 文件里的 <c>Dispose</c> 重载负责（见
+    ''' SnakeBrainForm.Designer.vb）：即使窗体是被 Dispose 掉的（没走 Close），
+    ''' 也不该留下一个还在后台推进游戏与仿真的定时器。重复调用由
+    ''' <see cref="m_stopped"/> 挡住。
+    ''' </remarks>
     Friend ReadOnly Property Stopped As Boolean
         Get
             Return m_stopped
@@ -300,7 +169,7 @@ Public Class SnakeBrainForm
         End If
     End Sub
 
-    Private Sub togglePlay()
+    Private Sub togglePlay() Handles m_playButton.Click
         If m_timer.Enabled Then
             m_timer.Stop()
             m_playButton.Text = "开始"
@@ -310,7 +179,7 @@ Public Class SnakeBrainForm
         End If
     End Sub
 
-    Private Sub startNewEpisode()
+    Private Sub startNewEpisode() Handles m_resetButton.Click
         If m_session Is Nothing Then Return
 
         Call m_session.NewEpisode()
@@ -332,7 +201,12 @@ Public Class SnakeBrainForm
         Call m_gamePanel.Invalidate()
     End Sub
 
-    Private Sub onTimerTick(sender As Object, e As EventArgs)
+    ''' <remarks>
+    ''' Tick 只挂一次：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
+    ''' 而且 --snake-window 自检永远等不到帧）。挂接由 Designer 的 WithEvents 字段承担，
+    ''' 这里用 Handles 声明即可，不要再另外 AddHandler。
+    ''' </remarks>
+    Private Sub onTimerTick(sender As Object, e As EventArgs) Handles m_timer.Tick
         Call stepOnce()
     End Sub
 
@@ -390,7 +264,7 @@ Public Class SnakeBrainForm
 #Region "训练"
 
     ''' <summary>在后台训练解码器，完成后立刻换上。</summary>
-    Private Sub trainDecoder()
+    Private Sub trainDecoder() Handles m_trainButton.Click
         ' 样本量是这条"脑机接口"读出层的瓶颈：1500 条样本要拟合 1488 × 4 个权重，
         ' 前一轮 6 局 × 250 tick 的准确率只有 0.70，蛇看起来还是乱走；
         ' 这里把样本量翻一倍（8 局 × 350 tick）
@@ -442,7 +316,7 @@ Public Class SnakeBrainForm
         End Try
     End Sub
 
-    Private Sub loadTrainedDecoder()
+    Private Sub loadTrainedDecoder() Handles m_loadButton.Click
         Try
             ' 局部变量避开 file / path：会遮蔽 System.IO.File / Path（VB 不区分大小写）
             Dim decoderFile As String = IO.Path.Combine(m_playground.DataDir, "snn-output", "snake", "snake_decoder.csv")
