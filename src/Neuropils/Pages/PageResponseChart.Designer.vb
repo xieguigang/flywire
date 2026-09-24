@@ -5,7 +5,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX
 ' 这里只放"控件怎么摆"的代码：控件实例化、属性赋值、容器装配与事件挂接；
 ' 数据装配与绘制逻辑 (refreshCategories / rebuildSeries / onRender 等) 仍然留在 ResponseChartForm.vb 里。
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
-Partial Class ResponseChartForm
+Partial Class PageResponseChart
     Inherits DocumentWindow
 
     'Form overrides dispose to clean up the component list.

@@ -18,7 +18,7 @@ Imports Neuropils.Data
 ''' 数据来源是<b>记录下来的响应结果</b>：会话内刚跑完的结果直接画，
 ''' 也可以随时打开任意一次历史实验的记录目录。
 ''' </remarks>
-Public Class ResponseChartForm
+Public Class PageResponseChart
 
 #Region "fields"
 

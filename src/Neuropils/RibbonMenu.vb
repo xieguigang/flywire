@@ -59,13 +59,13 @@ Module RibbonMenu
             data = Analysis.ResponseDataset.FromReport(dir, m_dataset)
         End If
 
-        Static m_chartForm As ResponseChartForm = Nothing
+        Static m_chartForm As PageResponseChart = Nothing
 
         If m_chartForm IsNot Nothing AndAlso Not m_chartForm.IsDisposed Then
             Call m_chartForm.Close()
         End If
 
-        m_chartForm = New ResponseChartForm(data, m_dataset)
+        m_chartForm = New PageResponseChart(data, m_dataset)
         m_chartForm.Show(CommonRuntime.AppHost.GetDockPanel)
         m_chartForm.DockState = DockState.Document
     End Sub

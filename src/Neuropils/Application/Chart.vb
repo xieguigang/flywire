@@ -98,7 +98,7 @@ Namespace AppLogics
                 .Window = 3
             }
                 Dim description As String = ""
-                Dim ok As Boolean = ResponseChartForm.RenderToFile(png, data, dataset, options, width, height, description)
+                Dim ok As Boolean = PageResponseChart.RenderToFile(png, data, dataset, options, width, height, description)
 
                 Call report.AppendLine()
                 Call report.AppendLine($"      curves: {description}")
@@ -166,7 +166,7 @@ Namespace AppLogics
 
                 Dim data As ResponseDataset = ResponseDataset.FromReport(reportDir, dataset)
 
-                Dim form As New ResponseChartForm(data, dataset)
+                Dim form As New PageResponseChart(data, dataset)
 
                 ' 先把命令行指定的视图应用上去，再显示 —— 抓到的帧才是要验证的那个视图
                 Call form.ApplyOptions(dimension, mode, aggregation)
