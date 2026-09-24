@@ -628,15 +628,18 @@ Partial Class PageFlywireCanvas
         ' 
 
         colorLabel = New ToolStripLabel
-        colorLabel.Text = "着色:"
+        colorLabel.Text = "神经元着色："
 
         modeLabel = New ToolStripLabel
-        modeLabel.Text = "模式:"
+        modeLabel.Text = "模式："
 
         connLabel = New ToolStripLabel
-        connLabel.Text = "连接:"
+        connLabel.Text = "连接："
 
         sep111 = New ToolStripSeparator
+
+        lineColorLabel = New ToolStripLabel
+        lineColorLabel.Text = "神经元链接颜色："
 
         m_toolStrip.SuspendLayout()
         m_toolStrip.Items.Add(colorLabel)
@@ -646,6 +649,7 @@ Partial Class PageFlywireCanvas
         m_toolStrip.Items.Add(m_renderModeBox)
         m_toolStrip.Items.Add(connLabel)
         m_toolStrip.Items.Add(m_connectionBox)
+        m_toolStrip.Items.Add(lineColorLabel)
         m_toolStrip.Items.Add(m_lineColorBox)
         m_toolStrip.Items.Add(New ToolStripLabel("≥突触:"))
         'm_toolStrip.Items.Add(New ToolStripControlHost(m_thresholdBox))
@@ -680,6 +684,7 @@ Partial Class PageFlywireCanvas
     Dim colorLabel As ToolStripLabel
     Dim modeLabel As ToolStripLabel
     Dim connLabel As ToolStripLabel
+    Dim lineColorLabel As ToolStripLabel
     Dim sep111 As ToolStripSeparator
 
 End Class
