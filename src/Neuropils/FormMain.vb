@@ -2,8 +2,10 @@
 Imports System.Text
 Imports System.Threading
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
+Imports Microsoft.VisualBasic.Drawing
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
+Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
 Imports Neuropils.Data
 Imports Neuropils.Rendering
@@ -337,7 +339,7 @@ Public Class FormMain
             .Multiline = True,
             .ReadOnly = True,
             .ScrollBars = ScrollBars.Vertical,
-            .Font = New Font("Consolas", 9),
+            .Font = New System.Drawing.Font("Consolas", 9),
             .BackColor = Color.FromArgb(250, 250, 250)
         }
 
@@ -454,7 +456,7 @@ Public Class FormMain
             .Text = text,
             .Dock = DockStyle.Fill,
             .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New Font("Segoe UI", 9, FontStyle.Bold)
+            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
         }
     End Function
 
@@ -594,14 +596,14 @@ Public Class FormMain
 
         ' 响应曲线出图：把实验记录画成曲线图（与界面共用同一套装配与绘图代码）
         If args.Length > 2 AndAlso String.Equals(args(1), "--chart", StringComparison.OrdinalIgnoreCase) Then
-            Call runChartExport(args)
+            Call New Chart(Me).runChartExport(args)
 
             Return
         End If
 
         ' 响应曲线窗口自检：真的开窗、等首帧、抓帧写盘（验证"画在控件 GPU 画布上"这条路径）
         If args.Length > 2 AndAlso String.Equals(args(1), "--chart-window", StringComparison.OrdinalIgnoreCase) Then
-            Call runChartWindowProbe(args)
+            Call New Chart(Me).runChartWindowProbe(args)
 
             Return
         End If
@@ -663,7 +665,7 @@ Public Class FormMain
             Sub()
                 Try
                     ' 抓帧内部会强制一次同步重绘，因此此刻的布局与首帧渲染都已经完成
-                    If m_canvas.SaveSnapshot(file, Microsoft.VisualBasic.Imaging.ImageFormats.Png) Then
+                    If m_canvas.SaveSnapshot(file, ImageFormats.Png) Then
                         Call Console.Out.WriteLine($"snapshot saved: {file} ({m_scene})")
                     Else
                         Call Console.Out.WriteLine($"snapshot failed: {m_canvas.LastError}")
@@ -1208,9 +1210,9 @@ Public Class FormMain
         Next
 
         ' 旧的位图要主动释放：切换维度会反复生成色标
-        Dim stale As Image = m_gradient.Image
+        Dim stale As System.Drawing.Image = m_gradient.Image
 
-        m_gradient.Image = bitmap
+        m_gradient.Image = bitmap.CTypeGdiImage
         m_gradient.Visible = True
 
         If stale IsNot Nothing Then

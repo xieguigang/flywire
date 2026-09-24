@@ -27,7 +27,7 @@ Public Class Chart
     '''   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
     ''' </list>
     ''' </remarks>
-    Private Sub runChartExport(args As String())
+    Public Sub runChartExport(args As String())
         Dim report As New StringBuilder()
         Dim failures As Integer = 0
         Dim png As String = args(2)
@@ -101,9 +101,9 @@ Public Class Chart
             Call report.AppendLine($"      curves: {description}")
             Call report.AppendLine($"      saved : {png} ({If(File.Exists(png), (New FileInfo(png)).Length \ 1024, 0):N0} KB)")
 
-            Call main.check(report, failures, "chart image written", File.Exists(png), True)
-            Call main.check(report, failures, "chart is not empty", If(File.Exists(png), (New FileInfo(png)).Length > 4096, False), True)
-            Call main.check(report, failures, "renderer returned success", ok, True)
+            Call check(report, failures, "chart image written", File.Exists(png), True)
+            Call check(report, failures, "chart is not empty", If(File.Exists(png), (New FileInfo(png)).Length > 4096, False), True)
+            Call check(report, failures, "renderer returned success", ok, True)
         Catch ex As Exception
             Call report.AppendLine()
             Call report.AppendLine($"[FATAL] {ex.GetType().Name}: {ex.Message}")
@@ -134,7 +134,7 @@ Public Class Chart
     ''' 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
     ''' "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
     ''' </remarks>
-    Private Sub runChartWindowProbe(args As String())
+    Public Sub runChartWindowProbe(args As String())
         Dim report As New StringBuilder()
         Dim failures As Integer = 0
         Dim png As String = args(2)
@@ -182,12 +182,12 @@ Public Class Chart
             Call Threading.Thread.Sleep(300)
             Call Application.DoEvents()
 
-            Call main.check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
+            Call check(report, failures, "chart window canvas is ready", form.CanvasReady, True)
 
             Dim ok As Boolean = form.CaptureTo(png)
 
-            Call main.check(report, failures, "captured the window frame", ok, True)
-            Call main.check(report, failures, "captured image written", File.Exists(png), True)
+            Call check(report, failures, "captured the window frame", ok, True)
+            Call check(report, failures, "captured image written", File.Exists(png), True)
 
             Call report.AppendLine($"      record dir : {reportDir}")
             Call report.AppendLine($"      responders : {data.Responders.Length:N0}, steps={data.Steps}, potential={data.HasPotential}")
@@ -203,7 +203,7 @@ Public Class Chart
                 Next
             Next
 
-            Call main.check(report, failures, "view switching did not throw", "ok", "ok")
+            Call check(report, failures, "view switching did not throw", "ok", "ok")
             Call form.Close()
         Catch ex As Exception
             Call report.AppendLine()

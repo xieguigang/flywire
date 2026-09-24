@@ -659,31 +659,6 @@ Neuropils
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.runChartExport(System.String[])">
- <summary>
- ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
- </summary>
- <remarks>
- <list type="bullet">
-   <item>维度：``neuropil`` / ``nt`` / ``type`` / ``super`` / ``class`` / ``group``；</item>
-   <item>口径：``potential``（膜电位）/ ``rate``（放电率）/ ``spike``（0-1 脉冲）；</item>
-   <item>组织：``one``（逐个神经元）/ ``mean``（组均值）/ ``envelope``（组均值 ± 包络）；</item>
-   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
- </list>
- </remarks>
-</member>
-<member name="M:Neuropils.FormMain.runChartWindowProbe(System.String[])">
- <summary>
- ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
- </summary>
- <remarks>
- <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
- 等首帧渲染完成后抓帧写盘再退出。
- 
- 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
- "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
- </remarks>
-</member>
 <member name="M:Neuropils.FormMain.runSelfTest(System.String[])">
  <summary>
  自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
@@ -1029,9 +1004,6 @@ Neuropils
  形参不能叫 ``file``：会遮蔽 <see cref="T:System.IO.File"/>（VB 不区分大小写）。
  </remarks>
 </member>
-<member name="F:Neuropils.FormMain.DefaultDataDir">
- <summary>数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。</summary>
-</member>
 <member name="F:Neuropils.FormMain.m_chartLink">
  <summary>状态栏右下角的"响应曲线"链接。</summary>
 </member>
@@ -1131,6 +1103,31 @@ Neuropils
  <remarks>
  单次线性扫描 534 万条连接 (约 30 ms)，因此可以随点击实时计算，
  不需要预先为每个神经元建立邻接表 (那会多占用数百 MB 内存)。
+ </remarks>
+</member>
+<member name="M:Neuropils.Chart.runChartExport(System.String[])">
+ <summary>
+ ``--chart &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织] [取值列表] [宽] [高]``
+ </summary>
+ <remarks>
+ <list type="bullet">
+   <item>维度：``neuropil`` / ``nt`` / ``type`` / ``super`` / ``class`` / ``group``；</item>
+   <item>口径：``potential``（膜电位）/ ``rate``（放电率）/ ``spike``（0-1 脉冲）；</item>
+   <item>组织：``one``（逐个神经元）/ ``mean``（组均值）/ ``envelope``（组均值 ± 包络）；</item>
+   <item>取值列表：逗号分隔的标签取值（省略 = 全部响应神经元）。</item>
+ </list>
+ </remarks>
+</member>
+<member name="M:Neuropils.Chart.runChartWindowProbe(System.String[])">
+ <summary>
+ ``--chart-window &lt;png&gt; [数据目录] [记录目录|latest] [维度] [口径] [组织]``
+ </summary>
+ <remarks>
+ <b>渲染链路自检</b>：真的把响应曲线窗口开起来（可见窗口 + GPU 画布），
+ 等首帧渲染完成后抓帧写盘再退出。
+ 
+ 与 <c>--chart</c>（离屏 <c>DxGraphics</c> 出图）相比，这里验证的是
+ "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
  </remarks>
 </member>
 <member name="T:Neuropils.Rendering.ConnectionRenderMode">
@@ -1919,6 +1916,11 @@ Neuropils
 </member>
 <member name="M:Neuropils.SnakeBrainForm.trainDecoder">
  <summary>在后台训练解码器，完成后立刻换上。</summary>
+</member>
+<member name="F:Neuropils.Workbench.DefaultDataDir">
+ <summary>
+ 数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。
+ </summary>
 </member>
 </members>
 </doc>

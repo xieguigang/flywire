@@ -29,6 +29,9 @@
     </Project>
   </Folder>
   <Folder Name="/framework/Graphics/">
+    <Project Path="../GCModeller/src/runtime/sciBASIC#/gr/Drawing-net4.8/Drawing-net4.8.vbproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
     <Project Path="../GCModeller/src/runtime/sciBASIC#/gr/Microsoft.VisualBasic.Imaging/imaging.NET5.vbproj">
       <Platform Solution="*|x64" Project="x64" />
     </Project>
