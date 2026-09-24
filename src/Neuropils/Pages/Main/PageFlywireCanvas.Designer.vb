@@ -626,13 +626,25 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_toolStrip 容器装配
         ' 
+
+        colorLabel = New ToolStripLabel
+        colorLabel.Text = "着色:"
+
+        modeLabel = New ToolStripLabel
+        modeLabel.Text = "模式:"
+
+        connLabel = New ToolStripLabel
+        connLabel.Text = "连接:"
+
+        sep111 = New ToolStripSeparator
+
         m_toolStrip.SuspendLayout()
-        m_toolStrip.Items.Add(New ToolStripLabel("着色:"))
+        m_toolStrip.Items.Add(colorLabel)
         m_toolStrip.Items.Add(m_dimensionBox)
-        m_toolStrip.Items.Add(New ToolStripSeparator())
-        m_toolStrip.Items.Add(New ToolStripLabel("模式:"))
+        m_toolStrip.Items.Add(sep111)
+        m_toolStrip.Items.Add(modeLabel)
         m_toolStrip.Items.Add(m_renderModeBox)
-        m_toolStrip.Items.Add(New ToolStripLabel("连接:"))
+        m_toolStrip.Items.Add(connLabel)
         m_toolStrip.Items.Add(m_connectionBox)
         m_toolStrip.Items.Add(m_lineColorBox)
         m_toolStrip.Items.Add(New ToolStripLabel("≥突触:"))
@@ -664,5 +676,10 @@ Partial Class PageFlywireCanvas
 
         ResumeLayout(False)
     End Sub
+
+    Dim colorLabel As ToolStripLabel
+    Dim modeLabel As ToolStripLabel
+    Dim connLabel As ToolStripLabel
+    Dim sep111 As ToolStripSeparator
 
 End Class
