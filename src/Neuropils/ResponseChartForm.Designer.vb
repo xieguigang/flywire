@@ -1,3 +1,4 @@
+Imports Galaxy.Workbench.DockDocument
 Imports Microsoft.VisualBasic.Drawing.DirectX
 
 ' ResponseChartForm 的界面布局（Windows 窗体设计器维护的声明式代码）。
@@ -5,7 +6,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX
 ' 数据装配与绘制逻辑 (refreshCategories / rebuildSeries / onRender 等) 仍然留在 ResponseChartForm.vb 里。
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class ResponseChartForm
-    Inherits System.Windows.Forms.Form
+    Inherits DocumentWindow
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()>

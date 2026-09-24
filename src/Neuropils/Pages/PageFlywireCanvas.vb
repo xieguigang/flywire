@@ -1,6 +1,7 @@
 ﻿Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.Drawing
 Imports Microsoft.VisualBasic.Drawing.DirectX
@@ -8,6 +9,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
 Imports Microsoft.VisualBasic.Imaging.Drawing3D
+Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.AppLogics
 Imports Neuropils.Data
 Imports Neuropils.Rendering
@@ -33,8 +35,6 @@ Public Class PageFlywireCanvas
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
-    ''' <summary>响应曲线窗口（单实例复用）。</summary>
-    Friend m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
 
@@ -49,9 +49,6 @@ Public Class PageFlywireCanvas
     Friend m_snapshotPath As String = Nothing
     Friend m_cancel As CancellationTokenSource
     Friend m_busy As Boolean
-
-    Friend m_snake As Snake
-    Dim m_experiment As StimulationExperiment
 
     ''' <summary>
     ''' 拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
@@ -115,51 +112,6 @@ Public Class PageFlywireCanvas
         If m_experiment IsNot Nothing Then
             Call m_experiment.onReplaySpeedChanged(sender, e)
         End If
-    End Sub
-
-    ''' <summary>
-    ''' 打开响应曲线窗口。
-    ''' </summary>
-    ''' <remarks>
-    ''' 数据优先级：<b>本次会话刚跑完的刺激结果</b>（含膜电位分析回放）→
-    ''' 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
-    ''' "记录下来的响应结果"也还能画出来。
-    ''' </remarks>
-    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_chartLink.LinkClicked
-        If m_dataset Is Nothing Then
-            Return
-        End If
-
-        '  Try
-        Dim data As Analysis.ResponseDataset
-
-        If m_experiment.m_replay IsNot Nothing Then
-            data = Analysis.ResponseDataset.FromReplay(m_experiment.m_replay, m_dataset, m_config.Threshold)
-        Else
-            Dim dir As String = Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir())
-
-            If dir Is Nothing Then
-                Call MessageBox.Show(Me,
-                                     "还没有任何电刺激实验记录。请先勾选「电刺激模式」，" &
-                                     "在神经元上按住左键做一次刺激，松开后即可查看响应曲线。",
-                                     "没有实验记录", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-                Return
-            End If
-
-            data = Analysis.ResponseDataset.FromReport(dir, m_dataset)
-        End If
-
-        If m_chartForm IsNot Nothing AndAlso Not m_chartForm.IsDisposed Then
-            Call m_chartForm.Close()
-        End If
-
-        m_chartForm = New ResponseChartForm(data, m_dataset)
-        Call m_chartForm.Show(Me)
-        Call m_chartForm.BringToFront()
-        '  Catch ex As Exception
-        'Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",        MessageBoxButtons.OK, MessageBoxIcon.Error)
-        ' End Try
     End Sub
 
 #End Region
@@ -407,7 +359,7 @@ Public Class PageFlywireCanvas
 
         ' 有历史实验记录时就可以直接看响应曲线（不必先做一次刺激）
         If Analysis.StimulationArchive.Latest(m_config.ResolveActivityDir()) IsNot Nothing Then
-            m_chartLink.Enabled = True
+            ribbon.ButtonOpenResponseCharts.Enabled = True
         End If
 
         ' 观战窗口自检：数据就绪后自动开窗

@@ -42,7 +42,6 @@ Partial Class PageFlywireCanvas
     Friend WithEvents m_statusText As ToolStripStatusLabel
     Friend WithEvents m_progress As ToolStripProgressBar
     Friend m_sceneText As ToolStripStatusLabel
-    Friend WithEvents m_chartLink As LinkLabel
 
     ' ---- 工具条（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
     ' 被其它类 (StimulationExperiment) 通过 FormMain 实例访问的保持 Friend；
@@ -225,18 +224,18 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_chartLink
         ' 
-        m_chartLink = New LinkLabel()
-        m_chartLink.Name = "m_chartLink"
-        m_chartLink.AutoSize = True
-        m_chartLink.Enabled = False
-        m_chartLink.Size = New Size(56, 17)
-        m_chartLink.Text = "响应曲线"
-        m_chartLink.LinkBehavior = LinkBehavior.HoverUnderline
-        m_chartLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
-        m_chartLink.ActiveLinkColor = Color.White
-        m_chartLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
-        m_chartLink.DisabledLinkColor = Color.FromArgb(CByte(100), CByte(116), CByte(139))
-        m_chartLink.Margin = New Padding(6, 4, 6, 0)
+        'm_chartLink = New LinkLabel()
+        'm_chartLink.Name = "m_chartLink"
+        'm_chartLink.AutoSize = True
+        'm_chartLink.Enabled = False
+        'm_chartLink.Size = New Size(56, 17)
+        'm_chartLink.Text = "响应曲线"
+        'm_chartLink.LinkBehavior = LinkBehavior.HoverUnderline
+        'm_chartLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        'm_chartLink.ActiveLinkColor = Color.White
+        'm_chartLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        'm_chartLink.DisabledLinkColor = Color.FromArgb(CByte(100), CByte(116), CByte(139))
+        'm_chartLink.Margin = New Padding(6, 4, 6, 0)
         ' 
         ' m_snakeLink
         ' 
@@ -257,7 +256,7 @@ Partial Class PageFlywireCanvas
         m_statusStrip.Items.Add(m_statusText)
         m_statusStrip.Items.Add(m_sceneText)
         m_statusStrip.Items.Add(m_progress)
-        m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
+        ' m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
         ' m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.ResumeLayout(False)
         ' 

@@ -1017,9 +1017,6 @@ Neuropils
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
  </remarks>
 </member>
-<member name="F:Neuropils.PageFlywireCanvas.m_chartForm">
- <summary>响应曲线窗口（单实例复用）。</summary>
-</member>
 <member name="F:Neuropils.PageFlywireCanvas.m_chartTip">
  <summary>状态栏链接的悬停提示。</summary>
 </member>
@@ -1042,16 +1039,6 @@ Neuropils
  回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
  这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
  </summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
- <summary>
- 打开响应曲线窗口。
- </summary>
- <remarks>
- 数据优先级：<b>本次会话刚跑完的刺激结果</b>（含膜电位分析回放）→
- 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
- "记录下来的响应结果"也还能画出来。
- </remarks>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.captureAndExit">
  <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
@@ -1484,6 +1471,16 @@ Neuropils
  走的是与窗口<b>完全相同</b>的代码路径（同一个 <c>LinePlot</c> + 同一套曲线装配），
  区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
  也能在没有窗口的环境里验证绘图链路。
+ </remarks>
+</member>
+<member name="M:Neuropils.RibbonMenu.onOpenResponseChart">
+ <summary>
+ 打开响应曲线窗口。
+ </summary>
+ <remarks>
+ 数据优先级：<b>本次会话刚跑完的刺激结果</b>（含膜电位分析回放）→
+ 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
+ "记录下来的响应结果"也还能画出来。
  </remarks>
 </member>
 <member name="T:Neuropils.Simulation.BrainStimulator">

@@ -384,7 +384,7 @@ Namespace AppLogics
             End If
 
             ' 刺激完成 → 右下角的"响应曲线"链接可用
-            main.m_chartLink.Enabled = True
+            ribbon.ButtonOpenResponseCharts.Enabled = True
         End Sub
 
         ''' <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
