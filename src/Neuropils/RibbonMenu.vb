@@ -14,6 +14,9 @@ Module RibbonMenu
     ''' <returns></returns>
     Public Property ToggleSimulationExperiment As Boolean
         Get
+            If ribbon Is Nothing Then
+                Return False
+            End If
             Return ribbon.ToggleSimulationExperiment.BooleanValue
         End Get
         Set(value As Boolean)
@@ -23,31 +26,49 @@ Module RibbonMenu
 
     Public ReadOnly Property SimulationSteps As Integer
         Get
+            If ribbon Is Nothing Then
+                Return 0
+            End If
             Return CInt(_ribbon.NumSimulationSteps.DecimalValue)
         End Get
     End Property
 
     Public ReadOnly Property SimulationIntensity As Double
         Get
+            If ribbon Is Nothing Then
+                Return 0
+            End If
             Return CDbl(_ribbon.NumIntensity.DecimalValue)
         End Get
     End Property
 
     Public Property ToggleConnection As Boolean
         Get
+            If ribbon Is Nothing Then
+                Return False
+            End If
+
             Return ribbon.ToggleShowConnection.BooleanValue
         End Get
         Set(value As Boolean)
-            ribbon.ToggleShowConnection.BooleanValue = value
+            If ribbon IsNot Nothing Then
+                ribbon.ToggleShowConnection.BooleanValue = value
+            End If
         End Set
     End Property
 
     Public Property ToggleGrid As Boolean
         Get
+            If ribbon Is Nothing Then
+                Return False
+            End If
+
             Return ribbon.ToggleShowGroundGrid.BooleanValue
         End Get
         Set(value As Boolean)
-            ribbon.ToggleShowGroundGrid.BooleanValue = value
+            If ribbon IsNot Nothing Then
+                ribbon.ToggleShowGroundGrid.BooleanValue = value
+            End If
         End Set
     End Property
 
