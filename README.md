@@ -4,6 +4,8 @@
 >
 > *One connectome, one simulation, one cyber-life.*
 
+**中文** | [English](README.en.md)
+
 [![.NET](https://img.shields.io/badge/.NET-10.0-blueviolet)](https://dotnet.microsoft.com/)
 [![Language](https://img.shields.io/badge/language-VB.NET-blue)](https://learn.microsoft.com/dotnet/visual-basic/)
 [![Dataset](https://img.shields.io/badge/dataset-FAFB%20v783-orange)](https://flywire.ai/)
