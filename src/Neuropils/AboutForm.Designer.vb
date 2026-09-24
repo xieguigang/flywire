@@ -1,9 +1,11 @@
 ' AboutForm 的界面布局（Windows 窗体设计器维护的声明式代码）。
 ' 这里只放"控件怎么摆"的代码：只读多行 TextBox 装说明文本、底部一个确定按钮；
 ' 说明文本本身由 AboutForm.vb 的 Load 事件灌入 m_textBox（从原 PageFlywireCanvas 的 onAbout 搬过来）。
+Imports Galaxy.Workbench.CommonDialogs
+
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class AboutForm
-    Inherits Form
+    Inherits InputDialog
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()>
@@ -37,6 +39,7 @@ Partial Class AboutForm
         components = New ComponentModel.Container()
         m_textBox = New TextBox()
         m_okButton = New Button()
+        VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
         SuspendLayout()
         ' 
         ' m_textBox
@@ -63,6 +66,10 @@ Partial Class AboutForm
         m_okButton.Text = "确定"
         m_okButton.UseVisualStyleBackColor = True
         ' 
+        ' VisualStudioToolStripExtender1
+        ' 
+        VisualStudioToolStripExtender1.DefaultRenderer = Nothing
+        ' 
         ' AboutForm
         ' 
         AcceptButton = m_okButton
@@ -72,13 +79,10 @@ Partial Class AboutForm
         Controls.Add(m_textBox)
         Controls.Add(m_okButton)
         FormBorderStyle = FormBorderStyle.FixedDialog
-        MaximizeBox = False
-        MinimizeBox = False
         Name = "AboutForm"
         Padding = New Padding(12)
         ShowIcon = False
         ShowInTaskbar = False
-        StartPosition = FormStartPosition.CenterParent
         Text = "关于 Neuropils"
         ResumeLayout(False)
         PerformLayout()
@@ -86,4 +90,5 @@ Partial Class AboutForm
 
     Private WithEvents m_textBox As TextBox
     Private WithEvents m_okButton As Button
+    Friend WithEvents VisualStudioToolStripExtender1 As Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender
 End Class

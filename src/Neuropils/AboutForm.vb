@@ -6,7 +6,7 @@ Imports System.Text
 ''' </summary>
 ''' <remarks>
 ''' 控件布局在 <c>AboutForm.Designer.vb</c> 的 <c>InitializeComponent</c> 中声明式建好，
-''' 文本本身在 <see cref="AboutForm_Load"/> 里灌入；弹出用 <see cref="ShowAbout"/>。
+''' 文本本身在 <see cref="AboutForm_Load"/> 里灌入
 ''' </remarks>
 Public Class AboutForm
 
@@ -66,14 +66,7 @@ Public Class AboutForm
         Return MyBase.ProcessDialogKey(keyData)
     End Function
 
-    ''' <summary>
-    ''' 以模态方式弹出关于窗口（owner 居中）。
-    ''' </summary>
-    ''' <param name="owner">父窗口（通常为 <see cref="FormMain"/> 或 <see cref="PageFlywireCanvas"/>）</param>
-    Public Shared Sub ShowAbout(owner As IWin32Window)
-        Using f As New AboutForm()
-            Call f.ShowDialog(owner)
-        End Using
+    Private Sub m_okButton_Click(sender As Object, e As EventArgs) Handles m_okButton.Click
+        DialogResult = DialogResult.OK
     End Sub
-
 End Class

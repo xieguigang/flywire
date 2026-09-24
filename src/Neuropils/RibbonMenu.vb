@@ -1,4 +1,5 @@
 ﻿Imports Galaxy.Workbench
+Imports Galaxy.Workbench.CommonDialogs
 Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.RibbonLib.Controls
 Imports RibbonLib
@@ -22,6 +23,7 @@ Module RibbonMenu
 
         AddHandler RibbonMenu.ribbon.ButtonOpenSnakeGame.ExecuteEvent, Sub() Call Workbench.m_snake.openSnakeWindow()
         AddHandler RibbonMenu.ribbon.ButtonOpenResponseCharts.ExecuteEvent, AddressOf onOpenResponseChart
+        AddHandler RibbonMenu.ribbon.ButtonAbout.ExecuteEvent, Sub() Call InputDialog.ShowDialog(Of AboutForm)()
     End Sub
 
     ''' <summary>

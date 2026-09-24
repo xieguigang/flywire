@@ -13,7 +13,7 @@ Neuropils
  </summary>
  <remarks>
  控件布局在 <c>AboutForm.Designer.vb</c> 的 <c>InitializeComponent</c> 中声明式建好，
- 文本本身在 <see cref="M:Neuropils.AboutForm.AboutForm_Load(System.Object,System.EventArgs)"/> 里灌入；弹出用 <see cref="M:Neuropils.AboutForm.ShowAbout(System.Windows.Forms.IWin32Window)"/>。
+ 文本本身在 <see cref="M:Neuropils.AboutForm.AboutForm_Load(System.Object,System.EventArgs)"/> 里灌入
  </remarks>
 </member>
 <member name="M:Neuropils.AboutForm.AboutForm_Load(System.Object,System.EventArgs)">
@@ -26,12 +26,6 @@ Neuropils
 </member>
 <member name="M:Neuropils.AboutForm.ProcessDialogKey(System.Windows.Forms.Keys)">
  <summary>ESC 关闭窗口（确定按钮已绑定 DialogResult.OK，回车也会触发）。</summary>
-</member>
-<member name="M:Neuropils.AboutForm.ShowAbout(System.Windows.Forms.IWin32Window)">
- <summary>
- 以模态方式弹出关于窗口（owner 居中）。
- </summary>
- <param name="owner">父窗口（通常为 <see cref="T:Neuropils.FormMain"/> 或 <see cref="T:Neuropils.PageFlywireCanvas"/>）</param>
 </member>
 <member name="T:Neuropils.Analysis.PlotRuntime">
  <summary>
