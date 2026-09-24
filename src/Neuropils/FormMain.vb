@@ -116,6 +116,7 @@ Public Class FormMain
         Me.StartPosition = FormStartPosition.CenterScreen
         Me.MinimumSize = New Size(900, 600)
 
+        m_experiment = New StimulationExperiment(Me)
         ' 注意：3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
         ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底。
         ' 另外：VB 的对象初始化器里不能夹注释行 (会被当成语法错误)，因此这条说明写在这里。
@@ -160,8 +161,6 @@ Public Class FormMain
         Me.Controls.Add(createToolbar())
         Me.Controls.Add(createMenu())
         Me.Controls.Add(createStatusBar())
-
-        m_experiment = New StimulationExperiment(Me)
 
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
