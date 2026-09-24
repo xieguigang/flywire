@@ -1,6 +1,7 @@
 ﻿Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork

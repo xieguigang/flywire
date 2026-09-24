@@ -1229,7 +1229,7 @@ Neuropils
  启动时按 <see cref="M:FlywireAI.FAFBv783.FafbMsgPackStorage.CandidatePackPaths"/> 的顺序自动找包
  （穷尽之后不会再自动尝试）；一个都没找到时，用户唯一的选择就是这里的
  文件对话框 —— 选中 <c>fafb-v783.msgpack.zip</c> 之后写进
- <see cref="!:SnnConfig.PackFile"/>，之后主界面与贪吃蛇等所有数据消费方都用这一份。
+ <see cref="P:FlywireAI.Connectome.SnnConfig.PackFile"/>，之后主界面与贪吃蛇等所有数据消费方都用这一份。
  
  数据目录 (csv 所在目录) 不在这里改：它只影响"新鲜度指纹核对"（源 csv 不在就跳过）
  与活动结果文件的搜索，与转储包在哪里无关。
