@@ -33,6 +33,7 @@ Partial Class FormMain
         m_statusText = New ToolStripStatusLabel()
         m_progress = New ToolStripProgressBar()
         m_sceneText = New ToolStripStatusLabel()
+        ToolStripStatusLabel1 = New ToolStripStatusLabel()
         StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
@@ -60,7 +61,7 @@ Partial Class FormMain
         ' 
         ' StatusStrip1
         ' 
-        StatusStrip1.Items.AddRange(New ToolStripItem() {m_statusText, m_progress, m_sceneText})
+        StatusStrip1.Items.AddRange(New ToolStripItem() {m_statusText, ToolStripStatusLabel1, m_progress, m_sceneText})
         StatusStrip1.Location = New Point(0, 821)
         StatusStrip1.Name = "StatusStrip1"
         StatusStrip1.Size = New Size(1428, 22)
@@ -70,10 +71,8 @@ Partial Class FormMain
         ' m_statusText
         ' 
         m_statusText.Name = "m_statusText"
-        m_statusText.Size = New Size(1234, 17)
-        m_statusText.Spring = True
+        m_statusText.Size = New Size(42, 17)
         m_statusText.Text = "Ready!"
-        m_statusText.TextAlign = ContentAlignment.MiddleLeft
         ' 
         ' m_progress
         ' 
@@ -86,6 +85,12 @@ Partial Class FormMain
         m_sceneText.Name = "m_sceneText"
         m_sceneText.Size = New Size(46, 17)
         m_sceneText.Text = "Loaded"
+        ' 
+        ' ToolStripStatusLabel1
+        ' 
+        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        ToolStripStatusLabel1.Size = New Size(1192, 17)
+        ToolStripStatusLabel1.Spring = True
         ' 
         ' FormMain
         ' 
@@ -111,4 +116,5 @@ Partial Class FormMain
     Friend WithEvents m_statusText As ToolStripStatusLabel
     Friend WithEvents m_progress As ToolStripProgressBar
     Friend WithEvents m_sceneText As ToolStripStatusLabel
+    Friend WithEvents ToolStripStatusLabel1 As ToolStripStatusLabel
 End Class

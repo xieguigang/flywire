@@ -30,6 +30,7 @@ Public Class FormMain : Implements AppHost
         End If
 
         Call RibbonMenu.Load(Ribbon1)
+        Call Workbench.Load(Me)
         Call CommonRuntime.Hook(Me)
         Call CommonRuntime.ShowSingleDocument(Of PageFlywireCanvas)()
     End Sub

@@ -23,6 +23,8 @@ Module Workbench
     Public Sub Load(main As FormMain)
         _main = main
         _progress = main.m_progress
+
+        Call SceneText("")
     End Sub
 
     <MethodImpl(MethodImplOptions.AggressiveInlining)>
