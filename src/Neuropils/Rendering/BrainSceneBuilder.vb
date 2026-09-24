@@ -1,4 +1,3 @@
-Imports System.Drawing
 Imports System.Text
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging.Drawing3D

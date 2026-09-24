@@ -1,4 +1,3 @@
-Imports System.Drawing
 Imports System.Drawing.Drawing2D
 Imports Microsoft.VisualBasic.Data.Plots
 Imports Neuropils.Data

@@ -1,6 +1,4 @@
-Imports System.Drawing
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
-Imports Neuropils.Data
 Imports Neuropils.Simulation
 
 Namespace Rendering

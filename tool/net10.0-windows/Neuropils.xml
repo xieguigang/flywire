@@ -1819,6 +1819,30 @@ Neuropils
 <member name="M:Neuropils.Simulation.StimulationReport.csv(System.String,System.Object)">
  <summary>``key,value`` 形式的一行（value 里的逗号/引号会被转义）。</summary>
 </member>
+<member name="T:Neuropils.ChannelBars">
+ <summary>
+ 竖排条形读数控件：一行一个通道，画名称 + 条形 + 数值。
+ </summary>
+ <remarks>
+ 手写而不是用 ProgressBar：一次要显示 16 行，ProgressBar 无法紧凑排布，
+ 也没法在同一行里带标签。
+ </remarks>
+</member>
+<member name="F:Neuropils.ChannelBars.m_adaptive">
+ <summary>量程是否是自适应（<see cref="F:Neuropils.ChannelBars.m_maximum"/> 传 &lt;= 0 时开启）。</summary>
+</member>
+<member name="F:Neuropils.ChannelBars.AdaptiveDecay">
+ <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
+</member>
+<member name="M:Neuropils.ChannelBars.SetData(System.String[],System.Double[],System.Drawing.Color,System.Double)">
+ <summary>
+ 灌入一行行读数。
+ </summary>
+ <param name="maximum">
+ 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="F:Neuropils.ChannelBars.AdaptiveDecay"/> 缓慢回落。
+ 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
+ </param>
+</member>
 <member name="T:Neuropils.SnakeBrainForm">
  <summary>
  观战窗口：看果蝇大脑玩贪吃蛇的实时画面。
@@ -1880,30 +1904,6 @@ Neuropils
 </member>
 <member name="M:Neuropils.SnakeBrainForm.trainDecoder">
  <summary>在后台训练解码器，完成后立刻换上。</summary>
-</member>
-<member name="T:Neuropils.ChannelBars">
- <summary>
- 竖排条形读数控件：一行一个通道，画名称 + 条形 + 数值。
- </summary>
- <remarks>
- 手写而不是用 ProgressBar：一次要显示 16 行，ProgressBar 无法紧凑排布，
- 也没法在同一行里带标签。
- </remarks>
-</member>
-<member name="F:Neuropils.ChannelBars.m_adaptive">
- <summary>量程是否是自适应（<see cref="F:Neuropils.ChannelBars.m_maximum"/> 传 &lt;= 0 时开启）。</summary>
-</member>
-<member name="F:Neuropils.ChannelBars.AdaptiveDecay">
- <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
-</member>
-<member name="M:Neuropils.ChannelBars.SetData(System.String[],System.Double[],System.Drawing.Color,System.Double)">
- <summary>
- 灌入一行行读数。
- </summary>
- <param name="maximum">
- 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="F:Neuropils.ChannelBars.AdaptiveDecay"/> 缓慢回落。
- 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
- </param>
 </member>
 </members>
 </doc>

@@ -1,110 +1,104 @@
-Imports System.Drawing
-Imports Snake2
 
-' 注意：这里不再显式写 Namespace FlywireSnake ——
-' VB 工程未指定 RootNamespace 时会默认用工程名作为根命名空间，
-' 再手写一层就会变成 FlywireSnake.FlywireSnake.*（外部引用时找不到类型）。
+''' <summary>
+''' 感觉通道：把贪吃蛇的游戏画面折算成一组"外界刺激强度"。
+''' </summary>
+''' <remarks>
+''' <b>为什么是这 16 个通道</b>：一条只知道往前走的蛇，决策只需要两类信息 ——
+''' "食物在哪个方位"（要追）与"往哪走会死"（要躲）。因此：
+''' <list type="bullet">
+'''   <item>0..7：<b>食物方位</b>，以蛇的<b>当前朝向</b>为参考系的 8 个扇区
+'''         （前进方向是扇区 0，左右各 3 个，正后方 7）。用相对朝向而不是绝对方向，
+'''         是因为蛇不能反向移动，"前方 / 左侧 / 右侧"才是可学习的刺激量；</item>
+'''   <item>8..11：<b>碰撞危险</b>，上 / 下 / 左 / 右四个绝对方向
+'''         （墙体、障碍物、自己与 AI 蛇的身体）；</item>
+'''   <item>12..15：<b>特殊食物方位</b>（活动食物 / 超级食物），同样以朝向为参考系的
+'''         4 个粗扇区。它们的分值远高于常规食物（活动 5 分 / 超级 30 分，常规 1 分），
+'''         因此必须让大脑看得见，否则"不该追的东西看得见、该追的看不见"。</item>
+''' </list>
+''' 
+''' 强度约定：食物通道取"最近的那份食物"的距离衰减 <c>1 - d / R</c>（R = 可视半径），
+''' 危险通道取 0 / 1。这些强度最终会乘上注入电流标定值变成感觉神经元的电流。
+''' </remarks>
+Public NotInheritable Class SnakeSensors
+
+    ''' <summary>食物方位扇区数。</summary>
+    Public Const FoodSectors As Integer = 8
+
+    ''' <summary>碰撞危险通道数（上 / 下 / 左 / 右）。</summary>
+    Public Const DangerChannels As Integer = 4
+
+    ''' <summary>特殊食物（活动食物 / 超级食物）方位扇区数。</summary>
+    Public Const SpecialFoodSectors As Integer = 4
+
+    ''' <summary>感觉通道总数。</summary>
+    Public Const ChannelCount As Integer = FoodSectors + DangerChannels + SpecialFoodSectors
 
     ''' <summary>
-    ''' 感觉通道：把贪吃蛇的游戏画面折算成一组"外界刺激强度"。
+    ''' 食物感知半径（格）：超出这个距离的食物不再产生任何刺激。
     ''' </summary>
     ''' <remarks>
-    ''' <b>为什么是这 16 个通道</b>：一条只知道往前走的蛇，决策只需要两类信息 ——
-    ''' "食物在哪个方位"（要追）与"往哪走会死"（要躲）。因此：
-    ''' <list type="bullet">
-    '''   <item>0..7：<b>食物方位</b>，以蛇的<b>当前朝向</b>为参考系的 8 个扇区
-    '''         （前进方向是扇区 0，左右各 3 个，正后方 7）。用相对朝向而不是绝对方向，
-    '''         是因为蛇不能反向移动，"前方 / 左侧 / 右侧"才是可学习的刺激量；</item>
-    '''   <item>8..11：<b>碰撞危险</b>，上 / 下 / 左 / 右四个绝对方向
-    '''         （墙体、障碍物、自己与 AI 蛇的身体）；</item>
-    '''   <item>12..15：<b>特殊食物方位</b>（活动食物 / 超级食物），同样以朝向为参考系的
-    '''         4 个粗扇区。它们的分值远高于常规食物（活动 5 分 / 超级 30 分，常规 1 分），
-    '''         因此必须让大脑看得见，否则"不该追的东西看得见、该追的看不见"。</item>
-    ''' </list>
-    ''' 
-    ''' 强度约定：食物通道取"最近的那份食物"的距离衰减 <c>1 - d / R</c>（R = 可视半径），
-    ''' 危险通道取 0 / 1。这些强度最终会乘上注入电流标定值变成感觉神经元的电流。
+    ''' 取<b>地图对角线</b> = 全图可见。原来取 45 格会留下大片盲区：食物一旦远于 45 格，
+    ''' 8 个食物方位通道就全为零 —— 此时大脑"看不见"食物，而示范教师仍然知道食物在哪，
+    ''' 训练标签与大脑的感知口径不一致，学出来的读出层只能原地兜圈（表现为随机游走）。
+    ''' 距离衰减仍然保留（<c>1 - d / R</c> 单调递减），因此"近处的食物更抢眼"这一点没变。
     ''' </remarks>
-    Public NotInheritable Class SnakeSensors
+    Public Shared ReadOnly SenseRadius As Double =
+        Math.Sqrt(Snake2.Game.MapCols * Snake2.Game.MapCols + Snake2.Game.MapRows * Snake2.Game.MapRows)
 
-        ''' <summary>食物方位扇区数。</summary>
-        Public Const FoodSectors As Integer = 8
+    ''' <summary>四个绝对方向（上 / 下 / 左 / 右），与危险通道 8..11 一一对应。</summary>
+    Public Shared ReadOnly Directions As Point() = {
+        New Point(0, -1), New Point(0, 1), New Point(-1, 0), New Point(1, 0)
+    }
 
-        ''' <summary>碰撞危险通道数（上 / 下 / 左 / 右）。</summary>
-        Public Const DangerChannels As Integer = 4
+    ''' <summary>某个通道的名字（用于可视化与报告）。</summary>
+    Public Shared Function ChannelName(channel As Integer) As String
+        If channel < FoodSectors Then
+            Return $"食物方位 {channel}"
+        ElseIf channel < FoodSectors + DangerChannels Then
+            Dim part As String() = {"上", "下", "左", "右"}
+            Return $"危险 {part(channel - FoodSectors)}"
+        Else
+            Dim part As String() = {"前方", "左方", "右方", "后方"}
+            Return $"特殊食物 {part(channel - FoodSectors - DangerChannels)}"
+        End If
+    End Function
 
-        ''' <summary>特殊食物（活动食物 / 超级食物）方位扇区数。</summary>
-        Public Const SpecialFoodSectors As Integer = 4
+    ''' <summary>据蛇的朝向把相对方位（前方 / 左 / 右 / 后）折算成绝对偏移。</summary>
+    ''' <remarks>
+    ''' 蛇的朝向只可能是四个轴向之一，因此"左转 / 右转"用简单的轴向旋转即可：
+    ''' 屏幕坐标 Y 轴向下，左转 = 把 (x, y) 变成 (y, -x)。
+    ''' </remarks>
+    Public Shared Function Relative(heading As Point, offset As Point) As Point
+        Dim forward As Point = If(heading = Point.Empty, New Point(1, 0), heading)
 
-        ''' <summary>感觉通道总数。</summary>
-        Public Const ChannelCount As Integer = FoodSectors + DangerChannels + SpecialFoodSectors
+        If offset.X <> 0 Then
+            ' 沿当前朝向的前 / 后
+            Return New Point(forward.X * offset.X, forward.Y * offset.X)
+        End If
 
-        ''' <summary>
-        ''' 食物感知半径（格）：超出这个距离的食物不再产生任何刺激。
-        ''' </summary>
-        ''' <remarks>
-        ''' 取<b>地图对角线</b> = 全图可见。原来取 45 格会留下大片盲区：食物一旦远于 45 格，
-        ''' 8 个食物方位通道就全为零 —— 此时大脑"看不见"食物，而示范教师仍然知道食物在哪，
-        ''' 训练标签与大脑的感知口径不一致，学出来的读出层只能原地兜圈（表现为随机游走）。
-        ''' 距离衰减仍然保留（<c>1 - d / R</c> 单调递减），因此"近处的食物更抢眼"这一点没变。
-        ''' </remarks>
-        Public Shared ReadOnly SenseRadius As Double =
-            Math.Sqrt(Snake2.Game.MapCols * Snake2.Game.MapCols + Snake2.Game.MapRows * Snake2.Game.MapRows)
+        ' 左 / 右：把朝向旋转 ±90°
+        Dim lateral As New Point(forward.Y, -forward.X)   ' 右
 
-        ''' <summary>四个绝对方向（上 / 下 / 左 / 右），与危险通道 8..11 一一对应。</summary>
-        Public Shared ReadOnly Directions As Point() = {
-            New Point(0, -1), New Point(0, 1), New Point(-1, 0), New Point(1, 0)
-        }
+        If offset.Y > 0 Then
+            lateral = New Point(-lateral.X, -lateral.Y)   ' 左
+        End If
 
-        ''' <summary>某个通道的名字（用于可视化与报告）。</summary>
-        Public Shared Function ChannelName(channel As Integer) As String
-            If channel < FoodSectors Then
-                Return $"食物方位 {channel}"
-            ElseIf channel < FoodSectors + DangerChannels Then
-                Dim part As String() = {"上", "下", "左", "右"}
-                Return $"危险 {part(channel - FoodSectors)}"
-            Else
-                Dim part As String() = {"前方", "左方", "右方", "后方"}
-                Return $"特殊食物 {part(channel - FoodSectors - DangerChannels)}"
-            End If
-        End Function
+        Return lateral
+    End Function
 
-        ''' <summary>据蛇的朝向把相对方位（前方 / 左 / 右 / 后）折算成绝对偏移。</summary>
-        ''' <remarks>
-        ''' 蛇的朝向只可能是四个轴向之一，因此"左转 / 右转"用简单的轴向旋转即可：
-        ''' 屏幕坐标 Y 轴向下，左转 = 把 (x, y) 变成 (y, -x)。
-        ''' </remarks>
-        Public Shared Function Relative(heading As Point, offset As Point) As Point
-            Dim forward As Point = If(heading = Point.Empty, New Point(1, 0), heading)
+End Class
 
-            If offset.X <> 0 Then
-                ' 沿当前朝向的前 / 后
-                Return New Point(forward.X * offset.X, forward.Y * offset.X)
-            End If
+''' <summary>
+''' 一次感觉采样的结果：通道强度 + 用于训练解码器的"示范动作"。
+''' </summary>
+Public Structure SnakeSensorFrame
+    ''' <summary>16 个通道的强度（[0,1]）。</summary>
+    Public Values As Double()
 
-            ' 左 / 右：把朝向旋转 ±90°
-            Dim lateral As New Point(forward.Y, -forward.X)   ' 右
+    ''' <summary>被蛇身体 / 障碍物 / 墙占据的格子数（诊断用）。</summary>
+    Public BlockedCells As Integer
 
-            If offset.Y > 0 Then
-                lateral = New Point(-lateral.X, -lateral.Y)   ' 左
-            End If
-
-            Return lateral
-        End Function
-
-    End Class
-
-    ''' <summary>
-    ''' 一次感觉采样的结果：通道强度 + 用于训练解码器的"示范动作"。
-    ''' </summary>
-    Public Structure SnakeSensorFrame
-        ''' <summary>16 个通道的强度（[0,1]）。</summary>
-        Public Values As Double()
-
-        ''' <summary>被蛇身体 / 障碍物 / 墙占据的格子数（诊断用）。</summary>
-        Public BlockedCells As Integer
-
-        ''' <summary>距离最近食物的曼哈顿距离（没有食物时为 -1）。</summary>
-        Public FoodDistance As Integer
-    End Structure
+    ''' <summary>距离最近食物的曼哈顿距离（没有食物时为 -1）。</summary>
+    Public FoodDistance As Integer
+End Structure
 
