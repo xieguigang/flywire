@@ -45,13 +45,6 @@ Public Class FormMain
     Private m_pointSizeBox As NumericUpDown
     Friend m_showConnections As ToolStripButton
     Private m_showGround As ToolStripButton
-    Friend WithEvents m_progress As ToolStripProgressBar
-    Friend WithEvents m_statusText As ToolStripStatusLabel
-    Friend m_sceneText As ToolStripStatusLabel
-    ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
-    Friend m_chartLink As LinkLabel
-    ''' <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
-    Friend m_snakeLink As LinkLabel
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Friend m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
@@ -160,7 +153,13 @@ Public Class FormMain
         Me.Controls.Add(m_split)
         Me.Controls.Add(createToolbar())
         Me.Controls.Add(m_menuStrip)
-        Me.Controls.Add(createStatusBar())
+        Me.Controls.Add(m_statusStrip)
+
+        ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
+        ' 这部分是运行时逻辑，保留在 initializeUi（控件本身已在 InitializeComponent 中建好）
+        m_snake = New Snake(Me)
+        m_chartTip.SetToolTip(m_chartLink, "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
+        m_chartTip.SetToolTip(m_snakeLink, "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
 
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
@@ -427,61 +426,6 @@ Public Class FormMain
         }
     End Function
 
-    Private Function createStatusBar() As StatusStrip
-        Dim bar As New StatusStrip()
-
-        m_statusText = New ToolStripStatusLabel("就绪") With {.Spring = True, .TextAlign = ContentAlignment.MiddleLeft}
-        m_sceneText = New ToolStripStatusLabel("") With {.BorderSides = ToolStripStatusLabelBorderSides.Left}
-        m_progress = New ToolStripProgressBar With {.Visible = False, .Width = 220, .Style = ProgressBarStyle.Marquee}
-
-        Call bar.Items.Add(m_statusText)
-        Call bar.Items.Add(m_sceneText)
-        Call bar.Items.Add(m_progress)
-
-        ' ---- 右下角：电刺激响应曲线入口 ----
-        ' 用真正的 LinkLabel（WinForms 的 ToolStripStatusLabel 虽然也能做成链接样式，
-        ' 但这里要的是"一个可点击的链接控件"，因此用 ToolStripControlHost 把它托进状态栏）
-        m_chartLink = New LinkLabel With {
-            .Text = "响应曲线",
-            .AutoSize = True,
-            .LinkBehavior = LinkBehavior.HoverUnderline,
-            .LinkColor = Color.FromArgb(34, 211, 238),
-            .ActiveLinkColor = Color.White,
-            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
-            .DisabledLinkColor = Color.FromArgb(100, 116, 139),
-            .Margin = New Padding(6, 4, 6, 0),
-            .Enabled = False
-        }
-        AddHandler m_chartLink.LinkClicked, AddressOf onOpenResponseChart
-
-        ' ---- 右下角：果蝇大脑玩贪吃蛇的观战窗口 ----
-        m_snakeLink = New LinkLabel With {
-            .Text = "果蝇大脑玩贪吃蛇",
-            .AutoSize = True,
-            .LinkBehavior = LinkBehavior.HoverUnderline,
-            .LinkColor = Color.FromArgb(34, 211, 238),
-            .ActiveLinkColor = Color.White,
-            .VisitedLinkColor = Color.FromArgb(34, 211, 238),
-            .Margin = New Padding(6, 4, 6, 0)
-        }
-        m_snake = New Snake(Me)
-
-        AddHandler m_snakeLink.LinkClicked, AddressOf m_snake.onOpenSnakeWindow
-
-        ' LinkLabel 没有 ToolTipText 属性，悬停提示要用 ToolTip 组件挂
-        m_chartTip.SetToolTip(
-            m_chartLink,
-            "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
-        m_chartTip.SetToolTip(
-            m_snakeLink,
-            "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
-
-        Call bar.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
-        Call bar.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
-
-        Return bar
-    End Function
-
     ''' <summary>
     ''' 打开响应曲线窗口。
     ''' </summary>
@@ -490,7 +434,7 @@ Public Class FormMain
     ''' 否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
     ''' "记录下来的响应结果"也还能画出来。
     ''' </remarks>
-    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs)
+    Private Sub onOpenResponseChart(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_chartLink.LinkClicked
         If m_dataset Is Nothing Then
             Return
         End If
@@ -525,6 +469,11 @@ Public Class FormMain
         '  Catch ex As Exception
         'Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",        MessageBoxButtons.OK, MessageBoxIcon.Error)
         ' End Try
+    End Sub
+
+    ''' <summary>状态栏"果蝇大脑玩贪吃蛇"链接：转交给 Snake 实例打开观战窗口。</summary>
+    Private Sub onSnakeLinkClick(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_snakeLink.LinkClicked
+        Call m_snake.onOpenSnakeWindow(sender, e)
     End Sub
 
 #End Region

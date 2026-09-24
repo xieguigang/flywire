@@ -31,6 +31,16 @@ Partial Class FormMain
     Dim WithEvents m_resetItem As ToolStripMenuItem
     Dim WithEvents m_aboutItem As ToolStripMenuItem
 
+    ' ---- 状态栏（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
+    ' 这些字段被其它类 (StimulationExperiment / Snake) 通过 FormMain 实例访问，因此保持 Friend。
+    ' 事件绑定改由 FormMain.vb 里对应的 Handles 子句完成。
+    Dim m_statusStrip As StatusStrip
+    Friend WithEvents m_statusText As ToolStripStatusLabel
+    Friend WithEvents m_progress As ToolStripProgressBar
+    Friend m_sceneText As ToolStripStatusLabel
+    Friend WithEvents m_chartLink As LinkLabel
+    Friend WithEvents m_snakeLink As LinkLabel
+
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
     'Do not modify it using the code editor.
@@ -127,6 +137,80 @@ Partial Class FormMain
         m_helpMenu.DropDownItems.Add(m_aboutItem)
         m_menuStrip.Items.AddRange(New ToolStripItem() {m_fileMenu, m_viewMenu, m_helpMenu})
         m_menuStrip.ResumeLayout(False)
+        ' 
+        ' m_statusStrip
+        ' 状态栏：停靠在窗体底端；宽度取窗体客户区宽度 (1500, 见 initializeUi 的 ClientSize)，
+        ' 高度 22 为状态栏标准高度，故 y = 900 - 22 = 878
+        ' 
+        m_statusStrip = New StatusStrip()
+        m_statusStrip.Dock = DockStyle.Bottom
+        m_statusStrip.Location = New Point(0, 878)
+        m_statusStrip.Name = "m_statusStrip"
+        m_statusStrip.Size = New Size(1500, 22)
+        m_statusStrip.TabIndex = 1
+        ' 
+        ' m_statusText
+        ' 
+        m_statusText = New ToolStripStatusLabel()
+        m_statusText.Name = "m_statusText"
+        m_statusText.Size = New Size(100, 17)
+        m_statusText.Spring = True
+        m_statusText.Text = "就绪"
+        m_statusText.TextAlign = ContentAlignment.MiddleLeft
+        ' 
+        ' m_sceneText
+        ' 
+        m_sceneText = New ToolStripStatusLabel()
+        m_sceneText.Name = "m_sceneText"
+        m_sceneText.Size = New Size(100, 17)
+        m_sceneText.Text = ""
+        m_sceneText.BorderSides = ToolStripStatusLabelBorderSides.Left
+        ' 
+        ' m_progress
+        ' 
+        m_progress = New ToolStripProgressBar()
+        m_progress.Name = "m_progress"
+        m_progress.Size = New Size(220, 16)
+        m_progress.Visible = False
+        m_progress.Style = ProgressBarStyle.Marquee
+        ' 
+        ' m_chartLink
+        ' 
+        m_chartLink = New LinkLabel()
+        m_chartLink.Name = "m_chartLink"
+        m_chartLink.AutoSize = True
+        m_chartLink.Enabled = False
+        m_chartLink.Size = New Size(56, 17)
+        m_chartLink.Text = "响应曲线"
+        m_chartLink.LinkBehavior = LinkBehavior.HoverUnderline
+        m_chartLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        m_chartLink.ActiveLinkColor = Color.White
+        m_chartLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        m_chartLink.DisabledLinkColor = Color.FromArgb(CByte(100), CByte(116), CByte(139))
+        m_chartLink.Margin = New Padding(6, 4, 6, 0)
+        ' 
+        ' m_snakeLink
+        ' 
+        m_snakeLink = New LinkLabel()
+        m_snakeLink.Name = "m_snakeLink"
+        m_snakeLink.AutoSize = True
+        m_snakeLink.Size = New Size(140, 17)
+        m_snakeLink.Text = "果蝇大脑玩贪吃蛇"
+        m_snakeLink.LinkBehavior = LinkBehavior.HoverUnderline
+        m_snakeLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        m_snakeLink.ActiveLinkColor = Color.White
+        m_snakeLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        m_snakeLink.Margin = New Padding(6, 4, 6, 0)
+        ' 
+        ' m_statusStrip 容器装配
+        ' 
+        m_statusStrip.SuspendLayout()
+        m_statusStrip.Items.Add(m_statusText)
+        m_statusStrip.Items.Add(m_sceneText)
+        m_statusStrip.Items.Add(m_progress)
+        m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
+        m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
+        m_statusStrip.ResumeLayout(False)
         ResumeLayout(False)
     End Sub
 
