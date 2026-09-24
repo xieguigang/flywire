@@ -1,6 +1,7 @@
 ﻿Imports Microsoft.VisualBasic.Drawing
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
+Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.Data
 
 Public Class FormNeuronMap
@@ -128,5 +129,10 @@ Public Class FormNeuronMap
         If m_experiment IsNot Nothing Then
             m_experiment.onReplaySpeedChanged(sender, e)
         End If
+    End Sub
+
+    Private Sub FormNeuronMap_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        e.Cancel = True
+        DockState = DockState.Hidden
     End Sub
 End Class
