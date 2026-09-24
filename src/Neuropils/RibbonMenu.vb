@@ -18,6 +18,18 @@ Module RibbonMenu
         End Get
     End Property
 
+    Public ReadOnly Property SimulationSteps As Integer
+        Get
+            Return CInt(_ribbon.NumSimulationSteps.DecimalValue)
+        End Get
+    End Property
+
+    Public ReadOnly Property SimulationIntensity As Double
+        Get
+            Return CDbl(_ribbon.NumIntensity.DecimalValue)
+        End Get
+    End Property
+
     Public Sub Load(ribbon As Ribbon)
         _ribbon = New RibbonItems(ribbon)
 
@@ -28,6 +40,24 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
         AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
         AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, Sub() Workbench.flywire.DockState = DockState.Document
+
+        _ribbon.NumIntensity.MinValue = 0.2
+        _ribbon.NumIntensity.MaxValue = 20
+        _ribbon.NumIntensity.Increment = 0.5
+        _ribbon.NumIntensity.DecimalValue = 1
+
+        _ribbon.NumSimulationSteps.MinValue = 5
+        _ribbon.NumSimulationSteps.MaxValue = 250
+        _ribbon.NumSimulationSteps.DecimalValue = 30
+
+        AddHandler RibbonMenu.ribbon.NumSimulationSteps.ExecuteEvent, AddressOf onStimulusStepsChanged
+    End Sub
+
+    ''' <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
+    Private Sub onStimulusStepsChanged(sender As Object, e As EventArgs)
+        If m_experiment IsNot Nothing Then
+            Call m_experiment.onStimulusStepsChanged(sender, e)
+        End If
     End Sub
 
     ''' <summary>

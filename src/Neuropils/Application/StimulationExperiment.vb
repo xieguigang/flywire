@@ -139,7 +139,7 @@ Namespace AppLogics
             If t < 0 Then t = 0
             If t > 1 Then t = 1
 
-            Dim scale As Double = CDbl(main.m_stimStrengthBox.Value)
+            Dim scale As Double = RibbonMenu.SimulationIntensity
 
             If scale <= 0 Then scale = 1
 
@@ -605,7 +605,7 @@ Namespace AppLogics
 
         ''' <summary>仿真步数改变（下一次刺激生效）。</summary>
         Friend Sub onStimulusStepsChanged(sender As Object, e As EventArgs)
-            m_config.TimeSteps = CInt(main.m_stimStepsBox.Value)
+            m_config.TimeSteps = RibbonMenu.SimulationSteps
         End Sub
 
         ''' <summary>

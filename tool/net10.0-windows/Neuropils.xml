@@ -1107,9 +1107,6 @@ Neuropils
 <member name="M:Neuropils.PageFlywireCanvas.onStimulateModeChanged(System.Object,System.EventArgs)">
  <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
 </member>
-<member name="M:Neuropils.PageFlywireCanvas.onStimulusStepsChanged(System.Object,System.EventArgs)">
- <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
-</member>
 <member name="M:Neuropils.PageFlywireCanvas.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
 </member>
@@ -1495,6 +1492,9 @@ Neuropils
  是否进入针对大脑神经元的电刺激实验模式
  </summary>
  <returns></returns>
+</member>
+<member name="M:Neuropils.RibbonMenu.onStimulusStepsChanged(System.Object,System.EventArgs)">
+ <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
 </member>
 <member name="M:Neuropils.RibbonMenu.onOpenResponseChart">
  <summary>

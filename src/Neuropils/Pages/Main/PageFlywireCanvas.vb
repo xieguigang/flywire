@@ -389,7 +389,7 @@ Public Class PageFlywireCanvas
     ''' <summary>
     ''' 重新载入数据目录 (可以在界面上换一台数据集)。
     ''' </summary>
-    Public Sub onReload() Handles m_reloadButton.Click
+    Public Sub onReload()
         If m_busy Then Return
 
         Using dialog As New FolderBrowserDialog()
@@ -654,14 +654,7 @@ Public Class PageFlywireCanvas
         Call m_experiment.onStimulateModeChanged(sender, e)
     End Sub
 
-    ''' <summary>工具条"仿真步数"：转交给 StimulationExperiment 处理步数变更。</summary>
-    Private Sub onStimulusStepsChanged(sender As Object, e As EventArgs) Handles m_stimStepsBox.ValueChanged
-        If m_experiment IsNot Nothing Then
-            Call m_experiment.onStimulusStepsChanged(sender, e)
-        End If
-    End Sub
-
-    Public Sub onSnapshot() Handles m_snapshotButton.Click
+    Public Sub onSnapshot()
         If Not m_viewInitialized Then Return
 
         Using dialog As New SaveFileDialog()

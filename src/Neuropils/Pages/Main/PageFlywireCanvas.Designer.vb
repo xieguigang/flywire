@@ -35,11 +35,8 @@ Partial Class PageFlywireCanvas
     Friend WithEvents m_showConnections As ToolStripButton
     Private WithEvents m_showGround As ToolStripButton
     Friend WithEvents m_stimulateMode As ToolStripButton
-    Friend m_stimStrengthBox As NumericUpDown
-    Friend WithEvents m_stimStepsBox As NumericUpDown
+
     Friend m_holdLabel As ToolStripLabel
-    Private WithEvents m_snapshotButton As ToolStripButton
-    Private WithEvents m_reloadButton As ToolStripButton
 
     ' ---- 主界面布局（声明式，参照 ResponseChartForm.Designer.vb 的模式）----
     ' 事件源用 WithEvents 以便 Handles 绑定，替代原 initializeUi / createSidebar / createReplayPanel 里的 AddHandler。
@@ -582,17 +579,17 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_snapshotButton
         ' 
-        m_snapshotButton = New ToolStripButton()
-        m_snapshotButton.Name = "m_snapshotButton"
-        m_snapshotButton.Size = New Size(45, 22)
-        m_snapshotButton.Text = "截图"
-        ' 
-        ' m_reloadButton
-        ' 
-        m_reloadButton = New ToolStripButton()
-        m_reloadButton.Name = "m_reloadButton"
-        m_reloadButton.Size = New Size(60, 22)
-        m_reloadButton.Text = "重新载入"
+        'm_snapshotButton = New ToolStripButton()
+        'm_snapshotButton.Name = "m_snapshotButton"
+        'm_snapshotButton.Size = New Size(45, 22)
+        'm_snapshotButton.Text = "截图"
+        '' 
+        '' m_reloadButton
+        '' 
+        'm_reloadButton = New ToolStripButton()
+        'm_reloadButton.Name = "m_reloadButton"
+        'm_reloadButton.Size = New Size(60, 22)
+        'm_reloadButton.Text = "重新载入"
         ' 
         ' m_stimulateMode
         ' 
@@ -606,24 +603,24 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_stimStrengthBox
         ' 
-        m_stimStrengthBox = New NumericUpDown()
-        m_stimStrengthBox.DecimalPlaces = 1
-        m_stimStrengthBox.Minimum = CDec(0.2)
-        m_stimStrengthBox.Maximum = CDec(20)
-        m_stimStrengthBox.Increment = CDec(0.5)
-        m_stimStrengthBox.Value = CDec(1)
-        m_stimStrengthBox.Name = "m_stimStrengthBox"
-        m_stimStrengthBox.Size = New Size(56, 23)
+        'm_stimStrengthBox = New NumericUpDown()
+        'm_stimStrengthBox.DecimalPlaces = 1
+        'm_stimStrengthBox.Minimum = CDec(0.2)
+        'm_stimStrengthBox.Maximum = CDec(20)
+        'm_stimStrengthBox.Increment = CDec(0.5)
+        'm_stimStrengthBox.Value = CDec(1)
+        'm_stimStrengthBox.Name = "m_stimStrengthBox"
+        'm_stimStrengthBox.Size = New Size(56, 23)
         ' 
         ' m_stimStepsBox
         ' 
-        m_stimStepsBox = New NumericUpDown()
-        m_stimStepsBox.Minimum = 5
-        m_stimStepsBox.Maximum = 200
-        m_stimStepsBox.Increment = 5
-        m_stimStepsBox.Value = 30
-        m_stimStepsBox.Name = "m_stimStepsBox"
-        m_stimStepsBox.Size = New Size(56, 23)
+        'm_stimStepsBox = New NumericUpDown()
+        'm_stimStepsBox.Minimum = 5
+        'm_stimStepsBox.Maximum = 200
+        'm_stimStepsBox.Increment = 5
+        'm_stimStepsBox.Value = 30
+        'm_stimStepsBox.Name = "m_stimStepsBox"
+        'm_stimStepsBox.Size = New Size(56, 23)
         ' 
         ' m_holdLabel
         ' 
@@ -651,14 +648,14 @@ Partial Class PageFlywireCanvas
         m_toolStrip.Items.Add(m_showConnections)
         m_toolStrip.Items.Add(m_showGround)
         m_toolStrip.Items.Add(New ToolStripSeparator())
-        m_toolStrip.Items.Add(m_snapshotButton)
-        m_toolStrip.Items.Add(m_reloadButton)
+        '   m_toolStrip.Items.Add(m_snapshotButton)
+        '   m_toolStrip.Items.Add(m_reloadButton)
         m_toolStrip.Items.Add(New ToolStripSeparator())
         m_toolStrip.Items.Add(m_stimulateMode)
         m_toolStrip.Items.Add(New ToolStripLabel("强度×"))
-        m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
+        '  m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
         m_toolStrip.Items.Add(New ToolStripLabel("仿真步数"))
-        m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStepsBox))
+        ' m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStepsBox))
         m_toolStrip.Items.Add(m_holdLabel)
         m_toolStrip.ResumeLayout(False)
 
