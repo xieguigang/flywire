@@ -31,7 +31,7 @@ Public Class FormMain
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
-    Private m_canvas As DxScene3DCanvas
+    Friend WithEvents m_canvas As DxScene3DCanvas
     Private m_split As SplitContainer
     Private m_legend As CheckedListBox
     Private m_gradient As PictureBox
@@ -44,8 +44,8 @@ Public Class FormMain
     Private m_pointSizeBox As NumericUpDown
     Private m_showConnections As ToolStripButton
     Private m_showGround As ToolStripButton
-    Private m_progress As ToolStripProgressBar
-    Private m_statusText As ToolStripStatusLabel
+    Friend WithEvents m_progress As ToolStripProgressBar
+    Friend WithEvents m_statusText As ToolStripStatusLabel
     Private m_sceneText As ToolStripStatusLabel
     ''' <summary>状态栏右下角的"响应曲线"链接。</summary>
     Private m_chartLink As LinkLabel
@@ -72,9 +72,9 @@ Public Class FormMain
     Private m_replaySpeed As NumericUpDown
     Private m_replayText As Label
 
-    Private m_dataset As BrainDataset
+    Friend m_dataset As BrainDataset
     Private m_colorizer As NeuronColorizer
-    Private m_scene As BrainScene
+    Friend m_scene As BrainScene
     Private m_lookup As Integer()
     Private m_focusNeuron As Integer = -1
     Private m_viewInitialized As Boolean = False

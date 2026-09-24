@@ -239,7 +239,7 @@ Partial Public Class FormMain
     ''' 决定回放高亮要改哪个字段：热力图模式下着色器不看嵌入色，只能抬热值 +
     ''' 放大尺寸（尺寸在两种模式下都能用，见 <c>PointCloudPoint.SizeScale</c>）。
     ''' </remarks>
-    Private Function isHeatMap() As Boolean
+    Public Function isHeatMap() As Boolean
         Return m_colorizer IsNot Nothing AndAlso m_colorizer.IsHeatMap
     End Function
 
