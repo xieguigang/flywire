@@ -8,7 +8,7 @@ Public Class FormNeuronMap
 #Region "legend"
 
     ''' <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
-    Private Sub refreshLegend()
+    Friend Sub refreshLegend()
         Call m_legend.Items.Clear()
 
         If m_colorizer Is Nothing Then Return
@@ -40,7 +40,7 @@ Public Class FormNeuronMap
         m_colorizer.SetVisible(item, e.NewValue = CheckState.Checked)
 
         ' 勾选状态在事件返回之后才生效，因此重建延后到消息循环的空闲时刻
-        BeginInvoke(New Action(AddressOf scheduleRebuild))
+        BeginInvoke(New Action(AddressOf Workbench.flywire.scheduleRebuild))
     End Sub
 
     Private Function minActivity() As Double
@@ -66,7 +66,7 @@ Public Class FormNeuronMap
     End Function
 
     ''' <summary>画出当前配色方案的色标 (热力图维度)。</summary>
-    Private Sub showGradient()
+    Public Sub showGradient()
         Dim colors As Color() = Designer.GetColors("viridis", 256, 255)
         Dim bitmap As New Bitmap(256, 1)
 

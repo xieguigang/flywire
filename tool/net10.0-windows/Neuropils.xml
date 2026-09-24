@@ -1021,6 +1021,18 @@ Neuropils
 <member name="M:Neuropils.Data.VisualizationConfig.ResolveActivityDir">
  <summary>解析活动表所在目录。</summary>
 </member>
+<member name="M:Neuropils.FormNeuronMap.refreshLegend">
+ <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
+</member>
+<member name="M:Neuropils.FormNeuronMap.showGradient">
+ <summary>画出当前配色方案的色标 (热力图维度)。</summary>
+</member>
+<member name="M:Neuropils.FormNeuronMap.onReplayFirst(System.Object,System.EventArgs)">
+ <summary>
+ 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
+ 这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
+ </summary>
+</member>
 <member name="T:Neuropils.PageFlywireCanvas">
  <summary>
  果蝇大脑三维可视化主窗体。
@@ -1039,14 +1051,16 @@ Neuropils
  </remarks>
 </member>
 <member name="F:Neuropils.PageFlywireCanvas.m_chartTip">
- <summary>状态栏链接的悬停提示。</summary>
+ <summary>
+ 状态栏链接的悬停提示。
+ </summary>
 </member>
 <member name="F:Neuropils.PageFlywireCanvas.m_snapshotPath">
  <summary>
  出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。
  </summary>
 </member>
-<member name="F:Neuropils.PageFlywireCanvas.m_rebuildTimer">
+<member name="F:Neuropils.PageFlywireCanvas._m_rebuildTimer">
  <summary>
  拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
  </summary>
@@ -1055,23 +1069,8 @@ Neuropils
  (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
  </remarks>
 </member>
-<member name="M:Neuropils.PageFlywireCanvas.onReplayFirst(System.Object,System.EventArgs)">
- <summary>
- 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
- 这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
- </summary>
-</member>
 <member name="M:Neuropils.PageFlywireCanvas.captureAndExit">
  <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.adjustSplitter">
- <summary>
- 把右侧栏固定成一个便于阅读的宽度。
- </summary>
- <remarks>
- 只在控件已经完成布局之后调用；布局中或尺寸过小时保持默认位置
- (硬设一个不合法的 SplitterDistance 会直接抛异常)。
- </remarks>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.dimensionFromUi">
  <summary>
@@ -1103,12 +1102,6 @@ Neuropils
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.scheduleRebuild">
  <summary>请求一次防抖之后的重建 (滑块 / 勾选频繁触发时使用)。</summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.refreshLegend">
- <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.showGradient">
- <summary>画出当前配色方案的色标 (热力图维度)。</summary>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.pickAt(System.Int32,System.Int32)">
  <summary>在画布的给定位置拾取神经元，并在详情面板里显示它的注释。</summary>

@@ -1,6 +1,8 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿Imports Galaxy.Workbench.DockDocument
+
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormNeuronMap
-    Inherits System.Windows.Forms.Form
+    Inherits ToolWindow
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()> _
@@ -321,10 +323,10 @@ Partial Class FormNeuronMap
 
     Private WithEvents sidebarPanel As TableLayoutPanel
     Private WithEvents legendLabel As Label
-    Private WithEvents m_gradient As PictureBox
+    Friend WithEvents m_gradient As PictureBox
     Private WithEvents m_legend As CheckedListBox
     Private WithEvents infoLabel As Label
-    Private WithEvents m_details As TextBox
+    Friend WithEvents m_details As TextBox
     Private WithEvents replayLabel As Label
     Friend WithEvents m_replayPanel As TableLayoutPanel
     Private WithEvents replayButtonsPanel As FlowLayoutPanel

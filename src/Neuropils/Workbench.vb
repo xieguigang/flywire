@@ -16,6 +16,8 @@ Module Workbench
     Friend m_config As New VisualizationConfig
     Friend m_experiment As StimulationExperiment
     Friend m_snake As Snake
+    Friend m_colorizer As NeuronColorizer
+
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
     Friend flywire As PageFlywireCanvas

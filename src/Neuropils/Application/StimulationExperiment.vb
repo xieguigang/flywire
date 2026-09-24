@@ -5,6 +5,7 @@ Imports System.Threading
 Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
+Imports Microsoft.VisualBasic.Imaging.Drawing3D
 Imports Neuropils.Data
 Imports Neuropils.Rendering
 Imports Neuropils.Simulation
@@ -363,7 +364,7 @@ Namespace AppLogics
                 m_dataset.Activity = replay.Counts
                 m_dataset.ActivitySource = $"电刺激 #{replay.Neuron} (强度 {replay.Strength:F2})"
 
-                If main.m_colorizer IsNot Nothing AndAlso main.m_colorizer.Dimension = NeuronColorDimension.Activity Then
+                If m_colorizer IsNot Nothing AndAlso m_colorizer.Dimension = NeuronColorDimension.Activity Then
                     Call main.rebuildColorizer(NeuronColorDimension.Activity, resetUi:=True)
                     Call main.rebuildScene()
                 End If
@@ -435,10 +436,11 @@ Namespace AppLogics
                 End If
             Next
 
+            Dim map = main.m_map
             Dim active As Integer = If(m_replay.ActivePerStep IsNot Nothing AndAlso m_replayStep < m_replay.ActivePerStep.Length,
                                    m_replay.ActivePerStep(m_replayStep), 0)
 
-            main.m_replayText.Text = $"步 {m_replayStep + 1}/{m_replay.Steps} · 活跃 {active:N0} · 累积 {cumulative:N0} / 总 {m_replay.TotalSpikes:N0}"
+            map.m_replayText.Text = $"步 {m_replayStep + 1}/{m_replay.Steps} · 活跃 {active:N0} · 累积 {cumulative:N0} / 总 {m_replay.TotalSpikes:N0}"
 
             Call updateReplayPanel()
         End Sub
@@ -446,32 +448,33 @@ Namespace AppLogics
         ''' <summary>刷新回放面板的可用状态与进度条位置。</summary>
         Private Sub updateReplayPanel()
             Dim hasReplay As Boolean = m_replay IsNot Nothing
+            Dim map = main.m_map
 
-            main.m_replayTrack.Enabled = hasReplay
-            main.m_replayFirst.Enabled = hasReplay
-            main.m_replayPrev.Enabled = hasReplay
-            main.m_replayNext.Enabled = hasReplay
-            main.m_replayLast.Enabled = hasReplay
-            main.m_replayPlay.Enabled = hasReplay
-            main.m_replayClear.Enabled = hasReplay
-            main.m_replaySpeed.Enabled = hasReplay
+            map.m_replayTrack.Enabled = hasReplay
+            map.m_replayFirst.Enabled = hasReplay
+            map.m_replayPrev.Enabled = hasReplay
+            map.m_replayNext.Enabled = hasReplay
+            map.m_replayLast.Enabled = hasReplay
+            map.m_replayPlay.Enabled = hasReplay
+            map.m_replayClear.Enabled = hasReplay
+            map.m_replaySpeed.Enabled = hasReplay
 
             If Not hasReplay Then
-                main.m_replayText.Text = If(RibbonMenu.ToggleSimulationExperiment,
+                map.m_replayText.Text = If(RibbonMenu.ToggleSimulationExperiment,
                                    "在神经元上按住左键并松开即可施加电刺激",
                                    "勾选工具条上的「电刺激模式」后可用")
-                main.m_replayTrack.Maximum = 0
+                map.m_replayTrack.Maximum = 0
 
                 Return
             End If
 
-            main.m_replayTrack.Maximum = System.Math.Max(1, m_replay.Steps - 1)
+            map.m_replayTrack.Maximum = System.Math.Max(1, m_replay.Steps - 1)
 
             If m_replayStep >= 0 Then
-                main.m_replayTrack.Value = System.Math.Min(m_replayStep, main.m_replayTrack.Maximum)
+                map.m_replayTrack.Value = System.Math.Min(m_replayStep, map.m_replayTrack.Maximum)
             End If
 
-            main.m_replayPlay.Text = If(m_replayPlaying, "暂停", "播放")
+            map.m_replayPlay.Text = If(m_replayPlaying, "暂停", "播放")
         End Sub
 
         Friend Sub onReplayPlay(sender As Object, e As EventArgs)
@@ -481,6 +484,8 @@ Namespace AppLogics
                 m_replayPlaying = False
                 m_replayTimer.Stop()
             Else
+                Dim map = main.m_map
+
                 ' 已经停在最后一帧时，从第一步重新播
                 If m_replayStep >= m_replay.Steps - 1 Then
                     m_replayStep = 0
@@ -488,7 +493,7 @@ Namespace AppLogics
                 End If
 
                 m_replayPlaying = True
-                m_replayTimer.Interval = CInt(System.Math.Max(20, main.m_replaySpeed.Value))
+                m_replayTimer.Interval = CInt(System.Math.Max(20, map.m_replaySpeed.Value))
                 m_replayTimer.Start()
             End If
 
@@ -496,13 +501,13 @@ Namespace AppLogics
         End Sub
 
         Friend Sub onReplaySpeedChanged(sender As Object, e As EventArgs)
-            m_replayTimer.Interval = CInt(System.Math.Max(20, main.m_replaySpeed.Value))
+            m_replayTimer.Interval = CInt(System.Math.Max(20, main.m_map.m_replaySpeed.Value))
         End Sub
 
         Friend Sub onReplayTrackScroll(sender As Object, e As EventArgs)
             If m_replay Is Nothing Then Return
 
-            m_replayStep = main.m_replayTrack.Value
+            m_replayStep = main.m_map.m_replayTrack.Value
             Call updateReplayFrame()
         End Sub
 
@@ -537,7 +542,7 @@ Namespace AppLogics
         Friend Sub onReplayClear(sender As Object, e As EventArgs)
             Call stopReplay(clearHighlight:=True)
 
-            main.m_replayText.Text = "已清除回放高亮"
+            main.m_map.m_replayText.Text = "已清除回放高亮"
         End Sub
 
         ''' <summary>停止回放（可选把点云恢复成未高亮状态）。</summary>
@@ -569,8 +574,8 @@ Namespace AppLogics
             Dim color As Color = Color.FromArgb(34, 211, 238)
 
             For axis As Integer = 0 To 2
-                Dim a As New Microsoft.VisualBasic.Imaging.Drawing3D.Point3D(position.X, position.Y, position.Z)
-                Dim b As New Microsoft.VisualBasic.Imaging.Drawing3D.Point3D(position.X, position.Y, position.Z)
+                Dim a As New Point3D(position.X, position.Y, position.Z)
+                Dim b As New Point3D(position.X, position.Y, position.Z)
 
                 Select Case axis
                     Case 0
@@ -728,7 +733,7 @@ Namespace AppLogics
 
                         Call Console.Out.WriteLine($"stimulation: {replay.Describe()}")
                         Call Console.Out.WriteLine($"replay highlight mode: heatMap={ main.isHeatMap()}, " &
-                                                   $"dimension={If(main.m_colorizer Is Nothing, "none", main.m_colorizer.Dimension.ToString)}, " &
+                                                   $"dimension={If(m_colorizer Is Nothing, "none", m_colorizer.Dimension.ToString)}, " &
                                                    $"embeddedColor={ main.m_canvas.UseEmbeddedColor}")
                         Call Console.Out.WriteLine($"rendering replay step {m_replayStep + 1}/{replay.Steps}, " &
                                                    $"active {replay.ActivePerStep(m_replayStep):N0}, " &

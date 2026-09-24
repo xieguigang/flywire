@@ -3,11 +3,9 @@ Imports System.Text
 Imports System.Threading
 Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
-Imports Microsoft.VisualBasic.Drawing
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging
-Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
 Imports Microsoft.VisualBasic.Imaging.Drawing3D
 Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.AppLogics
@@ -31,13 +29,14 @@ Imports Neuropils.Rendering
 ''' </remarks>
 Public Class PageFlywireCanvas
 
-
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
 
-    ''' <summary>状态栏链接的悬停提示。</summary>
-    Private ReadOnly m_chartTip As New ToolTip()
+    ''' <summary>
+    ''' 状态栏链接的悬停提示。
+    ''' </summary>
+    Friend ReadOnly m_chartTip As New ToolTip
+    Friend m_map As New FormNeuronMap
 
-    Friend m_colorizer As NeuronColorizer
     Friend m_scene As BrainScene
     Friend m_lookup As Integer()
     Friend m_focusNeuron As Integer = -1
@@ -63,15 +62,14 @@ Public Class PageFlywireCanvas
     Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_experiment = New StimulationExperiment(Me)
 
-
-
-
         ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
         ' 这部分是运行时逻辑，保留在 initializeUi
         m_snake = New Snake(Me)
         ' m_chartTip.SetToolTip(m_chartLink, "")
         ' m_chartTip.SetToolTip(m_snakeLink, "")
+        m_map = New FormNeuronMap With {.Name = "neuron_map"}
 
+        Call CommonRuntime.RegisterToolWindow(m_map, DockState.DockRight)
 
         Call m_experiment.initializeStimulation()
 
@@ -232,11 +230,8 @@ Public Class PageFlywireCanvas
 
         Dim loader As New BrainDatasetLoader(m_config)
 
-        Task.Run(
-            Function() As BrainDataset
-                ' 进度回调来自后台线程，切回 UI 线程再更新状态栏
-                Return loader.Load(AddressOf onLoadProgress, tokenSource.Token)
-            End Function) _
+        ' 进度回调来自后台线程，切回 UI 线程再更新状态栏
+        Task.Run(Function() loader.Load(AddressOf onLoadProgress, tokenSource.Token)) _
             .ContinueWith(AddressOf onLoadCompleted, TaskScheduler.FromCurrentSynchronizationContext())
     End Sub
 
@@ -346,14 +341,14 @@ Public Class PageFlywireCanvas
             ' 热力图用渲染管线的调色板纹理，点云改走 Intensity 通道
             m_canvas.UseEmbeddedColor = False
             m_canvas.ColorScheme = "viridis"
-            Call showGradient()
+            Call m_map.showGradient()
         Else
             m_canvas.UseEmbeddedColor = True
-            m_gradient.Visible = False
+            m_map.m_gradient.Visible = False
         End If
 
         If resetUi Then
-            Call refreshLegend()
+            Call m_map.refreshLegend()
         End If
     End Sub
 
@@ -622,7 +617,7 @@ Public Class PageFlywireCanvas
         Dim hit As SceneHitTest = m_canvas.HitTest(x, y, radius:=8)
 
         If Not hit.HasHit Then
-            m_details.Text = "(此处没有神经元)" & Environment.NewLine & Environment.NewLine &
+            m_map.m_details.Text = "(此处没有神经元)" & Environment.NewLine & Environment.NewLine &
                              "提示: 左键拖动旋转，右键拖动平移，滚轮缩放；" & Environment.NewLine &
                              "点大小可以在工具条上调大，便于点中密集区域的神经元。"
 
@@ -656,7 +651,7 @@ Public Class PageFlywireCanvas
                 Call text.AppendLine($"后神经元: {m_dataset.Index.GetRootId(m_dataset.Post(hit.Index))}")
             End If
 
-            m_details.Text = text.ToString()
+            m_map.m_details.Text = text.ToString()
         End If
     End Sub
 
@@ -711,7 +706,7 @@ Public Class PageFlywireCanvas
         Call text.AppendLine($"output           : {stats.OutCount} partners, {stats.OutSynapses:N0} synapses")
         Call text.AppendLine($"input            : {stats.InCount} partners, {stats.InSynapses:N0} synapses")
 
-        m_details.Text = text.ToString()
+        m_map.m_details.Text = text.ToString()
     End Sub
 
     ''' <summary>
