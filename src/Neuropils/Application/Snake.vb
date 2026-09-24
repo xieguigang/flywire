@@ -41,13 +41,6 @@ Namespace AppLogics
             Me.main = main
         End Sub
 
-        ''' <summary>
-        ''' 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
-        ''' </summary>
-        Public Sub onOpenSnakeWindow(sender As Object, e As LinkLabelLinkClickedEventArgs)
-            Call openSnakeWindow()
-        End Sub
-
         ''' <summary>打开观战窗口（链接与命令行自检共用）。</summary>
         Public Sub openSnakeWindow()
             If main.m_dataset Is Nothing Then Return
