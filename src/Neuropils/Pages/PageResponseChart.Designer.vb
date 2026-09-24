@@ -357,13 +357,13 @@ Partial Class PageResponseChart
         m_canvas.Dock = DockStyle.Fill
         m_canvas.Location = New Point(0, 0)
         m_canvas.Name = "m_canvas"
-        m_canvas.Size = New Size(901, 764)
+        m_canvas.Size = New Size(901, 742)
         m_canvas.TabIndex = 0
         ' 
         ' Panel1
         ' 
-        Panel1.Controls.Add(StatusStrip1)
         Panel1.Controls.Add(m_canvas)
+        Panel1.Controls.Add(StatusStrip1)
         Panel1.Dock = DockStyle.Fill
         Panel1.Location = New Point(0, 0)
         Panel1.Name = "Panel1"
