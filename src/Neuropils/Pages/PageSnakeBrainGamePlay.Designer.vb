@@ -286,6 +286,7 @@ Partial Class PageSnakeBrainGamePlay
         ' AutoScaleDimensions = New SizeF(96.0F, 96.0F)
         BackColor = Color.Black
         ClientSize = New Size(1181, 663)
+        Size = New Size(1181, 663)
         Controls.Add(SplitContainer1)
         ' DockState = Microsoft.VisualStudio.WinForms.Docking.DockState.Float
         '  DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
