@@ -117,7 +117,7 @@ Namespace Data
         ''' 每个神经元的三维坐标：``coordinates.csv`` 对同一个神经元可能有多条标记位置，
         ''' 这里取它们的算术平均 (并记录标记条数)。
         ''' </summary>
-        ''' <summary>转储包里的坐标记录 → 每神经元一个平均位置。</summary>
+        ''' <remarks>转储包里的坐标记录 → 每神经元一个平均位置。</remarks>>
         Private Shared Sub applyPositions(dataset As BrainDataset, rows As List(Of Coordinates), progress As Action(Of String))
             Dim units As Integer = dataset.Units
             Dim index As ConnectomeIndex = dataset.Index

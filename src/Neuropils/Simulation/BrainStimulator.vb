@@ -99,13 +99,17 @@ Namespace Simulation
 
                 ThrowIfCancelled(cancel)
 
-                ' 2) 连接表 -> 稀疏三元组 -> CSR。索引直接复用可视化已经建好的那一份，
-                '    避免把 13 万个 root_id 的映射表再建一遍。
-                Call report(reporter, $"building the connectome from {m_config.ConnectionsCsv} ...")
+                ' 2) 连接 -> 稀疏三元组 -> CSR。连接列直接复用数据集里已经解析好的那一份
+                '    (来自 msgpack 转储包，且已经按索引解析/过滤)，这里不再读任何 csv。
+                Call report(reporter, "building the connectome from the loaded connection table ...")
 
-                Dim triplets As SynapseTriplets = SynapseTriplets.Build(
+                Dim triplets As SynapseTriplets = SynapseTriplets.BuildFromIndices(
                     m_dataset.Index,
-                    m_config.ResolvePath(m_config.ConnectionsCsv),
+                    m_dataset.Pre,
+                    m_dataset.Post,
+                    m_dataset.SynCount.Select(Function(x) CDbl(x)).ToArray,
+                    m_dataset.ConnectionNtType,
+                    m_dataset.ConnectionNeurotransmitters,
                     m_config.ExcitatoryGain,
                     m_config.InhibitoryGain)
 

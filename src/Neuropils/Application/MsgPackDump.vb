@@ -1,5 +1,6 @@
 Imports System.IO
 Imports System.Text
+Imports FlywireAI.Connectome
 Imports FlywireAI.FAFBv783
 Imports Neuropils.Data
 
@@ -63,7 +64,7 @@ Namespace AppLogics
                 End If
 
                 If verify Then
-                    Call verifyAgainstCsv(report, failures, config, zipFile)
+                    Call verifyPackContents(report, failures, config, zipFile)
                 End If
             Catch ex As Exception
                 Call report.AppendLine()
@@ -97,53 +98,96 @@ Namespace AppLogics
             Call Environment.Exit(If(failures = 0, 0, 1))
         End Sub
 
-        ''' <summary>两条加载路径各跑一遍并逐项比对。</summary>
-        Private Sub verifyAgainstCsv(report As StringBuilder, ByRef failures As Integer,
-                                     config As VisualizationConfig, zipFile As String)
+        ''' <summary>
+        ''' 校验转储包："包里的行数 = 清单声明的行数"，并真的用它装配一遍数据集。
+        ''' </summary>
+        ''' <remarks>
+        ''' 数据源改成只有 msgpack 之后，这里<b>没有 csv 路径可比对</b>了；
+        ''' 能校验的是两件事：① 清单里声明的行数与包里实际数组长度一致；
+        ''' ② 用这份包真的能装配出一个规模正确、端点全部可解析的数据集。
+        ''' 字节级的往返一致性由 src/test 的第 11 节负责。
+        ''' </remarks>
+        Private Sub verifyPackContents(report As StringBuilder, ByRef failures As Integer,
+                                       config As VisualizationConfig, zipFile As String)
             Dim echo As Action(Of String) = Sub(message) Call report.AppendLine($"      {message}")
 
-            Call report.AppendLine("      ---- 从 msgpack 转储包加载 ----")
+            ' 1) 包里的行数 == 清单里声明的行数
+            Dim rows As New Dictionary(Of String, Integer)(StringComparer.OrdinalIgnoreCase)
 
-            Dim packClock As Stopwatch = Stopwatch.StartNew()
-            Dim fromPack As BrainDataset = New BrainDatasetLoader(config) With {
-                .PreferMsgPack = True,
-                .PackFile = zipFile
-            }.Load(echo)
+            Using reader As FafbPackReader = FafbMsgPackStorage.Open(zipFile)
+                If reader.Manifest Is Nothing OrElse reader.Manifest.Sources Is Nothing Then
+                    Call check(report, failures, "转储包里有清单", False, True)
 
-            packClock.Stop()
+                    Return
+                End If
 
-            Call report.AppendLine("      ---- 从 csv 加载 ----")
+                For Each source As FafbPackSource In reader.Manifest.Sources
+                    Dim actual As Integer = 0
 
-            Dim csvClock As Stopwatch = Stopwatch.StartNew()
-            Dim fromCsv As BrainDataset = New BrainDatasetLoader(config) With {
-                .PreferMsgPack = False
-            }.Load(echo)
+                    Select Case source.Key
+                        Case FafbMsgPackStorage.KeyNames
+                            actual = packRows(Of CellNamesPack)(reader, source.Key, source)
+                        Case FafbMsgPackStorage.KeyClassification
+                            actual = packRows(Of ClassificationPack)(reader, source.Key, source)
+                        Case FafbMsgPackStorage.KeyCellTypes
+                            actual = packRows(Of CellTypesPack)(reader, source.Key, source)
+                        Case FafbMsgPackStorage.KeyNeurons
+                            actual = packRows(Of NeuronsPack)(reader, source.Key, source)
+                        Case FafbMsgPackStorage.KeyCoordinates
+                            actual = packRows(Of CoordinatesPack)(reader, source.Key, source)
+                        Case FafbMsgPackStorage.KeyNeuropil
+                            Dim pack As NeuropilTablePack = reader.Read(Of NeuropilTablePack)(source.Key)
 
-            csvClock.Stop()
+                            actual = If(pack Is Nothing, 0, pack.RowCount)
+                        Case FafbMsgPackStorage.KeyConnections
+                            Dim pack As ConnectionsPack = reader.Read(Of ConnectionsPack)(source.Key)
 
-            Call report.AppendLine()
-            Call report.AppendLine($"      msgpack: {packClock.ElapsedMilliseconds} ms")
-            Call report.AppendLine($"      csv    : {csvClock.ElapsedMilliseconds} ms")
-            Call report.AppendLine()
+                            actual = If(pack Is Nothing, 0, pack.RowCount)
+                    End Select
 
-            Call check(report, failures, "神经元数量一致", fromPack.Units, fromCsv.Units)
-            Call check(report, failures, "连接条数一致", fromPack.ConnectionCount, fromCsv.ConnectionCount)
+                    rows(source.Key) = actual
+                    Call check(report, failures, $"[{source.Key}] 行数与清单一致", actual, source.Rows)
+                Next
+            End Using
 
-            Call compare(report, failures, "坐标", fromPack.Positions, fromCsv.Positions)
-            Call compare(report, failures, "坐标标记数", fromPack.PositionMarks, fromCsv.PositionMarks)
-            Call compare(report, failures, "主导脑区", fromPack.Neuropil, fromCsv.Neuropil)
-            Call compare(report, failures, "主导脑区突触数", fromPack.NeuropilSynapses, fromCsv.NeuropilSynapses)
-            Call compare(report, failures, "突触前", fromPack.Pre, fromCsv.Pre)
-            Call compare(report, failures, "突触后", fromPack.Post, fromCsv.Post)
-            Call compare(report, failures, "突触数", fromPack.SynCount, fromCsv.SynCount)
-            Call compare(report, failures, "连接脑区", fromPack.ConnectionNeuropil, fromCsv.ConnectionNeuropil)
-            Call compare(report, failures, "连接递质", fromPack.ConnectionNtType, fromCsv.ConnectionNtType)
+            ' 2) 真的用它装配一遍数据集
+            Call report.AppendLine("      ---- 用转储包装配数据集 ----")
 
-            Call compare(report, failures, "脑区名表", fromPack.NeuropilNames, fromCsv.NeuropilNames)
-            Call compare(report, failures, "递质类型", fromPack.Neurotransmitters, fromCsv.Neurotransmitters)
-            Call compare(report, failures, "连接脑区名表", fromPack.ConnectionNeuropils, fromCsv.ConnectionNeuropils)
-            Call compare(report, failures, "连接递质名表", fromPack.ConnectionNeurotransmitters, fromCsv.ConnectionNeurotransmitters)
+            Dim loader As New BrainDatasetLoader(config) With {.PackFile = zipFile}
+            Dim dataset As BrainDataset = loader.Load(echo)
+
+            Call check(report, failures, "神经元数量 == names 行数", dataset.Units, rows(FafbMsgPackStorage.KeyNames))
+            Call check(report, failures, "连接条数 == connections 行数", dataset.ConnectionCount, rows(FafbMsgPackStorage.KeyConnections))
+            Call check(report, failures, "全部端点都在索引里", connectionsResolved(dataset), True)
         End Sub
+
+        Private Function packRows(Of T As Class)(reader As FafbPackReader, key As String, source As FafbPackSource) As Integer
+            Dim pack As T = reader.Read(Of T)(key)
+
+            If pack Is Nothing Then
+                Return 0
+            End If
+
+            Dim propertyInfo As Reflection.PropertyInfo = pack.GetType().GetProperty("RootId")
+
+            If propertyInfo Is Nothing Then Return 0
+
+            Dim rootId As Array = TryCast(propertyInfo.GetValue(pack), Array)
+
+            Return If(rootId Is Nothing, 0, rootId.Length)
+        End Function
+
+        ''' <summary>所有连接条目的端点都能在索引里解析出来 (没有因为 root_id 不认识而被跳过的行)。</summary>
+        Private Function connectionsResolved(dataset As BrainDataset) As Boolean
+            Dim index As ConnectomeIndex = dataset.Index
+
+            For i As Integer = 0 To dataset.ConnectionCount - 1
+                If dataset.Pre(i) < 0 OrElse dataset.Pre(i) >= index.Size Then Return False
+                If dataset.Post(i) < 0 OrElse dataset.Post(i) >= index.Size Then Return False
+            Next
+
+            Return True
+        End Function
 
 #Region "比对工具"
 
@@ -154,79 +198,6 @@ Namespace AppLogics
 
             Call report.AppendLine($"      [{(If(ok, "OK", "FAIL"))}] {name}: actual={actual}, expected={expected}")
         End Sub
-
-        Private Sub compare(report As StringBuilder, ByRef failures As Integer, name As String, a As Integer(), b As Integer())
-            Dim diff As Integer = countDiff(a, b)
-
-            If diff > 0 Then failures += 1
-
-            Call report.AppendLine($"      [{(If(diff = 0, "OK", "FAIL"))}] {name}: {diff} 处不一致 " &
-                                   $"(长度 {length(a)} vs {length(b)})")
-        End Sub
-
-        Private Sub compare(report As StringBuilder, ByRef failures As Integer, name As String, a As Double(), b As Double())
-            Dim diff As Integer = countDiff(a, b)
-
-            If diff > 0 Then failures += 1
-
-            Call report.AppendLine($"      [{(If(diff = 0, "OK", "FAIL"))}] {name}: {diff} 处不一致 " &
-                                   $"(长度 {length(a)} vs {length(b)})")
-        End Sub
-
-        Private Sub compare(report As StringBuilder, ByRef failures As Integer, name As String, a As String(), b As String())
-            Dim diff As Integer = 0
-            Dim count As Integer = Math.Max(length(a), length(b))
-
-            For i As Integer = 0 To count - 1
-                If Not String.Equals(item(a, i), item(b, i), StringComparison.Ordinal) Then
-                    diff += 1
-                End If
-            Next
-
-            If diff > 0 Then failures += 1
-
-            Call report.AppendLine($"      [{(If(diff = 0, "OK", "FAIL"))}] {name}: {diff} 处不一致 " &
-                                   $"(长度 {length(a)} vs {length(b)})")
-        End Sub
-
-        Private Function countDiff(a As Integer(), b As Integer()) As Integer
-            Dim diff As Integer = 0
-            Dim count As Integer = Math.Min(length(a), length(b))
-
-            For i As Integer = 0 To count - 1
-                If a(i) <> b(i) Then diff += 1
-            Next
-
-            ' 长度不同本身就是不一致
-            diff += Math.Abs(length(a) - length(b))
-
-            Return diff
-        End Function
-
-        Private Function countDiff(a As Double(), b As Double()) As Integer
-            Dim diff As Integer = 0
-            Dim count As Integer = Math.Min(length(a), length(b))
-
-            For i As Integer = 0 To count - 1
-                ' NaN 与 NaN 视为相等（没有坐标的神经元两侧都是 NaN）
-                If Double.IsNaN(a(i)) AndAlso Double.IsNaN(b(i)) Then Continue For
-                If a(i) <> b(i) Then diff += 1
-            Next
-
-            diff += Math.Abs(length(a) - length(b))
-
-            Return diff
-        End Function
-
-        Private Function length(a As Array) As Integer
-            Return If(a Is Nothing, 0, a.Length)
-        End Function
-
-        Private Function item(a As String(), i As Integer) As String
-            If a Is Nothing OrElse i < 0 OrElse i >= a.Length Then Return Nothing
-
-            Return a(i)
-        End Function
 
 #End Region
 

@@ -184,38 +184,69 @@ Public Class SnakePlayground
     ''' </summary>
     ''' <param name="config">SNN 配置（提供数据文件路径、增益标定参数、后端开关）</param>
     ''' <param name="reporter">进度回调</param>
-    Public Shared Function Create(config As SnnConfig, Optional reporter As Action(Of String) = Nothing) As SnakePlayground
+    ''' <param name="pack">
+    ''' msgpack 转储包（<see cref="FafbMsgPackStorage"/>）：给了它就<b>只从包里取数</b>，
+    ''' 不再读任何 csv。调用方负责打开与关闭（本函数不接管它的生命周期）。
+    ''' </param>
+    Public Shared Function Create(config As SnnConfig,
+                                  Optional reporter As Action(Of String) = Nothing,
+                                  Optional pack As FafbPackReader = Nothing) As SnakePlayground
         If config Is Nothing Then Throw New ArgumentNullException(NameOf(config))
 
         Dim timer As Stopwatch = Stopwatch.StartNew()
 
-        ' 1) 神经元索引：names.csv 给出全脑神经元，再叠加连接表里出现的神经元
-        Call report(reporter, $"loading cell names from {config.NamesCsv} ...")
+        ' 1) 神经元索引：主索引来自 names（转储包或 csv），再叠加连接表里出现的神经元
+        Dim names As List(Of CellNames)
 
-        Dim names As List(Of CellNames) = config.ResolvePath(config.NamesCsv).LoadCellNames()
+        If pack IsNot Nothing Then
+            Call report(reporter, $"loading cell names from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyNames)} ...")
+
+            names = readColumn(pack, FafbMsgPackStorage.KeyNames).ToRecords()
+        Else
+            Call report(reporter, $"loading cell names from {config.NamesCsv} ...")
+
+            names = config.ResolvePath(config.NamesCsv).LoadCellNames()
+        End If
+
         Dim index As New ConnectomeIndex()
 
         For Each cell As CellNames In names
             Call index.Add(cell.RootId)
         Next
 
-        ' 2) 连接三元组 → CSR（连接表的端点全部在 names.csv 内，因此索引可以安全共享）
-        Call report(reporter, $"building the connectome from {config.ConnectionsCsv} ...")
+        ' 2) 连接三元组 → CSR（连接表的端点全部在主索引内，因此索引可以安全共享）
+        Dim triplets As SynapseTriplets
 
-        Dim triplets As SynapseTriplets = SynapseTriplets.Build(
-            index,
-            config.ResolvePath(config.ConnectionsCsv),
-            config.ExcitatoryGain,
-            config.InhibitoryGain)
+        If pack IsNot Nothing Then
+            Call report(reporter, $"building the connectome from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyConnections)} ...")
+
+            triplets = SynapseTriplets.Build(
+                index,
+                column(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPre)).Values,
+                column(Of LongColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPost)).Values,
+                column(Of DoubleColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnSynapses)).Values,
+                column(Of IntegerColumnPack)(pack, FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnNt)).Values,
+                columnNtNames(pack),
+                config.ExcitatoryGain,
+                config.InhibitoryGain)
+        Else
+            Call report(reporter, $"building the connectome from {config.ConnectionsCsv} ...")
+
+            triplets = SynapseTriplets.Build(
+                index,
+                config.ResolvePath(config.ConnectionsCsv),
+                config.ExcitatoryGain,
+                config.InhibitoryGain)
+        End If
 
         Call index.Freeze()
 
         ' 3) 注释（其中 classification 的 flow 列决定"感觉输入 / 运动输出"这两组神经元）
         Call index.AttachAnnotations(
             names,
-            config.ResolvePath(config.ClassificationCsv).LoadClassification(),
-            config.ResolvePath(config.CellTypesCsv).LoadCellTypes(),
-            config.ResolvePath(config.NeuronsCsv).LoadNeurons())
+            packAnnotations(pack, FafbMsgPackStorage.KeyClassification),
+            packAnnotations(pack, FafbMsgPackStorage.KeyCellTypes),
+            packNeurons(pack))
 
         Dim matrix As ConnectomeMatrix = BrainNetworkBuilder.BuildMatrix(triplets, reporter)
 
