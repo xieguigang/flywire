@@ -33,8 +33,10 @@
 #define cmdButtonMakeScreenshot 8 
 #define cmdButtonMakeScreenshot_LabelTitle_RESID 60020
 #define cmdButtonMakeScreenshot_TooltipDescription_RESID 60021
-#define InternalCmd2_LabelTitle_RESID 60022
-#define InternalCmd6_LabelTitle_RESID 60023
-#define InternalCmd8_LabelTitle_RESID 60024
-#define InternalCmd10_LabelTitle_RESID 60025
-#define InternalCmd12_LabelTitle_RESID 60026
+#define cmdButtonOpenCanvas 9 
+#define cmdButtonOpenCanvas_LabelTitle_RESID 60022
+#define InternalCmd2_LabelTitle_RESID 60023
+#define InternalCmd6_LabelTitle_RESID 60024
+#define InternalCmd8_LabelTitle_RESID 60025
+#define InternalCmd10_LabelTitle_RESID 60026
+#define InternalCmd12_LabelTitle_RESID 60027

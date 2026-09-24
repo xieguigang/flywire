@@ -1,5 +1,6 @@
 ﻿Imports System.Runtime.CompilerServices
 Imports System.Text
+Imports Galaxy.Workbench
 Imports Neuropils.AppLogics
 Imports Neuropils.Data
 
@@ -11,10 +12,11 @@ Module Workbench
     Public Const DefaultDataDir As String = "F:\flywire\FAFB-v783"
 
     Friend m_dataset As BrainDataset
-    Friend flywire As PageFlywireCanvas
-    Friend m_config As New VisualizationConfig()
+    Friend m_config As New VisualizationConfig
     Friend m_experiment As StimulationExperiment
     Friend m_snake As Snake
+
+    Friend flywire As PageFlywireCanvas
 
     Public ReadOnly Property progress As ToolStripProgressBar
 
@@ -23,6 +25,8 @@ Module Workbench
     Public Sub Load(main As FormMain)
         _main = main
         _progress = main.m_progress
+
+        flywire = CommonRuntime.ShowSingleDocument(Of PageFlywireCanvas)()
 
         Call SceneText("")
     End Sub

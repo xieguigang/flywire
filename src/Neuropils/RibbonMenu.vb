@@ -27,6 +27,7 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonResetView.ExecuteEvent, Sub() Call Workbench.flywire.m_canvas.ResetView()
         AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
         AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
+        AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, Sub() Workbench.flywire.DockState = DockState.Document
     End Sub
 
     ''' <summary>

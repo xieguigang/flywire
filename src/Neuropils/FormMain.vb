@@ -29,10 +29,9 @@ Public Class FormMain : Implements AppHost
             StatusStrip1.BackColor = DockPanel1.Theme.ColorPalette.MainWindowStatusBarDefault.Background
         End If
 
-        Call RibbonMenu.Load(Ribbon1)
-        Call Workbench.Load(Me)
         Call CommonRuntime.Hook(Me)
-        Call CommonRuntime.ShowSingleDocument(Of PageFlywireCanvas)()
+        Call Workbench.Load(Me)
+        Call RibbonMenu.Load(Ribbon1)
     End Sub
 
     Public Sub SetWorkbenchVisible(visible As Boolean) Implements AppHost.SetWorkbenchVisible

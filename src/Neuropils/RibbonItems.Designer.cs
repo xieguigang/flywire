@@ -21,6 +21,7 @@ namespace RibbonLib.Controls
             public const uint cmdButtonAbout = 2;
             public const uint cmdButtonOpenModelDir = 7;
             public const uint cmdButtonMakeScreenshot = 8;
+            public const uint cmdButtonOpenCanvas = 9;
             public const uint cmdButtonOpenResponseCharts = 3;
             public const uint cmdButtonOpenSnakeGame = 4;
             public const uint cmdToggleSimulationExperiment = 5;
@@ -33,6 +34,7 @@ namespace RibbonLib.Controls
         public RibbonButton ButtonAbout { get; private set; }
         public RibbonButton ButtonOpenModelDir { get; private set; }
         public RibbonButton ButtonMakeScreenshot { get; private set; }
+        public RibbonButton ButtonOpenCanvas { get; private set; }
         public RibbonButton ButtonOpenResponseCharts { get; private set; }
         public RibbonButton ButtonOpenSnakeGame { get; private set; }
         public RibbonToggleButton ToggleSimulationExperiment { get; private set; }
@@ -46,6 +48,7 @@ namespace RibbonLib.Controls
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
             ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);
             ButtonMakeScreenshot = new RibbonButton(ribbon, Cmd.cmdButtonMakeScreenshot);
+            ButtonOpenCanvas = new RibbonButton(ribbon, Cmd.cmdButtonOpenCanvas);
             ButtonOpenResponseCharts = new RibbonButton(ribbon, Cmd.cmdButtonOpenResponseCharts);
             ButtonOpenSnakeGame = new RibbonButton(ribbon, Cmd.cmdButtonOpenSnakeGame);
             ToggleSimulationExperiment = new RibbonToggleButton(ribbon, Cmd.cmdToggleSimulationExperiment);

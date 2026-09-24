@@ -31,6 +31,10 @@
       <Ribbon.Tabs>
         <Tab>
           <Group>
+            <Button CommandName="cmdButtonOpenModelDir" />
+            <Button CommandName="cmdButtonMakeScreenshot" />
+          </Group>
+          <Group>
             <Button CommandName="cmdButtonOpenResponseCharts" />
             <Button CommandName="cmdButtonOpenSnakeGame" />
             <ToggleButton CommandName="cmdToggleSimulationExperiment" />

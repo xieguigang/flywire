@@ -931,6 +931,11 @@ Public Class PageFlywireCanvas
         Return (outCount, outSynapses, inCount, inSynapses)
     End Function
 
+    Private Sub PageFlywireCanvas_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        e.Cancel = True
+        DockState = DockState.Hidden
+    End Sub
+
 #End Region
 
 End Class

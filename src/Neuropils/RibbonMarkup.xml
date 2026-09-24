@@ -15,6 +15,7 @@
     <Command Name="cmdButtonResetView" Id="6" LabelTitle="Reset View" LabelDescription="重置视角 (&amp;R)" TooltipDescription="菜单「视图 → 重置视角」：把三维画布恢复到默认视角。" />
     <Command Name="cmdButtonOpenModelDir" Id="7" LabelTitle="Open Model" LabelDescription="打开数据目录 (&amp;O)..." TooltipDescription="打开数据目录 (&amp;O)..." />
     <Command Name="cmdButtonMakeScreenshot" Id="8" LabelTitle="Screenshot" TooltipDescription="保存截图 (&amp;S)..." />
+    <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>
@@ -33,6 +34,7 @@
           <Group>
             <Button CommandName="cmdButtonOpenModelDir" />
             <Button CommandName="cmdButtonMakeScreenshot" />
+            <Button CommandName="cmdButtonOpenCanvas" />
           </Group>
           <Group>
             <Button CommandName="cmdButtonOpenResponseCharts" />

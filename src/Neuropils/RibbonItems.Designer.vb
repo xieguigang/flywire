@@ -18,6 +18,7 @@ Namespace RibbonLib.Controls
             Public Const cmdButtonAbout As UInteger = 2
             Public Const cmdButtonOpenModelDir As UInteger = 7
             Public Const cmdButtonMakeScreenshot As UInteger = 8
+            Public Const cmdButtonOpenCanvas As UInteger = 9
             Public Const cmdButtonOpenResponseCharts As UInteger = 3
             Public Const cmdButtonOpenSnakeGame As UInteger = 4
             Public Const cmdToggleSimulationExperiment As UInteger = 5
@@ -48,6 +49,12 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property ButtonMakeScreenshot As RibbonButton
             Get
                 Return _ButtonMakeScreenshot
+            End Get
+        End Property
+        Private _ButtonOpenCanvas As RibbonButton
+        Public ReadOnly Property ButtonOpenCanvas As RibbonButton
+            Get
+                Return _ButtonOpenCanvas
             End Get
         End Property
         Private _ButtonOpenResponseCharts As RibbonButton
@@ -83,6 +90,7 @@ Namespace RibbonLib.Controls
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
             _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)
             _ButtonMakeScreenshot = New RibbonButton(_ribbon, Cmd.cmdButtonMakeScreenshot)
+            _ButtonOpenCanvas = New RibbonButton(_ribbon, Cmd.cmdButtonOpenCanvas)
             _ButtonOpenResponseCharts = New RibbonButton(_ribbon, Cmd.cmdButtonOpenResponseCharts)
             _ButtonOpenSnakeGame = New RibbonButton(_ribbon, Cmd.cmdButtonOpenSnakeGame)
             _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
