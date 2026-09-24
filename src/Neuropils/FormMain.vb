@@ -29,6 +29,7 @@ Public Class FormMain : Implements AppHost
             StatusStrip1.BackColor = DockPanel1.Theme.ColorPalette.MainWindowStatusBarDefault.Background
         End If
 
+        Call RibbonMenu.Load(Ribbon1)
         Call CommonRuntime.Hook(Me)
         Call CommonRuntime.ShowSingleDocument(Of PageFlywireCanvas)()
     End Sub
