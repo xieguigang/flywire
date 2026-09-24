@@ -58,211 +58,35 @@ Public Class ResponseChartForm
 
         Call PlotRuntime.EnsureRegistered()
 
-        Call initializeUi()
+        ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
+        Call InitializeComponent()
+        Call bindSignalModes()
         Call refreshCategories()
         Call rebuildSeries()
     End Sub
 
-#Region "界面装配"
+    ''' <summary>
+    ''' 填充"响应信号"下拉框：只列出当前数据真正可用的口径
+    ''' (没有分析回放时就不给出"膜电位"这个选项)。
+    ''' </summary>
+    ''' <remarks>
+    ''' 下拉框本身在 Designer 的 <c>InitializeComponent</c> 里建好，
+    ''' 但可选项由数据决定，因此放到这里；<c>m_loading</c> 用来抑制
+    ''' 初始选中项触发的事件 —— 那时其余控件刚建好，还不该重建曲线。
+    ''' </remarks>
+    Private Sub bindSignalModes()
+        m_loading = True
 
-    Private Sub initializeUi()
-        Me.Text = "电刺激响应曲线"
-        Me.StartPosition = FormStartPosition.CenterParent
-        Me.Size = New Size(1180, 720)
-        Me.MinimumSize = New Size(820, 520)
-        Me.BackColor = Color.FromArgb(21, 29, 38)
-        Me.ForeColor = Color.FromArgb(226, 232, 240)
-        Me.Font = New Font("Segoe UI", 9)
+        Try
+            For Each mode As ResponseSignalMode In m_data.AvailableModes
+                Call m_modeBox.Items.Add(ResponseCurveBuilder.DescribeMode(mode))
+            Next
 
-        Dim root As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 2,
-            .RowCount = 2,
-            .BackColor = Me.BackColor
-        }
-
-        Call root.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 268))
-        Call root.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
-        Call root.RowStyles.Add(New RowStyle(SizeType.Absolute, 76))
-        Call root.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
-
-        Call root.Controls.Add(createFilterBar(), 0, 0)
-        Call root.Controls.Add(createValuePanel(), 0, 1)
-        Call root.Controls.Add(createCanvas(), 1, 0)
-        Call root.SetRowSpan(root.GetControlFromPosition(1, 0), 2)
-
-        Me.Controls.Add(root)
+            m_modeBox.SelectedIndex = 0
+        Finally
+            m_loading = False
+        End Try
     End Sub
-
-    ''' <summary>顶部：信号口径 / 组织方式 / 曲线上限。</summary>
-    Private Function createFilterBar() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 2,
-            .RowCount = 4,
-            .Padding = New Padding(8, 6, 8, 0)
-        }
-
-        Call panel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 84))
-        Call panel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
-
-        m_dimensionBox = New ComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Dock = DockStyle.Fill}
-        Call m_dimensionBox.Items.AddRange(New Object() {
-            "主导脑区", "神经递质", "细胞类型", "分类层级 super_class", "分类层级 class", "分类层级 group"
-        })
-        m_dimensionBox.SelectedIndex = 0
-        AddHandler m_dimensionBox.SelectedIndexChanged, AddressOf onDimensionChanged
-
-        ' 只列出当前数据真正可用的口径：没有分析回放（膜电位）时就不要给出这个选项
-        m_modeBox = New ComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Dock = DockStyle.Fill}
-
-        For Each mode As ResponseSignalMode In m_data.AvailableModes
-            Call m_modeBox.Items.Add(ResponseCurveBuilder.DescribeMode(mode))
-        Next
-
-        m_modeBox.SelectedIndex = 0
-        AddHandler m_modeBox.SelectedIndexChanged, AddressOf onOptionChanged
-
-        m_aggregationBox = New ComboBox With {.DropDownStyle = ComboBoxStyle.DropDownList, .Dock = DockStyle.Fill}
-        Call m_aggregationBox.Items.AddRange(New Object() {"逐个神经元", "组均值", "组均值 ± 包络"})
-        m_aggregationBox.SelectedIndex = 0
-        AddHandler m_aggregationBox.SelectedIndexChanged, AddressOf onOptionChanged
-
-        Call panel.Controls.Add(newFieldLabel("筛选维度"), 0, 0)
-        Call panel.Controls.Add(m_dimensionBox, 1, 0)
-        Call panel.Controls.Add(newFieldLabel("响应信号"), 0, 1)
-        Call panel.Controls.Add(m_modeBox, 1, 1)
-        Call panel.Controls.Add(newFieldLabel("曲线组织"), 0, 2)
-
-        Dim row3 As New FlowLayoutPanel With {.Dock = DockStyle.Fill, .WrapContents = False, .Margin = New Padding(0)}
-        Dim limitLabel As New Label With {
-            .Text = "曲线上限", .AutoSize = True, .TextAlign = ContentAlignment.MiddleLeft,
-            .ForeColor = Me.ForeColor, .Margin = New Padding(0, 5, 6, 0)
-        }
-        Dim windowLabel As New Label With {
-            .Text = "平滑窗", .AutoSize = True, .TextAlign = ContentAlignment.MiddleLeft,
-            .ForeColor = Me.ForeColor, .Margin = New Padding(12, 5, 6, 0)
-        }
-
-        m_limitBox = New NumericUpDown With {.Minimum = 1, .Maximum = 200, .Value = 24, .Width = 60}
-        AddHandler m_limitBox.ValueChanged, AddressOf onOptionChanged
-
-        m_windowBox = New NumericUpDown With {.Minimum = 1, .Maximum = 21, .Value = 3, .Width = 50}
-        AddHandler m_windowBox.ValueChanged, AddressOf onOptionChanged
-
-        Call row3.Controls.Add(limitLabel)
-        Call row3.Controls.Add(m_limitBox)
-        Call row3.Controls.Add(windowLabel)
-        Call row3.Controls.Add(m_windowBox)
-
-        Call panel.Controls.Add(m_aggregationBox, 1, 2)
-        Call panel.Controls.Add(row3, 1, 3)
-
-        Return panel
-    End Function
-
-    Private Function newFieldLabel(text As String) As Label
-        Return New Label With {
-            .Text = text, .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft,
-            .ForeColor = Color.FromArgb(148, 163, 184)
-        }
-    End Function
-
-    ''' <summary>左侧：标签取值勾选（勾选 = 只看这些，不勾选 = 全部）。</summary>
-    Private Function createValuePanel() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 4,
-            .Padding = New Padding(8, 0, 4, 8),
-            .BackColor = Me.BackColor
-        }
-
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 34))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 62))
-
-        m_valueHint = New Label With {
-            .Text = "勾选 = 只看这些；不勾选 = 全部响应神经元",
-            .Dock = DockStyle.Fill,
-            .ForeColor = Color.FromArgb(148, 163, 184),
-            .AutoEllipsis = True
-        }
-
-        Dim buttons As New FlowLayoutPanel With {.Dock = DockStyle.Fill, .WrapContents = False, .Margin = New Padding(0)}
-        Dim selectAll As New Button With {.Text = "全选", .Width = 62, .Height = 24, .Margin = New Padding(0, 2, 4, 0)}
-        Dim clearAll As New Button With {.Text = "清空", .Width = 62, .Height = 24, .Margin = New Padding(0, 2, 4, 0)}
-        Dim export As New Button With {.Text = "保存图片", .Width = 84, .Height = 24, .Margin = New Padding(0, 2, 0, 0)}
-
-        AddHandler selectAll.Click, Sub() Call setAllValues(True)
-        AddHandler clearAll.Click, Sub() Call setAllValues(False)
-        AddHandler export.Click, AddressOf onSaveImage
-
-        Call buttons.Controls.Add(selectAll)
-        Call buttons.Controls.Add(clearAll)
-        Call buttons.Controls.Add(export)
-
-        m_values = New CheckedListBox With {
-            .Dock = DockStyle.Fill,
-            .CheckOnClick = True,
-            .IntegralHeight = False,
-            .BackColor = Color.FromArgb(15, 22, 30),
-            .ForeColor = Color.FromArgb(226, 232, 240),
-            .BorderStyle = BorderStyle.FixedSingle
-        }
-        AddHandler m_values.ItemCheck, AddressOf onValueChecked
-
-        m_summary = New Label With {
-            .Dock = DockStyle.Fill,
-            .ForeColor = Color.FromArgb(148, 163, 184),
-            .AutoEllipsis = True,
-            .Text = ""
-        }
-
-        Call panel.Controls.Add(m_valueHint, 0, 0)
-        Call panel.Controls.Add(buttons, 0, 1)
-        Call panel.Controls.Add(m_values, 0, 2)
-        Call panel.Controls.Add(m_summary, 0, 3)
-
-        Return panel
-    End Function
-
-    ''' <summary>右侧：GPU 画布 + 状态行。</summary>
-    Private Function createCanvas() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 2,
-            .Padding = New Padding(0, 6, 8, 8),
-            .BackColor = Me.BackColor
-        }
-
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26))
-
-        m_canvas = New DxCanvas With {
-            .Dock = DockStyle.Fill,
-            .AutoClear = True,
-            .BackgroundColor = m_theme.BackgroundColor
-        }
-        AddHandler m_canvas.Render, AddressOf onRender
-
-        m_status = New Label With {
-            .Dock = DockStyle.Fill,
-            .ForeColor = Color.FromArgb(148, 163, 184),
-            .AutoEllipsis = True,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Text = ""
-        }
-
-        Call panel.Controls.Add(m_canvas, 0, 0)
-        Call panel.Controls.Add(m_status, 0, 1)
-
-        Return panel
-    End Function
-
-#End Region
 
 #Region "数据装配"
 
@@ -538,10 +362,6 @@ Public Class ResponseChartForm
     Public Function CaptureTo(file As String) As Boolean
         Return m_canvas.SaveImage(file)
     End Function
-
-    Private Sub InitializeComponent()
-
-    End Sub
 
     ''' <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
     Public ReadOnly Property CanvasReady As Boolean
