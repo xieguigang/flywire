@@ -1,6 +1,7 @@
 Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.Data.Plots
 Imports Microsoft.VisualBasic.Drawing.DirectX
+Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.Analysis
 Imports Neuropils.Data
 
@@ -46,18 +47,25 @@ Public Class PageResponseChart
         m_data = data
         m_dataset = dataset
         m_theme = PlotTheme.Dark()
-        m_opt = New FormChartData()
 
         Call InitializeComponent()
         Call PlotRuntime.EnsureRegistered()
-
-        ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
-        Call m_opt.bindSignalModes(Me)
-        Call m_opt.refreshCategories()
+        Call ShowOptions()
         Call rebuildSeries()
     End Sub
 
+    Public Sub ShowOptions()
+        If m_opt Is Nothing OrElse m_opt.optFormClosed Then
+            m_opt = New FormChartData()
 
+            ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
+            Call m_opt.bindSignalModes(Me)
+            Call m_opt.refreshCategories()
+            Call CommonRuntime.RegisterToolWindow(m_opt, DockState.DockLeft)
+        Else
+            Call CommonRuntime.RegisterToolWindow(m_opt, DockState.DockLeft)
+        End If
+    End Sub
 
 #Region "数据装配"
 
@@ -317,6 +325,12 @@ Public Class PageResponseChart
             Return g.Save(file)
         End Using
     End Function
+
+    Private Sub PageResponseChart_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        If m_opt IsNot Nothing AndAlso Not m_opt.optFormClosed Then
+            m_opt.Close()
+        End If
+    End Sub
 
 #End Region
 

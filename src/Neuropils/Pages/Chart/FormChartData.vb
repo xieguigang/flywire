@@ -1,4 +1,5 @@
-﻿Imports Galaxy.Workbench
+﻿Imports System.ComponentModel
+Imports Galaxy.Workbench
 Imports Neuropils.Analysis
 
 Public Class FormChartData
@@ -49,7 +50,7 @@ Public Class FormChartData
         m_limitBox.ValueChanged,
         m_windowBox.ValueChanged
 
-        If m_loading Then
+        If m_loading OrElse m_host Is Nothing Then
             Return
         End If
 
@@ -114,5 +115,11 @@ Public Class FormChartData
                 CommonRuntime.Warning($"保存失败: {m_host.m_canvas.LastError}")
             End If
         End Using
+    End Sub
+
+    Friend optFormClosed As Boolean
+
+    Private Sub FormChartData_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
+        optFormClosed = True
     End Sub
 End Class

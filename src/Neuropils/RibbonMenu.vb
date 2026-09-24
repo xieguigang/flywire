@@ -82,7 +82,7 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonResetView.ExecuteEvent, Sub() Call Workbench.flywire.m_canvas.ResetView()
         AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
         AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
-        AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, Sub() Workbench.flywire.DockState = DockState.Document
+        AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, AddressOf openCanvas
         AddHandler RibbonMenu.ribbon.ButtonExit.ExecuteEvent, Sub() Call App.Exit()
 
         AddHandler RibbonMenu.ribbon.ToggleShowConnection.ExecuteEvent, AddressOf onShowConnectionsChanged
@@ -115,6 +115,11 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.NumSimulationSteps.ExecuteEvent, AddressOf onStimulusStepsChanged
         AddHandler RibbonMenu.ribbon.NumSynapseCutoff.ExecuteEvent, AddressOf onThresholdChanged
         AddHandler RibbonMenu.ribbon.NumScatterSize.ExecuteEvent, AddressOf onPointSizeChanged
+    End Sub
+
+    Private Sub openCanvas()
+        Workbench.flywire.openMap()
+        Workbench.flywire.DockState = DockState.Document
     End Sub
 
     Private Sub onShowGroundChanged(sender As Object, e As EventArgs)

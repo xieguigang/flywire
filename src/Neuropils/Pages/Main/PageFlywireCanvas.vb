@@ -59,6 +59,14 @@ Public Class PageFlywireCanvas
 
 #Region "life cycle"
 
+    Public Sub openMap()
+        If m_map Is Nothing Then
+            m_map = New FormNeuronMap With {.Name = "neuron_map"}
+        End If
+
+        Call CommonRuntime.RegisterToolWindow(m_map, DockState.DockRight)
+    End Sub
+
     Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_experiment = New StimulationExperiment(Me)
 
@@ -67,10 +75,7 @@ Public Class PageFlywireCanvas
         m_snake = New Snake(Me)
         ' m_chartTip.SetToolTip(m_chartLink, "")
         ' m_chartTip.SetToolTip(m_snakeLink, "")
-        m_map = New FormNeuronMap With {.Name = "neuron_map"}
-
-        Call CommonRuntime.RegisterToolWindow(m_map, DockState.DockRight)
-
+        Call openMap()
         Call m_experiment.initializeStimulation()
 
         m_rebuildTimer.Stop()
