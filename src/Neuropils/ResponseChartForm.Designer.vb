@@ -22,20 +22,20 @@ Partial Class ResponseChartForm
     'Required by the Windows Form Designer
     Private components As System.ComponentModel.IContainer
 
-    Dim WithEvents root As New TableLayoutPanel()
-    Dim WithEvents filterBar As New TableLayoutPanel()
-    Dim WithEvents dimensionLabel As New Label()
-    Dim WithEvents modeLabel As New Label()
-    Dim WithEvents aggregationLabel As New Label()
-    Dim WithEvents row3 As New FlowLayoutPanel()
-    Dim WithEvents limitLabel As New Label()
-    Dim WithEvents windowLabel As New Label()
-    Dim WithEvents valuePanel As New TableLayoutPanel()
-    Dim WithEvents buttons As New FlowLayoutPanel()
-    Dim WithEvents selectAll As New Button()
-    Dim WithEvents clearAll As New Button()
-    Dim WithEvents exportImage As New Button()
-    Dim WithEvents canvasPanel As New TableLayoutPanel()
+    Dim WithEvents root As TableLayoutPanel
+    Dim WithEvents filterBar As TableLayoutPanel
+    Dim WithEvents dimensionLabel As Label
+    Dim WithEvents modeLabel As Label
+    Dim WithEvents aggregationLabel As Label
+    Dim WithEvents row3 As FlowLayoutPanel
+    Dim WithEvents limitLabel As Label
+    Dim WithEvents windowLabel As Label
+    Dim WithEvents valuePanel As TableLayoutPanel
+    Dim WithEvents buttons As FlowLayoutPanel
+    Dim WithEvents selectAll As Button
+    Dim WithEvents clearAll As Button
+    Dim WithEvents exportImage As Button
+    Dim WithEvents canvasPanel As TableLayoutPanel
 
     Sub New()
 
@@ -54,6 +54,23 @@ Partial Class ResponseChartForm
 
 
         SuspendLayout()
+
+        root = New TableLayoutPanel()
+        filterBar = New TableLayoutPanel()
+        dimensionLabel = New Label()
+        modeLabel = New Label()
+        aggregationLabel = New Label()
+        row3 = New FlowLayoutPanel()
+        limitLabel = New Label()
+        windowLabel = New Label()
+        valuePanel = New TableLayoutPanel()
+        buttons = New FlowLayoutPanel()
+        selectAll = New Button()
+        clearAll = New Button()
+        exportImage = New Button()
+        canvasPanel = New TableLayoutPanel()
+
+
         ' 
         ' ResponseChartForm
         ' 
