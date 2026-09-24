@@ -7,6 +7,7 @@ Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
+Imports Microsoft.VisualBasic.Imaging.Drawing3D
 Imports Neuropils.AppLogics
 Imports Neuropils.Data
 Imports Neuropils.Rendering
@@ -596,8 +597,8 @@ Public Class PageFlywireCanvas
         Dim color As Color = Color.FromArgb(255, 255, 255)
 
         For axis As Integer = 0 To 2
-            Dim a As New Microsoft.VisualBasic.Imaging.Drawing3D.Point3D(position.X, position.Y, position.Z)
-            Dim b As New Microsoft.VisualBasic.Imaging.Drawing3D.Point3D(position.X, position.Y, position.Z)
+            Dim a As New Point3D(position.X, position.Y, position.Z)
+            Dim b As New Point3D(position.X, position.Y, position.Z)
 
             Select Case axis
                 Case 0
