@@ -10,7 +10,7 @@ Module Workbench
     ''' <summary>
     ''' 数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。
     ''' </summary>
-    Public Const DefaultDataDir As String = "F:\flywire\FAFB-v783"
+    Public ReadOnly DefaultDataDir As String = App.HOME & "/data/FAFB-v783"
 
     Friend m_dataset As BrainDataset
     Friend m_config As New VisualizationConfig
