@@ -51,6 +51,7 @@ Partial Class PageResponseChart
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(PageResponseChart))
         root = New TableLayoutPanel()
         filterBar = New TableLayoutPanel()
         dimensionLabel = New Label()
@@ -413,6 +414,7 @@ Partial Class PageResponseChart
         DoubleBuffered = True
         Font = New Font("Segoe UI", 9F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MinimumSize = New Size(820, 520)
         Name = "PageResponseChart"
         ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown

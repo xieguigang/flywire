@@ -13,6 +13,7 @@
     <RootNamespace>Neuropils</RootNamespace>
     <AssemblyTitle>Neuropils</AssemblyTitle>
     <AssemblyName>Neuropils</AssemblyName>
+    <ApplicationIcon>Icons\Model.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -34,6 +35,10 @@
   <ItemGroup>
     <None Remove="RibbonMarkup.log" />
     <None Remove="RibbonMarkup.ribbon" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Icons\Model.ico" />
   </ItemGroup>
 
   <ItemGroup>

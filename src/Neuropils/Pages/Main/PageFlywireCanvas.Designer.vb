@@ -51,6 +51,7 @@ Partial Class PageFlywireCanvas
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(PageFlywireCanvas))
         m_canvas = New DxScene3DCanvas()
         m_toolStrip = New ToolStrip()
         colorLabel = New ToolStripLabel()
@@ -161,6 +162,7 @@ Partial Class PageFlywireCanvas
         Controls.Add(m_toolStrip)
         DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
         DoubleBuffered = True
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MinimumSize = New Size(900, 600)
         Name = "PageFlywireCanvas"
         ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown

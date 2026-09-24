@@ -37,6 +37,7 @@ Partial Class AboutForm
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         components = New ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AboutForm))
         m_textBox = New TextBox()
         m_okButton = New Button()
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
@@ -45,12 +46,12 @@ Partial Class AboutForm
         ' m_textBox
         ' 
         m_textBox.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        m_textBox.BorderStyle = BorderStyle.FixedSingle
         m_textBox.Location = New Point(12, 12)
         m_textBox.Multiline = True
         m_textBox.Name = "m_textBox"
         m_textBox.ReadOnly = True
-        m_textBox.ScrollBars = ScrollBars.Vertical
-        m_textBox.Size = New Size(560, 360)
+        m_textBox.Size = New Size(560, 489)
         m_textBox.TabIndex = 0
         m_textBox.TabStop = False
         m_textBox.WordWrap = False
@@ -59,7 +60,7 @@ Partial Class AboutForm
         ' 
         m_okButton.Anchor = AnchorStyles.Bottom Or AnchorStyles.Right
         m_okButton.DialogResult = DialogResult.OK
-        m_okButton.Location = New Point(497, 384)
+        m_okButton.Location = New Point(497, 513)
         m_okButton.Name = "m_okButton"
         m_okButton.Size = New Size(75, 23)
         m_okButton.TabIndex = 1
@@ -75,13 +76,13 @@ Partial Class AboutForm
         AcceptButton = m_okButton
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(584, 419)
+        ClientSize = New Size(584, 548)
         Controls.Add(m_textBox)
         Controls.Add(m_okButton)
         FormBorderStyle = FormBorderStyle.FixedDialog
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         Name = "AboutForm"
         Padding = New Padding(12)
-        ShowIcon = False
         ShowInTaskbar = False
         Text = "关于 Neuropils"
         ResumeLayout(False)

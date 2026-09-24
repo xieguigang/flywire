@@ -25,6 +25,7 @@ Partial Class FormMain
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         components = New ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FormMain))
         VS2015LightTheme1 = New ThemeVS2015.VS2015LightTheme()
         DockPanel1 = New Microsoft.VisualStudio.WinForms.Docking.DockPanel()
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
@@ -100,6 +101,7 @@ Partial Class FormMain
         Controls.Add(DockPanel1)
         Controls.Add(StatusStrip1)
         Controls.Add(Ribbon1)
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         Name = "FormMain"
         Text = "Neuropils"
         StatusStrip1.ResumeLayout(False)

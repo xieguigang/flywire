@@ -24,6 +24,8 @@ Partial Class FormNeuronMap
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        components = New ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FormNeuronMap))
         sidebarPanel = New TableLayoutPanel()
         legendLabel = New Label()
         m_gradient = New PictureBox()
@@ -307,7 +309,11 @@ Partial Class FormNeuronMap
         AutoScaleMode = AutoScaleMode.Font
         ClientSize = New Size(444, 889)
         Controls.Add(sidebarPanel)
+        DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
+        DoubleBuffered = True
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
         Name = "FormNeuronMap"
+        ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown
         Text = "Neuron Map"
         sidebarPanel.ResumeLayout(False)
         sidebarPanel.PerformLayout()

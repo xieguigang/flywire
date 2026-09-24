@@ -44,6 +44,7 @@ Partial Class PageSnakeBrainGamePlay
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         components = New ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(PageSnakeBrainGamePlay))
         m_gamePanel = New Panel()
         side = New Panel()
         m_status = New Label()
@@ -95,7 +96,7 @@ Partial Class PageSnakeBrainGamePlay
         ' 
         ' m_status
         ' 
-        m_status.Font = New Font("Consolas", 10.0F, FontStyle.Bold)
+        m_status.Font = New Font("Consolas", 10F, FontStyle.Bold)
         m_status.ForeColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
         m_status.Location = New Point(8, 8)
         m_status.Name = "m_status"
@@ -248,16 +249,22 @@ Partial Class PageSnakeBrainGamePlay
         ' m_timer
         ' 
         ' 
-        ' SnakeBrainForm
+        ' PageSnakeBrainGamePlay
         ' 
+        AutoScaleDimensions = New SizeF(96F, 96F)
         BackColor = Color.Black
         ClientSize = New Size(1181, 663)
         Controls.Add(m_gamePanel)
         Controls.Add(side)
-        Font = New Font("Segoe UI", 9.0F)
+        DockAreas = Microsoft.VisualStudio.WinForms.Docking.DockAreas.Float Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockLeft Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockRight Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockTop Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.DockBottom Or Microsoft.VisualStudio.WinForms.Docking.DockAreas.Document
+        DoubleBuffered = True
+        Font = New Font("Segoe UI", 9F)
         ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
-        Name = "SnakeBrainForm"
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
+        Name = "PageSnakeBrainGamePlay"
+        ShowHint = Microsoft.VisualStudio.WinForms.Docking.DockState.Unknown
         StartPosition = FormStartPosition.CenterParent
+        TabPageContextMenuStrip = DockContextMenuStrip1
         Text = "果蝇大脑玩贪吃蛇 — 实时观战"
         side.ResumeLayout(False)
         toolbar.ResumeLayout(False)
