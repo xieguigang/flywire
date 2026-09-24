@@ -23,6 +23,7 @@ Namespace RibbonLib.Controls
             Public Const cmdButtonOpenSnakeGame As UInteger = 4
             Public Const cmdToggleSimulationExperiment As UInteger = 5
             Public Const cmdButtonResetView As UInteger = 6
+            Public Const cmdToggleShowGroundGrid As UInteger = 10
         End Class
 
         ' ContextPopup CommandName
@@ -81,6 +82,12 @@ Namespace RibbonLib.Controls
                 Return _ButtonResetView
             End Get
         End Property
+        Private _ToggleShowGroundGrid As RibbonToggleButton
+        Public ReadOnly Property ToggleShowGroundGrid As RibbonToggleButton
+            Get
+                Return _ToggleShowGroundGrid
+            End Get
+        End Property
 
         Public Sub New(ByVal ribbon As Ribbon)
             If ribbon Is Nothing Then
@@ -95,6 +102,7 @@ Namespace RibbonLib.Controls
             _ButtonOpenSnakeGame = New RibbonButton(_ribbon, Cmd.cmdButtonOpenSnakeGame)
             _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
             _ButtonResetView = New RibbonButton(_ribbon, Cmd.cmdButtonResetView)
+            _ToggleShowGroundGrid = New RibbonToggleButton(_ribbon, Cmd.cmdToggleShowGroundGrid)
         End Sub
 
     End Class

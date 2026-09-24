@@ -26,6 +26,7 @@ namespace RibbonLib.Controls
             public const uint cmdButtonOpenSnakeGame = 4;
             public const uint cmdToggleSimulationExperiment = 5;
             public const uint cmdButtonResetView = 6;
+            public const uint cmdToggleShowGroundGrid = 10;
         }
 
         // ContextPopup CommandName
@@ -39,6 +40,7 @@ namespace RibbonLib.Controls
         public RibbonButton ButtonOpenSnakeGame { get; private set; }
         public RibbonToggleButton ToggleSimulationExperiment { get; private set; }
         public RibbonButton ButtonResetView { get; private set; }
+        public RibbonToggleButton ToggleShowGroundGrid { get; private set; }
 
         public RibbonItems(Ribbon ribbon)
         {
@@ -53,6 +55,7 @@ namespace RibbonLib.Controls
             ButtonOpenSnakeGame = new RibbonButton(ribbon, Cmd.cmdButtonOpenSnakeGame);
             ToggleSimulationExperiment = new RibbonToggleButton(ribbon, Cmd.cmdToggleSimulationExperiment);
             ButtonResetView = new RibbonButton(ribbon, Cmd.cmdButtonResetView);
+            ToggleShowGroundGrid = new RibbonToggleButton(ribbon, Cmd.cmdToggleShowGroundGrid);
         }
 
     }
