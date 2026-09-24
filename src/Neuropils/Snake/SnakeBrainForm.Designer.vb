@@ -54,24 +54,23 @@ Partial Class SnakeBrainForm
         ForeColor = Color.FromArgb(226, 232, 240)
         Font = New Font("Segoe UI", 9)
 
-        ' 两半屏都是绝对坐标摆位：左半屏的尺寸就是游戏本体的一屏格数，
-        ' 与玩家手动玩时看到的画面完全一致；右半屏宽度固定。
-        Dim width As Integer = Snake2.Game.ViewCols * Snake2.Game.CellSize
-        Dim height As Integer = Snake2.Game.ViewRows * Snake2.Game.CellSize
-
-        ClientSize = New Size(width + 380, height + 64)
+        ' 两半屏都是绝对坐标摆位，坐标全部按游戏本体的可视区算好写成常数字面量：
+        '   左半屏 = Snake2 可视区 40 列 × 30 行 × 20 px/格 = 800 × 600
+        '   右半屏 = 固定宽 368，与左半屏之间留 8 px 间隔
+        '   客户区 = 800 + 380 宽、600 + 64 高（底部留白）
+        ClientSize = New Size(1180, 664)
         ' 
         ' m_gamePanel：左半屏 —— 游戏画面（Paint 事件里直接调 Snake2 的 Render.Draw）
         ' 
         m_gamePanel.Location = New Point(0, 0)
-        m_gamePanel.Size = New Size(width, height)
+        m_gamePanel.Size = New Size(800, 600)
         m_gamePanel.BackColor = Color.Black
         ' AddHandler m_gamePanel.Paint, AddressOf onGamePaint
         ' 
         ' side：右半屏 —— 大脑此刻在做什么（读数 + 统计 + 工具栏）
         ' 
-        side.Location = New Point(width + 8, 0)
-        side.Size = New Size(368, height)
+        side.Location = New Point(808, 0)
+        side.Size = New Size(368, 600)
         side.BackColor = Color.FromArgb(15, 22, 30)
         ' 
         ' m_timer：会话推进的唯一驱动（游戏与大脑逐步仿真都靠它）
@@ -125,7 +124,7 @@ Partial Class SnakeBrainForm
         ' 
         ' toolbar：右下角 —— 播放 / 新一局 / 训练 / 载入 + 速度与每帧步数
         ' 
-        toolbar.Location = New Point(4, height - 74)
+        toolbar.Location = New Point(4, 526)
         toolbar.Size = New Size(360, 70)
         toolbar.WrapContents = True
         toolbar.BackColor = Color.Transparent
