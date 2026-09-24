@@ -2,6 +2,7 @@ Imports System.Collections.Concurrent
 Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
 Imports Neuropils.Data
@@ -154,7 +155,7 @@ Namespace AppLogics
 
         Friend Sub onStimulateModeChanged(sender As Object, e As EventArgs)
             If main.m_stimulateMode.Checked Then
-                main.m_statusText.Text = "电刺激模式：在神经元上按住左键（越久越强），松开后自动运行全脑仿真并回放"
+                CommonRuntime.StatusMessage("电刺激模式：在神经元上按住左键（越久越强），松开后自动运行全脑仿真并回放")
                 main.m_holdLabel.Text = ""
 
                 ' 回放时先收掉连线：几十万根半透明线会把点亮的神经元淹掉
@@ -163,7 +164,7 @@ Namespace AppLogics
                 Call cancelStimulationHold()
                 Call stopReplay(clearHighlight:=True)
 
-                main.m_statusText.Text = "就绪"
+                CommonRuntime.StatusMessage("就绪")
             End If
         End Sub
 
@@ -244,7 +245,7 @@ Namespace AppLogics
             If m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
 
             If m_stimBusy Then
-                main.m_statusText.Text = "上一次电刺激还在运行，请稍等"
+                CommonRuntime.StatusMessage("上一次电刺激还在运行，请稍等")
 
                 Return
             End If
@@ -252,7 +253,7 @@ Namespace AppLogics
             Dim hit As SceneHitTest = main.m_canvas.HitTest(x, y, radius:=8)
 
             If Not hit.HasHit OrElse hit.Kind <> SceneHitKind.Point Then
-                main.m_statusText.Text = "电刺激：这里没有神经元（把点大小调大一点更容易点中）"
+                CommonRuntime.StatusMessage("电刺激：这里没有神经元（把点大小调大一点更容易点中）")
 
                 Return
             End If
@@ -283,9 +284,9 @@ Namespace AppLogics
             Dim current As Double = stimulus.Current
 
             m_stimBusy = True
-            main.m_progress.Visible = True
-            main.m_progress.Style = ProgressBarStyle.Marquee
-            main.m_statusText.Text = $"电刺激 #{neuron}：半径 {radius / 1000.0:F0}μm / 电流 {current:F1}，正在运行全脑仿真 ..."
+            progress.Visible = True
+            progress.Style = ProgressBarStyle.Marquee
+            CommonRuntime.StatusMessage($"电刺激 #{neuron}：半径 {radius / 1000.0:F0}μm / 电流 {current:F1}，正在运行全脑仿真 ...")
 
             Call setStimulusMarker(neuron)
             Call ensureStimWorker()
@@ -352,8 +353,8 @@ Namespace AppLogics
 
         Private Sub onStimulationCompleted(replay As StimulationReplay)
             m_stimBusy = False
-            main.m_progress.Visible = False
-            main.m_progress.Style = ProgressBarStyle.Continuous
+            progress.Visible = False
+            progress.Style = ProgressBarStyle.Continuous
 
             m_replay = replay
 
@@ -377,10 +378,10 @@ Namespace AppLogics
             m_replayPlaying = True
             m_replayTimer.Start()
 
-            main.m_statusText.Text = $"电刺激完成 ({replay.WallMs} ms, {replay.Backend}/{replay.StepPath}): {replay.Describe()}"
+            CommonRuntime.Success($"电刺激完成 ({replay.WallMs} ms, {replay.Backend}/{replay.StepPath}): {replay.Describe()}")
 
             If Not String.IsNullOrEmpty(replay.ReportDir) Then
-                main.m_sceneText.Text = $"结果已记录: {replay.ReportDir}"
+                Workbench.SceneText($"结果已记录: {replay.ReportDir}")
             End If
 
             ' 刺激完成 → 右下角的"响应曲线"链接可用
@@ -390,9 +391,9 @@ Namespace AppLogics
         ''' <summary>刺激失败：把原因如实报出来（界面回到可用状态，下一次点击仍然可以重试）。</summary>
         Private Sub onStimulationFailed(reason As String)
             m_stimBusy = False
-            main.m_progress.Visible = False
-            main.m_progress.Style = ProgressBarStyle.Continuous
-            main.m_statusText.Text = "电刺激失败"
+            progress.Visible = False
+            progress.Style = ProgressBarStyle.Continuous
+            CommonRuntime.Warning("电刺激失败")
 
             Call MessageBox.Show(Me, reason, "电刺激仿真失败", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Sub

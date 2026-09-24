@@ -79,6 +79,7 @@ Partial Class FormMain
         ' 
         m_progress.Name = "m_progress"
         m_progress.Size = New Size(100, 16)
+        m_progress.Style = ProgressBarStyle.Marquee
         ' 
         ' m_sceneText
         ' 

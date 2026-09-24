@@ -34,14 +34,6 @@ Partial Class PageFlywireCanvas
     Dim WithEvents m_exitItem As ToolStripMenuItem
     Dim WithEvents m_resetItem As ToolStripMenuItem
 
-    ' ---- 状态栏（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
-    ' 这些字段被其它类 (StimulationExperiment / Snake) 通过 FormMain 实例访问，因此保持 Friend。
-    ' 事件绑定改由 FormMain.vb 里对应的 Handles 子句完成。
-    Dim m_statusStrip As StatusStrip
-    Friend WithEvents m_statusText As ToolStripStatusLabel
-    Friend WithEvents m_progress As ToolStripProgressBar
-    Friend m_sceneText As ToolStripStatusLabel
-
     ' ---- 工具条（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
     ' 被其它类 (StimulationExperiment) 通过 FormMain 实例访问的保持 Friend；
     ' 事件源用 WithEvents 以便 Handles 绑定，替代原 createToolbar 里的 AddHandler。
@@ -181,37 +173,37 @@ Partial Class PageFlywireCanvas
         ' 状态栏：停靠在窗体底端；宽度取窗体客户区宽度 (1500, 见 initializeUi 的 ClientSize)，
         ' 高度 22 为状态栏标准高度，故 y = 900 - 22 = 878
         ' 
-        m_statusStrip = New StatusStrip()
-        m_statusStrip.Dock = DockStyle.Bottom
-        m_statusStrip.Location = New Point(0, 878)
-        m_statusStrip.Name = "m_statusStrip"
-        m_statusStrip.Size = New Size(1500, 22)
-        m_statusStrip.TabIndex = 1
-        ' 
-        ' m_statusText
-        ' 
-        m_statusText = New ToolStripStatusLabel()
-        m_statusText.Name = "m_statusText"
-        m_statusText.Size = New Size(100, 17)
-        m_statusText.Spring = True
-        m_statusText.Text = "就绪"
-        m_statusText.TextAlign = ContentAlignment.MiddleLeft
-        ' 
-        ' m_sceneText
-        ' 
-        m_sceneText = New ToolStripStatusLabel()
-        m_sceneText.Name = "m_sceneText"
-        m_sceneText.Size = New Size(100, 17)
-        m_sceneText.Text = ""
-        m_sceneText.BorderSides = ToolStripStatusLabelBorderSides.Left
-        ' 
-        ' m_progress
-        ' 
-        m_progress = New ToolStripProgressBar()
-        m_progress.Name = "m_progress"
-        m_progress.Size = New Size(220, 16)
-        m_progress.Visible = False
-        m_progress.Style = ProgressBarStyle.Marquee
+        'm_statusStrip = New StatusStrip()
+        'm_statusStrip.Dock = DockStyle.Bottom
+        'm_statusStrip.Location = New Point(0, 878)
+        'm_statusStrip.Name = "m_statusStrip"
+        'm_statusStrip.Size = New Size(1500, 22)
+        'm_statusStrip.TabIndex = 1
+        '' 
+        '' m_statusText
+        '' 
+        'm_statusText = New ToolStripStatusLabel()
+        'm_statusText.Name = "m_statusText"
+        'm_statusText.Size = New Size(100, 17)
+        'm_statusText.Spring = True
+        'm_statusText.Text = "就绪"
+        'm_statusText.TextAlign = ContentAlignment.MiddleLeft
+        '' 
+        '' m_sceneText
+        '' 
+        'm_sceneText = New ToolStripStatusLabel()
+        'm_sceneText.Name = "m_sceneText"
+        'm_sceneText.Size = New Size(100, 17)
+        'm_sceneText.Text = ""
+        'm_sceneText.BorderSides = ToolStripStatusLabelBorderSides.Left
+        '' 
+        '' m_progress
+        '' 
+        'm_progress = New ToolStripProgressBar()
+        'm_progress.Name = "m_progress"
+        'm_progress.Size = New Size(220, 16)
+        'm_progress.Visible = False
+        'm_progress.Style = ProgressBarStyle.Marquee
         ' 
         ' m_chartLink
         ' 
@@ -243,13 +235,13 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_statusStrip 容器装配
         ' 
-        m_statusStrip.SuspendLayout()
-        m_statusStrip.Items.Add(m_statusText)
-        m_statusStrip.Items.Add(m_sceneText)
-        m_statusStrip.Items.Add(m_progress)
-        ' m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
-        ' m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
-        m_statusStrip.ResumeLayout(False)
+        'm_statusStrip.SuspendLayout()
+        'm_statusStrip.Items.Add(m_statusText)
+        'm_statusStrip.Items.Add(m_sceneText)
+        'm_statusStrip.Items.Add(m_progress)
+        '' m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
+        '' m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
+        'm_statusStrip.ResumeLayout(False)
         ' 
         ' FormMain (窗体自身)
         ' 
@@ -668,7 +660,7 @@ Partial Class PageFlywireCanvas
         Me.Controls.Add(m_split)
         Me.Controls.Add(m_toolStrip)
         Me.Controls.Add(m_menuStrip)
-        Me.Controls.Add(m_statusStrip)
+        ' Me.Controls.Add(m_statusStrip)
 
         ResumeLayout(False)
     End Sub

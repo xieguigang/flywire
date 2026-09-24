@@ -57,9 +57,9 @@ Namespace AppLogics
                 Return
             End If
 
-            main.m_statusText.Text = "正在装配游戏用的果蝇大脑（连接组 → CSR，约 30 秒）..."
-            main.m_progress.Visible = True
-            main.m_progress.Style = ProgressBarStyle.Marquee
+            CommonRuntime.StatusMessage("正在装配游戏用的果蝇大脑（连接组 → CSR，约 30 秒）...")
+            progress.Visible = True
+            progress.Style = ProgressBarStyle.Marquee
 
             Task.Run(
                 Function() As SnakePlayground
@@ -70,11 +70,11 @@ Namespace AppLogics
                 End Function) _
                 .ContinueWith(
                     Sub(task As Task(Of SnakePlayground))
-                        main.m_progress.Visible = False
-                        main.m_progress.Style = ProgressBarStyle.Continuous
+                        progress.Visible = False
+                        progress.Style = ProgressBarStyle.Continuous
 
                         If task.IsFaulted Then
-                            main.m_statusText.Text = "装配果蝇大脑失败"
+                            CommonRuntime.Warning("装配果蝇大脑失败")
                             Call MessageBox.Show(main, $"{task.Exception?.GetBaseException()?.Message}",
                                                  "无法启动观战窗口", MessageBoxButtons.OK, MessageBoxIcon.Error)
 
@@ -125,7 +125,7 @@ Namespace AppLogics
 
             Call brainForm.Show(CommonRuntime.AppHost.GetDockPanel)
 
-            main.m_statusText.Text = $"观战窗口已打开：{brain.FlowSummary}"
+            CommonRuntime.StatusMessage($"观战窗口已打开：{brain.FlowSummary}")
 
             ' 命令行自检：跑够指定帧数后抓屏退出
             If m_snakeProbeTicks > 0 Then

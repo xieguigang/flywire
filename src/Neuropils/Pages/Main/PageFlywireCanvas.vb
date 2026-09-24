@@ -300,8 +300,8 @@ Public Class PageFlywireCanvas
         Dim tokenSource As New CancellationTokenSource()
 
         m_cancel = tokenSource
-        m_statusText.Text = $"正在载入 {m_config.DataDir} ..."
-        m_progress.Visible = True
+        CommonRuntime.StatusMessage($"正在载入 {m_config.DataDir} ...")
+        progress.Visible = True
         m_dataset = Nothing
         m_viewInitialized = False
         Call m_canvas.ClearScene()
@@ -321,31 +321,31 @@ Public Class PageFlywireCanvas
 
         Call BeginInvoke(New Action(
             Sub()
-                m_statusText.Text = message
+                CommonRuntime.StatusMessage(message)
             End Sub))
     End Sub
 
     Private Sub onLoadCompleted(task As Task(Of BrainDataset))
         m_busy = False
-        m_progress.Visible = False
+        progress.Visible = False
 
         If task.IsCanceled Then
-            m_statusText.Text = "载入已取消"
+            CommonRuntime.StatusMessage("载入已取消")
             Return
         End If
 
         If task.IsFaulted Then
             Dim reason As String = If(task.Exception?.GetBaseException()?.Message, "unknown error")
 
-            m_statusText.Text = "载入失败"
+            CommonRuntime.Warning("载入失败")
             Call MessageBox.Show(Me, reason, "载入数据失败", MessageBoxButtons.OK, MessageBoxIcon.Error)
 
             Return
         End If
 
         m_dataset = task.Result
-        m_statusText.Text = $"数据载入完成: {m_dataset}"
-        m_sceneText.Text = m_dataset.ToString()
+        CommonRuntime.Success($"数据载入完成: {m_dataset}")
+        Workbench.SceneText(m_dataset.ToString)
 
         If m_dataset.Units = 0 Then
             Return
@@ -441,8 +441,8 @@ Public Class PageFlywireCanvas
         If m_busy Then Return
 
         m_busy = True
-        m_statusText.Text = "正在装配场景 ..."
-        m_progress.Visible = True
+        CommonRuntime.StatusMessage("正在装配场景 ...")
+        progress.Visible = True
 
         If m_buildOptions.Mode = ConnectionRenderMode.SelectedNeuron Then
             ' 还没点过任何神经元时，先用"最忙的神经元"作为默认目标，
@@ -470,10 +470,10 @@ Public Class PageFlywireCanvas
             .ContinueWith(
                 Sub(task As Task(Of BrainScene))
                     m_busy = False
-                    m_progress.Visible = False
+                    progress.Visible = False
 
                     If task.IsFaulted Then
-                        m_statusText.Text = $"场景装配失败: {If(task.Exception?.GetBaseException()?.Message, "unknown")}"
+                        CommonRuntime.Warning($"场景装配失败: {If(task.Exception?.GetBaseException()?.Message, "unknown")}")
 
                         Return
                     End If
@@ -485,8 +485,8 @@ Public Class PageFlywireCanvas
 
                     Call applyScene(resetView)
 
-                    m_statusText.Text = $"场景就绪 ({timer.ElapsedMilliseconds} ms): {m_scene.Describe()}"
-                    m_sceneText.Text = m_scene.Describe()
+                    CommonRuntime.Success($"场景就绪 ({timer.ElapsedMilliseconds} ms): {m_scene.Describe()}")
+                    Workbench.SceneText(m_scene.Describe)
                 End Sub,
                 TaskScheduler.FromCurrentSynchronizationContext())
     End Sub
@@ -675,9 +675,9 @@ Public Class PageFlywireCanvas
             End If
 
             If m_canvas.SaveSnapshot(dialog.FileName, Microsoft.VisualBasic.Imaging.ImageFormats.Png) Then
-                m_statusText.Text = $"截图已保存: {dialog.FileName}"
+                CommonRuntime.StatusMessage($"截图已保存: {dialog.FileName}")
             Else
-                m_statusText.Text = $"截图保存失败: {m_canvas.LastError}"
+                CommonRuntime.Warning($"截图保存失败: {m_canvas.LastError}")
             End If
         End Using
     End Sub
