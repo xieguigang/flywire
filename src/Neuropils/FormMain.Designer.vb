@@ -31,9 +31,9 @@ Partial Class FormMain
         Ribbon1 = New Ribbon()
         StatusStrip1 = New StatusStrip()
         m_statusText = New ToolStripStatusLabel()
+        ToolStripStatusLabel1 = New ToolStripStatusLabel()
         m_progress = New ToolStripProgressBar()
         m_sceneText = New ToolStripStatusLabel()
-        ToolStripStatusLabel1 = New ToolStripStatusLabel()
         StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
@@ -74,6 +74,12 @@ Partial Class FormMain
         m_statusText.Size = New Size(42, 17)
         m_statusText.Text = "Ready!"
         ' 
+        ' ToolStripStatusLabel1
+        ' 
+        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        ToolStripStatusLabel1.Size = New Size(1223, 17)
+        ToolStripStatusLabel1.Spring = True
+        ' 
         ' m_progress
         ' 
         m_progress.Name = "m_progress"
@@ -86,12 +92,6 @@ Partial Class FormMain
         m_sceneText.Size = New Size(46, 17)
         m_sceneText.Text = "Loaded"
         ' 
-        ' ToolStripStatusLabel1
-        ' 
-        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        ToolStripStatusLabel1.Size = New Size(1192, 17)
-        ToolStripStatusLabel1.Spring = True
-        ' 
         ' FormMain
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
@@ -101,7 +101,7 @@ Partial Class FormMain
         Controls.Add(StatusStrip1)
         Controls.Add(Ribbon1)
         Name = "FormMain"
-        Text = "Form1"
+        Text = "Neuropils"
         StatusStrip1.ResumeLayout(False)
         StatusStrip1.PerformLayout()
         ResumeLayout(False)

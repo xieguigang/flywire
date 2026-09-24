@@ -24,7 +24,7 @@ Namespace AppLogics
 #Region "观战窗口"
 
         ''' <summary>果蝇大脑玩贪吃蛇的观战窗口（单实例复用）。</summary>
-        Private m_snakeForm As SnakeBrainForm
+        Private m_snakeForm As PageSnakeBrainGamePlay
 
         ''' <summary>装配好的游戏用大脑环境（连接组 + CSR + 标定，约 30 秒，只做一次）。</summary>
         Private m_snakePlayground As SnakePlayground
@@ -102,7 +102,7 @@ Namespace AppLogics
             End If
 
             ' 用局部变量持有窗体：FormClosed 里 m_snakeForm 会被清空，只有它能用来解绑事件
-            Dim brainForm As New SnakeBrainForm(playground, brain, decoder)
+            Dim brainForm As New PageSnakeBrainGamePlay(playground, brain, decoder)
 
             AddHandler brainForm.BrainActivityChanged, AddressOf onSnakeBrainActivity
             AddHandler brainForm.FormClosed,
@@ -148,7 +148,7 @@ Namespace AppLogics
         ''' 抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
         ''' 因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
         ''' </remarks>
-        Private Sub startSnakeProbeCapture(snakeForm As SnakeBrainForm)
+        Private Sub startSnakeProbeCapture(snakeForm As PageSnakeBrainGamePlay)
             AddHandler snakeForm.BrainActivityChanged,
                 Sub(activeNeurons As Integer(), frame As SnakeStep)
                     ' 抓屏后的重入事件直接丢掉，帧数才不会被 DoEvents 抽出来的定时器消息灌大
@@ -189,7 +189,7 @@ Namespace AppLogics
         ''' 停机前定时器是活的，每 tick 都会推一次脑活动；停机后如果还能数到事件，
         ''' 说明定时器没被真正停掉 —— 那就是用户看到的"关了窗口大脑还在闪"。
         ''' </remarks>
-        Private Sub verifySnakeShutdown(snakeForm As SnakeBrainForm)
+        Private Sub verifySnakeShutdown(snakeForm As PageSnakeBrainGamePlay)
             Dim before As Integer = m_snakeProbeSeen
 
             Call snakeForm.Close()

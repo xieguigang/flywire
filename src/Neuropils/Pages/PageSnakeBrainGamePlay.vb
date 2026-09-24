@@ -20,7 +20,7 @@ Imports Snake2
 ''' 会话在 UI 线程上推进（每 tick 只有两次内核启动，几毫秒量级），
 ''' 训练在后台线程上跑，完成后把新解码器换上。
 ''' </remarks>
-Public Class SnakeBrainForm
+Public Class PageSnakeBrainGamePlay
 
     Private ReadOnly m_playground As SnakePlayground
 

@@ -32,6 +32,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="RibbonMarkup.log" />
     <None Remove="RibbonMarkup.ribbon" />
   </ItemGroup>
 

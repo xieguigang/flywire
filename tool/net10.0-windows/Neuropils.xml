@@ -402,14 +402,14 @@ Neuropils
 <member name="F:Neuropils.AppLogics.Snake.m_snakeProbePng">
  <summary>``--snake-window &lt;png&gt; [数据目录] [tick 数]`` 的抓屏状态。</summary>
 </member>
-<member name="M:Neuropils.AppLogics.Snake.startSnakeProbeCapture(Neuropils.SnakeBrainForm)">
+<member name="M:Neuropils.AppLogics.Snake.startSnakeProbeCapture(Neuropils.PageSnakeBrainGamePlay)">
  <summary>等待观战窗口跑够帧数，然后把两个窗口一起抓屏写盘再退出。</summary>
  <remarks>
  抓的是<b>屏幕上真实的两个窗口</b>（主窗口的三维点云 + 观战窗口），
  因此它同时验证了"游戏实时画面"与"三维神经元活动点亮"这两条链路。
  </remarks>
 </member>
-<member name="M:Neuropils.AppLogics.Snake.verifySnakeShutdown(Neuropils.SnakeBrainForm)">
+<member name="M:Neuropils.AppLogics.Snake.verifySnakeShutdown(Neuropils.PageSnakeBrainGamePlay)">
  <summary>
  抓完屏把观战窗口关掉，验证"关窗 = 停机"：不该再有脑活动事件，点云也该恢复原色。
  </summary>
@@ -1021,6 +1021,30 @@ Neuropils
 <member name="M:Neuropils.Data.VisualizationConfig.ResolveActivityDir">
  <summary>解析活动表所在目录。</summary>
 </member>
+<member name="T:Neuropils.ChannelBars">
+ <summary>
+ 竖排条形读数控件：一行一个通道，画名称 + 条形 + 数值。
+ </summary>
+ <remarks>
+ 手写而不是用 ProgressBar：一次要显示 16 行，ProgressBar 无法紧凑排布，
+ 也没法在同一行里带标签。
+ </remarks>
+</member>
+<member name="F:Neuropils.ChannelBars.m_adaptive">
+ <summary>量程是否是自适应（<see cref="F:Neuropils.ChannelBars.m_maximum"/> 传 &lt;= 0 时开启）。</summary>
+</member>
+<member name="F:Neuropils.ChannelBars.AdaptiveDecay">
+ <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
+</member>
+<member name="M:Neuropils.ChannelBars.SetData(System.String[],System.Double[],System.Drawing.Color,System.Double)">
+ <summary>
+ 灌入一行行读数。
+ </summary>
+ <param name="maximum">
+ 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="F:Neuropils.ChannelBars.AdaptiveDecay"/> 缓慢回落。
+ 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
+ </param>
+</member>
 <member name="M:Neuropils.FormNeuronMap.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
 </member>
@@ -1214,6 +1238,81 @@ Neuropils
  区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
  也能在没有窗口的环境里验证绘图链路。
  </remarks>
+</member>
+<member name="T:Neuropils.PageSnakeBrainGamePlay">
+ <summary>
+ 观战窗口：看果蝇大脑玩贪吃蛇的实时画面。
+ </summary>
+ <remarks>
+ 左半屏是游戏本身的画面（直接调用 Snake2 的 <see cref="M:Snake2.Render.Draw(System.Drawing.Graphics)"/>，
+ 与玩家手动玩时看到的是同一套渲染），右半屏是"大脑此刻在做什么"：
+ 
+ <list type="bullet">
+   <item><b>感觉通道</b>：16 个通道的强度 —— 大脑看到的食物方位 / 危险；</item>
+   <item><b>运动读出</b>：4 组运动神经元的脉冲数与解码出的走向；</item>
+   <item><b>脑活动</b>：本 tick 发放的神经元总数，并通过 <see cref="E:Neuropils.PageSnakeBrainGamePlay.BrainActivityChanged"/>
+         事件送到主窗口的三维点云上点亮。</item>
+ </list>
+ 
+ 会话在 UI 线程上推进（每 tick 只有两次内核启动，几毫秒量级），
+ 训练在后台线程上跑，完成后把新解码器换上。
+ </remarks>
+</member>
+<member name="E:Neuropils.PageSnakeBrainGamePlay.BrainActivityChanged">
+ <summary>大脑活动事件：&lt;本 tick 发放的神经元, 本 tick 的完整读数&gt;。</summary>
+</member>
+<member name="P:Neuropils.PageSnakeBrainGamePlay.Session">
+ <summary>本窗口所用的游戏会话（主窗口也用它拿活动读数）。</summary>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.onGamePaint(System.Object,System.Windows.Forms.PaintEventArgs)">
+ <summary>游戏画面的绘制（左半屏）。</summary>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.onSpeedChanged(System.Object,System.EventArgs)">
+ <summary>速度（定时器间隔）改动后立即生效。</summary>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.PauseForProbe">
+ <summary>
+ 供命令行自检抓屏前调用：先停表，抓到的才是"恰好跑了 N 帧"的那一帧。
+ </summary>
+ <remarks>
+ 抓屏前的 <c>Application.DoEvents()</c> 会把定时器消息再抽进来（重入），
+ 不先停表的话游戏会在抓屏过程中继续往前跑，帧数与画面都对不上。
+ </remarks>
+</member>
+<member name="F:Neuropils.PageSnakeBrainGamePlay.m_stopped">
+ <summary>停过机之后不再重复停机。</summary>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
+ <summary>
+ 关窗即停机：定时器是"游戏引擎 + 大脑逐步仿真"的唯一驱动，停掉它两者就都停了。
+ </summary>
+ <remarks>
+ 不停表的话后果很具体：<see cref="T:System.Windows.Forms.Timer"/> 的 WM_TIMER 发到的是它自己的隐藏窗口，
+ <b>不随窗体销毁而结束</b> —— 关窗之后会话继续 tick，主窗口的三维点云
+ 也就继续被脑活动点亮（看起来"关不掉地一直闪"）。
+ </remarks>
+</member>
+<member name="P:Neuropils.PageSnakeBrainGamePlay.Stopped">
+ <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
+ <remarks>
+ 兜底再停一次由 Designer 文件里的 <c>Dispose</c> 重载负责（见
+ SnakeBrainForm.Designer.vb）：即使窗体是被 Dispose 掉的（没走 Close），
+ 也不该留下一个还在后台推进游戏与仿真的定时器。重复调用由
+ <see cref="F:Neuropils.PageSnakeBrainGamePlay.m_stopped"/> 挡住。
+ </remarks>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.onTimerTick(System.Object,System.EventArgs)">
+ <remarks>
+ Tick 只挂一次：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
+ 而且 --snake-window 自检永远等不到帧）。挂接由 Designer 的 WithEvents 字段承担，
+ 这里用 Handles 声明即可，不要再另外 AddHandler。
+ </remarks>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.updateReadouts(FlywireSnake.SnakeStep)">
+ <summary>刷新右侧读数（感觉通道 / 运动读出 / 统计）。</summary>
+</member>
+<member name="M:Neuropils.PageSnakeBrainGamePlay.trainDecoder">
+ <summary>在后台训练解码器，完成后立刻换上。</summary>
 </member>
 <member name="T:Neuropils.Rendering.ConnectionRenderMode">
  <summary>
@@ -1836,105 +1935,6 @@ Neuropils
 </member>
 <member name="M:Neuropils.Simulation.StimulationReport.csv(System.String,System.Object)">
  <summary>``key,value`` 形式的一行（value 里的逗号/引号会被转义）。</summary>
-</member>
-<member name="T:Neuropils.ChannelBars">
- <summary>
- 竖排条形读数控件：一行一个通道，画名称 + 条形 + 数值。
- </summary>
- <remarks>
- 手写而不是用 ProgressBar：一次要显示 16 行，ProgressBar 无法紧凑排布，
- 也没法在同一行里带标签。
- </remarks>
-</member>
-<member name="F:Neuropils.ChannelBars.m_adaptive">
- <summary>量程是否是自适应（<see cref="F:Neuropils.ChannelBars.m_maximum"/> 传 &lt;= 0 时开启）。</summary>
-</member>
-<member name="F:Neuropils.ChannelBars.AdaptiveDecay">
- <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>
-</member>
-<member name="M:Neuropils.ChannelBars.SetData(System.String[],System.Double[],System.Drawing.Color,System.Double)">
- <summary>
- 灌入一行行读数。
- </summary>
- <param name="maximum">
- 量程。传 &lt;= 0 表示自适应：峰值立刻抬到最高，之后按 <see cref="F:Neuropils.ChannelBars.AdaptiveDecay"/> 缓慢回落。
- 适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
- </param>
-</member>
-<member name="T:Neuropils.SnakeBrainForm">
- <summary>
- 观战窗口：看果蝇大脑玩贪吃蛇的实时画面。
- </summary>
- <remarks>
- 左半屏是游戏本身的画面（直接调用 Snake2 的 <see cref="M:Snake2.Render.Draw(System.Drawing.Graphics)"/>，
- 与玩家手动玩时看到的是同一套渲染），右半屏是"大脑此刻在做什么"：
- 
- <list type="bullet">
-   <item><b>感觉通道</b>：16 个通道的强度 —— 大脑看到的食物方位 / 危险；</item>
-   <item><b>运动读出</b>：4 组运动神经元的脉冲数与解码出的走向；</item>
-   <item><b>脑活动</b>：本 tick 发放的神经元总数，并通过 <see cref="E:Neuropils.SnakeBrainForm.BrainActivityChanged"/>
-         事件送到主窗口的三维点云上点亮。</item>
- </list>
- 
- 会话在 UI 线程上推进（每 tick 只有两次内核启动，几毫秒量级），
- 训练在后台线程上跑，完成后把新解码器换上。
- </remarks>
-</member>
-<member name="E:Neuropils.SnakeBrainForm.BrainActivityChanged">
- <summary>大脑活动事件：&lt;本 tick 发放的神经元, 本 tick 的完整读数&gt;。</summary>
-</member>
-<member name="P:Neuropils.SnakeBrainForm.Session">
- <summary>本窗口所用的游戏会话（主窗口也用它拿活动读数）。</summary>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.onGamePaint(System.Object,System.Windows.Forms.PaintEventArgs)">
- <summary>游戏画面的绘制（左半屏）。</summary>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.onSpeedChanged(System.Object,System.EventArgs)">
- <summary>速度（定时器间隔）改动后立即生效。</summary>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.PauseForProbe">
- <summary>
- 供命令行自检抓屏前调用：先停表，抓到的才是"恰好跑了 N 帧"的那一帧。
- </summary>
- <remarks>
- 抓屏前的 <c>Application.DoEvents()</c> 会把定时器消息再抽进来（重入），
- 不先停表的话游戏会在抓屏过程中继续往前跑，帧数与画面都对不上。
- </remarks>
-</member>
-<member name="F:Neuropils.SnakeBrainForm.m_stopped">
- <summary>停过机之后不再重复停机。</summary>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
- <summary>
- 关窗即停机：定时器是"游戏引擎 + 大脑逐步仿真"的唯一驱动，停掉它两者就都停了。
- </summary>
- <remarks>
- 不停表的话后果很具体：<see cref="T:System.Windows.Forms.Timer"/> 的 WM_TIMER 发到的是它自己的隐藏窗口，
- <b>不随窗体销毁而结束</b> —— 关窗之后会话继续 tick，主窗口的三维点云
- 也就继续被脑活动点亮（看起来"关不掉地一直闪"）。
- </remarks>
-</member>
-<member name="P:Neuropils.SnakeBrainForm.Stopped">
- <summary>是否已经停机（关窗 / Dispose 之后为 True）。</summary>
- <remarks>
- 兜底再停一次由 Designer 文件里的 <c>Dispose</c> 重载负责（见
- SnakeBrainForm.Designer.vb）：即使窗体是被 Dispose 掉的（没走 Close），
- 也不该留下一个还在后台推进游戏与仿真的定时器。重复调用由
- <see cref="F:Neuropils.SnakeBrainForm.m_stopped"/> 挡住。
- </remarks>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.onTimerTick(System.Object,System.EventArgs)">
- <remarks>
- Tick 只挂一次：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
- 而且 --snake-window 自检永远等不到帧）。挂接由 Designer 的 WithEvents 字段承担，
- 这里用 Handles 声明即可，不要再另外 AddHandler。
- </remarks>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.updateReadouts(FlywireSnake.SnakeStep)">
- <summary>刷新右侧读数（感觉通道 / 运动读出 / 统计）。</summary>
-</member>
-<member name="M:Neuropils.SnakeBrainForm.trainDecoder">
- <summary>在后台训练解码器，完成后立刻换上。</summary>
 </member>
 <member name="F:Neuropils.Workbench.DefaultDataDir">
  <summary>
