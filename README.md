@@ -11,6 +11,8 @@
 [![Dataset](https://img.shields.io/badge/dataset-FAFB%20v783-orange)](https://flywire.ai/)
 [![Framework](https://img.shields.io/badge/framework-sciBASIC.NET-success)](https://github.com/xieguigang/GCModeller)
 
+![](docs/assets/SNN-Snake.PNG)
+
 ---
 
 ## 1. 这是什么
