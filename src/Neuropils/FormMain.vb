@@ -43,7 +43,9 @@ Public Class FormMain
     Friend m_lookup As Integer()
     Friend m_focusNeuron As Integer = -1
     Friend m_viewInitialized As Boolean = False
-    ''' <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
+    ''' <summary>
+    ''' 出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。
+    ''' </summary>
     Friend m_snapshotPath As String = Nothing
     Friend m_cancel As CancellationTokenSource
     Friend m_busy As Boolean
@@ -65,13 +67,7 @@ Public Class FormMain
     Private Sub initializeUi()
 
 
-        ' 控件本身（菜单栏 / 状态栏 / 工具条 / 画布 / 分隔容器 / 侧边栏 / 回放面板）已在
-        ' InitializeComponent 中声明式建好；这里只负责把根容器按顺序挂到窗体上。
-        ' 顺序保持：split → 工具条 → 菜单 → 状态栏
-        Me.Controls.Add(m_split)
-        Me.Controls.Add(m_toolStrip)
-        Me.Controls.Add(m_menuStrip)
-        Me.Controls.Add(m_statusStrip)
+
 
         ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
         ' 这部分是运行时逻辑，保留在 initializeUi
@@ -82,8 +78,6 @@ Public Class FormMain
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
     End Sub
-
-
 
     ''' <summary>
     ''' 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，

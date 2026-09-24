@@ -1029,7 +1029,9 @@ Neuropils
  <summary>状态栏链接的悬停提示。</summary>
 </member>
 <member name="F:Neuropils.FormMain.m_snapshotPath">
- <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
+ <summary>
+ 出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。
+ </summary>
 </member>
 <member name="F:Neuropils.FormMain.m_rebuildTimer">
  <summary>

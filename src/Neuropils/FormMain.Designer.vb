@@ -671,6 +671,15 @@ Partial Class FormMain
         m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStepsBox))
         m_toolStrip.Items.Add(m_holdLabel)
         m_toolStrip.ResumeLayout(False)
+
+        ' 控件本身（菜单栏 / 状态栏 / 工具条 / 画布 / 分隔容器 / 侧边栏 / 回放面板）已在
+        ' InitializeComponent 中声明式建好；这里只负责把根容器按顺序挂到窗体上。
+        ' 顺序保持：split → 工具条 → 菜单 → 状态栏
+        Me.Controls.Add(m_split)
+        Me.Controls.Add(m_toolStrip)
+        Me.Controls.Add(m_menuStrip)
+        Me.Controls.Add(m_statusStrip)
+
         ResumeLayout(False)
     End Sub
 
