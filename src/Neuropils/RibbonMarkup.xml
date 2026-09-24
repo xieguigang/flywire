@@ -16,10 +16,10 @@
     <Command Name="cmdButtonOpenModelDir" Id="7" LabelTitle="Open Model" LabelDescription="打开数据目录 (&amp;O)..." TooltipDescription="打开数据目录 (&amp;O)..." />
     <Command Name="cmdButtonMakeScreenshot" Id="8" LabelTitle="Screenshot" TooltipDescription="保存截图 (&amp;S)..." />
     <Command Name="cmdButtonOpenCanvas" Id="9" LabelTitle="Open Canvas" />
-    <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" />
+    <Command Name="cmdToggleShowGroundGrid" Id="10" LabelTitle="Show Grid" TooltipDescription="显示网格" />
     <Command Name="cmdNumIntensity" Id="11" LabelTitle="Intensity: " />
     <Command Name="cmdNumSimulationSteps" Id="12" LabelTitle="Steps: " />
-    <Command Name="cmdToggleShowConnection" Id="13" LabelTitle="Show Connection" />
+    <Command Name="cmdToggleShowConnection" Id="13" LabelTitle="Show Connection" TooltipDescription="显示神经元连接" />
     <Command Name="cmdNumSynapseCutoff" Id="14" LabelTitle="Synapse: " />
     <Command Name="cmdNumScatterSize" Id="15" LabelTitle="Scatter Size: " />
   </Application.Commands>

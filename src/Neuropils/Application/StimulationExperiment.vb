@@ -154,12 +154,12 @@ Namespace AppLogics
 #Region "hold interaction"
 
         Friend Sub onStimulateModeChanged(sender As Object, e As EventArgs)
-            If main.m_stimulateMode.Checked Then
+            If RibbonMenu.ToggleSimulationExperiment Then
                 CommonRuntime.StatusMessage("电刺激模式：在神经元上按住左键（越久越强），松开后自动运行全脑仿真并回放")
                 main.m_holdLabel.Text = ""
 
                 ' 回放时先收掉连线：几十万根半透明线会把点亮的神经元淹掉
-                main.m_showConnections.Checked = False
+                RibbonMenu.ToggleConnection = False
             Else
                 Call cancelStimulationHold()
                 Call stopReplay(clearHighlight:=True)
@@ -276,7 +276,7 @@ Namespace AppLogics
             Call stopReplay(clearHighlight:=True)
             Call cancelStimulationHold()
 
-            main.m_stimulateMode.Checked = True
+            RibbonMenu.ToggleSimulationExperiment = True
 
             Dim stimulator As BrainStimulator = m_stimulator
             Dim index As Integer = neuron
@@ -457,7 +457,7 @@ Namespace AppLogics
             main.m_replaySpeed.Enabled = hasReplay
 
             If Not hasReplay Then
-                main.m_replayText.Text = If(main.m_stimulateMode.Checked,
+                main.m_replayText.Text = If(RibbonMenu.ToggleSimulationExperiment,
                                    "在神经元上按住左键并松开即可施加电刺激",
                                    "勾选工具条上的「电刺激模式」后可用")
                 main.m_replayTrack.Maximum = 0
@@ -596,7 +596,7 @@ Namespace AppLogics
         Private Sub clearStimulusMarker()
             If main.m_scene Is Nothing Then Return
 
-            If main.m_showConnections.Checked Then
+            If RibbonMenu.ToggleConnection Then
                 Call main.m_canvas.UpdateConnections(main.m_scene.Lines)
             Else
                 Call main.m_canvas.UpdateConnections(New LineSegment() {})

@@ -207,7 +207,7 @@ Public Class PageFlywireCanvas
 
                 If connections > 0 Then
                     m_connectionBox.SelectedIndex = System.Math.Max(0, System.Math.Min(2, connections - 1))
-                    m_showConnections.Checked = True
+                    RibbonMenu.ToggleConnection = True
                 End If
             End If
 
@@ -506,7 +506,7 @@ Public Class PageFlywireCanvas
         Else
             Call m_canvas.UpdatePointCloud(m_scene.Points)
 
-            If m_showConnections.Checked Then
+            If RibbonMenu.ToggleConnection Then
                 Call m_canvas.UpdateConnections(m_scene.Lines)
             End If
         End If
@@ -566,7 +566,7 @@ Public Class PageFlywireCanvas
         Call m_canvas.UpdateConnections(lines)
 
         m_canvas.ShowConnections = True
-        m_showConnections.Checked = True
+        RibbonMenu.ToggleConnection = True
     End Sub
 
     Private Sub onRebuildTimerTick(sender As Object, e As EventArgs)
@@ -627,19 +627,6 @@ Public Class PageFlywireCanvas
         End Select
 
         Call scheduleRebuild()
-    End Sub
-
-    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs) Handles m_showConnections.CheckedChanged
-        m_canvas.ShowConnections = m_showConnections.Checked
-    End Sub
-
-    Private Sub onShowGroundChanged(sender As Object, e As EventArgs) Handles m_showGround.CheckedChanged
-        m_canvas.ShowGround = m_showGround.Checked
-    End Sub
-
-    ''' <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
-    Private Sub onStimulateModeChanged(sender As Object, e As EventArgs) Handles m_stimulateMode.CheckedChanged
-        Call m_experiment.onStimulateModeChanged(sender, e)
     End Sub
 
     Public Sub onSnapshot()
@@ -757,7 +744,7 @@ Public Class PageFlywireCanvas
         m_mouseDownValid = True
 
         ' 电刺激模式下同时开始"按住计时"：强度由按住时长决定，因此在按下期间就要回显
-        If m_stimulateMode.Checked Then
+        If RibbonMenu.ToggleSimulationExperiment Then
             Call m_experiment.beginStimulationHold(e.X, e.Y)
         End If
     End Sub
@@ -777,7 +764,7 @@ Public Class PageFlywireCanvas
             Return
         End If
 
-        If m_stimulateMode.Checked Then
+        If RibbonMenu.ToggleSimulationExperiment Then
             Call m_experiment.stimulateAt(e.X, e.Y, holdMs)
         Else
             Call m_experiment.cancelStimulationHold()
@@ -808,7 +795,7 @@ Public Class PageFlywireCanvas
             m_buildOptions.Mode = ConnectionRenderMode.SelectedNeuron
             m_buildOptions.FocusNeuron = neuron
             m_connectionBox.SelectedIndex = 2
-            m_showConnections.Checked = True
+            RibbonMenu.ToggleConnection = True
 
             Call showNeuronDetails(neuron)
             Call rebuildScene()

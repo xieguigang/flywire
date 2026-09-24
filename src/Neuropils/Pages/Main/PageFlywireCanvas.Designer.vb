@@ -31,10 +31,6 @@ Partial Class PageFlywireCanvas
     Private WithEvents m_lineColorBox As ToolStripComboBox
     Private WithEvents m_renderModeBox As ToolStripComboBox
 
-    Friend WithEvents m_showConnections As ToolStripButton
-    Private WithEvents m_showGround As ToolStripButton
-    Friend WithEvents m_stimulateMode As ToolStripButton
-
     Friend m_holdLabel As ToolStripLabel
 
     ' ---- 主界面布局（声明式，参照 ResponseChartForm.Designer.vb 的模式）----
@@ -82,7 +78,7 @@ Partial Class PageFlywireCanvas
         ' 
         ' FormMain
         ' 
-        AutoScaleDimensions = New SizeF(7F, 15F)
+        AutoScaleDimensions = New SizeF(7.0F, 15.0F)
         AutoScaleMode = AutoScaleMode.Font
         ClientSize = New Size(1411, 818)
         Name = "FormMain"
@@ -560,21 +556,21 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_showConnections
         ' 
-        m_showConnections = New ToolStripButton()
-        m_showConnections.CheckOnClick = True
-        m_showConnections.Checked = False
-        m_showConnections.Name = "m_showConnections"
-        m_showConnections.Size = New Size(75, 22)
-        m_showConnections.Text = "显示连接"
+        'm_showConnections = New ToolStripButton()
+        'm_showConnections.CheckOnClick = True
+        'm_showConnections.Checked = False
+        'm_showConnections.Name = "m_showConnections"
+        'm_showConnections.Size = New Size(75, 22)
+        'm_showConnections.Text = "显示连接"
         ' 
         ' m_showGround
         ' 
-        m_showGround = New ToolStripButton()
-        m_showGround.CheckOnClick = True
-        m_showGround.Checked = False
-        m_showGround.Name = "m_showGround"
-        m_showGround.Size = New Size(45, 22)
-        m_showGround.Text = "地面"
+        'm_showGround = New ToolStripButton()
+        'm_showGround.CheckOnClick = True
+        'm_showGround.Checked = False
+        'm_showGround.Name = "m_showGround"
+        'm_showGround.Size = New Size(45, 22)
+        'm_showGround.Text = "地面"
         ' 
         ' m_snapshotButton
         ' 
@@ -592,13 +588,13 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_stimulateMode
         ' 
-        m_stimulateMode = New ToolStripButton()
-        m_stimulateMode.CheckOnClick = True
-        m_stimulateMode.Checked = False
-        m_stimulateMode.Name = "m_stimulateMode"
-        m_stimulateMode.Size = New Size(75, 22)
-        m_stimulateMode.Text = "电刺激模式"
-        m_stimulateMode.ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
+        'm_stimulateMode = New ToolStripButton()
+        'm_stimulateMode.CheckOnClick = True
+        'm_stimulateMode.Checked = False
+        'm_stimulateMode.Name = "m_stimulateMode"
+        'm_stimulateMode.Size = New Size(75, 22)
+        'm_stimulateMode.Text = "电刺激模式"
+        'm_stimulateMode.ToolTipText = "勾选后：在神经元上按住左键（越久越强），松开即运行一次全脑 SNN 仿真并回放激活过程"
         ' 
         ' m_stimStrengthBox
         ' 
@@ -644,13 +640,13 @@ Partial Class PageFlywireCanvas
         m_toolStrip.Items.Add(New ToolStripSeparator())
         m_toolStrip.Items.Add(New ToolStripLabel("点大小:"))
         ' m_toolStrip.Items.Add(New ToolStripControlHost(m_pointSizeBox))
-        m_toolStrip.Items.Add(m_showConnections)
-        m_toolStrip.Items.Add(m_showGround)
+        '  m_toolStrip.Items.Add(m_showConnections)
+        '  m_toolStrip.Items.Add(m_showGround)
         m_toolStrip.Items.Add(New ToolStripSeparator())
         '   m_toolStrip.Items.Add(m_snapshotButton)
         '   m_toolStrip.Items.Add(m_reloadButton)
         m_toolStrip.Items.Add(New ToolStripSeparator())
-        m_toolStrip.Items.Add(m_stimulateMode)
+        ' m_toolStrip.Items.Add(m_stimulateMode)
         m_toolStrip.Items.Add(New ToolStripLabel("强度×"))
         '  m_toolStrip.Items.Add(New ToolStripControlHost(m_stimStrengthBox))
         m_toolStrip.Items.Add(New ToolStripLabel("仿真步数"))

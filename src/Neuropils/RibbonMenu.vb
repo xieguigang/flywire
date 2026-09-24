@@ -12,10 +12,13 @@ Module RibbonMenu
     ''' 是否进入针对大脑神经元的电刺激实验模式
     ''' </summary>
     ''' <returns></returns>
-    Public ReadOnly Property ToggleSimulationExperiment As Boolean
+    Public Property ToggleSimulationExperiment As Boolean
         Get
             Return ribbon.ToggleSimulationExperiment.BooleanValue
         End Get
+        Set(value As Boolean)
+            ribbon.ToggleSimulationExperiment.BooleanValue = value
+        End Set
     End Property
 
     Public ReadOnly Property SimulationSteps As Integer
@@ -30,6 +33,24 @@ Module RibbonMenu
         End Get
     End Property
 
+    Public Property ToggleConnection As Boolean
+        Get
+            Return ribbon.ToggleShowConnection.BooleanValue
+        End Get
+        Set(value As Boolean)
+            ribbon.ToggleShowConnection.BooleanValue = value
+        End Set
+    End Property
+
+    Public Property ToggleGrid As Boolean
+        Get
+            Return ribbon.ToggleShowGroundGrid.BooleanValue
+        End Get
+        Set(value As Boolean)
+            ribbon.ToggleShowGroundGrid.BooleanValue = value
+        End Set
+    End Property
+
     Public Sub Load(ribbon As Ribbon)
         _ribbon = New RibbonItems(ribbon)
 
@@ -40,6 +61,10 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.ButtonOpenModelDir.ExecuteEvent, Sub() Workbench.flywire.onReload()
         AddHandler RibbonMenu.ribbon.ButtonMakeScreenshot.ExecuteEvent, Sub() Workbench.flywire.onSnapshot()
         AddHandler RibbonMenu.ribbon.ButtonOpenCanvas.ExecuteEvent, Sub() Workbench.flywire.DockState = DockState.Document
+
+        AddHandler RibbonMenu.ribbon.ToggleShowConnection.ExecuteEvent, AddressOf onShowConnectionsChanged
+        AddHandler RibbonMenu.ribbon.ToggleShowGroundGrid.ExecuteEvent, AddressOf onShowGroundChanged
+        AddHandler RibbonMenu.ribbon.ToggleSimulationExperiment.ExecuteEvent, AddressOf onStimulateModeChanged
 
         _ribbon.NumIntensity.MinValue = 0.2
         _ribbon.NumIntensity.MaxValue = 20
@@ -67,6 +92,19 @@ Module RibbonMenu
         AddHandler RibbonMenu.ribbon.NumSimulationSteps.ExecuteEvent, AddressOf onStimulusStepsChanged
         AddHandler RibbonMenu.ribbon.NumSynapseCutoff.ExecuteEvent, AddressOf onThresholdChanged
         AddHandler RibbonMenu.ribbon.NumScatterSize.ExecuteEvent, AddressOf onPointSizeChanged
+    End Sub
+
+    Private Sub onShowGroundChanged(sender As Object, e As EventArgs)
+        Workbench.flywire.m_canvas.ShowGround = ToggleGrid
+    End Sub
+
+    ''' <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
+    Private Sub onStimulateModeChanged(sender As Object, e As EventArgs)
+        Call m_experiment.onStimulateModeChanged(sender, e)
+    End Sub
+
+    Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs)
+        Workbench.flywire.m_canvas.ShowConnections = RibbonMenu.ToggleConnection
     End Sub
 
     Private Sub onThresholdChanged(sender As Object, e As EventArgs)
