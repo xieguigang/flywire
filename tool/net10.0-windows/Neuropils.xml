@@ -6,6 +6,33 @@ Neuropils
 </name>
 </assembly>
 <members>
+<member name="T:Neuropils.AboutForm">
+ <summary>
+ 关于 Neuropils 的独立窗口：把原 <see cref="T:Neuropils.PageFlywireCanvas"/> 的 onAbout 里的说明文本
+ 抽到这里，显示在一个只读多行的 <see cref="T:System.Windows.Forms.TextBox"/> 里（而非 MessageBox）。
+ </summary>
+ <remarks>
+ 控件布局在 <c>AboutForm.Designer.vb</c> 的 <c>InitializeComponent</c> 中声明式建好，
+ 文本本身在 <see cref="M:Neuropils.AboutForm.AboutForm_Load(System.Object,System.EventArgs)"/> 里灌入；弹出用 <see cref="M:Neuropils.AboutForm.ShowAbout(System.Windows.Forms.IWin32Window)"/>。
+ </remarks>
+</member>
+<member name="M:Neuropils.AboutForm.AboutForm_Load(System.Object,System.EventArgs)">
+ <summary>载入时把说明文本灌入只读 TextBox（文本与原 onAbout 完全一致）。</summary>
+</member>
+<member name="M:Neuropils.AboutForm.buildAboutText">
+ <summary>
+ 原 PageFlywireCanvas.onAbout 里的说明文本（原样搬过来，未作改动）。
+ </summary>
+</member>
+<member name="M:Neuropils.AboutForm.ProcessDialogKey(System.Windows.Forms.Keys)">
+ <summary>ESC 关闭窗口（确定按钮已绑定 DialogResult.OK，回车也会触发）。</summary>
+</member>
+<member name="M:Neuropils.AboutForm.ShowAbout(System.Windows.Forms.IWin32Window)">
+ <summary>
+ 以模态方式弹出关于窗口（owner 居中）。
+ </summary>
+ <param name="owner">父窗口（通常为 <see cref="T:Neuropils.FormMain"/> 或 <see cref="T:Neuropils.PageFlywireCanvas"/>）</param>
+</member>
 <member name="T:Neuropils.Analysis.PlotRuntime">
  <summary>
  绘图运行时的初始化。
@@ -1472,6 +1499,12 @@ Neuropils
  区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
  也能在没有窗口的环境里验证绘图链路。
  </remarks>
+</member>
+<member name="P:Neuropils.RibbonMenu.ToggleSimulationExperiment">
+ <summary>
+ 是否进入针对大脑神经元的电刺激实验模式
+ </summary>
+ <returns></returns>
 </member>
 <member name="M:Neuropils.RibbonMenu.onOpenResponseChart">
  <summary>
