@@ -26,7 +26,7 @@ Partial Class FormMain
         VS2015LightTheme1 = New ThemeVS2015.VS2015LightTheme()
         DockPanel1 = New Microsoft.VisualStudio.WinForms.Docking.DockPanel()
         VisualStudioToolStripExtender1 = New Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender(components)
-        Ribbon1 = New RibbonLib.Ribbon()
+        Ribbon1 = New Global.RibbonLib.Ribbon()
         StatusStrip1 = New StatusStrip()
         SuspendLayout()
         ' 
@@ -47,7 +47,7 @@ Partial Class FormMain
         Ribbon1.Location = New Point(0, 0)
         Ribbon1.Name = "Ribbon1"
         Ribbon1.ResourceIdentifier = Nothing
-        Ribbon1.ResourceName = Nothing
+        Ribbon1.ResourceName = "Neuropils.RibbonMarkup.ribbon"
         Ribbon1.ShortcutTableResourceName = Nothing
         Ribbon1.Size = New Size(1428, 116)
         Ribbon1.TabIndex = 1
@@ -77,6 +77,6 @@ Partial Class FormMain
     Friend WithEvents VS2015LightTheme1 As ThemeVS2015.VS2015LightTheme
     Friend WithEvents DockPanel1 As Microsoft.VisualStudio.WinForms.Docking.DockPanel
     Friend WithEvents VisualStudioToolStripExtender1 As Microsoft.VisualStudio.WinForms.Docking.VisualStudioToolStripExtender
-    Friend WithEvents Ribbon1 As RibbonLib.Ribbon
+    Friend WithEvents Ribbon1 As Global.RibbonLib.Ribbon
     Friend WithEvents StatusStrip1 As StatusStrip
 End Class

@@ -10,6 +10,9 @@
     <UseWPF>True</UseWPF>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);WFO1000</NoWarn>
+    <RootNamespace>Neuropils</RootNamespace>
+    <AssemblyTitle>Neuropils</AssemblyTitle>
+    <AssemblyName>Neuropils</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -27,6 +30,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutputPath>../../tool/</OutputPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="RibbonMarkup.ribbon" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="RibbonMarkup.ribbon" />
+  </ItemGroup>
 
   <ItemGroup>
     <Import Include="System.Data" />

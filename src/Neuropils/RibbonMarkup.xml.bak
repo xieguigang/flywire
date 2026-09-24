@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns="http://schemas.microsoft.com/windows/2009/Ribbon">
+  <Application.Commands>
+    <Command Name="cmdButtonAbout" Id="2" LabelTitle="About" />
+  </Application.Commands>
+  <Application.Views>
+    <Ribbon>
+      <Ribbon.ApplicationMenu>
+        <ApplicationMenu>
+          <MenuGroup>
+            <Button CommandName="cmdButtonAbout" />
+          </MenuGroup>
+        </ApplicationMenu>
+      </Ribbon.ApplicationMenu>
+      <Ribbon.QuickAccessToolbar>
+        <QuickAccessToolbar />
+      </Ribbon.QuickAccessToolbar>
+    </Ribbon>
+    <ContextPopup />
+  </Application.Views>
+</Application>
+<!--ResourceName Value="APPLICATION"-->
