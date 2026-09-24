@@ -1,3 +1,4 @@
+Imports Galaxy.Workbench
 Imports Microsoft.VisualBasic.Data.Plots
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Neuropils.Analysis
@@ -332,8 +333,7 @@ Public Class PageResponseChart
             End If
         End Using
 
-        m_status.Text = $"{m_description} · 画布 {e.Width}x{e.Height} px · {m_data.Source}"
-        m_status.ForeColor = Color.FromArgb(148, 163, 184)
+        CommonRuntime.StatusMessage($"{m_description} · 画布 {e.Width}x{e.Height} px · {m_data.Source}")
     End Sub
 
     Private Sub onSaveImage(sender As Object, e As EventArgs) Handles exportImage.Click
@@ -345,9 +345,9 @@ Public Class PageResponseChart
             If dialog.ShowDialog(Me) <> DialogResult.OK Then Return
 
             If CaptureTo(dialog.FileName) Then
-                m_status.Text = $"已保存: {dialog.FileName}"
+                CommonRuntime.StatusMessage($"已保存: {dialog.FileName}")
             Else
-                m_status.Text = $"保存失败: {m_canvas.LastError}"
+                CommonRuntime.Warning($"保存失败: {m_canvas.LastError}")
             End If
         End Using
     End Sub

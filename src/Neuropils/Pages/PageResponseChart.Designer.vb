@@ -76,7 +76,6 @@ Partial Class PageResponseChart
         m_summary = New Label()
         canvasPanel = New TableLayoutPanel()
         m_canvas = New DxCanvas()
-        m_status = New Label()
         root.SuspendLayout()
         filterBar.SuspendLayout()
         row3.SuspendLayout()
@@ -353,7 +352,6 @@ Partial Class PageResponseChart
         canvasPanel.ColumnCount = 1
         canvasPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 20F))
         canvasPanel.Controls.Add(m_canvas, 0, 0)
-        canvasPanel.Controls.Add(m_status, 0, 1)
         canvasPanel.Dock = DockStyle.Fill
         canvasPanel.Location = New Point(367, 3)
         canvasPanel.Name = "canvasPanel"
@@ -373,17 +371,6 @@ Partial Class PageResponseChart
         m_canvas.Name = "m_canvas"
         m_canvas.Size = New Size(886, 712)
         m_canvas.TabIndex = 0
-        ' 
-        ' m_status
-        ' 
-        m_status.AutoEllipsis = True
-        m_status.Dock = DockStyle.Fill
-        m_status.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
-        m_status.Location = New Point(3, 724)
-        m_status.Name = "m_status"
-        m_status.Size = New Size(886, 26)
-        m_status.TabIndex = 1
-        m_status.TextAlign = ContentAlignment.MiddleLeft
         ' 
         ' PageResponseChart
         ' 
@@ -422,6 +409,5 @@ Partial Class PageResponseChart
     Private WithEvents m_windowBox As NumericUpDown
     Private WithEvents m_values As CheckedListBox
     Private WithEvents m_valueHint As Label
-    Private WithEvents m_status As Label
     Private WithEvents m_summary As Label
 End Class
