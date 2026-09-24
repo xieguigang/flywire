@@ -3,6 +3,7 @@ Imports Galaxy.Workbench.CommonDialogs
 Imports Microsoft.VisualStudio.WinForms.Docking
 Imports Neuropils.RibbonLib.Controls
 Imports RibbonLib
+Imports RibbonLib.Interop
 
 Module RibbonMenu
 
@@ -123,6 +124,12 @@ Module RibbonMenu
     ''' <summary>工具条"电刺激模式"开关：转交给 StimulationExperiment 处理状态切换。</summary>
     Private Sub onStimulateModeChanged(sender As Object, e As EventArgs)
         Call m_experiment.onStimulateModeChanged(sender, e)
+
+        If ToggleSimulationExperiment Then
+            ribbon.MenuSimulationExperiment.ContextAvailable = ContextAvailability.Active
+        Else
+            ribbon.MenuSimulationExperiment.ContextAvailable = ContextAvailability.NotAvailable
+        End If
     End Sub
 
     Private Sub onShowConnectionsChanged(sender As Object, e As EventArgs)

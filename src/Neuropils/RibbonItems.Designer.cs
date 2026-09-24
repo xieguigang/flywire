@@ -18,19 +18,29 @@ namespace RibbonLib.Controls
     {
         private static class Cmd
         {
+            public const uint cmdButtonOpenModelDir = 7;
             public const uint cmdButtonAbout = 2;
             public const uint cmdButtonExit = 16;
+            public const uint cmdMenuSimulationExperiment = 25;
+            public const uint cmdTabExperiment = 26;
+            public const uint cmdGroupExperimentParameters = 23;
             public const uint cmdNumIntensity = 11;
             public const uint cmdNumSimulationSteps = 12;
-            public const uint cmdButtonOpenModelDir = 7;
-            public const uint cmdButtonMakeScreenshot = 8;
+            public const uint cmdMenuWorkbench = 21;
+            public const uint cmdGroupWorkbench = 20;
             public const uint cmdButtonOpenCanvas = 9;
+            public const uint cmdButtonMakeScreenshot = 8;
+            public const uint cmdGroupWorkbenchTools = 19;
             public const uint cmdButtonOpenResponseCharts = 3;
             public const uint cmdButtonOpenSnakeGame = 4;
             public const uint cmdToggleSimulationExperiment = 5;
             public const uint cmdButtonResetView = 6;
+            public const uint cmdGroupInformation = 18;
+            public const uint cmdTabCanvasOptions = 24;
+            public const uint cmdGroupDisplayOptions = 17;
             public const uint cmdToggleShowGroundGrid = 10;
             public const uint cmdToggleShowConnection = 13;
+            public const uint cmdGroupDisplayParameters = 22;
             public const uint cmdNumSynapseCutoff = 14;
             public const uint cmdNumScatterSize = 15;
         }
@@ -38,19 +48,29 @@ namespace RibbonLib.Controls
         // ContextPopup CommandName
 
         public Ribbon Ribbon { get; private set; }
+        public RibbonButton ButtonOpenModelDir { get; private set; }
         public RibbonButton ButtonAbout { get; private set; }
         public RibbonButton ButtonExit { get; private set; }
+        public RibbonTabGroup MenuSimulationExperiment { get; private set; }
+        public RibbonTab TabExperiment { get; private set; }
+        public RibbonGroup GroupExperimentParameters { get; private set; }
         public RibbonSpinner NumIntensity { get; private set; }
         public RibbonSpinner NumSimulationSteps { get; private set; }
-        public RibbonButton ButtonOpenModelDir { get; private set; }
-        public RibbonButton ButtonMakeScreenshot { get; private set; }
+        public RibbonTab MenuWorkbench { get; private set; }
+        public RibbonGroup GroupWorkbench { get; private set; }
         public RibbonButton ButtonOpenCanvas { get; private set; }
+        public RibbonButton ButtonMakeScreenshot { get; private set; }
+        public RibbonGroup GroupWorkbenchTools { get; private set; }
         public RibbonButton ButtonOpenResponseCharts { get; private set; }
         public RibbonButton ButtonOpenSnakeGame { get; private set; }
         public RibbonToggleButton ToggleSimulationExperiment { get; private set; }
         public RibbonButton ButtonResetView { get; private set; }
+        public RibbonGroup GroupInformation { get; private set; }
+        public RibbonTab TabCanvasOptions { get; private set; }
+        public RibbonGroup GroupDisplayOptions { get; private set; }
         public RibbonToggleButton ToggleShowGroundGrid { get; private set; }
         public RibbonToggleButton ToggleShowConnection { get; private set; }
+        public RibbonGroup GroupDisplayParameters { get; private set; }
         public RibbonSpinner NumSynapseCutoff { get; private set; }
         public RibbonSpinner NumScatterSize { get; private set; }
 
@@ -59,19 +79,29 @@ namespace RibbonLib.Controls
             if (ribbon == null)
                 throw new ArgumentNullException(nameof(ribbon), "Parameter is null");
             this.Ribbon = ribbon;
+            ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
             ButtonExit = new RibbonButton(ribbon, Cmd.cmdButtonExit);
+            MenuSimulationExperiment = new RibbonTabGroup(ribbon, Cmd.cmdMenuSimulationExperiment);
+            TabExperiment = new RibbonTab(ribbon, Cmd.cmdTabExperiment);
+            GroupExperimentParameters = new RibbonGroup(ribbon, Cmd.cmdGroupExperimentParameters);
             NumIntensity = new RibbonSpinner(ribbon, Cmd.cmdNumIntensity);
             NumSimulationSteps = new RibbonSpinner(ribbon, Cmd.cmdNumSimulationSteps);
-            ButtonOpenModelDir = new RibbonButton(ribbon, Cmd.cmdButtonOpenModelDir);
-            ButtonMakeScreenshot = new RibbonButton(ribbon, Cmd.cmdButtonMakeScreenshot);
+            MenuWorkbench = new RibbonTab(ribbon, Cmd.cmdMenuWorkbench);
+            GroupWorkbench = new RibbonGroup(ribbon, Cmd.cmdGroupWorkbench);
             ButtonOpenCanvas = new RibbonButton(ribbon, Cmd.cmdButtonOpenCanvas);
+            ButtonMakeScreenshot = new RibbonButton(ribbon, Cmd.cmdButtonMakeScreenshot);
+            GroupWorkbenchTools = new RibbonGroup(ribbon, Cmd.cmdGroupWorkbenchTools);
             ButtonOpenResponseCharts = new RibbonButton(ribbon, Cmd.cmdButtonOpenResponseCharts);
             ButtonOpenSnakeGame = new RibbonButton(ribbon, Cmd.cmdButtonOpenSnakeGame);
             ToggleSimulationExperiment = new RibbonToggleButton(ribbon, Cmd.cmdToggleSimulationExperiment);
             ButtonResetView = new RibbonButton(ribbon, Cmd.cmdButtonResetView);
+            GroupInformation = new RibbonGroup(ribbon, Cmd.cmdGroupInformation);
+            TabCanvasOptions = new RibbonTab(ribbon, Cmd.cmdTabCanvasOptions);
+            GroupDisplayOptions = new RibbonGroup(ribbon, Cmd.cmdGroupDisplayOptions);
             ToggleShowGroundGrid = new RibbonToggleButton(ribbon, Cmd.cmdToggleShowGroundGrid);
             ToggleShowConnection = new RibbonToggleButton(ribbon, Cmd.cmdToggleShowConnection);
+            GroupDisplayParameters = new RibbonGroup(ribbon, Cmd.cmdGroupDisplayParameters);
             NumSynapseCutoff = new RibbonSpinner(ribbon, Cmd.cmdNumSynapseCutoff);
             NumScatterSize = new RibbonSpinner(ribbon, Cmd.cmdNumScatterSize);
         }

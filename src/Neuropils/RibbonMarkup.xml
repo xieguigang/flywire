@@ -93,16 +93,24 @@
         <Image MinDPI="192">Icons/icons8-exit-96.png</Image>
       </Command.LargeImages>
     </Command>
-    <Command Name="cmd_2" Id="17" />
-    <Command Name="cmd_3" Id="18" />
-    <Command Name="cmd_4" Id="19" />
-    <Command Name="cmd_5" Id="20" />
-    <Command Name="cmd_6" Id="21" />
+    <Command Name="cmdGroupDisplayOptions" Id="17" LabelTitle="Display Options" />
+    <Command Name="cmdGroupInformation" Id="18" LabelTitle="Information" />
+    <Command Name="cmdGroupWorkbenchTools" Id="19" LabelTitle="Tools" />
+    <Command Name="cmdGroupWorkbench" Id="20" LabelTitle="Workbench" />
+    <Command Name="cmdMenuWorkbench" Id="21" LabelTitle="Flywire AI" />
+    <Command Name="cmdGroupDisplayParameters" Id="22" LabelTitle="Display Parameters" />
+    <Command Name="cmdGroupExperimentParameters" Id="23" LabelTitle="Experiment Parameters" />
+    <Command Name="cmdTabCanvasOptions" Id="24" LabelTitle="Canvas Options" />
+    <Command Name="cmdMenuSimulationExperiment" Id="25" LabelTitle="Simulation Experiment" />
+    <Command Name="cmdTabExperiment" Id="26" LabelTitle="Experiment" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>
       <Ribbon.ApplicationMenu>
         <ApplicationMenu>
+          <MenuGroup>
+            <Button CommandName="cmdButtonOpenModelDir" />
+          </MenuGroup>
           <MenuGroup>
             <Button CommandName="cmdButtonAbout" />
             <Button CommandName="cmdButtonExit" />
@@ -113,9 +121,9 @@
         <QuickAccessToolbar />
       </Ribbon.QuickAccessToolbar>
       <Ribbon.ContextualTabs>
-        <TabGroup>
-          <Tab>
-            <Group>
+        <TabGroup CommandName="cmdMenuSimulationExperiment">
+          <Tab CommandName="cmdTabExperiment">
+            <Group CommandName="cmdGroupExperimentParameters">
               <Spinner CommandName="cmdNumIntensity" />
               <Spinner CommandName="cmdNumSimulationSteps" />
             </Group>
@@ -123,28 +131,28 @@
         </TabGroup>
       </Ribbon.ContextualTabs>
       <Ribbon.Tabs>
-        <Tab>
-          <Group SizeDefinition="ThreeButtons">
+        <Tab CommandName="cmdMenuWorkbench">
+          <Group CommandName="cmdGroupWorkbench" SizeDefinition="ThreeButtons">
             <Button CommandName="cmdButtonOpenModelDir" />
-            <Button CommandName="cmdButtonMakeScreenshot" />
             <Button CommandName="cmdButtonOpenCanvas" />
+            <Button CommandName="cmdButtonMakeScreenshot" />
           </Group>
-          <Group SizeDefinition="FourButtons">
+          <Group CommandName="cmdGroupWorkbenchTools" SizeDefinition="FourButtons">
             <Button CommandName="cmdButtonOpenResponseCharts" />
             <Button CommandName="cmdButtonOpenSnakeGame" />
             <ToggleButton CommandName="cmdToggleSimulationExperiment" />
             <Button CommandName="cmdButtonResetView" />
           </Group>
-          <Group SizeDefinition="OneButton">
+          <Group CommandName="cmdGroupInformation" SizeDefinition="OneButton">
             <Button CommandName="cmdButtonAbout" />
           </Group>
         </Tab>
-        <Tab>
-          <Group SizeDefinition="TwoButtons">
+        <Tab CommandName="cmdTabCanvasOptions">
+          <Group CommandName="cmdGroupDisplayOptions" SizeDefinition="TwoButtons">
             <ToggleButton CommandName="cmdToggleShowGroundGrid" />
             <ToggleButton CommandName="cmdToggleShowConnection" />
           </Group>
-          <Group>
+          <Group CommandName="cmdGroupDisplayParameters">
             <Spinner CommandName="cmdNumSynapseCutoff" />
             <Spinner CommandName="cmdNumScatterSize" />
           </Group>

@@ -15,19 +15,29 @@ Imports RibbonLib.Controls
 Namespace RibbonLib.Controls
     Partial Class RibbonItems
         Private Class Cmd
+            Public Const cmdButtonOpenModelDir As UInteger = 7
             Public Const cmdButtonAbout As UInteger = 2
             Public Const cmdButtonExit As UInteger = 16
+            Public Const cmdMenuSimulationExperiment As UInteger = 25
+            Public Const cmdTabExperiment As UInteger = 26
+            Public Const cmdGroupExperimentParameters As UInteger = 23
             Public Const cmdNumIntensity As UInteger = 11
             Public Const cmdNumSimulationSteps As UInteger = 12
-            Public Const cmdButtonOpenModelDir As UInteger = 7
-            Public Const cmdButtonMakeScreenshot As UInteger = 8
+            Public Const cmdMenuWorkbench As UInteger = 21
+            Public Const cmdGroupWorkbench As UInteger = 20
             Public Const cmdButtonOpenCanvas As UInteger = 9
+            Public Const cmdButtonMakeScreenshot As UInteger = 8
+            Public Const cmdGroupWorkbenchTools As UInteger = 19
             Public Const cmdButtonOpenResponseCharts As UInteger = 3
             Public Const cmdButtonOpenSnakeGame As UInteger = 4
             Public Const cmdToggleSimulationExperiment As UInteger = 5
             Public Const cmdButtonResetView As UInteger = 6
+            Public Const cmdGroupInformation As UInteger = 18
+            Public Const cmdTabCanvasOptions As UInteger = 24
+            Public Const cmdGroupDisplayOptions As UInteger = 17
             Public Const cmdToggleShowGroundGrid As UInteger = 10
             Public Const cmdToggleShowConnection As UInteger = 13
+            Public Const cmdGroupDisplayParameters As UInteger = 22
             Public Const cmdNumSynapseCutoff As UInteger = 14
             Public Const cmdNumScatterSize As UInteger = 15
         End Class
@@ -38,6 +48,12 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property Ribbon As Ribbon
             Get
                 Return _ribbon
+            End Get
+        End Property
+        Private _ButtonOpenModelDir As RibbonButton
+        Public ReadOnly Property ButtonOpenModelDir As RibbonButton
+            Get
+                Return _ButtonOpenModelDir
             End Get
         End Property
         Private _ButtonAbout As RibbonButton
@@ -52,6 +68,24 @@ Namespace RibbonLib.Controls
                 Return _ButtonExit
             End Get
         End Property
+        Private _MenuSimulationExperiment As RibbonTabGroup
+        Public ReadOnly Property MenuSimulationExperiment As RibbonTabGroup
+            Get
+                Return _MenuSimulationExperiment
+            End Get
+        End Property
+        Private _TabExperiment As RibbonTab
+        Public ReadOnly Property TabExperiment As RibbonTab
+            Get
+                Return _TabExperiment
+            End Get
+        End Property
+        Private _GroupExperimentParameters As RibbonGroup
+        Public ReadOnly Property GroupExperimentParameters As RibbonGroup
+            Get
+                Return _GroupExperimentParameters
+            End Get
+        End Property
         Private _NumIntensity As RibbonSpinner
         Public ReadOnly Property NumIntensity As RibbonSpinner
             Get
@@ -64,10 +98,22 @@ Namespace RibbonLib.Controls
                 Return _NumSimulationSteps
             End Get
         End Property
-        Private _ButtonOpenModelDir As RibbonButton
-        Public ReadOnly Property ButtonOpenModelDir As RibbonButton
+        Private _MenuWorkbench As RibbonTab
+        Public ReadOnly Property MenuWorkbench As RibbonTab
             Get
-                Return _ButtonOpenModelDir
+                Return _MenuWorkbench
+            End Get
+        End Property
+        Private _GroupWorkbench As RibbonGroup
+        Public ReadOnly Property GroupWorkbench As RibbonGroup
+            Get
+                Return _GroupWorkbench
+            End Get
+        End Property
+        Private _ButtonOpenCanvas As RibbonButton
+        Public ReadOnly Property ButtonOpenCanvas As RibbonButton
+            Get
+                Return _ButtonOpenCanvas
             End Get
         End Property
         Private _ButtonMakeScreenshot As RibbonButton
@@ -76,10 +122,10 @@ Namespace RibbonLib.Controls
                 Return _ButtonMakeScreenshot
             End Get
         End Property
-        Private _ButtonOpenCanvas As RibbonButton
-        Public ReadOnly Property ButtonOpenCanvas As RibbonButton
+        Private _GroupWorkbenchTools As RibbonGroup
+        Public ReadOnly Property GroupWorkbenchTools As RibbonGroup
             Get
-                Return _ButtonOpenCanvas
+                Return _GroupWorkbenchTools
             End Get
         End Property
         Private _ButtonOpenResponseCharts As RibbonButton
@@ -106,6 +152,24 @@ Namespace RibbonLib.Controls
                 Return _ButtonResetView
             End Get
         End Property
+        Private _GroupInformation As RibbonGroup
+        Public ReadOnly Property GroupInformation As RibbonGroup
+            Get
+                Return _GroupInformation
+            End Get
+        End Property
+        Private _TabCanvasOptions As RibbonTab
+        Public ReadOnly Property TabCanvasOptions As RibbonTab
+            Get
+                Return _TabCanvasOptions
+            End Get
+        End Property
+        Private _GroupDisplayOptions As RibbonGroup
+        Public ReadOnly Property GroupDisplayOptions As RibbonGroup
+            Get
+                Return _GroupDisplayOptions
+            End Get
+        End Property
         Private _ToggleShowGroundGrid As RibbonToggleButton
         Public ReadOnly Property ToggleShowGroundGrid As RibbonToggleButton
             Get
@@ -116,6 +180,12 @@ Namespace RibbonLib.Controls
         Public ReadOnly Property ToggleShowConnection As RibbonToggleButton
             Get
                 Return _ToggleShowConnection
+            End Get
+        End Property
+        Private _GroupDisplayParameters As RibbonGroup
+        Public ReadOnly Property GroupDisplayParameters As RibbonGroup
+            Get
+                Return _GroupDisplayParameters
             End Get
         End Property
         Private _NumSynapseCutoff As RibbonSpinner
@@ -136,19 +206,29 @@ Namespace RibbonLib.Controls
                 Throw New ArgumentNullException(NameOf(ribbon), "Parameter is Nothing")
             End If
             _ribbon = ribbon
+            _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)
             _ButtonAbout = New RibbonButton(_ribbon, Cmd.cmdButtonAbout)
             _ButtonExit = New RibbonButton(_ribbon, Cmd.cmdButtonExit)
+            _MenuSimulationExperiment = New RibbonTabGroup(_ribbon, Cmd.cmdMenuSimulationExperiment)
+            _TabExperiment = New RibbonTab(_ribbon, Cmd.cmdTabExperiment)
+            _GroupExperimentParameters = New RibbonGroup(_ribbon, Cmd.cmdGroupExperimentParameters)
             _NumIntensity = New RibbonSpinner(_ribbon, Cmd.cmdNumIntensity)
             _NumSimulationSteps = New RibbonSpinner(_ribbon, Cmd.cmdNumSimulationSteps)
-            _ButtonOpenModelDir = New RibbonButton(_ribbon, Cmd.cmdButtonOpenModelDir)
-            _ButtonMakeScreenshot = New RibbonButton(_ribbon, Cmd.cmdButtonMakeScreenshot)
+            _MenuWorkbench = New RibbonTab(_ribbon, Cmd.cmdMenuWorkbench)
+            _GroupWorkbench = New RibbonGroup(_ribbon, Cmd.cmdGroupWorkbench)
             _ButtonOpenCanvas = New RibbonButton(_ribbon, Cmd.cmdButtonOpenCanvas)
+            _ButtonMakeScreenshot = New RibbonButton(_ribbon, Cmd.cmdButtonMakeScreenshot)
+            _GroupWorkbenchTools = New RibbonGroup(_ribbon, Cmd.cmdGroupWorkbenchTools)
             _ButtonOpenResponseCharts = New RibbonButton(_ribbon, Cmd.cmdButtonOpenResponseCharts)
             _ButtonOpenSnakeGame = New RibbonButton(_ribbon, Cmd.cmdButtonOpenSnakeGame)
             _ToggleSimulationExperiment = New RibbonToggleButton(_ribbon, Cmd.cmdToggleSimulationExperiment)
             _ButtonResetView = New RibbonButton(_ribbon, Cmd.cmdButtonResetView)
+            _GroupInformation = New RibbonGroup(_ribbon, Cmd.cmdGroupInformation)
+            _TabCanvasOptions = New RibbonTab(_ribbon, Cmd.cmdTabCanvasOptions)
+            _GroupDisplayOptions = New RibbonGroup(_ribbon, Cmd.cmdGroupDisplayOptions)
             _ToggleShowGroundGrid = New RibbonToggleButton(_ribbon, Cmd.cmdToggleShowGroundGrid)
             _ToggleShowConnection = New RibbonToggleButton(_ribbon, Cmd.cmdToggleShowConnection)
+            _GroupDisplayParameters = New RibbonGroup(_ribbon, Cmd.cmdGroupDisplayParameters)
             _NumSynapseCutoff = New RibbonSpinner(_ribbon, Cmd.cmdNumSynapseCutoff)
             _NumScatterSize = New RibbonSpinner(_ribbon, Cmd.cmdNumScatterSize)
         End Sub
