@@ -43,7 +43,7 @@ Public Class FormMain
     Private m_renderModeBox As ToolStripComboBox
     Private m_thresholdBox As NumericUpDown
     Private m_pointSizeBox As NumericUpDown
-    Private m_showConnections As ToolStripButton
+    Friend m_showConnections As ToolStripButton
     Private m_showGround As ToolStripButton
     Friend WithEvents m_progress As ToolStripProgressBar
     Friend WithEvents m_statusText As ToolStripStatusLabel
