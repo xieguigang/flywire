@@ -20,6 +20,7 @@ namespace RibbonLib.Controls
         {
             public const uint cmdButtonAbout = 2;
             public const uint cmdButtonOpenResponseCharts = 3;
+            public const uint cmdButtonOpenSnakeGame = 4;
         }
 
         // ContextPopup CommandName
@@ -27,6 +28,7 @@ namespace RibbonLib.Controls
         public Ribbon Ribbon { get; private set; }
         public RibbonButton ButtonAbout { get; private set; }
         public RibbonButton ButtonOpenResponseCharts { get; private set; }
+        public RibbonButton ButtonOpenSnakeGame { get; private set; }
 
         public RibbonItems(Ribbon ribbon)
         {
@@ -35,6 +37,7 @@ namespace RibbonLib.Controls
             this.Ribbon = ribbon;
             ButtonAbout = new RibbonButton(ribbon, Cmd.cmdButtonAbout);
             ButtonOpenResponseCharts = new RibbonButton(ribbon, Cmd.cmdButtonOpenResponseCharts);
+            ButtonOpenSnakeGame = new RibbonButton(ribbon, Cmd.cmdButtonOpenSnakeGame);
         }
 
     }

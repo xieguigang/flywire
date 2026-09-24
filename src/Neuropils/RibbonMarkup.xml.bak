@@ -3,6 +3,7 @@
   <Application.Commands>
     <Command Name="cmdButtonAbout" Id="2" LabelTitle="About" />
     <Command Name="cmdButtonOpenResponseCharts" Id="3" LabelTitle="Response Charts" />
+    <Command Name="cmdButtonOpenSnakeGame" Id="4" LabelTitle="Snake GamePlay" />
   </Application.Commands>
   <Application.Views>
     <Ribbon>
@@ -18,6 +19,9 @@
       </Ribbon.QuickAccessToolbar>
       <Ribbon.Tabs>
         <Tab>
+          <Group>
+            <Button CommandName="cmdButtonOpenResponseCharts" />
+          </Group>
           <Group>
             <Button CommandName="cmdButtonAbout" />
           </Group>
