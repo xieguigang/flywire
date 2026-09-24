@@ -33,7 +33,6 @@ Partial Class PageFlywireCanvas
     Dim WithEvents m_snapshotItem As ToolStripMenuItem
     Dim WithEvents m_exitItem As ToolStripMenuItem
     Dim WithEvents m_resetItem As ToolStripMenuItem
-    Dim WithEvents m_aboutItem As ToolStripMenuItem
 
     ' ---- 状态栏（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
     ' 这些字段被其它类 (StimulationExperiment / Snake) 通过 FormMain 实例访问，因此保持 Friend。
@@ -170,19 +169,11 @@ Partial Class PageFlywireCanvas
         m_helpMenu.Size = New Size(60, 21)
         m_helpMenu.Text = "帮助 (&H)"
         ' 
-        ' m_aboutItem
-        ' 
-        m_aboutItem = New ToolStripMenuItem()
-        m_aboutItem.Name = "m_aboutItem"
-        m_aboutItem.Size = New Size(160, 22)
-        m_aboutItem.Text = "关于数据来源 (&A)"
-        ' 
         ' m_menuStrip 容器装配
         ' 
         m_menuStrip.SuspendLayout()
         m_fileMenu.DropDownItems.AddRange(New ToolStripItem() {m_openItem, m_snapshotItem, m_separator, m_exitItem})
         m_viewMenu.DropDownItems.Add(m_resetItem)
-        m_helpMenu.DropDownItems.Add(m_aboutItem)
         m_menuStrip.Items.AddRange(New ToolStripItem() {m_fileMenu, m_viewMenu, m_helpMenu})
         m_menuStrip.ResumeLayout(False)
         ' 
