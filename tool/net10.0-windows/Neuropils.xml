@@ -372,11 +372,6 @@ Neuropils
 <member name="F:Neuropils.AppLogics.Snake.m_snakeMask">
  <summary>逐神经元权重缓冲（跨 tick 复用，避免每帧分配 1.1 MB）。</summary>
 </member>
-<member name="M:Neuropils.AppLogics.Snake.onOpenSnakeWindow(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
- <summary>
- 打开观战窗口：首次需要装配连接组（约 30 秒），在后台完成并显示进度。
- </summary>
-</member>
 <member name="M:Neuropils.AppLogics.Snake.openSnakeWindow">
  <summary>打开观战窗口（链接与命令行自检共用）。</summary>
 </member>
@@ -1057,9 +1052,6 @@ Neuropils
  否则读<b>最近一次落盘的实验记录目录</b>。因此即使重开程序，
  "记录下来的响应结果"也还能画出来。
  </remarks>
-</member>
-<member name="M:Neuropils.PageFlywireCanvas.onSnakeLinkClick(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
- <summary>状态栏"果蝇大脑玩贪吃蛇"链接：转交给 Snake 实例打开观战窗口。</summary>
 </member>
 <member name="M:Neuropils.PageFlywireCanvas.captureAndExit">
  <summary>抓一帧写成图片，然后结束进程 (出图模式)。</summary>

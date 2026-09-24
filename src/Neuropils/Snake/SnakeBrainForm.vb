@@ -21,7 +21,6 @@ Imports Snake2
 ''' 训练在后台线程上跑，完成后把新解码器换上。
 ''' </remarks>
 Public Class SnakeBrainForm
-    Inherits Form
 
     Private ReadOnly m_playground As SnakePlayground
 

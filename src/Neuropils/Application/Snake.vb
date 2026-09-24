@@ -43,7 +43,7 @@ Namespace AppLogics
 
         ''' <summary>打开观战窗口（链接与命令行自检共用）。</summary>
         Public Sub openSnakeWindow()
-            If main.m_dataset Is Nothing Then Return
+            If Workbench.m_dataset Is Nothing Then Return
 
             If m_snakeForm IsNot Nothing AndAlso Not m_snakeForm.IsDisposed Then
                 Call m_snakeForm.BringToFront()
@@ -64,9 +64,9 @@ Namespace AppLogics
             Task.Run(
                 Function() As SnakePlayground
                     ' 顺带把 GPU 后端注册上：逐 tick 推理用融合路径最快
-                    Call GpuRuntime.TryRegister(main.m_config, AddressOf main.onLoadProgress)
+                    Call GpuRuntime.TryRegister(Workbench.m_config, AddressOf main.onLoadProgress)
 
-                    Return SnakePlayground.Create(main.m_config, AddressOf main.onLoadProgress)
+                    Return SnakePlayground.Create(Workbench.m_config, AddressOf main.onLoadProgress)
                 End Function) _
                 .ContinueWith(
                     Sub(task As Task(Of SnakePlayground))
@@ -94,11 +94,11 @@ Namespace AppLogics
             Dim decoder As SnakeDecoder = loadTrainedDecoder(brain)
 
             If m_snakeHighlighter Is Nothing AndAlso main.m_scene IsNot Nothing Then
-                m_snakeHighlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
+                m_snakeHighlighter = New ReplayHighlighter(main.m_scene, Workbench.m_dataset.Units, main.isHeatMap())
             End If
 
             If m_snakeMask Is Nothing Then
-                m_snakeMask = New Double(main.m_dataset.Units - 1) {}
+                m_snakeMask = New Double(Workbench.m_dataset.Units - 1) {}
             End If
 
             ' 用局部变量持有窗体：FormClosed 里 m_snakeForm 会被清空，只有它能用来解绑事件
@@ -261,7 +261,7 @@ Namespace AppLogics
         Private Function loadTrainedDecoder(brain As SnakeBrain) As SnakeDecoder
             Try
                 ' 局部变量不能叫 file：会遮蔽 System.IO.File（VB 不区分大小写）
-                Dim decoderFile As String = IO.Path.Combine(main.m_config.ResolveActivityDir(), "snake", "snake_decoder.csv")
+                Dim decoderFile As String = IO.Path.Combine(Workbench.m_config.ResolveActivityDir(), "snake", "snake_decoder.csv")
 
                 If IO.File.Exists(decoderFile) Then
                     Return SnakeDecoder.Load(decoderFile, brain.MotorFeatures.Length)
@@ -281,18 +281,18 @@ Namespace AppLogics
         ''' 可以直接更新画布而不用跨线程封送。
         ''' </remarks>
         Private Sub onSnakeBrainActivity(activeNeurons As Integer(), frame As SnakeStep)
-            If main.m_scene Is Nothing OrElse main.m_dataset Is Nothing Then Return
+            If main.m_scene Is Nothing OrElse Workbench.m_dataset Is Nothing Then Return
 
             ' 关窗之后不该再点亮任何东西：高亮器是在这里按需重建的，
             ' 少了这道闸，残留事件会让刚被 Reset 的点云又亮起来（看起来"关掉了还在闪"）
             If m_snakeForm Is Nothing Then Return
 
             If m_snakeHighlighter Is Nothing Then
-                m_snakeHighlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
+                m_snakeHighlighter = New ReplayHighlighter(main.m_scene, Workbench.m_dataset.Units, main.isHeatMap())
             End If
 
-            If m_snakeMask Is Nothing OrElse m_snakeMask.Length <> main.m_dataset.Units Then
-                m_snakeMask = New Double(main.m_dataset.Units - 1) {}
+            If m_snakeMask Is Nothing OrElse m_snakeMask.Length <> Workbench.m_dataset.Units Then
+                m_snakeMask = New Double(Workbench.m_dataset.Units - 1) {}
             Else
                 ' 只清上一帧动过的格子：整块清零在 13 万长度上每 tick 也要 1 MB 的写带宽
                 Array.Clear(m_snakeMask, 0, m_snakeMask.Length)
@@ -334,7 +334,7 @@ Namespace AppLogics
             Dim ticks As Integer = 300
             Dim evaluateRounds As Integer = 8
 
-            main.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+            Workbench.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
 
             If args.Length > 4 Then Integer.TryParse(args(4), episodes)
             If args.Length > 5 Then Integer.TryParse(args(5), ticks)
@@ -355,23 +355,23 @@ Namespace AppLogics
             Dim rlRate As Double = environmentDouble("FLYWIRE_SNAKE_RL_RATE", -1)
 
             ' 游戏要跑很多 tick，逐 tick 回读对 CPU 后端来说太贵，因此默认尝试 GPU
-            main.m_config.UseGpu = True
-            main.m_config.KeepHistory = True
-            main.m_config.UseFusedStep = True
-            main.m_config.ResidentPrecision = Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision.Double64
-            main.m_config.StimulationNeurons = 5000
+            Workbench.m_config.UseGpu = True
+            Workbench.m_config.KeepHistory = True
+            Workbench.m_config.UseFusedStep = True
+            Workbench.m_config.ResidentPrecision = Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork.LifResidentPrecision.Double64
+            Workbench.m_config.StimulationNeurons = 5000
 
             Dim timer As Stopwatch = Stopwatch.StartNew()
 
             Try
                 Call report.AppendLine("FlywireSnake: 果蝇大脑驾驶贪吃蛇")
-                Call report.AppendLine($"data dir : {main.m_config.DataDir}")
+                Call report.AppendLine($"data dir : {Workbench.m_config.DataDir}")
                 Call report.AppendLine($"episodes : {episodes} x {ticks} ticks (评估 {evaluateRounds} 局)")
                 Call report.AppendLine()
 
                 Using host As New Form() With {.ClientSize = New Size(1, 1)}
                     Dim playground As SnakePlayground = SnakePlayground.Create(
-                          main.m_config,
+                         Workbench.m_config,
                         Sub(message) Call report.AppendLine($"      [{timer.ElapsedMilliseconds,7:N0} ms] {message}"))
 
                     ' 标定档位（没给就沿用 SnakePlayground 的默认值）
@@ -456,7 +456,7 @@ Namespace AppLogics
                     Call report.AppendLine($"      训练后再评估 {evaluateRounds} 局：均分 {finalScore:F2}")
 
                     ' ---- 存档：把训练好的解码器与训练报告落盘，窗口可以直接用 ----
-                    Dim outputDir As String = Path.Combine(main.m_config.ResolveActivityDir(), "snake")
+                    Dim outputDir As String = Path.Combine(Workbench.m_config.ResolveActivityDir(), "snake")
                     Dim decoderFile As String = Path.Combine(outputDir, "snake_decoder.csv")
                     Dim summaryFile As String = Path.Combine(outputDir, "snake_training.csv")
 

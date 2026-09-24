@@ -169,7 +169,7 @@ Namespace AppLogics
 
         ''' <summary>鼠标按下：开始计时并进入按住预览。</summary>
         Friend Sub beginStimulationHold(x As Integer, y As Integer)
-            If main.m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
+            If m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
             If m_stimBusy Then Return
 
             m_holdNeuron = -1
@@ -202,12 +202,12 @@ Namespace AppLogics
             If hit.HasHit AndAlso hit.Kind = SceneHitKind.Point Then
                 m_holdNeuron = main.m_scene.PointNeurons(hit.Index)
 
-                Dim rootId As Long = main.m_dataset.Index.GetRootId(m_holdNeuron)
+                Dim rootId As Long = m_dataset.Index.GetRootId(m_holdNeuron)
 
                 ' 顺便实测一次"这一下会募集多少个神经元"：一次线性扫描约 1 ms
-                Dim recruited As Integer() = BrainStimulator.Recruit(main.m_dataset, m_holdNeuron, stimulus.RadiusNm)
+                Dim recruited As Integer() = BrainStimulator.Recruit(m_dataset, m_holdNeuron, stimulus.RadiusNm)
 
-                target = $" · 目标 #{m_holdNeuron} ({ main.m_dataset.GetNeuropilName(m_holdNeuron)}, root_id {rootId})" &
+                target = $" · 目标 #{m_holdNeuron} ({m_dataset.GetNeuropilName(m_holdNeuron)}, root_id {rootId})" &
                      $" · 募集 {recruited.Length:N0} 个"
             Else
                 m_holdNeuron = -1
@@ -241,7 +241,7 @@ Namespace AppLogics
 
         ''' <summary>在指定位置施加电刺激（点击命中神经元时）。</summary>
         Friend Sub stimulateAt(x As Integer, y As Integer, holdMs As Long)
-            If main.m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
+            If m_dataset Is Nothing OrElse main.m_scene Is Nothing Then Return
 
             If m_stimBusy Then
                 main.m_statusText.Text = "上一次电刺激还在运行，请稍等"
@@ -269,7 +269,7 @@ Namespace AppLogics
         ''' <summary>在后台装配（首次）并运行一次刺激仿真，完成后自动进入回放。</summary>
         Private Sub startStimulation(neuron As Integer, stimulus As HoldStimulus, holdMs As Long)
             If m_stimulator Is Nothing Then
-                m_stimulator = New BrainStimulator(main.m_config, main.m_dataset)
+                m_stimulator = New BrainStimulator(m_config, m_dataset)
             End If
 
             Call stopReplay(clearHighlight:=True)
@@ -303,7 +303,7 @@ Namespace AppLogics
                     Dim result As StimulationReplay = stimulator.Stimulate(index, radius, current, holdMs, AddressOf main.onLoadProgress)
 
                     ' 记录仿真结果（逐步激活清单 + 统计 + 活跃度快照）
-                    Call StimulationReport.Write(result, main.m_config.ResolveActivityDir(), main.m_dataset.Index)
+                    Call StimulationReport.Write(result, m_config.ResolveActivityDir(), m_dataset.Index)
 
                     Call main.BeginInvoke(New Action(Sub() onStimulationCompleted(result)))
                 Catch ex As Exception
@@ -358,9 +358,9 @@ Namespace AppLogics
             m_replay = replay
 
             ' 把这次刺激的逐神经元计数接进"仿真活跃度"着色：点一次就能直接看全脑的热力分布
-            If main.m_dataset IsNot Nothing AndAlso replay.Counts IsNot Nothing AndAlso replay.Counts.Length = main.m_dataset.Units Then
-                main.m_dataset.Activity = replay.Counts
-                main.m_dataset.ActivitySource = $"电刺激 #{replay.Neuron} (强度 {replay.Strength:F2})"
+            If m_dataset IsNot Nothing AndAlso replay.Counts IsNot Nothing AndAlso replay.Counts.Length = m_dataset.Units Then
+                m_dataset.Activity = replay.Counts
+                m_dataset.ActivitySource = $"电刺激 #{replay.Neuron} (强度 {replay.Strength:F2})"
 
                 If main.m_colorizer IsNot Nothing AndAlso main.m_colorizer.Dimension = NeuronColorDimension.Activity Then
                     Call main.rebuildColorizer(NeuronColorDimension.Activity, resetUi:=True)
@@ -369,7 +369,7 @@ Namespace AppLogics
             End If
 
             m_replayStep = 0
-            m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
+            m_highlighter = New ReplayHighlighter(main.m_scene, m_dataset.Units, main.isHeatMap())
 
             Call updateReplayPanel()
             Call updateReplayFrame()
@@ -559,11 +559,11 @@ Namespace AppLogics
 
         ''' <summary>把"电极位置"用一个大号十字标出来。</summary>
         Private Sub setStimulusMarker(neuron As Integer)
-            If main.m_dataset Is Nothing OrElse neuron < 0 OrElse neuron >= main.m_dataset.Units Then Return
-            If Not main.m_dataset.HasPosition(neuron) Then Return
+            If m_dataset Is Nothing OrElse neuron < 0 OrElse neuron >= m_dataset.Units Then Return
+            If Not m_dataset.HasPosition(neuron) Then Return
 
             Dim lines As New List(Of LineSegment)(3)
-            Dim position As FlywireAI.FAFBv783.NeuronPosition = main.m_dataset.GetPosition(neuron)
+            Dim position As FlywireAI.FAFBv783.NeuronPosition = m_dataset.GetPosition(neuron)
             Dim size As Double = 9000.0
             Dim color As Color = Color.FromArgb(34, 211, 238)
 
@@ -604,7 +604,7 @@ Namespace AppLogics
 
         ''' <summary>仿真步数改变（下一次刺激生效）。</summary>
         Friend Sub onStimulusStepsChanged(sender As Object, e As EventArgs)
-            main.m_config.TimeSteps = CInt(main.m_stimStepsBox.Value)
+            m_config.TimeSteps = CInt(main.m_stimStepsBox.Value)
         End Sub
 
         ''' <summary>
@@ -615,9 +615,9 @@ Namespace AppLogics
         ''' 继续用旧的高亮器会把"上一套配色下的颜色"写进新点云。
         ''' </remarks>
         Friend Sub rebindHighlighter()
-            If main.m_scene Is Nothing OrElse main.m_dataset Is Nothing OrElse m_replay Is Nothing Then Return
+            If main.m_scene Is Nothing OrElse m_dataset Is Nothing OrElse m_replay Is Nothing Then Return
 
-            m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
+            m_highlighter = New ReplayHighlighter(main.m_scene, m_dataset.Units, main.isHeatMap())
 
             If m_replayStep < 0 Then m_replayStep = 0
 
@@ -689,10 +689,10 @@ Namespace AppLogics
                          Dim neuron As Integer = spec.Neuron
 
                          If neuron < 0 Then
-                             neuron = BrainSceneBuilder.FindBusiestNeuron(main.m_dataset)
+                             neuron = BrainSceneBuilder.FindBusiestNeuron(m_dataset)
                          End If
 
-                         Dim stimulator As New BrainStimulator(main.m_config, main.m_dataset)
+                         Dim stimulator As New BrainStimulator(m_config, m_dataset)
 
                          If Not stimulator.Prepare(Sub(message) Trace.WriteLine(message), CancellationToken.None) Then
                              Throw New InvalidOperationException($"刺激引擎装配失败: {stimulator.LastError}")
@@ -701,7 +701,7 @@ Namespace AppLogics
                          Dim replay As StimulationReplay = stimulator.Stimulate(neuron, spec.RadiusNm, spec.Current, 0,
                                                                             Sub(message) Trace.WriteLine(message))
 
-                         Call StimulationReport.Write(replay, main.m_config.ResolveActivityDir(), main.m_dataset.Index)
+                         Call StimulationReport.Write(replay, m_config.ResolveActivityDir(), m_dataset.Index)
 
                          Return replay
                      End Function) _
@@ -720,7 +720,7 @@ Namespace AppLogics
                         m_replayStep = If(spec.StepIndex >= 0,
                                           System.Math.Min(spec.StepIndex, replay.Steps - 1),
                                           replay.PeakStep)
-                        m_highlighter = New ReplayHighlighter(main.m_scene, main.m_dataset.Units, main.isHeatMap())
+                        m_highlighter = New ReplayHighlighter(main.m_scene, m_dataset.Units, main.isHeatMap())
 
                         Call updateReplayFrame()
                         Call updateReplayPanel()
@@ -764,14 +764,14 @@ Namespace AppLogics
             Dim failures As Integer = 0
             Dim reportFile As String = If(args.Length > 2, args(2), Path.Combine(AppContext.BaseDirectory, "stimulation-report.txt"))
 
-            main.m_config.DataDir = If(args.Length > 3, args(3), main.m_config.DataDir)
+            m_config.DataDir = If(args.Length > 3, args(3), m_config.DataDir)
 
-            main.m_config.TimeSteps = 30
-            main.m_config.KeepHistory = True
-            main.m_config.UseGpu = True
-            main.m_config.UseFusedStep = True
-            main.m_config.ResidentPrecision = LifResidentPrecision.Double64
-            main.m_config.StimulationNeurons = 5000
+            m_config.TimeSteps = 30
+            m_config.KeepHistory = True
+            m_config.UseGpu = True
+            m_config.UseFusedStep = True
+            m_config.ResidentPrecision = LifResidentPrecision.Double64
+            m_config.StimulationNeurons = 5000
 
             ' 扫描的是"募集半径"而不是电流：单点刺激在归一化权重下无法传播，
             ' 真正决定激活规模的是被电极募集到的那一群神经元有多大
@@ -803,13 +803,13 @@ Namespace AppLogics
 
             Try
                 Call report.AppendLine("Neuropils electrical stimulation probe")
-                Call report.AppendLine($"data dir : { main.m_config.DataDir}")
+                Call report.AppendLine($"data dir : {m_config.DataDir}")
                 Call report.AppendLine($"time     : {DateTime.Now:yyyy-MM-dd HH:mm:ss}")
-                Call report.AppendLine($"steps    : { main.m_config.TimeSteps}")
+                Call report.AppendLine($"steps    : {m_config.TimeSteps}")
                 Call report.AppendLine()
 
                 ' 直接走数据层：不建窗体、不装配可视化场景，把注意力集中在仿真本身
-                Dim loader As New BrainDatasetLoader(main.m_config)
+                Dim loader As New BrainDatasetLoader(m_config)
                 Dim dataset As BrainDataset = loader.Load(Sub(message) Call report.AppendLine($"      {message}"))
 
                 Dim probeNeuron As Integer
@@ -825,7 +825,7 @@ Namespace AppLogics
                                    $"nt {dataset.Neurotransmitters(probeNeuron)})")
                 Call report.AppendLine()
 
-                Dim stimulator As New BrainStimulator(main.m_config, dataset)
+                Dim stimulator As New BrainStimulator(m_config, dataset)
                 Dim prepared As Boolean = stimulator.Prepare(Sub(message) Call report.AppendLine($"      {message}"),
                                                          CancellationToken.None)
 
@@ -932,7 +932,7 @@ Namespace AppLogics
                     Call report.AppendLine()
                     checkStepConsistency(report, failures, best)
 
-                    Dim dir As String = StimulationReport.Write(best, main.m_config.ResolveActivityDir(), dataset.Index)
+                    Dim dir As String = StimulationReport.Write(best, m_config.ResolveActivityDir(), dataset.Index)
 
                     Call report.AppendLine($"      report dir: {dir}")
 

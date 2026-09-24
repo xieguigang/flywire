@@ -28,10 +28,10 @@ Namespace AppLogics
 
             Dim reportFile As String = If(args.Length > 2, args(2), Path.Combine(AppContext.BaseDirectory, "selftest-report.txt"))
 
-            main.m_config.DataDir = If(args.Length > 3, args(3), main.m_config.DataDir)
+            m_config.DataDir = If(args.Length > 3, args(3), m_config.DataDir)
 
             Call report.AppendLine("Neuropils self test")
-            Call report.AppendLine($"data dir : {  main.m_config.DataDir}")
+            Call report.AppendLine($"data dir : {m_config.DataDir}")
             Call report.AppendLine($"time     : {DateTime.Now:yyyy-MM-dd HH:mm:ss}")
             Call report.AppendLine()
 
@@ -39,7 +39,7 @@ Namespace AppLogics
                 Call appendSection(report, "1. dataset loading")
 
                 Dim loadTimer As Stopwatch = Stopwatch.StartNew()
-                Dim loader As New BrainDatasetLoader(main.m_config)
+                Dim loader As New BrainDatasetLoader(m_config)
                 Dim dataset As BrainDataset = loader.Load(Sub(message) Call report.AppendLine($"      {message}"))
 
                 loadTimer.Stop()

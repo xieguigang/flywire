@@ -35,12 +35,12 @@ Namespace AppLogics
             Dim failures As Integer = 0
             Dim png As String = args(2)
 
-            main.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+            m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
 
             Dim reportDir As String = If(args.Length > 4, args(4), "")
 
             If String.IsNullOrWhiteSpace(reportDir) OrElse String.Equals(reportDir, "latest", StringComparison.OrdinalIgnoreCase) Then
-                reportDir = StimulationArchive.Latest(Path.Combine(main.m_config.DataDir, "snn-output"))
+                reportDir = StimulationArchive.Latest(Path.Combine(m_config.DataDir, "snn-output"))
             End If
 
             Dim dimension As NeuronLabelDimension = parseDimension(If(args.Length > 5, args(5), "neuropil"))
@@ -63,7 +63,7 @@ Namespace AppLogics
 
             Try
                 Call report.AppendLine("Neuropils stimulation response chart export")
-                Call report.AppendLine($"data dir   : {main.m_config.DataDir}")
+                Call report.AppendLine($"data dir   : {m_config.DataDir}")
                 Call report.AppendLine($"record dir : {reportDir}")
                 Call report.AppendLine($"canvas     : {width} x {height}")
                 Call report.AppendLine()
@@ -73,7 +73,7 @@ Namespace AppLogics
                 End If
 
                 ' 数据集只为标签（脑区 / 递质 / 细胞类型 / 分类层级）服务；标签齐全时曲线图才有筛选意义
-                Dim loader As New BrainDatasetLoader(main.m_config)
+                Dim loader As New BrainDatasetLoader(m_config)
                 Dim dataset As BrainDataset = loader.Load(Sub(message) Call report.AppendLine($"      {message}"))
 
                 Call PlotRuntime.EnsureRegistered()
@@ -142,12 +142,12 @@ Namespace AppLogics
             Dim failures As Integer = 0
             Dim png As String = args(2)
 
-            main.m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
+            m_config.DataDir = If(args.Length > 3 AndAlso args(3).Length > 0, args(3), DefaultDataDir)
 
             Dim reportDir As String = If(args.Length > 4, args(4), "")
 
             If String.IsNullOrWhiteSpace(reportDir) OrElse String.Equals(reportDir, "latest", StringComparison.OrdinalIgnoreCase) Then
-                reportDir = StimulationArchive.Latest(IO.Path.Combine(main.m_config.DataDir, "snn-output"))
+                reportDir = StimulationArchive.Latest(IO.Path.Combine(m_config.DataDir, "snn-output"))
             End If
 
             Dim dimension As NeuronLabelDimension = parseDimension(If(args.Length > 5, args(5), "neuropil"))
@@ -157,7 +157,7 @@ Namespace AppLogics
             Try
                 Call PlotRuntime.EnsureRegistered()
 
-                Dim loader As New BrainDatasetLoader(main.m_config)
+                Dim loader As New BrainDatasetLoader(m_config)
                 Dim dataset As BrainDataset = loader.Load(Sub(message) Trace.WriteLine(message))
 
                 If String.IsNullOrWhiteSpace(reportDir) Then

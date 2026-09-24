@@ -29,7 +29,7 @@ Imports Neuropils.Rendering
 ''' </remarks>
 Public Class PageFlywireCanvas
 
-    Friend ReadOnly m_config As New VisualizationConfig()
+
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
@@ -38,7 +38,6 @@ Public Class PageFlywireCanvas
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
 
-    Friend m_dataset As BrainDataset
     Friend m_colorizer As NeuronColorizer
     Friend m_scene As BrainScene
     Friend m_lookup As Integer()
@@ -51,7 +50,7 @@ Public Class PageFlywireCanvas
     Friend m_cancel As CancellationTokenSource
     Friend m_busy As Boolean
 
-    Dim m_snake As Snake
+    Friend m_snake As Snake
     Dim m_experiment As StimulationExperiment
 
     ''' <summary>
@@ -73,8 +72,8 @@ Public Class PageFlywireCanvas
         ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
         ' 这部分是运行时逻辑，保留在 initializeUi
         m_snake = New Snake(Me)
-        m_chartTip.SetToolTip(m_chartLink, "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
-        m_chartTip.SetToolTip(m_snakeLink, "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
+        ' m_chartTip.SetToolTip(m_chartLink, "")
+        ' m_chartTip.SetToolTip(m_snakeLink, "")
 
         Call refreshLegend()
         Call m_experiment.initializeStimulation()
@@ -161,11 +160,6 @@ Public Class PageFlywireCanvas
         '  Catch ex As Exception
         'Call MessageBox.Show(Me, $"{ex.GetType().Name}: {ex.Message}", "无法打开响应曲线窗口",        MessageBoxButtons.OK, MessageBoxIcon.Error)
         ' End Try
-    End Sub
-
-    ''' <summary>状态栏"果蝇大脑玩贪吃蛇"链接：转交给 Snake 实例打开观战窗口。</summary>
-    Private Sub onSnakeLinkClick(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles m_snakeLink.LinkClicked
-        Call m_snake.onOpenSnakeWindow(sender, e)
     End Sub
 
 #End Region

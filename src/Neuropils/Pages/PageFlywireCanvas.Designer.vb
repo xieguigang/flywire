@@ -43,7 +43,6 @@ Partial Class PageFlywireCanvas
     Friend WithEvents m_progress As ToolStripProgressBar
     Friend m_sceneText As ToolStripStatusLabel
     Friend WithEvents m_chartLink As LinkLabel
-    Friend WithEvents m_snakeLink As LinkLabel
 
     ' ---- 工具条（声明式布局，参照 ResponseChartForm.Designer.vb 的模式）----
     ' 被其它类 (StimulationExperiment) 通过 FormMain 实例访问的保持 Friend；
@@ -241,16 +240,16 @@ Partial Class PageFlywireCanvas
         ' 
         ' m_snakeLink
         ' 
-        m_snakeLink = New LinkLabel()
-        m_snakeLink.Name = "m_snakeLink"
-        m_snakeLink.AutoSize = True
-        m_snakeLink.Size = New Size(140, 17)
-        m_snakeLink.Text = "果蝇大脑玩贪吃蛇"
-        m_snakeLink.LinkBehavior = LinkBehavior.HoverUnderline
-        m_snakeLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
-        m_snakeLink.ActiveLinkColor = Color.White
-        m_snakeLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
-        m_snakeLink.Margin = New Padding(6, 4, 6, 0)
+        'm_snakeLink = New LinkLabel()
+        'm_snakeLink.Name = "m_snakeLink"
+        'm_snakeLink.AutoSize = True
+        'm_snakeLink.Size = New Size(140, 17)
+        'm_snakeLink.Text = "果蝇大脑玩贪吃蛇"
+        'm_snakeLink.LinkBehavior = LinkBehavior.HoverUnderline
+        'm_snakeLink.LinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        'm_snakeLink.ActiveLinkColor = Color.White
+        'm_snakeLink.VisitedLinkColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        'm_snakeLink.Margin = New Padding(6, 4, 6, 0)
         ' 
         ' m_statusStrip 容器装配
         ' 
@@ -259,7 +258,7 @@ Partial Class PageFlywireCanvas
         m_statusStrip.Items.Add(m_sceneText)
         m_statusStrip.Items.Add(m_progress)
         m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
-        m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
+        ' m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.ResumeLayout(False)
         ' 
         ' FormMain (窗体自身)

@@ -2,9 +2,11 @@
 ' SnakeBrainForm 的界面布局（Windows 窗体设计器维护的声明式代码）。
 ' 这里只放"控件怎么摆"的代码：控件实例化、属性赋值、容器装配与事件声明；
 ' 会话推进、大脑仿真与解码器训练等逻辑仍然留在 SnakeBrainForm.vb 里。
+Imports Galaxy.Workbench.DockDocument
+
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class SnakeBrainForm
-    Inherits System.Windows.Forms.Form
+    Inherits DocumentWindow
 
     'Form overrides dispose to clean up the component list.
     <System.Diagnostics.DebuggerNonUserCode()>
