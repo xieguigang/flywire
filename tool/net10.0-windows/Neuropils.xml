@@ -1022,22 +1022,10 @@ Neuropils
  放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
  </remarks>
 </member>
-<member name="F:Neuropils.FormMain.m_chartLink">
- <summary>状态栏右下角的"响应曲线"链接。</summary>
+<member name="F:Neuropils.FormMain._m_chartTip">
+ <summary>状态栏链接的悬停提示 (LinkLabel 没有 ToolTipText 属性)。</summary>
 </member>
-<member name="F:Neuropils.FormMain.m_snakeLink">
- <summary>状态栏右下角的"果蝇大脑玩贪吃蛇"链接。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_chartForm">
- <summary>响应曲线窗口（单实例复用）。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_chartTip">
- <summary>状态栏链接的悬停提示。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_snapshotPath">
- <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
-</member>
-<member name="F:Neuropils.FormMain.m_rebuildTimer">
+<member name="F:Neuropils.FormMain._m_rebuildTimer">
  <summary>
  拖动 / 筛选滑块的防抖定时器 (面板"应用"一次而不是每帧重建)。
  </summary>
@@ -1046,10 +1034,27 @@ Neuropils
  (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.createReplayPanel">
+<member name="F:Neuropils.FormMain.m_chartForm">
+ <summary>响应曲线窗口（单实例复用）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_experiment">
+ <summary>电刺激 / 回放（详见 Application\StimulationExperiment.vb）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snake">
+ <summary>果蝇大脑玩贪吃蛇（详见 Application\Snake.vb）。</summary>
+</member>
+<member name="F:Neuropils.FormMain.m_snapshotPath">
+ <summary>出图模式下要写入的图片路径 (``Nothing`` 表示交互模式)。</summary>
+</member>
+<member name="M:Neuropils.FormMain.initializeUi">
  <summary>
- 回放控制面板：播放/暂停、单步、进度条、速度与状态。
+ 控件之外的界面初始化。
  </summary>
+ <remarks>
+ 控件的实例化、摆放与事件声明都在 <see cref="M:Neuropils.FormMain.InitializeComponent"/>
+ (FormMain.Designer.vb) 里，这里只补三件"设计器写不了"的事：
+ 建立电刺激 / 观战窗口这两个协作对象、刷新图例、启动回放面板的初始状态。
+ </remarks>
 </member>
 <member name="M:Neuropils.FormMain.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">
  <summary>
@@ -1136,6 +1141,23 @@ Neuropils
  <remarks>
  单次线性扫描 534 万条连接 (约 30 ms)，因此可以随点击实时计算，
  不需要预先为每个神经元建立邻接表 (那会多占用数百 MB 内存)。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormMain.exitMenuItem_Click(System.Object,System.EventArgs)">
+ <summary>
+ 事件桥接。
+ </summary>
+ <remarks>
+ Designer 里的控件用 <c>Handles</c> 把事件声明在窗体自己的方法上，而电刺激与观战窗口
+ 的处理逻辑属于各自的协作对象（<see cref="T:Neuropils.AppLogics.StimulationExperiment"/> / <see cref="T:Neuropils.AppLogics.Snake"/>），
+ 这里只做一次转发：绑定仍然是声明式的 <c>Handles</c>，逻辑也仍然留在它自己的类里。
+ 
+ <b>为什么 ValueChanged / CheckedChanged 要先判空</b>：InitializeComponent 给
+ NumericUpDown / TrackBar 赋 Minimum、Maximum、Value 时会就地触发一次 ValueChanged，
+ 那一刻 <see cref="F:Neuropils.FormMain.m_experiment"/> 还是 Nothing（它由 initializeUi 在
+ InitializeComponent 之后创建）。原先把 AddHandler 写在属性赋值之后，
+ 同样不会收到这一次事件，所以跳过它正是原有行为。
+ 点击与链接事件不可能在构造期间触发，因此不做判断。
  </remarks>
 </member>
 <member name="T:Neuropils.Rendering.ConnectionRenderMode">
