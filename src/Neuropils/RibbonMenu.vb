@@ -45,20 +45,24 @@ Module RibbonMenu
         _ribbon.NumIntensity.MaxValue = 20
         _ribbon.NumIntensity.Increment = 0.5
         _ribbon.NumIntensity.DecimalValue = 1
+        _ribbon.NumIntensity.RepresentativeString = "XXXXXXX"
 
         _ribbon.NumSimulationSteps.MinValue = 5
         _ribbon.NumSimulationSteps.MaxValue = 250
         _ribbon.NumSimulationSteps.DecimalValue = 30
+        _ribbon.NumSimulationSteps.RepresentativeString = "XXXXXXX"
 
         _ribbon.NumSynapseCutoff.MinValue = 1
         _ribbon.NumSynapseCutoff.MaxValue = 100000
         _ribbon.NumSynapseCutoff.Increment = 1
         _ribbon.NumSynapseCutoff.DecimalValue = m_buildOptions.SynapseThreshold
+        _ribbon.NumSynapseCutoff.RepresentativeString = "XXXXXXX"
 
         _ribbon.NumScatterSize.MinValue = 1
         _ribbon.NumScatterSize.MaxValue = 12
         _ribbon.NumScatterSize.Increment = 1
         _ribbon.NumScatterSize.DecimalValue = 2
+        _ribbon.NumScatterSize.RepresentativeString = "XXXXXXX"
 
         AddHandler RibbonMenu.ribbon.NumSimulationSteps.ExecuteEvent, AddressOf onStimulusStepsChanged
         AddHandler RibbonMenu.ribbon.NumSynapseCutoff.ExecuteEvent, AddressOf onThresholdChanged
