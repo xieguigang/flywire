@@ -1,0 +1,91 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Microsoft.VisualBasic.Data.IO.MessagePack
+</name>
+</assembly>
+<members>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Constants.MsgPackFormats">
+ <summary>
+ 枚举所有的基础类型常量
+ </summary>
+ <remarks>
+ 20211029
+ 
+ 因为有些常量的值会出现重复，所以使用Enum枚举类型来表示会
+ 产生符号冲突。在这里就只用普通的常量值来表示了
+ </remarks>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Constants.NamespaceDoc">
+ <summary>
+ The MessagePack format constants: format byte ranges and codes for booleans, fixed
+ integers, fixed strings, fixed arrays and fixed maps.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.NamespaceDoc">
+ <summary>
+ MessagePack binary object serialization: serializes and deserializes .NET objects to and from
+ the MessagePack format, driven by a serialization context and message pack I/O helpers.
+ </summary>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.SerializationContext.RegisterSerializer``1(System.String[])">
+ <summary>
+ 
+ </summary>
+ <typeparam name="T"></typeparam>
+ <param name="propertyNames"></param>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.Default.NamespaceDoc">
+ <summary>
+ The default MessagePack serialization handlers for framework internal types.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.MessagePackMemberAttribute">
+ <summary>
+ 必须要使用这个自定义属性标记在对象属性上才会被加入序列化之中
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.NamespaceDoc">
+ <summary>
+ The MessagePack serialization model: member attributes and definitions, nil implication
+ handling, the serialization method and the schema provider.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.Reflection.NamespaceDoc">
+ <summary>
+ Reflection based MessagePack serialization: the serializable property and type information
+ models.
+ </summary>
+</member>
+<member name="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.SchemaProvider`1">
+ <summary>
+ 
+ </summary>
+ <typeparam name="T"></typeparam>
+ <remarks>
+ 这个模块是为了处理元素类型定义信息和序列化代码调用模块之间没有实际的引用关系的情况
+ 例如模块A没有引用messagepack模块，则没有办法添加<see cref="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.MessagePackMemberAttribute"/>
+ 来完成序列化，则这个时候会需要通过这个模块来提供这样的映射关系
+ </remarks>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.SchemaProvider`1.GetObjectSchema">
+ <summary>
+ provides a schema table for base object for generates 
+ a sequence of <see cref="T:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.MessagePackMemberAttribute"/>
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:Microsoft.VisualBasic.Data.IO.MessagePack.Serialization.SchemaProvider`1.Write(System.Collections.Generic.IEnumerable{`0},System.IO.Stream)">
+ <summary>
+ 
+ </summary>
+ <param name="items"></param>
+ <param name="file"></param>
+ <returns></returns>
+ <remarks>
+ data will be auto flush to <paramref name="file"/>.
+ </remarks>
+</member>
+</members>
+</doc>

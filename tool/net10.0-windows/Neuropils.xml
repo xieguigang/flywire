@@ -332,6 +332,23 @@ Neuropils
  "画在控件自己的画布上"这条路径 —— 也就是用户在界面上实际看到的那条。
  </remarks>
 </member>
+<member name="T:Neuropils.AppLogics.MsgPackDump">
+ <summary>
+ ``Neuropils.exe --dump &lt;zip&gt; [数据目录] [verify]``
+ </summary>
+ <remarks>
+ 把 FAFB v783 数据源里的每张表<b>分别</b>转储成 msgpack，再打包成一个 zip。
+ 之后界面 (<see cref="T:Neuropils.Data.BrainDatasetLoader"/>) 直接从这个包读定型数组，
+ 不再去解析 261 MB 的连接表与 85 MB 的脑区表。
+ 
+ 第三个参数给 <c>verify</c> 时会多做一件事：<b>把 csv 路径与 msgpack 路径各加载一遍
+ 并逐项比对</b> —— 转储只能是"另一种表示"，不允许改变任何一个数字。
+ 转储本身是一次性的（几分钟），比对才是这个模式存在的理由。
+ </remarks>
+</member>
+<member name="M:Neuropils.AppLogics.MsgPackDump.verifyAgainstCsv(System.Text.StringBuilder,System.Int32@,Neuropils.Data.VisualizationConfig,System.String)">
+ <summary>两条加载路径各跑一遍并逐项比对。</summary>
+</member>
 <member name="M:Neuropils.AppLogics.SelfTest.runSelfTest(Neuropils.PageFlywireCanvas,System.String[])">
  <summary>
  自检模式 (``Neuropils.exe --selftest [报告文件] [数据目录]``)。
@@ -796,14 +813,29 @@ Neuropils
 <member name="P:Neuropils.Data.BrainDatasetLoader.MaxConnections">
  <summary>连接表的读取上限 (超过之后截断，并在进度里报告)。</summary>
 </member>
+<member name="P:Neuropils.Data.BrainDatasetLoader.PreferMsgPack">
+ <summary>
+ 是否优先使用 msgpack 转储包 (<see cref="T:FlywireAI.FAFBv783.FafbMsgPackStorage"/>)。
+ </summary>
+ <remarks>
+ 默认开启：转储包存在且没过期时，整条加载路径<b>完全不解析 ASCII 文本</b>。
+ 包不存在 / 过期 / 损坏 / 版本不对时自动回退到 csv（见 <see cref="M:FlywireAI.FAFBv783.FafbMsgPackStorage.Verify(FlywireAI.Connectome.SnnConfig,System.String)"/>）。
+ </remarks>
+</member>
+<member name="P:Neuropils.Data.BrainDatasetLoader.PackFile">
+ <summary>转储包的路径；为空时落到 <see cref="M:FlywireAI.FAFBv783.FafbMsgPackStorage.ResolvePackFile(FlywireAI.Connectome.SnnConfig,System.String)"/> 的默认位置。</summary>
+</member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.Load(System.Action{System.String},System.Threading.CancellationToken)">
  <summary>
- 加载整个数据集。
+ 加载整个数据集：优先走 msgpack 转储包，没有包就回退到 csv。
  </summary>
  <param name="progress">进度回调 (已经格式化的文本)</param>
  <param name="cancel">取消标记</param>
  <exception cref="T:System.IO.FileNotFoundException">必需的表格不存在</exception>
  <exception cref="T:System.OperationCanceledException">调用方取消了加载</exception>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadFromCsv(System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>从 csv 装配数据集 (没有转储包时走的原始路径)。</summary>
 </member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.reportStage(System.Action{System.String},System.String,System.Diagnostics.Stopwatch,System.Int64@)">
  <summary>报告一个阶段的耗时 (同时也把逐阶段耗时写进自检报告)。</summary>
@@ -811,11 +843,17 @@ Neuropils
 <member name="M:Neuropils.Data.BrainDatasetLoader.loadNeurotransmitters(FlywireAI.Connectome.ConnectomeIndex,System.Threading.CancellationToken)">
  <summary>每神经元的递质类型 (``neurons.csv``)。</summary>
 </member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.neurotransmittersOf(FlywireAI.Connectome.ConnectomeIndex,System.Collections.Generic.List{FlywireAI.FAFBv783.Neurons})">
+ <summary>``neurons.csv`` 的记录 → 每神经元一个递质字符串 (csv 与 msgpack 两条路径共用)。</summary>
+</member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.loadPositions(Neuropils.Data.BrainDataset,System.Action{System.String},System.Threading.CancellationToken)">
  <summary>
  每个神经元的三维坐标：``coordinates.csv`` 对同一个神经元可能有多条标记位置，
  这里取它们的算术平均 (并记录标记条数)。
  </summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.applyPositions(Neuropils.Data.BrainDataset,System.Collections.Generic.List{FlywireAI.FAFBv783.Coordinates},System.Action{System.String})">
+ <summary>坐标记录 → 每神经元一个平均位置 (csv 与 msgpack 两条路径共用)。</summary>
 </member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.loadNeuropils(Neuropils.Data.BrainDataset,System.Action{System.String},System.Threading.CancellationToken)">
  <summary>
@@ -827,6 +865,12 @@ Neuropils
  <see cref="M:System.Delegate.CreateDelegate(System.Type,System.Object,System.Reflection.MethodInfo)"/> 绑定出来的委托而不是
  ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
  </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.dominantRegion(System.Double[])">
+ <summary>
+ 在"各脑区的输入+输出突触数"里挑出最大的那个脑区 (csv 与 msgpack 两条路径共用)。
+ </summary>
+ <returns>脑区下标与它的突触数；全部为 0 时返回 <c>-1</c>。</returns>
 </member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.parseNeuropilHeader(System.String[])">
  <summary>
@@ -850,6 +894,31 @@ Neuropils
  找不到时不做任何事：界面可以在需要的时候现场跑一次全脑仿真 (GPU 下只要几十毫秒)，
  那条路径拿到的活跃度与这里的文件完全同源 (都是 <c>BrainSimulationResult.Counts</c>)。
  </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadFromPack(FlywireAI.FAFBv783.FafbPackReader,System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 从 msgpack 转储包装配数据集：结果与 csv 路径一致，只是全程不再解析 ASCII 文本。
+ </summary>
+ <remarks>
+ 每一步都与 <see cref="M:Neuropils.Data.BrainDatasetLoader.loadFromCsv(System.Action{System.String},System.Threading.CancellationToken)"/> 里对应的步骤使用<b>同一段</b>语义代码
+ (索引、坐标平均、脑区取最大值、连接过滤)，区别只在于"记录从哪儿来"：
+ 这里是从转储包里读回来的定型数组，那边是逐行切分 csv。
+ </remarks>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.assignNeuropilsFromPack(Neuropils.Data.BrainDataset,FlywireAI.FAFBv783.FafbPackReader,FlywireAI.FAFBv783.NeuropilTablePack,System.Action{System.String})">
+ <summary>
+ 主导脑区：与 csv 路径同一套表头解析 (``input/output synapses in &lt;region&gt;``)
+ 与同一个取最大值逻辑，只是数值直接来自转储包的列式数组。
+ </summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.loadConnectionsFromPack(Neuropils.Data.BrainDataset,FlywireAI.FAFBv783.FafbPackReader,FlywireAI.FAFBv783.ConnectionsPack,System.Action{System.String},System.Threading.CancellationToken)">
+ <summary>
+ 连接表：转储包里已经字典化的分类列在这里重新编号，
+ 保证与 csv 路径得到<b>完全相同</b>的名称表 (按首次出现的顺序)。
+ </summary>
+</member>
+<member name="M:Neuropils.Data.BrainDatasetLoader.code(System.Int32[],System.Int32)">
+ <summary>取字典化列的第 i 个编号 (缺列 / 越界时返回 -1，交由上层当"(unknown)"处理)。</summary>
 </member>
 <member name="M:Neuropils.Data.BrainDatasetLoader.intern(System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.Dictionary{System.String,System.Int32})">
  <summary>把名称字符串映射到连续索引 (保持首次出现的顺序)。</summary>
@@ -986,26 +1055,6 @@ Neuropils
  <remarks>
  继承 <see cref="T:FlywireAI.Connectome.SnnConfig"/> 而不是另起一套配置，是为了让"仿真"与"看仿真结果"
  共用同一个 ``DataDir`` 与同一批表格路径：两个子系统读到的必须是同一份数据。
- </remarks>
-</member>
-<member name="P:Neuropils.Data.VisualizationConfig.CoordinatesCsv">
- <summary>
- 标记位置坐标表 (``coordinates.csv``)：``root_id, position, supervoxel_id``。
- </summary>
- <remarks>
- 13.9 MB / 238,909 行，覆盖约 13 万个神经元。文档说明这些坐标是"人工校对时
- 标记的位置"，并不保证是胞体，但它是唯一一张"每神经元一行"的坐标表，
- 因此作为点云的位置来源。
- </remarks>
-</member>
-<member name="P:Neuropils.Data.VisualizationConfig.NeuropilTableCsv">
- <summary>
- 按脑区统计的突触表 (``neuropil_synapse_table.csv``)：321 列 / 134,181 行。
- </summary>
- <remarks>
- 每行是一个神经元对 80 个脑区的输入/输出突触数与伙伴数。对每个神经元取
- "输入+输出突触数最多的脑区"即可得到它的主导脑区，这是"不同脑区不同颜色"
- 的依据 (数据集里没有直接给出每个神经元的脑区归属)。
  </remarks>
 </member>
 <member name="P:Neuropils.Data.VisualizationConfig.ActivityDir">

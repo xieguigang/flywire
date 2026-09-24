@@ -42,7 +42,19 @@ Namespace Data
         Public Property MaxConnections As Integer = DefaultMaxConnections
 
         ''' <summary>
-        ''' 加载整个数据集。
+        ''' 是否优先使用 msgpack 转储包 (<see cref="FafbMsgPackStorage"/>)。
+        ''' </summary>
+        ''' <remarks>
+        ''' 默认开启：转储包存在且没过期时，整条加载路径<b>完全不解析 ASCII 文本</b>。
+        ''' 包不存在 / 过期 / 损坏 / 版本不对时自动回退到 csv（见 <see cref="FafbMsgPackStorage.Verify"/>）。
+        ''' </remarks>
+        Public Property PreferMsgPack As Boolean = True
+
+        ''' <summary>转储包的路径；为空时落到 <see cref="FafbMsgPackStorage.ResolvePackFile"/> 的默认位置。</summary>
+        Public Property PackFile As String = Nothing
+
+        ''' <summary>
+        ''' 加载整个数据集：优先走 msgpack 转储包，没有包就回退到 csv。
         ''' </summary>
         ''' <param name="progress">进度回调 (已经格式化的文本)</param>
         ''' <param name="cancel">取消标记</param>
@@ -50,6 +62,27 @@ Namespace Data
         ''' <exception cref="OperationCanceledException">调用方取消了加载</exception>
         Public Function Load(Optional progress As Action(Of String) = Nothing,
                              Optional cancel As CancellationToken = Nothing) As BrainDataset
+
+            If PreferMsgPack Then
+                Dim packPath As String = FafbMsgPackStorage.ResolvePackFile(m_config, PackFile)
+                Dim reason As String = FafbMsgPackStorage.Verify(m_config, PackFile)
+
+                If String.IsNullOrEmpty(reason) Then
+                    Call report(progress, $"loading from the msgpack archive {packPath} ...")
+
+                    Using reader As FafbPackReader = FafbMsgPackStorage.Open(packPath)
+                        Return loadFromPack(reader, progress, cancel)
+                    End Using
+                Else
+                    Call report(progress, $"msgpack archive not usable ({reason}), falling back to csv ...")
+                End If
+            End If
+
+            Return loadFromCsv(progress, cancel)
+        End Function
+
+        ''' <summary>从 csv 装配数据集 (没有转储包时走的原始路径)。</summary>
+        Private Function loadFromCsv(progress As Action(Of String), cancel As CancellationToken) As BrainDataset
 
             Call validateFiles()
 
@@ -131,12 +164,17 @@ Namespace Data
 
         ''' <summary>每神经元的递质类型 (``neurons.csv``)。</summary>
         Private Function loadNeurotransmitters(index As ConnectomeIndex, cancel As CancellationToken) As String()
+            Call throwIfCancelled(cancel)
+
+            Return neurotransmittersOf(index, m_config.ResolvePath(m_config.NeuronsCsv).LoadNeurons())
+        End Function
+
+        ''' <summary>``neurons.csv`` 的记录 → 每神经元一个递质字符串 (csv 与 msgpack 两条路径共用)。</summary>
+        Private Shared Function neurotransmittersOf(index As ConnectomeIndex, rows As List(Of Neurons)) As String()
             Dim types As String() = New String(index.Size - 1) {}
             Dim i As Integer
 
-            For Each cell As Neurons In m_config.ResolvePath(m_config.NeuronsCsv).StreamNeurons()
-                Call throwIfCancelled(cancel)
-
+            For Each cell As Neurons In rows
                 If cell Is Nothing OrElse Not index.IndexOf(cell.RootId, i) Then
                     Continue For
                 End If
@@ -159,20 +197,33 @@ Namespace Data
         ''' 这里取它们的算术平均 (并记录标记条数)。
         ''' </summary>
         Private Sub loadPositions(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)
+            Dim rows As New List(Of Coordinates)()
+
+            For Each cell As Coordinates In m_config.ResolvePath(m_config.CoordinatesCsv).StreamCoordinates()
+                Call throwIfCancelled(cancel)
+
+                If cell IsNot Nothing Then
+                    Call rows.Add(cell)
+                End If
+            Next
+
+            Call applyPositions(dataset, rows, progress)
+        End Sub
+
+        ''' <summary>坐标记录 → 每神经元一个平均位置 (csv 与 msgpack 两条路径共用)。</summary>
+        Private Shared Sub applyPositions(dataset As BrainDataset, rows As List(Of Coordinates), progress As Action(Of String))
             Dim units As Integer = dataset.Units
             Dim index As ConnectomeIndex = dataset.Index
             Dim sums As Double() = New Double(units * 3 - 1) {}
             Dim marks As Integer() = New Integer(units - 1) {}
             Dim i As Integer
-            Dim rows As Long = 0
+            Dim total As Long = 0
 
-            For Each cell As Coordinates In m_config.ResolvePath(m_config.CoordinatesCsv).StreamCoordinates()
-                Call throwIfCancelled(cancel)
+            For Each cell As Coordinates In rows
+                total += 1
 
-                rows += 1
-
-                If (rows Mod 50000) = 0 Then
-                    Call report(progress, $"  {rows} coordinate rows ...")
+                If (total Mod 50000) = 0 Then
+                    Call report(progress, $"  {total} coordinate rows ...")
                 End If
 
                 If cell Is Nothing OrElse Not index.IndexOf(cell.RootId, i) Then
@@ -215,7 +266,7 @@ Namespace Data
             dataset.Positions = positions
             dataset.PositionMarks = marks
 
-            Call report(progress, $"  {rows} coordinate rows -> {positioned}/{units} neurons have a position")
+            Call report(progress, $"  {total} coordinate rows -> {positioned}/{units} neurons have a position")
         End Sub
 
         ''' <summary>
@@ -312,19 +363,11 @@ Namespace Data
                     End If
                 Next
 
-                Dim best As Integer = -1
-                Dim bestValue As Double = 0
+                Dim best As (Region As Integer, Value As Double) = dominantRegion(totals)
 
-                For r As Integer = 0 To totals.Length - 1
-                    If totals(r) > bestValue Then
-                        bestValue = totals(r)
-                        best = r
-                    End If
-                Next
-
-                If best >= 0 Then
-                    assignment(i) = best
-                    strength(i) = bestValue
+                If best.Region >= 0 Then
+                    assignment(i) = best.Region
+                    strength(i) = best.Value
                     assigned += 1
                 End If
             Next
@@ -337,6 +380,24 @@ Namespace Data
 
             Call report(progress, $"  {rows} rows -> {assigned}/{units} neurons assigned to {regionNames.Length} neuropils")
         End Sub
+
+        ''' <summary>
+        ''' 在"各脑区的输入+输出突触数"里挑出最大的那个脑区 (csv 与 msgpack 两条路径共用)。
+        ''' </summary>
+        ''' <returns>脑区下标与它的突触数；全部为 0 时返回 <c>-1</c>。</returns>
+        Private Shared Function dominantRegion(totals As Double()) As (Region As Integer, Value As Double)
+            Dim best As Integer = -1
+            Dim bestValue As Double = 0
+
+            For r As Integer = 0 To totals.Length - 1
+                If totals(r) > bestValue Then
+                    bestValue = totals(r)
+                    best = r
+                End If
+            Next
+
+            Return (best, bestValue)
+        End Function
 
         ''' <summary>
         ''' 从脑区表的表头里挑出 ``input/output synapses in &lt;region&gt;`` 列的位置。
@@ -560,6 +621,258 @@ Namespace Data
         End Sub
 
 #End Region
+
+#Region "msgpack 快路径"
+
+        ''' <summary>
+        ''' 从 msgpack 转储包装配数据集：结果与 csv 路径一致，只是全程不再解析 ASCII 文本。
+        ''' </summary>
+        ''' <remarks>
+        ''' 每一步都与 <see cref="loadFromCsv"/> 里对应的步骤使用<b>同一段</b>语义代码
+        ''' (索引、坐标平均、脑区取最大值、连接过滤)，区别只在于"记录从哪儿来"：
+        ''' 这里是从转储包里读回来的定型数组，那边是逐行切分 csv。
+        ''' </remarks>
+        Private Function loadFromPack(reader As FafbPackReader,
+                                      progress As Action(Of String),
+                                      cancel As CancellationToken) As BrainDataset
+
+            Dim dataset As New BrainDataset With {
+                .Source = m_config.DataDir
+            }
+            Dim clock As Diagnostics.Stopwatch = Diagnostics.Stopwatch.StartNew()
+            Dim stage As Long = 0
+
+            ' 1) 神经元主索引 + 注释
+            Call throwIfCancelled(cancel)
+            Call report(progress, $"loading neuron index from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyNames)} ...")
+
+            Dim namesPack As CellNamesPack = reader.Read(Of CellNamesPack)(FafbMsgPackStorage.KeyNames)
+            Dim neuronsPack As NeuronsPack = reader.Read(Of NeuronsPack)(FafbMsgPackStorage.KeyNeurons)
+            Dim names As List(Of CellNames) = If(namesPack Is Nothing, New List(Of CellNames)(), namesPack.ToRecords())
+            Dim neurons As List(Of Neurons) = If(neuronsPack Is Nothing, New List(Of Neurons)(), neuronsPack.ToRecords())
+            Dim index As New ConnectomeIndex()
+
+            For Each cell As CellNames In names
+                Call index.Add(cell.RootId)
+            Next
+
+            Call index.Freeze()
+
+            Call report(progress, $"  {index.Size} neurons, attaching annotations ...")
+
+            Dim classificationPack As ClassificationPack = reader.Read(Of ClassificationPack)(FafbMsgPackStorage.KeyClassification)
+            Dim cellTypesPack As CellTypesPack = reader.Read(Of CellTypesPack)(FafbMsgPackStorage.KeyCellTypes)
+
+            Call index.AttachAnnotations(
+                names,
+                If(classificationPack Is Nothing, New List(Of Classification)(), classificationPack.ToRecords()),
+                If(cellTypesPack Is Nothing, New List(Of CellTypes)(), cellTypesPack.ToRecords()),
+                neurons)
+
+            dataset.Index = index
+
+            ' 2) 递质类型 (ConnectomeIndex 只保留了"是否抑制性"，着色需要类型本身)
+            Call throwIfCancelled(cancel)
+
+            dataset.Neurotransmitters = neurotransmittersOf(index, neurons)
+            Call reportStage(progress, "neuron index + annotations", clock, stage)
+
+            ' 3) 三维坐标
+            Call throwIfCancelled(cancel)
+            Call report(progress, $"loading coordinates from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyCoordinates)} ...")
+
+            Dim coordinatesPack As CoordinatesPack = reader.Read(Of CoordinatesPack)(FafbMsgPackStorage.KeyCoordinates)
+
+            Call applyPositions(dataset,
+                                If(coordinatesPack Is Nothing, New List(Of Coordinates)(), coordinatesPack.ToRecords()),
+                                progress)
+            Call reportStage(progress, "coordinates", clock, stage)
+
+            ' 4) 主导脑区
+            Call throwIfCancelled(cancel)
+            Call report(progress, $"loading neuropil assignments from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyNeuropil)} ...")
+
+            Call assignNeuropilsFromPack(dataset, reader,
+                                         reader.Read(Of NeuropilTablePack)(FafbMsgPackStorage.KeyNeuropil), progress)
+            Call reportStage(progress, "neuropil assignment", clock, stage)
+
+            ' 5) 连接表
+            Call throwIfCancelled(cancel)
+            Call report(progress, $"loading connections from {FafbMsgPackStorage.EntryNameOf(FafbMsgPackStorage.KeyConnections)} ...")
+
+            Call loadConnectionsFromPack(dataset, reader,
+                                         reader.Read(Of ConnectionsPack)(FafbMsgPackStorage.KeyConnections),
+                                         progress, cancel)
+            Call reportStage(progress, "connections", clock, stage)
+
+            ' 6) 仿真活跃度 (可选)
+            Call throwIfCancelled(cancel)
+            Call loadActivity(dataset, progress)
+            Call reportStage(progress, "activity (optional)", clock, stage)
+
+            Call report(progress, $"dataset ready: {dataset}")
+
+            Return dataset
+        End Function
+
+        ''' <summary>
+        ''' 主导脑区：与 csv 路径同一套表头解析 (``input/output synapses in &lt;region&gt;``)
+        ''' 与同一个取最大值逻辑，只是数值直接来自转储包的列式数组。
+        ''' </summary>
+        Private Shared Sub assignNeuropilsFromPack(dataset As BrainDataset, reader As FafbPackReader,
+                                                   pack As NeuropilTablePack, progress As Action(Of String))
+            If pack Is Nothing Then Throw New InvalidDataException("转储包里没有脑区表 (neuropil)")
+
+            Dim units As Integer = dataset.Units
+            Dim assignment As Integer() = New Integer(units - 1) {}
+            Dim strength As Double() = New Double(units - 1) {}
+
+            For k As Integer = 0 To assignment.Length - 1
+                assignment(k) = -1
+            Next
+
+            Dim parsed = parseNeuropilHeader(pack.Columns)
+            Dim regionNames As String() = parsed.Names
+
+            If regionNames Is Nothing OrElse regionNames.Length = 0 Then
+                Throw New InvalidDataException("转储包里的脑区表缺少 ``... synapses in <region>`` 列")
+            End If
+
+            ' 只把"用得上的那 158 个脑区突触数列"读进来：
+            ' 321 列整读一遍要比只挑出需要的列多花一个数量级的时间
+            Dim columns As Double()() = New Double(parsed.Columns.Length - 1)() {}
+
+            For c As Integer = 0 To parsed.Columns.Length - 1
+                columns(c) = reader.ReadDoubles(FafbMsgPackStorage.NeuropilColumnKey(parsed.Columns(c)))
+            Next
+
+            Dim totals As Double() = New Double(regionNames.Length - 1) {}
+            Dim rows As Integer = pack.RowCount()
+            Dim assigned As Integer = 0
+            Dim i As Integer
+
+            For r As Integer = 0 To rows - 1
+                If Not dataset.Index.IndexOf(pack.RootId(r), i) Then
+                    Continue For
+                End If
+
+                Array.Clear(totals, 0, totals.Length)
+
+                For c As Integer = 0 To parsed.Columns.Length - 1
+                    totals(parsed.Regions(c)) += columns(c)(r)
+                Next
+
+                Dim best As (Region As Integer, Value As Double) = dominantRegion(totals)
+
+                If best.Region >= 0 Then
+                    assignment(i) = best.Region
+                    strength(i) = best.Value
+                    assigned += 1
+                End If
+            Next
+
+            dataset.Neuropil = assignment
+            dataset.NeuropilNames = regionNames
+            dataset.NeuropilSynapses = strength
+
+            Call report(progress, $"  {rows} rows -> {assigned}/{units} neurons assigned to {regionNames.Length} neuropils")
+        End Sub
+
+        ''' <summary>
+        ''' 连接表：转储包里已经字典化的分类列在这里重新编号，
+        ''' 保证与 csv 路径得到<b>完全相同</b>的名称表 (按首次出现的顺序)。
+        ''' </summary>
+        Private Sub loadConnectionsFromPack(dataset As BrainDataset, reader As FafbPackReader, pack As ConnectionsPack,
+                                            progress As Action(Of String), cancel As CancellationToken)
+            If pack Is Nothing Then Throw New InvalidDataException("转储包里没有连接表 (connections)")
+
+            Dim index As ConnectomeIndex = dataset.Index
+            Dim rows As Integer = pack.RowCount
+            Dim capacity As Integer = System.Math.Min(MaxConnections, rows)
+
+            ' 5 个数据列走快通道整段读回（逐元素反序列化 2,670 万个值要比解析 csv 还慢）
+            Dim preRoots As Long() = reader.ReadLongs(FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPre))
+            Dim postRoots As Long() = reader.ReadLongs(FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnPost))
+            Dim neuropilCodes As Integer() = reader.ReadIntegers(FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnNeuropil))
+            Dim synCounts As Double() = reader.ReadDoubles(FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnSynapses))
+            Dim ntCodes As Integer() = reader.ReadIntegers(FafbMsgPackStorage.ConnectionColumnKey(FafbMsgPackStorage.ColumnNt))
+
+            If preRoots Is Nothing OrElse postRoots Is Nothing Then
+                Throw New InvalidDataException("转储包里的连接表缺少 pre / post 列")
+            End If
+
+            Dim pre As New List(Of Integer)(capacity)
+            Dim post As New List(Of Integer)(capacity)
+            Dim synapses As New List(Of Integer)(capacity)
+            Dim neuropils As New List(Of Integer)(capacity)
+            Dim types As New List(Of Integer)(capacity)
+
+            Dim neuropilNames As New List(Of String)()
+            Dim neuropilIds As New Dictionary(Of String, Integer)(StringComparer.Ordinal)
+            Dim ntNames As New List(Of String)()
+            Dim ntIds As New Dictionary(Of String, Integer)(StringComparer.Ordinal)
+
+            Dim skipped As Long = 0
+            Dim truncated As Boolean = False
+
+            For r As Integer = 0 To rows - 1
+                If r > 0 AndAlso (r Mod 500000) = 0 Then
+                    Call throwIfCancelled(cancel)
+                    Call report(progress, $"  {r} connection rows, {pre.Count} accepted ... (msgpack)")
+                End If
+
+                Dim preIndex As Integer
+                Dim postIndex As Integer
+
+                ' 索引在注释表建立之后已经冻结，转储包里出现的其它 root_id 只能跳过
+                If Not index.IndexOf(preRoots(r), preIndex) Then
+                    skipped += 1
+
+                    Continue For
+                End If
+                If Not index.IndexOf(postRoots(r), postIndex) Then
+                    skipped += 1
+
+                    Continue For
+                End If
+
+                Call pre.Add(preIndex)
+                Call post.Add(postIndex)
+                Call synapses.Add(CInt(System.Math.Max(0, System.Math.Min(Integer.MaxValue, synCounts(r)))))
+                Call neuropils.Add(intern(pack.NeuropilOf(code(neuropilCodes, r)), neuropilNames, neuropilIds))
+                Call types.Add(intern(pack.NeurotransmitterOf(code(ntCodes, r)), ntNames, ntIds))
+
+                If pre.Count >= MaxConnections Then
+                    truncated = True
+
+                    Exit For
+                End If
+            Next
+
+            dataset.Pre = pre.ToArray()
+            dataset.Post = post.ToArray()
+            dataset.SynCount = synapses.ToArray()
+            dataset.ConnectionNeuropil = neuropils.ToArray()
+            dataset.ConnectionNtType = types.ToArray()
+            dataset.ConnectionNeuropils = neuropilNames.ToArray()
+            dataset.ConnectionNeurotransmitters = ntNames.ToArray()
+
+            Call report(progress, $"  {rows} rows -> {dataset.ConnectionCount} connections " &
+                                  $"({skipped} skipped, {neuropilNames.Count} neuropils, {ntNames.Count} neurotransmitters)")
+
+            If truncated Then
+                Call report(progress, $"  [WARN] the connection table was truncated at {MaxConnections} rows")
+            End If
+        End Sub
+
+#End Region
+
+        ''' <summary>取字典化列的第 i 个编号 (缺列 / 越界时返回 -1，交由上层当"(unknown)"处理)。</summary>
+        Private Shared Function code(codes As Integer(), i As Integer) As Integer
+            If codes Is Nothing OrElse i < 0 OrElse i >= codes.Length Then Return -1
+
+            Return codes(i)
+        End Function
 
         ''' <summary>把名称字符串映射到连续索引 (保持首次出现的顺序)。</summary>
         Private Shared Function intern(name As String, names As List(Of String), ids As Dictionary(Of String, Integer)) As Integer

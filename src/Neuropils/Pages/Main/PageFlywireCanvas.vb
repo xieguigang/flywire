@@ -96,6 +96,14 @@ Public Class PageFlywireCanvas
 
         Dim args As String() = Environment.GetCommandLineArgs()
 
+        ' msgpack 转储：把数据源的 csv 逐个转储成 msgpack 并打成一个 zip 包
+        ' (``Neuropils.exe --dump <zip> [数据目录] [verify]``)
+        If args.Length > 2 AndAlso String.Equals(args(1), "--dump", StringComparison.OrdinalIgnoreCase) Then
+            Call AppLogics.MsgPackDump.runDump(args)
+
+            Return
+        End If
+
         ' 自检模式：把数据层与场景装配的实测结果写成报告，便于无人值守的回归
         If args.Length > 1 AndAlso String.Equals(args(1), "--selftest", StringComparison.OrdinalIgnoreCase) Then
             Call SelfTest.runSelfTest(Me, args)

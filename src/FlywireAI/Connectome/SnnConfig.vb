@@ -34,6 +34,29 @@ Namespace Connectome
         Public Property CellTypesCsv As String = "consolidated_cell_types.csv"
         Public Property NeuronsCsv As String = "neurons.csv"
 
+        ''' <summary>
+        ''' 标记位置坐标表 (``coordinates.csv``)：``root_id, position, supervoxel_id``。
+        ''' </summary>
+        ''' <remarks>
+        ''' 13.9 MB / 238,909 行，覆盖约 13 万个神经元。文档说明这些坐标是"人工校对时
+        ''' 标记的位置"，并不保证是胞体，但它是唯一一张"每神经元一行"的坐标表，
+        ''' 因此作为点云的位置来源。
+        ''' 
+        ''' 放在这里（而不是只在可视化配置里）的原因：<see cref="FAFBv783.FafbMsgPackStorage"/>
+        ''' 需要把<b>全部</b>数据源文件转储成 msgpack，它只能看到 <see cref="SnnConfig"/>。
+        ''' </remarks>
+        Public Property CoordinatesCsv As String = "coordinates.csv"
+
+        ''' <summary>
+        ''' 按脑区统计的突触表 (``neuropil_synapse_table.csv``)：321 列 / 134,181 行。
+        ''' </summary>
+        ''' <remarks>
+        ''' 每行是一个神经元对 80 个脑区的输入/输出突触数与伙伴数。对每个神经元取
+        ''' "输入+输出突触数最多的脑区"即可得到它的主导脑区，这是"不同脑区不同颜色"
+        ''' 的依据 (数据集里没有直接给出每个神经元的脑区归属)。
+        ''' </remarks>
+        Public Property NeuropilTableCsv As String = "neuropil_synapse_table.csv"
+
 #End Region
 
 #Region "网络与仿真参数"
