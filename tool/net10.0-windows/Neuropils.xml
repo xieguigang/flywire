@@ -1045,6 +1045,94 @@ Neuropils
  适合"数量级事先不知道"的读数（例如每 tick 的脉冲个数）。
  </param>
 </member>
+<member name="M:Neuropils.FormChartData.bindSignalModes(Neuropils.PageResponseChart)">
+ <summary>
+ 填充"响应信号"下拉框：只列出当前数据真正可用的口径
+ (没有分析回放时就不给出"膜电位"这个选项)。
+ </summary>
+ <remarks>
+ 下拉框本身在 Designer 的 <c>InitializeComponent</c> 里建好，
+ 但可选项由数据决定，因此放到这里；<c>m_loading</c> 用来抑制
+ 初始选中项触发的事件 —— 那时其余控件刚建好，还不该重建曲线。
+ </remarks>
+</member>
+<member name="M:Neuropils.FormChartData.onValueChecked(System.Object,System.Windows.Forms.ItemCheckEventArgs)">
+ <summary>取值列表项被勾选 / 取消勾选。</summary>
+</member>
+<member name="M:Neuropils.FormChartData.refreshCategories">
+ <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
+</member>
+<member name="T:Neuropils.PageResponseChart">
+ <summary>
+ 电刺激响应曲线窗口：把一次刺激实验记录下来的响应结果画成曲线。
+ </summary>
+ <remarks>
+ <b>横轴</b>是时间步，<b>纵轴</b>是神经元的响应电信号强度（默认取触发前膜电位）。
+ 曲线可以逐神经元画，也可以按「脑区 / 神经递质 / 细胞类型 / 分类层级」筛选出的
+ 神经元集合聚合后画（组均值 ± 包络）。
+ 
+ 曲线<b>直接绘制在 <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas"/> 控件上</b>（Direct2D/D3D11 GPU 画布）：
+ <c>LinePlot</c> 通过注入 <c>IGraphics</c> 的方式使用控件自己的绘图设备，
+ 中间不需要位图，也不存在"先画到 Bitmap 再贴到控件"的拷贝。
+ 
+ 数据来源是<b>记录下来的响应结果</b>：会话内刚跑完的结果直接画，
+ 也可以随时打开任意一次历史实验的记录目录。
+ </remarks>
+</member>
+<member name="M:Neuropils.PageResponseChart.#ctor(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset)">
+ <summary>
+ 构造响应曲线窗口。
+ </summary>
+ <param name="data">响应数据（会话内结果或落盘记录）</param>
+ <param name="dataset">数据集（提供脑区 / 递质等标签）</param>
+</member>
+<member name="M:Neuropils.PageResponseChart.ApplyOptions(Neuropils.Analysis.NeuronLabelDimension,Neuropils.Analysis.ResponseSignalMode,Neuropils.Analysis.CurveAggregation)">
+ <summary>
+ 按给定参数切换视图（供自动化自检与外部调用；界面上等价于改三个下拉框）。
+ </summary>
+</member>
+<member name="M:Neuropils.PageResponseChart.unwrap(System.String)">
+ <summary>把列表项文本（"名称  (n)"）还原成纯标签值。</summary>
+</member>
+<member name="M:Neuropils.PageResponseChart.rebuildSeries">
+ <summary>重新装配曲线集合并请求重绘。</summary>
+</member>
+<member name="M:Neuropils.PageResponseChart.onRender(System.Object,Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs)">
+ <summary>
+ 把曲线画到控件的 GPU 画布上。
+ </summary>
+ <remarks>
+ 每帧新建一个 <c>LinePlot</c>：绘图引擎的排版尺寸取自画布尺寸，
+ 控件一旦缩放就需要按新尺寸重新排版，复用旧对象会画到旧尺寸上。
+ 因为画布是外部注入的，<c>Dispose</c> 不会关闭控件自己的绘图设备。
+ </remarks>
+</member>
+<member name="M:Neuropils.PageResponseChart.CaptureTo(System.String)">
+ <summary>把控件当前画面（也就是曲线图）抓成一帧写盘。</summary>
+ <remarks>
+ 走的是控件的 GPU 画布回读：强制同步重绘一帧并保存，
+ 因此拿到的是屏幕上真正显示的内容，而不是另画一遍。
+ </remarks>
+</member>
+<member name="P:Neuropils.PageResponseChart.CanvasReady">
+ <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
+</member>
+<member name="M:Neuropils.PageResponseChart.RenderToFile(System.String,Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset,Neuropils.Analysis.CurveOptions,System.Int32,System.Int32,System.String@)">
+ <summary>
+ 把响应曲线渲染成一张图片文件（不需要窗口，用于命令行出图与自动化验证）。
+ </summary>
+ <param name="file">输出 png 路径</param>
+ <param name="data">响应数据</param>
+ <param name="dataset">数据集</param>
+ <param name="options">曲线参数</param>
+ <param name="width">画布宽 (像素)</param>
+ <param name="height">画布高 (像素)</param>
+ <remarks>
+ 走的是与窗口<b>完全相同</b>的代码路径（同一个 <c>LinePlot</c> + 同一套曲线装配），
+ 区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
+ 也能在没有窗口的环境里验证绘图链路。
+ </remarks>
+</member>
 <member name="M:Neuropils.FormNeuronMap.refreshLegend">
  <summary>刷新图例列表 (热力图维度下显示色标而不是勾选列表)。</summary>
 </member>
@@ -1149,94 +1237,6 @@ Neuropils
  <remarks>
  单次线性扫描 534 万条连接 (约 30 ms)，因此可以随点击实时计算，
  不需要预先为每个神经元建立邻接表 (那会多占用数百 MB 内存)。
- </remarks>
-</member>
-<member name="T:Neuropils.PageResponseChart">
- <summary>
- 电刺激响应曲线窗口：把一次刺激实验记录下来的响应结果画成曲线。
- </summary>
- <remarks>
- <b>横轴</b>是时间步，<b>纵轴</b>是神经元的响应电信号强度（默认取触发前膜电位）。
- 曲线可以逐神经元画，也可以按「脑区 / 神经递质 / 细胞类型 / 分类层级」筛选出的
- 神经元集合聚合后画（组均值 ± 包络）。
- 
- 曲线<b>直接绘制在 <see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxCanvas"/> 控件上</b>（Direct2D/D3D11 GPU 画布）：
- <c>LinePlot</c> 通过注入 <c>IGraphics</c> 的方式使用控件自己的绘图设备，
- 中间不需要位图，也不存在"先画到 Bitmap 再贴到控件"的拷贝。
- 
- 数据来源是<b>记录下来的响应结果</b>：会话内刚跑完的结果直接画，
- 也可以随时打开任意一次历史实验的记录目录。
- </remarks>
-</member>
-<member name="M:Neuropils.PageResponseChart.#ctor(Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset)">
- <summary>
- 构造响应曲线窗口。
- </summary>
- <param name="data">响应数据（会话内结果或落盘记录）</param>
- <param name="dataset">数据集（提供脑区 / 递质等标签）</param>
-</member>
-<member name="M:Neuropils.PageResponseChart.bindSignalModes">
- <summary>
- 填充"响应信号"下拉框：只列出当前数据真正可用的口径
- (没有分析回放时就不给出"膜电位"这个选项)。
- </summary>
- <remarks>
- 下拉框本身在 Designer 的 <c>InitializeComponent</c> 里建好，
- 但可选项由数据决定，因此放到这里；<c>m_loading</c> 用来抑制
- 初始选中项触发的事件 —— 那时其余控件刚建好，还不该重建曲线。
- </remarks>
-</member>
-<member name="M:Neuropils.PageResponseChart.ApplyOptions(Neuropils.Analysis.NeuronLabelDimension,Neuropils.Analysis.ResponseSignalMode,Neuropils.Analysis.CurveAggregation)">
- <summary>
- 按给定参数切换视图（供自动化自检与外部调用；界面上等价于改三个下拉框）。
- </summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.onValueChecked(System.Object,System.Windows.Forms.ItemCheckEventArgs)">
- <summary>取值列表项被勾选 / 取消勾选。</summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.refreshCategories">
- <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.unwrap(System.String)">
- <summary>把列表项文本（"名称  (n)"）还原成纯标签值。</summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.rebuildSeries">
- <summary>重新装配曲线集合并请求重绘。</summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.onRender(System.Object,Microsoft.VisualBasic.Drawing.DirectX.DxRenderEventArgs)">
- <summary>
- 把曲线画到控件的 GPU 画布上。
- </summary>
- <remarks>
- 每帧新建一个 <c>LinePlot</c>：绘图引擎的排版尺寸取自画布尺寸，
- 控件一旦缩放就需要按新尺寸重新排版，复用旧对象会画到旧尺寸上。
- 因为画布是外部注入的，<c>Dispose</c> 不会关闭控件自己的绘图设备。
- </remarks>
-</member>
-<member name="M:Neuropils.PageResponseChart.CaptureTo(System.String)">
- <summary>把控件当前画面（也就是曲线图）抓成一帧写盘。</summary>
- <remarks>
- 走的是控件的 GPU 画布回读：强制同步重绘一帧并保存，
- 因此拿到的是屏幕上真正显示的内容，而不是另画一遍。
- </remarks>
-</member>
-<member name="P:Neuropils.PageResponseChart.CanvasReady">
- <summary>GPU 画布是否已经就绪（供自动化自检等待首帧）。</summary>
-</member>
-<member name="M:Neuropils.PageResponseChart.RenderToFile(System.String,Neuropils.Analysis.ResponseDataset,Neuropils.Data.BrainDataset,Neuropils.Analysis.CurveOptions,System.Int32,System.Int32,System.String@)">
- <summary>
- 把响应曲线渲染成一张图片文件（不需要窗口，用于命令行出图与自动化验证）。
- </summary>
- <param name="file">输出 png 路径</param>
- <param name="data">响应数据</param>
- <param name="dataset">数据集</param>
- <param name="options">曲线参数</param>
- <param name="width">画布宽 (像素)</param>
- <param name="height">画布高 (像素)</param>
- <remarks>
- 走的是与窗口<b>完全相同</b>的代码路径（同一个 <c>LinePlot</c> + 同一套曲线装配），
- 区别只是画布换成离屏 <c>DxGraphics</c> —— 因此它既能导出图片，
- 也能在没有窗口的环境里验证绘图链路。
  </remarks>
 </member>
 <member name="T:Neuropils.PageSnakeBrainGamePlay">

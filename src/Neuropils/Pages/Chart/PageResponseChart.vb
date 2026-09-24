@@ -53,7 +53,7 @@ Public Class PageResponseChart
 
         ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
         Call m_opt.bindSignalModes(Me)
-        Call refreshCategories()
+        Call m_opt.refreshCategories()
         Call rebuildSeries()
     End Sub
 
@@ -83,7 +83,7 @@ Public Class PageResponseChart
             m_opt.m_loading = False
         End Try
 
-        Call refreshCategories()
+        Call m_opt.refreshCategories()
         Call rebuildSeries()
     End Sub
 
@@ -115,7 +115,7 @@ Public Class PageResponseChart
         End Select
     End Function
 
-    Private Function currentDimension() As NeuronLabelDimension
+    Friend Function currentDimension() As NeuronLabelDimension
         Select Case m_opt.m_dimensionBox.SelectedIndex
             Case 1
                 Return NeuronLabelDimension.Neurotransmitter
@@ -160,42 +160,6 @@ Public Class PageResponseChart
         Return picked.ToArray()
     End Function
 
-    ''' <summary>刷新标签取值列表（只列出当前响应集合里出现过的取值）。</summary>
-    Private Sub refreshCategories()
-        m_loading = True
-
-        Try
-            Dim counts As Integer() = Nothing
-            Dim values As String() = m_data.Categories(currentDimension(), m_dataset, counts)
-
-            Call m_values.Items.Clear()
-
-            For i As Integer = 0 To values.Length - 1
-                Call m_values.Items.Add($"{values(i)}  ({counts(i):N0})")
-            Next
-
-            m_valueHint.Text = $"{ResponseCurveBuilder.DescribeDimension(currentDimension())}：" &
-                               $"{values.Length} 个取值 / {m_data.Responders.Length:N0} 个响应神经元"
-            Call updateSummary()
-        Finally
-            m_loading = False
-        End Try
-    End Sub
-
-    Private Sub setAllValues(checked As Boolean)
-        m_loading = True
-
-        Try
-            For i As Integer = 0 To m_values.Items.Count - 1
-                m_values.SetItemChecked(i, checked)
-            Next
-        Finally
-            m_loading = False
-        End Try
-
-        Call rebuildSeries()
-    End Sub
-
     ''' <summary>把列表项文本（"名称  (n)"）还原成纯标签值。</summary>
     Private Shared Function unwrap(item As String) As String
         If item Is Nothing Then Return ""
@@ -214,8 +178,8 @@ Public Class PageResponseChart
             .Selected = selectedValues(),
             .Mode = currentMode(),
             .Aggregation = currentAggregation(),
-            .MaxCurves = CInt(m_limitBox.Value),
-            .Window = CInt(m_windowBox.Value)
+            .MaxCurves = CInt(m_opt.m_limitBox.Value),
+            .Window = CInt(m_opt.m_windowBox.Value)
         }
 
         m_series = ResponseCurveBuilder.Build(m_data, m_dataset, options, m_description)
@@ -225,7 +189,7 @@ Public Class PageResponseChart
         Call m_canvas.Invalidate()
     End Sub
 
-    Private Sub updateSummary()
+    Friend Sub updateSummary()
         Dim modes As ResponseSignalMode() = m_data.AvailableModes
         Dim potentialNote As String = ""
 
@@ -237,7 +201,7 @@ Public Class PageResponseChart
             potentialNote = "；本次记录没有膜电位（曲线由脉冲折算）"
         End If
 
-        m_summary.Text = $"{m_description}{Environment.NewLine}" &
+        m_opt.m_summary.Text = $"{m_description}{Environment.NewLine}" &
                          $"响应神经元 {m_data.Responders.Length:N0} / 全脑 {m_data.Units:N0}，T={m_data.Steps} 步{potentialNote}"
     End Sub
 

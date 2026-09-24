@@ -70,5 +70,5 @@ Partial Class PageResponseChart
         ResumeLayout(False)
     End Sub
 
-    Private WithEvents m_canvas As DxCanvas
+    Friend WithEvents m_canvas As DxCanvas
 End Class
