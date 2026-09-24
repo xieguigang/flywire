@@ -1,4 +1,7 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
+﻿Imports Microsoft.VisualBasic.Drawing.DirectX
+Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
+
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormMain
     Inherits System.Windows.Forms.Form
 
@@ -59,6 +62,24 @@ Partial Class FormMain
     Friend m_holdLabel As ToolStripLabel
     Private WithEvents m_snapshotButton As ToolStripButton
     Private WithEvents m_reloadButton As ToolStripButton
+
+    ' ---- 主界面布局（声明式，参照 ResponseChartForm.Designer.vb 的模式）----
+    ' 事件源用 WithEvents 以便 Handles 绑定，替代原 initializeUi / createSidebar / createReplayPanel 里的 AddHandler。
+    Friend WithEvents m_canvas As DxScene3DCanvas
+    Private m_split As SplitContainer
+    Private WithEvents m_legend As CheckedListBox
+    Private m_gradient As PictureBox
+    Private m_details As TextBox
+    Friend m_replayPanel As TableLayoutPanel
+    Friend WithEvents m_replayFirst As Button
+    Friend WithEvents m_replayPrev As Button
+    Friend WithEvents m_replayPlay As Button
+    Friend WithEvents m_replayNext As Button
+    Friend WithEvents m_replayLast As Button
+    Friend WithEvents m_replayClear As Button
+    Friend WithEvents m_replayTrack As TrackBar
+    Friend WithEvents m_replaySpeed As NumericUpDown
+    Friend m_replayText As Label
 
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.
@@ -230,6 +251,249 @@ Partial Class FormMain
         m_statusStrip.Items.Add(New ToolStripControlHost(m_chartLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.Items.Add(New ToolStripControlHost(m_snakeLink) With {.Alignment = ToolStripItemAlignment.Left})
         m_statusStrip.ResumeLayout(False)
+        ' 
+        ' FormMain (窗体自身)
+        ' 
+        Me.Text = "Neuropils - Drosophila brain 3D viewer"
+        Me.ClientSize = New Size(1500, 900)
+        Me.StartPosition = FormStartPosition.CenterScreen
+        Me.MinimumSize = New Size(900, 600)
+        ' 
+        ' m_canvas
+        ' 
+        m_canvas = New DxScene3DCanvas()
+        m_canvas.Dock = DockStyle.Fill
+        m_canvas.AutoClear = False
+        m_canvas.BackColor = Color.Black
+        m_canvas.BackgroundColor = Color.FromArgb(12, 12, 18)
+        m_canvas.Renderer = m_renderer
+        m_canvas.RenderMode = SceneRenderMode.PointCloud
+        m_canvas.ColorScheme = "viridis"
+        m_canvas.UseEmbeddedColor = True
+        m_canvas.ShowConnections = False
+        m_canvas.ShowGround = False
+        m_canvas.PointSize = 2
+        m_canvas.PointAlpha = 255
+        m_canvas.MultisampleCount = 1
+        m_canvas.CullBackFaces = False
+        m_canvas.EnableKeyboardShortcuts = True
+        m_canvas.Name = "m_canvas"
+        ' 
+        ' m_split
+        ' 
+        m_split = New SplitContainer()
+        m_split.Dock = DockStyle.Fill
+        m_split.Orientation = Orientation.Vertical
+        m_split.FixedPanel = FixedPanel.Panel2
+        m_split.Name = "m_split"
+        ' SplitterDistance / Panel1MinSize / Panel2MinSize 依赖真实布局尺寸，
+        ' 在 FormMain_Load 的 adjustSplitter 中设置（构造函数阶段直接赋值会因未完成布局而抛异常）
+        m_split.Panel1.Controls.Add(m_canvas)
+        ' 
+        ' sidebarPanel (侧边栏容器)
+        ' 
+        Dim sidebarPanel As New TableLayoutPanel()
+        sidebarPanel.Dock = DockStyle.Fill
+        sidebarPanel.ColumnCount = 1
+        sidebarPanel.RowCount = 7
+        sidebarPanel.Padding = New Padding(6)
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 38))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 34))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
+        sidebarPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 112))
+        Call sidebarPanel.Controls.Add(New Label() With {
+            .Text = "图例 / 筛选 (勾选控制显示)",
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+        }, 0, 0)
+        ' 
+        ' m_gradient
+        ' 
+        m_gradient = New PictureBox()
+        m_gradient.Dock = DockStyle.Fill
+        m_gradient.Height = 20
+        m_gradient.Visible = False
+        m_gradient.SizeMode = PictureBoxSizeMode.StretchImage
+        m_gradient.Name = "m_gradient"
+        Call sidebarPanel.Controls.Add(m_gradient, 0, 1)
+        ' 
+        ' m_legend
+        ' 
+        m_legend = New CheckedListBox()
+        m_legend.Dock = DockStyle.Fill
+        m_legend.CheckOnClick = True
+        m_legend.IntegralHeight = False
+        m_legend.Name = "m_legend"
+        Call sidebarPanel.Controls.Add(m_legend, 0, 2)
+        Call sidebarPanel.Controls.Add(New Label() With {
+            .Text = "神经元详情 (点击画布中的点)",
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+        }, 0, 3)
+        ' 
+        ' m_details
+        ' 
+        m_details = New TextBox()
+        m_details.Dock = DockStyle.Fill
+        m_details.Multiline = True
+        m_details.ReadOnly = True
+        m_details.ScrollBars = ScrollBars.Vertical
+        m_details.Font = New System.Drawing.Font("Consolas", 9)
+        m_details.BackColor = Color.FromArgb(250, 250, 250)
+        m_details.Name = "m_details"
+        Call sidebarPanel.Controls.Add(m_details, 0, 4)
+        Call sidebarPanel.Controls.Add(New Label() With {
+            .Text = "电刺激 / 回放",
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft,
+            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
+        }, 0, 5)
+        ' 
+        ' m_replayPanel (回放控制面板)
+        ' 
+        m_replayPanel = New TableLayoutPanel()
+        m_replayPanel.Dock = DockStyle.Fill
+        m_replayPanel.ColumnCount = 1
+        m_replayPanel.RowCount = 3
+        m_replayPanel.Margin = New Padding(0)
+        m_replayPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
+        m_replayPanel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
+        m_replayPanel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
+        ' 
+        ' replayButtonsPanel (回放按钮行)
+        ' 
+        Dim replayButtonsPanel As New FlowLayoutPanel()
+        replayButtonsPanel.Dock = DockStyle.Fill
+        replayButtonsPanel.FlowDirection = FlowDirection.LeftToRight
+        replayButtonsPanel.WrapContents = False
+        replayButtonsPanel.Margin = New Padding(0)
+        ' 
+        ' m_replayFirst
+        ' 
+        m_replayFirst = New Button()
+        m_replayFirst.Text = "|◀"
+        m_replayFirst.Width = 40
+        m_replayFirst.Height = 26
+        m_replayFirst.Margin = New Padding(0, 0, 4, 0)
+        m_replayFirst.TabStop = False
+        m_replayFirst.Name = "m_replayFirst"
+        ' 
+        ' m_replayPrev
+        ' 
+        m_replayPrev = New Button()
+        m_replayPrev.Text = "◀"
+        m_replayPrev.Width = 40
+        m_replayPrev.Height = 26
+        m_replayPrev.Margin = New Padding(0, 0, 4, 0)
+        m_replayPrev.TabStop = False
+        m_replayPrev.Name = "m_replayPrev"
+        ' 
+        ' m_replayPlay
+        ' 
+        m_replayPlay = New Button()
+        m_replayPlay.Text = "播放"
+        m_replayPlay.Width = 52
+        m_replayPlay.Height = 26
+        m_replayPlay.Margin = New Padding(0, 0, 4, 0)
+        m_replayPlay.TabStop = False
+        m_replayPlay.Name = "m_replayPlay"
+        ' 
+        ' m_replayNext
+        ' 
+        m_replayNext = New Button()
+        m_replayNext.Text = "▶"
+        m_replayNext.Width = 40
+        m_replayNext.Height = 26
+        m_replayNext.Margin = New Padding(0, 0, 4, 0)
+        m_replayNext.TabStop = False
+        m_replayNext.Name = "m_replayNext"
+        ' 
+        ' m_replayLast
+        ' 
+        m_replayLast = New Button()
+        m_replayLast.Text = "▶|"
+        m_replayLast.Width = 40
+        m_replayLast.Height = 26
+        m_replayLast.Margin = New Padding(0, 0, 4, 0)
+        m_replayLast.TabStop = False
+        m_replayLast.Name = "m_replayLast"
+
+        Call replayButtonsPanel.Controls.Add(m_replayFirst)
+        Call replayButtonsPanel.Controls.Add(m_replayPrev)
+        Call replayButtonsPanel.Controls.Add(m_replayPlay)
+        Call replayButtonsPanel.Controls.Add(m_replayNext)
+        Call replayButtonsPanel.Controls.Add(m_replayLast)
+        ' 
+        ' m_replayTrack
+        ' 
+        m_replayTrack = New TrackBar()
+        m_replayTrack.Dock = DockStyle.Fill
+        m_replayTrack.Minimum = 0
+        m_replayTrack.Maximum = 0
+        m_replayTrack.TickStyle = TickStyle.None
+        m_replayTrack.SmallChange = 1
+        m_replayTrack.LargeChange = 5
+        m_replayTrack.Name = "m_replayTrack"
+        ' 
+        ' replayBottomPanel (速度 + 清除 + 状态文本)
+        ' 
+        Dim replayBottomPanel As New TableLayoutPanel()
+        replayBottomPanel.Dock = DockStyle.Fill
+        replayBottomPanel.ColumnCount = 3
+        replayBottomPanel.RowCount = 1
+        replayBottomPanel.Margin = New Padding(0)
+        replayBottomPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 34))
+        replayBottomPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 86))
+        replayBottomPanel.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
+        ' 
+        ' m_replaySpeed
+        ' 
+        m_replaySpeed = New NumericUpDown()
+        m_replaySpeed.Minimum = 30
+        m_replaySpeed.Maximum = 1000
+        m_replaySpeed.Increment = 20
+        m_replaySpeed.Value = 120
+        m_replaySpeed.Width = 62
+        m_replaySpeed.Margin = New Padding(0)
+        m_replaySpeed.Name = "m_replaySpeed"
+        ' 
+        ' m_replayClear
+        ' 
+        m_replayClear = New Button()
+        m_replayClear.Text = "清除"
+        m_replayClear.Dock = DockStyle.Fill
+        m_replayClear.Margin = New Padding(4, 0, 0, 0)
+        m_replayClear.Name = "m_replayClear"
+        ' 
+        ' m_replayText
+        ' 
+        m_replayText = New Label()
+        m_replayText.Dock = DockStyle.Fill
+        m_replayText.TextAlign = ContentAlignment.MiddleLeft
+        m_replayText.AutoEllipsis = True
+        m_replayText.Margin = New Padding(6, 0, 0, 0)
+        m_replayText.Name = "m_replayText"
+
+        Call replayBottomPanel.Controls.Add(New Label() With {
+            .Text = "速度",
+            .Dock = DockStyle.Fill,
+            .TextAlign = ContentAlignment.MiddleLeft
+        }, 0, 0)
+        Call replayBottomPanel.Controls.Add(m_replaySpeed, 1, 0)
+        Call replayBottomPanel.Controls.Add(m_replayText, 2, 0)
+
+        Call m_replayPanel.Controls.Add(replayButtonsPanel, 0, 0)
+        Call m_replayPanel.Controls.Add(m_replayTrack, 0, 1)
+        Call m_replayPanel.Controls.Add(replayBottomPanel, 0, 2)
+        ' 清除按钮放在按钮行最右侧
+        Call replayButtonsPanel.Controls.Add(m_replayClear)
+        Call sidebarPanel.Controls.Add(m_replayPanel, 0, 6)
+        Call m_split.Panel2.Controls.Add(sidebarPanel)
         ' 
         ' m_toolStrip
         ' 工具条：停靠在窗体顶端，位于菜单栏 (y=0, 高 24) 之下，故 y=24；高度 25 为 16x16 图标的标准工具条高度

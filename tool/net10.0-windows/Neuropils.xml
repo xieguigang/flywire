@@ -1040,9 +1040,10 @@ Neuropils
  (那个在多线程上触发回调，拿来更新界面会直接踩到跨线程访问)。
  </remarks>
 </member>
-<member name="M:Neuropils.FormMain.createReplayPanel">
+<member name="M:Neuropils.FormMain.onReplayFirst(System.Object,System.EventArgs)">
  <summary>
- 回放控制面板：播放/暂停、单步、进度条、速度与状态。
+ 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
+ 这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
  </summary>
 </member>
 <member name="M:Neuropils.FormMain.onOpenResponseChart(System.Object,System.Windows.Forms.LinkLabelLinkClickedEventArgs)">

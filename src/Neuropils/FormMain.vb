@@ -32,25 +32,10 @@ Public Class FormMain
     Friend ReadOnly m_renderer As New Direct3D11SceneRenderer()
     Friend ReadOnly m_buildOptions As New SceneBuildOptions()
 
-    Friend WithEvents m_canvas As DxScene3DCanvas
-    Private m_split As SplitContainer
-    Private m_legend As CheckedListBox
-    Private m_gradient As PictureBox
-    Private m_details As TextBox
     ''' <summary>响应曲线窗口（单实例复用）。</summary>
     Friend m_chartForm As ResponseChartForm
     ''' <summary>状态栏链接的悬停提示。</summary>
     Private ReadOnly m_chartTip As New ToolTip()
-    Friend m_replayPanel As Control
-    Friend m_replayPlay As Button
-    Friend m_replayFirst As Button
-    Friend m_replayPrev As Button
-    Friend m_replayNext As Button
-    Friend m_replayLast As Button
-    Friend m_replayClear As Button
-    Friend m_replayTrack As TrackBar
-    Friend m_replaySpeed As NumericUpDown
-    Friend m_replayText As Label
 
     Friend m_dataset As BrainDataset
     Friend m_colorizer As NeuronColorizer
@@ -76,6 +61,8 @@ Public Class FormMain
     Private ReadOnly m_rebuildTimer As New System.Windows.Forms.Timer()
 
     Public Sub New()
+        m_experiment = New StimulationExperiment(Me)
+
         ' 先调用设计器生成的 InitializeComponent (顶部菜单栏等声明式布局在此完成)，
         ' 再调用 initializeUi 完成其余需要运行时逻辑 (画布、工具条、状态栏、面板等) 的控件。
         Call InitializeComponent()
@@ -90,59 +77,18 @@ Public Class FormMain
 #Region "ui construction"
 
     Private Sub initializeUi()
-        Me.Text = "Neuropils - Drosophila brain 3D viewer"
-        Me.ClientSize = New Size(1500, 900)
-        Me.StartPosition = FormStartPosition.CenterScreen
-        Me.MinimumSize = New Size(900, 600)
 
-        m_experiment = New StimulationExperiment(Me)
-        ' 注意：3D 后端用的背景色来自 DxCanvas.BackgroundColor (它自己负责清屏)，
-        ' 而不是 WinForms 的 BackColor —— 只设 BackColor 会得到一块白底。
-        ' 另外：VB 的对象初始化器里不能夹注释行 (会被当成语法错误)，因此这条说明写在这里。
-        m_canvas = New DxScene3DCanvas With {
-            .Dock = DockStyle.Fill,
-            .AutoClear = False,
-            .BackColor = Color.Black,
-            .BackgroundColor = Color.FromArgb(12, 12, 18),
-            .Renderer = m_renderer,
-            .RenderMode = SceneRenderMode.PointCloud,
-            .ColorScheme = "viridis",
-            .UseEmbeddedColor = True,
-            .ShowConnections = False,
-            .ShowGround = False,
-            .PointSize = 2,
-            .PointAlpha = 255,
-            .MultisampleCount = 1,
-            .CullBackFaces = False,
-            .EnableKeyboardShortcuts = True
-        }
 
-        ' 点击拾取：画布的鼠标事件先喂给相机控制器，这里只在"没有拖动"时当作点击
-        AddHandler m_canvas.MouseDown, AddressOf onCanvasMouseDown
-        AddHandler m_canvas.MouseUp, AddressOf onCanvasMouseUp
-
-        Dim sidebar As Control = createSidebar()
-
-        ' 注意：SplitterDistance / Panel*MinSize 必须在控件真正拿到尺寸之后再设置。
-        ' 在构造函数里直接赋值会因为"还没有完成布局"而抛
-        ' InvalidOperationException (SplitterDistance must be between ...)，
-        ' 这就是为什么它们被放到 FormMain_Load 的 adjustSplitter 里。
-        m_split = New SplitContainer With {
-            .Dock = DockStyle.Fill,
-            .Orientation = Orientation.Vertical,
-            .FixedPanel = FixedPanel.Panel2
-        }
-
-        m_split.Panel1.Controls.Add(m_canvas)
-        m_split.Panel2.Controls.Add(sidebar)
-
+        ' 控件本身（菜单栏 / 状态栏 / 工具条 / 画布 / 分隔容器 / 侧边栏 / 回放面板）已在
+        ' InitializeComponent 中声明式建好；这里只负责把根容器按顺序挂到窗体上。
+        ' 顺序保持：split → 工具条 → 菜单 → 状态栏
         Me.Controls.Add(m_split)
         Me.Controls.Add(m_toolStrip)
         Me.Controls.Add(m_menuStrip)
         Me.Controls.Add(m_statusStrip)
 
         ' 状态栏里的"响应曲线 / 贪吃蛇"链接需要一条 Snake 实例与悬停提示，
-        ' 这部分是运行时逻辑，保留在 initializeUi（控件本身已在 InitializeComponent 中建好）
+        ' 这部分是运行时逻辑，保留在 initializeUi
         m_snake = New Snake(Me)
         m_chartTip.SetToolTip(m_chartLink, "把电刺激实验记录下来的响应结果画成曲线图（横轴时间步 / 纵轴响应电信号强度）")
         m_chartTip.SetToolTip(m_snakeLink, "让果蝇大脑模型接管贪吃蛇的运动：实时画面 + 大脑神经元活动（并同步点亮三维点云）")
@@ -153,163 +99,41 @@ Public Class FormMain
 
 
 
-    Private Function createSidebar() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 7,
-            .Padding = New Padding(6)
-        }
-
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 26))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 38))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 34))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 24))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 112))
-
-        Call panel.Controls.Add(newLabel("图例 / 筛选 (勾选控制显示)"), 0, 0)
-
-        m_gradient = New PictureBox With {.Dock = DockStyle.Fill, .Height = 20, .Visible = False, .SizeMode = PictureBoxSizeMode.StretchImage}
-
-        Call panel.Controls.Add(m_gradient, 0, 1)
-
-        m_legend = New CheckedListBox With {
-            .Dock = DockStyle.Fill,
-            .CheckOnClick = True,
-            .IntegralHeight = False
-        }
-        AddHandler m_legend.ItemCheck, AddressOf onLegendItemCheck
-
-        Call panel.Controls.Add(m_legend, 0, 2)
-        Call panel.Controls.Add(newLabel("神经元详情 (点击画布中的点)"), 0, 3)
-
-        m_details = New TextBox With {
-            .Dock = DockStyle.Fill,
-            .Multiline = True,
-            .ReadOnly = True,
-            .ScrollBars = ScrollBars.Vertical,
-            .Font = New System.Drawing.Font("Consolas", 9),
-            .BackColor = Color.FromArgb(250, 250, 250)
-        }
-
-        Call panel.Controls.Add(m_details, 0, 4)
-        Call panel.Controls.Add(newLabel("电刺激 / 回放"), 0, 5)
-
-        m_replayPanel = createReplayPanel()
-
-        Call panel.Controls.Add(m_replayPanel, 0, 6)
-
-        Return panel
-    End Function
-
     ''' <summary>
-    ''' 回放控制面板：播放/暂停、单步、进度条、速度与状态。
+    ''' 回放控制面板各按钮 / 滑块的事件包装：控件已在 InitializeComponent 中声明式建好，
+    ''' 这里仅以 Handles 绑定后转交给 StimulationExperiment 处理。
     ''' </summary>
-    Private Function createReplayPanel() As Control
-        Dim panel As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 1,
-            .RowCount = 3,
-            .Margin = New Padding(0)
-        }
+    Private Sub onReplayFirst(sender As Object, e As EventArgs) Handles m_replayFirst.Click
+        Call m_experiment.onReplayFirst(sender, e)
+    End Sub
 
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Absolute, 30))
-        Call panel.RowStyles.Add(New RowStyle(SizeType.Percent, 100))
+    Private Sub onReplayPrev(sender As Object, e As EventArgs) Handles m_replayPrev.Click
+        Call m_experiment.onReplayPrev(sender, e)
+    End Sub
 
-        Dim buttons As New FlowLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .FlowDirection = FlowDirection.LeftToRight,
-            .WrapContents = False,
-            .Margin = New Padding(0)
-        }
+    Private Sub onReplayPlay(sender As Object, e As EventArgs) Handles m_replayPlay.Click
+        Call m_experiment.onReplayPlay(sender, e)
+    End Sub
 
-        m_replayFirst = newReplayButton("|◀", AddressOf m_experiment.onReplayFirst)
-        m_replayPrev = newReplayButton("◀", AddressOf m_experiment.onReplayPrev)
-        m_replayPlay = newReplayButton("播放", AddressOf m_experiment.onReplayPlay, 52)
-        m_replayNext = newReplayButton("▶", AddressOf m_experiment.onReplayNext)
-        m_replayLast = newReplayButton("▶|", AddressOf m_experiment.onReplayLast)
+    Private Sub onReplayNext(sender As Object, e As EventArgs) Handles m_replayNext.Click
+        Call m_experiment.onReplayNext(sender, e)
+    End Sub
 
-        Call buttons.Controls.Add(m_replayFirst)
-        Call buttons.Controls.Add(m_replayPrev)
-        Call buttons.Controls.Add(m_replayPlay)
-        Call buttons.Controls.Add(m_replayNext)
-        Call buttons.Controls.Add(m_replayLast)
+    Private Sub onReplayLast(sender As Object, e As EventArgs) Handles m_replayLast.Click
+        Call m_experiment.onReplayLast(sender, e)
+    End Sub
 
-        m_replayTrack = New TrackBar With {
-            .Dock = DockStyle.Fill,
-            .Minimum = 0,
-            .Maximum = 0,
-            .TickStyle = TickStyle.None,
-            .SmallChange = 1,
-            .LargeChange = 5
-        }
-        AddHandler m_replayTrack.ValueChanged, AddressOf m_experiment.onReplayTrackScroll
+    Private Sub onReplayClear(sender As Object, e As EventArgs) Handles m_replayClear.Click
+        Call m_experiment.onReplayClear(sender, e)
+    End Sub
 
-        Dim bottom As New TableLayoutPanel With {
-            .Dock = DockStyle.Fill,
-            .ColumnCount = 3,
-            .RowCount = 1,
-            .Margin = New Padding(0)
-        }
+    Private Sub onReplayTrackScroll(sender As Object, e As EventArgs) Handles m_replayTrack.ValueChanged
+        Call m_experiment.onReplayTrackScroll(sender, e)
+    End Sub
 
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 34))
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 86))
-        Call bottom.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100))
-
-        m_replaySpeed = New NumericUpDown With {
-            .Minimum = 30, .Maximum = 1000, .Increment = 20, .Value = 120, .Width = 62, .Margin = New Padding(0)
-        }
-        AddHandler m_replaySpeed.ValueChanged, AddressOf m_experiment.onReplaySpeedChanged
-
-        m_replayClear = New Button With {.Text = "清除", .Dock = DockStyle.Fill, .Margin = New Padding(4, 0, 0, 0)}
-        AddHandler m_replayClear.Click, AddressOf m_experiment.onReplayClear
-
-        m_replayText = New Label With {
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .AutoEllipsis = True,
-            .Margin = New Padding(6, 0, 0, 0)
-        }
-
-        Call bottom.Controls.Add(New Label With {.Text = "速度", .Dock = DockStyle.Fill, .TextAlign = ContentAlignment.MiddleLeft}, 0, 0)
-        Call bottom.Controls.Add(m_replaySpeed, 1, 0)
-        Call bottom.Controls.Add(m_replayText, 2, 0)
-
-        Call panel.Controls.Add(buttons, 0, 0)
-        Call panel.Controls.Add(m_replayTrack, 0, 1)
-        Call panel.Controls.Add(bottom, 0, 2)
-
-        ' 清除按钮与速度靠在一起放在按钮行的右侧
-        Call buttons.Controls.Add(m_replayClear)
-
-        Return panel
-    End Function
-
-    Private Shared Function newReplayButton(text As String, handler As EventHandler, Optional width As Integer = 40) As Button
-        Dim button As New Button With {
-            .Text = text,
-            .Width = width,
-            .Height = 26,
-            .Margin = New Padding(0, 0, 4, 0),
-            .TabStop = False
-        }
-
-        AddHandler button.Click, handler
-
-        Return button
-    End Function
-
-    Private Shared Function newLabel(text As String) As Label
-        Return New Label With {
-            .Text = text,
-            .Dock = DockStyle.Fill,
-            .TextAlign = ContentAlignment.MiddleLeft,
-            .Font = New System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold)
-        }
-    End Function
+    Private Sub onReplaySpeedChanged(sender As Object, e As EventArgs) Handles m_replaySpeed.ValueChanged
+        Call m_experiment.onReplaySpeedChanged(sender, e)
+    End Sub
 
     ''' <summary>
     ''' 打开响应曲线窗口。
@@ -990,7 +814,7 @@ Public Class FormMain
         Next
     End Sub
 
-    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs)
+    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs) Handles m_legend.ItemCheck
         If m_colorizer Is Nothing OrElse m_colorizer.IsHeatMap Then Return
         If e.Index < 0 OrElse e.Index >= m_legend.Items.Count Then Return
 
@@ -1053,7 +877,7 @@ Public Class FormMain
     Private m_mouseDown As Point
     Private m_mouseDownValid As Boolean
 
-    Private Sub onCanvasMouseDown(sender As Object, e As MouseEventArgs)
+    Private Sub onCanvasMouseDown(sender As Object, e As MouseEventArgs) Handles m_canvas.MouseDown
         If e.Button <> MouseButtons.Left Then Return
 
         m_mouseDown = New Point(e.X, e.Y)
@@ -1065,7 +889,7 @@ Public Class FormMain
         End If
     End Sub
 
-    Private Sub onCanvasMouseUp(sender As Object, e As MouseEventArgs)
+    Private Sub onCanvasMouseUp(sender As Object, e As MouseEventArgs) Handles m_canvas.MouseUp
         If e.Button <> MouseButtons.Left OrElse Not m_mouseDownValid Then Return
 
         m_mouseDownValid = False
