@@ -30,7 +30,7 @@ Public Class FormNeuronMap
         Next
     End Sub
 
-    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs)
+    Private Sub onLegendItemCheck(sender As Object, e As ItemCheckEventArgs) Handles m_legend.ItemCheck
         If m_colorizer Is Nothing OrElse m_colorizer.IsHeatMap Then Return
         If e.Index < 0 OrElse e.Index >= m_legend.Items.Count Then Return
 
