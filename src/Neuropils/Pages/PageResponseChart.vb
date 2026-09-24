@@ -417,8 +417,8 @@ Public Class PageResponseChart
         End Using
     End Function
 
-    Private Sub filterBar_Paint(sender As Object, e As PaintEventArgs) Handles filterBar.Paint
-
+    Private Sub PageResponseChart_Load(sender As Object, e As EventArgs) Handles Me.Load
+        ApplyVsTheme(StatusStrip1)
     End Sub
 
 #End Region
