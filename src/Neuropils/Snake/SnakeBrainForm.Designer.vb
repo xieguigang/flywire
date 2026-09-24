@@ -41,158 +41,43 @@ Partial Class SnakeBrainForm
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-
-        components = New System.ComponentModel.Container()
-
-        SuspendLayout()
-
+        components = New ComponentModel.Container()
         m_gamePanel = New Panel()
         side = New Panel()
+        m_status = New Label()
         sensorLabel = New Label()
+        m_sensors = New ChannelBars()
         motorLabel = New Label()
+        m_motors = New ChannelBars()
+        m_detail = New Label()
+        m_training = New Label()
         toolbar = New FlowLayoutPanel()
-        speedLabel = New Label()
-        tickLabel = New Label()
+        m_playButton = New Button()
         m_resetButton = New Button()
         m_trainButton = New Button()
         m_loadButton = New Button()
-
-        ' 
-        ' SnakeBrainForm
-        ' 
-        Text = "果蝇大脑玩贪吃蛇 — 实时观战"
-        StartPosition = FormStartPosition.CenterParent
-        BackColor = Color.Black
-        ForeColor = Color.FromArgb(226, 232, 240)
-        Font = New Font("Segoe UI", 9)
-
-        ' 两半屏都是绝对坐标摆位，坐标全部按游戏本体的可视区算好写成常数字面量：
-        '   左半屏 = Snake2 可视区 40 列 × 30 行 × 20 px/格 = 800 × 600
-        '   右半屏 = 固定宽 368，与左半屏之间留 8 px 间隔
-        '   客户区 = 800 + 380 宽、600 + 64 高（底部留白）
-        ClientSize = New Size(1180, 664)
-        ' 
-        ' m_gamePanel：左半屏 —— 游戏画面（Paint 事件里直接调 Snake2 的 Render.Draw）
-        ' 
-        m_gamePanel.Location = New Point(0, 0)
-        m_gamePanel.Size = New Size(800, 600)
-        m_gamePanel.BackColor = Color.Black
-        ' AddHandler m_gamePanel.Paint, AddressOf onGamePaint
-        ' 
-        ' side：右半屏 —— 大脑此刻在做什么（读数 + 统计 + 工具栏）
-        ' 
-        side.Location = New Point(808, 0)
-        side.Size = New Size(368, 600)
-        side.BackColor = Color.FromArgb(15, 22, 30)
-        ' 
-        ' m_timer：会话推进的唯一驱动（游戏与大脑逐步仿真都靠它）
-        ' 
-        m_timer = New Timer(components)
-        ' Tick 只在这里挂一次：漏了这一步窗口开出来就是静止的（游戏一直停在"暂停"态，
-        ' 而且 --snake-window 自检永远等不到帧）
-        ' AddHandler m_timer.Tick, AddressOf onTimerTick
-        ' 
-        ' m_status：得分 / 最高分 / 方向 / 步数
-        ' 
-        m_status = New Label()
-        m_status.Location = New Point(8, 8)
-        m_status.Size = New Size(352, 46)
-        m_status.ForeColor = Color.FromArgb(34, 211, 238)
-        m_status.Font = New Font("Consolas", 10, FontStyle.Bold)
-
-        sensorLabel.Text = "感觉通道（大脑看到了什么）"
-        sensorLabel.Location = New Point(8, 58)
-        sensorLabel.Size = New Size(352, 20)
-        sensorLabel.ForeColor = Color.FromArgb(148, 163, 184)
-        ' 
-        ' m_sensors：16 个感觉通道的强度条
-        ' 
-        m_sensors = New ChannelBars()
-        m_sensors.Location = New Point(8, 80)
-        m_sensors.Size = New Size(352, 220)
-
-        motorLabel.Text = "运动读出（大脑命令往哪走）"
-        motorLabel.Location = New Point(8, 306)
-        motorLabel.Size = New Size(352, 20)
-        motorLabel.ForeColor = Color.FromArgb(148, 163, 184)
-        ' 
-        ' m_motors：4 组运动神经元的脉冲数
-        ' 
-        m_motors = New ChannelBars()
-        m_motors.Location = New Point(8, 328)
-        m_motors.Size = New Size(352, 96)
-
-        m_detail = New Label()
-        m_detail.Location = New Point(8, 428)
-        m_detail.Size = New Size(352, 62)
-        m_detail.ForeColor = Color.FromArgb(203, 213, 225)
-        m_detail.Font = New Font("Consolas", 8.5)
-
-        m_training = New Label()
-        m_training.Location = New Point(8, 494)
-        m_training.Size = New Size(352, 60)
-        m_training.ForeColor = Color.FromArgb(250, 204, 21)
-        m_training.Font = New Font("Consolas", 8.5)
-        ' 
-        ' toolbar：右下角 —— 播放 / 新一局 / 训练 / 载入 + 速度与每帧步数
-        ' 
-        toolbar.Location = New Point(4, 526)
-        toolbar.Size = New Size(360, 70)
-        toolbar.WrapContents = True
-        toolbar.BackColor = Color.Transparent
-        toolbar.ForeColor = ForeColor
-
-        m_playButton = New Button()
-        m_playButton.Text = "暂停"
-        m_playButton.Width = 62
-        m_playButton.Height = 26
-        ' AddHandler m_playButton.Click, AddressOf togglePlay
-
-        m_resetButton.Text = "新一局"
-        m_resetButton.Width = 62
-        m_resetButton.Height = 26
-        ' AddHandler m_resetButton.Click, AddressOf startNewEpisode
-
-        m_trainButton.Text = "训练解码器"
-        m_trainButton.Width = 96
-        m_trainButton.Height = 26
-        ' AddHandler m_trainButton.Click, AddressOf trainDecoder
-
-        m_loadButton.Text = "载入已训练"
-        m_loadButton.Width = 92
-        m_loadButton.Height = 26
-        ' AddHandler m_loadButton.Click, AddressOf loadTrainedDecoder
-
-        speedLabel.Text = "间隔(ms)"
-        speedLabel.AutoSize = True
-        speedLabel.Margin = New Padding(6, 8, 2, 0)
-
+        speedLabel = New Label()
         m_speedBox = New NumericUpDown()
-        m_speedBox.Minimum = 30
-        m_speedBox.Maximum = 1000
-        m_speedBox.Value = 120
-        m_speedBox.Width = 62
-        ' AddHandler m_speedBox.ValueChanged, AddressOf onSpeedChanged
-
-        tickLabel.Text = "每帧步数"
-        tickLabel.AutoSize = True
-        tickLabel.Margin = New Padding(6, 8, 2, 0)
-
+        tickLabel = New Label()
         m_tickBox = New NumericUpDown()
-        m_tickBox.Minimum = 1
-        m_tickBox.Maximum = 20
-        m_tickBox.Value = 1
-        m_tickBox.Width = 46
-
-        toolbar.Controls.Add(m_playButton)
-        toolbar.Controls.Add(m_resetButton)
-        toolbar.Controls.Add(m_trainButton)
-        toolbar.Controls.Add(m_loadButton)
-        toolbar.Controls.Add(speedLabel)
-        toolbar.Controls.Add(m_speedBox)
-        toolbar.Controls.Add(tickLabel)
-        toolbar.Controls.Add(m_tickBox)
-
+        m_timer = New Timer(components)
+        side.SuspendLayout()
+        toolbar.SuspendLayout()
+        CType(m_speedBox, ComponentModel.ISupportInitialize).BeginInit()
+        CType(m_tickBox, ComponentModel.ISupportInitialize).BeginInit()
+        SuspendLayout()
+        ' 
+        ' m_gamePanel
+        ' 
+        m_gamePanel.BackColor = Color.Black
+        m_gamePanel.Location = New Point(0, 0)
+        m_gamePanel.Name = "m_gamePanel"
+        m_gamePanel.Size = New Size(800, 600)
+        m_gamePanel.TabIndex = 0
+        ' 
+        ' side
+        ' 
+        side.BackColor = Color.FromArgb(CByte(15), CByte(22), CByte(30))
         side.Controls.Add(m_status)
         side.Controls.Add(sensorLabel)
         side.Controls.Add(m_sensors)
@@ -201,12 +86,183 @@ Partial Class SnakeBrainForm
         side.Controls.Add(m_detail)
         side.Controls.Add(m_training)
         side.Controls.Add(toolbar)
-
+        side.Location = New Point(808, 0)
+        side.Name = "side"
+        side.Size = New Size(368, 600)
+        side.TabIndex = 1
+        ' 
+        ' m_status
+        ' 
+        m_status.Font = New Font("Consolas", 10F, FontStyle.Bold)
+        m_status.ForeColor = Color.FromArgb(CByte(34), CByte(211), CByte(238))
+        m_status.Location = New Point(8, 8)
+        m_status.Name = "m_status"
+        m_status.Size = New Size(352, 46)
+        m_status.TabIndex = 0
+        ' 
+        ' sensorLabel
+        ' 
+        sensorLabel.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
+        sensorLabel.Location = New Point(8, 58)
+        sensorLabel.Name = "sensorLabel"
+        sensorLabel.Size = New Size(352, 20)
+        sensorLabel.TabIndex = 1
+        sensorLabel.Text = "感觉通道（大脑看到了什么）"
+        ' 
+        ' m_sensors
+        ' 
+        m_sensors.BackColor = Color.FromArgb(CByte(20), CByte(28), CByte(38))
+        m_sensors.ForeColor = Color.FromArgb(CByte(203), CByte(213), CByte(225))
+        m_sensors.Location = New Point(8, 80)
+        m_sensors.Name = "m_sensors"
+        m_sensors.Size = New Size(352, 220)
+        m_sensors.TabIndex = 2
+        ' 
+        ' motorLabel
+        ' 
+        motorLabel.ForeColor = Color.FromArgb(CByte(148), CByte(163), CByte(184))
+        motorLabel.Location = New Point(8, 306)
+        motorLabel.Name = "motorLabel"
+        motorLabel.Size = New Size(352, 20)
+        motorLabel.TabIndex = 3
+        motorLabel.Text = "运动读出（大脑命令往哪走）"
+        ' 
+        ' m_motors
+        ' 
+        m_motors.BackColor = Color.FromArgb(CByte(20), CByte(28), CByte(38))
+        m_motors.ForeColor = Color.FromArgb(CByte(203), CByte(213), CByte(225))
+        m_motors.Location = New Point(8, 328)
+        m_motors.Name = "m_motors"
+        m_motors.Size = New Size(352, 96)
+        m_motors.TabIndex = 4
+        ' 
+        ' m_detail
+        ' 
+        m_detail.Font = New Font("Consolas", 8.5F)
+        m_detail.ForeColor = Color.FromArgb(CByte(203), CByte(213), CByte(225))
+        m_detail.Location = New Point(8, 428)
+        m_detail.Name = "m_detail"
+        m_detail.Size = New Size(352, 62)
+        m_detail.TabIndex = 5
+        ' 
+        ' m_training
+        ' 
+        m_training.Font = New Font("Consolas", 8.5F)
+        m_training.ForeColor = Color.FromArgb(CByte(250), CByte(204), CByte(21))
+        m_training.Location = New Point(8, 494)
+        m_training.Name = "m_training"
+        m_training.Size = New Size(352, 60)
+        m_training.TabIndex = 6
+        ' 
+        ' toolbar
+        ' 
+        toolbar.BackColor = Color.Transparent
+        toolbar.Controls.Add(m_playButton)
+        toolbar.Controls.Add(m_resetButton)
+        toolbar.Controls.Add(m_trainButton)
+        toolbar.Controls.Add(m_loadButton)
+        toolbar.Controls.Add(speedLabel)
+        toolbar.Controls.Add(m_speedBox)
+        toolbar.Controls.Add(tickLabel)
+        toolbar.Controls.Add(m_tickBox)
+        toolbar.ForeColor = SystemColors.ControlText
+        toolbar.Location = New Point(4, 526)
+        toolbar.Name = "toolbar"
+        toolbar.Size = New Size(360, 70)
+        toolbar.TabIndex = 7
+        ' 
+        ' m_playButton
+        ' 
+        m_playButton.Location = New Point(3, 3)
+        m_playButton.Name = "m_playButton"
+        m_playButton.Size = New Size(62, 26)
+        m_playButton.TabIndex = 0
+        m_playButton.Text = "暂停"
+        ' 
+        ' m_resetButton
+        ' 
+        m_resetButton.Location = New Point(71, 3)
+        m_resetButton.Name = "m_resetButton"
+        m_resetButton.Size = New Size(62, 26)
+        m_resetButton.TabIndex = 1
+        m_resetButton.Text = "新一局"
+        ' 
+        ' m_trainButton
+        ' 
+        m_trainButton.Location = New Point(139, 3)
+        m_trainButton.Name = "m_trainButton"
+        m_trainButton.Size = New Size(96, 26)
+        m_trainButton.TabIndex = 2
+        m_trainButton.Text = "训练解码器"
+        ' 
+        ' m_loadButton
+        ' 
+        m_loadButton.Location = New Point(241, 3)
+        m_loadButton.Name = "m_loadButton"
+        m_loadButton.Size = New Size(92, 26)
+        m_loadButton.TabIndex = 3
+        m_loadButton.Text = "载入已训练"
+        ' 
+        ' speedLabel
+        ' 
+        speedLabel.AutoSize = True
+        speedLabel.Location = New Point(6, 40)
+        speedLabel.Margin = New Padding(6, 8, 2, 0)
+        speedLabel.Name = "speedLabel"
+        speedLabel.Size = New Size(57, 15)
+        speedLabel.TabIndex = 4
+        speedLabel.Text = "间隔(ms)"
+        ' 
+        ' m_speedBox
+        ' 
+        m_speedBox.Location = New Point(68, 35)
+        m_speedBox.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
+        m_speedBox.Minimum = New Decimal(New Integer() {30, 0, 0, 0})
+        m_speedBox.Name = "m_speedBox"
+        m_speedBox.Size = New Size(62, 23)
+        m_speedBox.TabIndex = 5
+        m_speedBox.Value = New Decimal(New Integer() {120, 0, 0, 0})
+        ' 
+        ' tickLabel
+        ' 
+        tickLabel.AutoSize = True
+        tickLabel.Location = New Point(139, 40)
+        tickLabel.Margin = New Padding(6, 8, 2, 0)
+        tickLabel.Name = "tickLabel"
+        tickLabel.Size = New Size(59, 15)
+        tickLabel.TabIndex = 6
+        tickLabel.Text = "每帧步数"
+        ' 
+        ' m_tickBox
+        ' 
+        m_tickBox.Location = New Point(203, 35)
+        m_tickBox.Maximum = New Decimal(New Integer() {20, 0, 0, 0})
+        m_tickBox.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
+        m_tickBox.Name = "m_tickBox"
+        m_tickBox.Size = New Size(46, 23)
+        m_tickBox.TabIndex = 7
+        m_tickBox.Value = New Decimal(New Integer() {1, 0, 0, 0})
+        ' 
+        ' m_timer
+        ' 
+        ' 
+        ' SnakeBrainForm
+        ' 
+        BackColor = Color.Black
+        ClientSize = New Size(1266, 698)
         Controls.Add(m_gamePanel)
         Controls.Add(side)
-
+        Font = New Font("Segoe UI", 9F)
+        ForeColor = Color.FromArgb(CByte(226), CByte(232), CByte(240))
+        Name = "SnakeBrainForm"
+        StartPosition = FormStartPosition.CenterParent
+        Text = "果蝇大脑玩贪吃蛇 — 实时观战"
+        side.ResumeLayout(False)
+        toolbar.ResumeLayout(False)
+        toolbar.PerformLayout()
+        CType(m_speedBox, ComponentModel.ISupportInitialize).EndInit()
+        CType(m_tickBox, ComponentModel.ISupportInitialize).EndInit()
         ResumeLayout(False)
-        PerformLayout()
     End Sub
 
     ' ---- 只负责摆位的控件（声明即建好，属性在 InitializeComponent 里赋值）----
