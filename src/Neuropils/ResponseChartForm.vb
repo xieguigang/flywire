@@ -38,8 +38,6 @@ Public Class ResponseChartForm
     ''' <param name="data">响应数据（会话内结果或落盘记录）</param>
     ''' <param name="dataset">数据集（提供脑区 / 递质等标签）</param>
     Public Sub New(data As ResponseDataset, dataset As BrainDataset)
-        Call Me.New
-
         If data Is Nothing Then
             Throw New ArgumentNullException(NameOf(data))
         End If
@@ -48,6 +46,7 @@ Public Class ResponseChartForm
         m_dataset = dataset
         m_theme = PlotTheme.Dark()
 
+        Call InitializeComponent()
         Call PlotRuntime.EnsureRegistered()
 
         ' 控件布局在 Designer 文件里生成 (与 FormMain 一致)，随后再灌入数据
