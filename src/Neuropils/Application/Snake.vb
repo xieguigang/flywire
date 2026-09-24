@@ -130,7 +130,7 @@ Namespace AppLogics
 
             m_snakeForm = brainForm
 
-            Call brainForm.Show(Me)
+            Call brainForm.Show(main)
 
             main.m_statusText.Text = $"观战窗口已打开：{brain.FlowSummary}"
 
