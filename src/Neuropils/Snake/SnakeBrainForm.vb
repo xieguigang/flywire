@@ -484,7 +484,7 @@ Public Class ChannelBars
     Private m_color As Color = Color.Cyan
     Private m_maximum As Double = 1.0
 
-    ''' <summary>量程是否是自适应（<paramref name="maximum"/> 传 &lt;= 0 时开启）。</summary>
+    ''' <summary>量程是否是自适应（<see cref="m_maximum"/> 传 &lt;= 0 时开启）。</summary>
     Private m_adaptive As Boolean
 
     ''' <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>

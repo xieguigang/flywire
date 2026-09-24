@@ -398,7 +398,7 @@ Neuropils
  <remarks>
  全部表格都以<b>流式</b>方式读取（``Stream*`` 扩展方法，惰性迭代、O(1) 内存），
  因为其中连接表有 261 MB / 534 万行、脑区表有 321 列。整个加载过程可以在后台线程
- 上运行，并通过 <paramref name="progress"/> 与 <paramref name="cancel"/> 反馈进度
+ 上运行，并通过 <see cref="M:Neuropils.Data.BrainDatasetLoader.Load(System.Action{System.String},System.Threading.CancellationToken)"/> 函数的 "progress" 与 "cancel" 参数进行反馈进度
  与响应取消。
  
  数据来源与用途：
@@ -445,7 +445,7 @@ Neuropils
  <remarks>
  列名通过 <see cref="T:Microsoft.VisualBasic.Data.Framework.StorageProvider.Reflection.ColumnAttribute"/> 反射得到（``input synapses in AL_L`` 之类），
  属性名本身被简写成 VB 标识符，只有列名保留着脑区前缀。取值走
- <see cref="!:Delegate.CreateDelegate(Type, MethodInfo)"/> 绑定出来的委托而不是
+ <see cref="M:System.Delegate.CreateDelegate(System.Type,System.Object,System.Reflection.MethodInfo)"/> 绑定出来的委托而不是
  ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
  </remarks>
 </member>
@@ -641,6 +641,23 @@ Neuropils
 </member>
 <member name="M:Neuropils.Data.VisualizationConfig.ResolveActivityDir">
  <summary>解析活动表所在目录。</summary>
+</member>
+<member name="T:Neuropils.FormMain">
+ <summary>
+ 果蝇大脑三维可视化主窗体。
+ </summary>
+ <remarks>
+ 界面分四块：
+ 
+ * 顶部菜单与工具条：数据目录、着色维度、连接模式、强度阈值、点大小、开关与截图；
+ * 中间左侧：<see cref="T:Microsoft.VisualBasic.Drawing.DirectX.DxScene3DCanvas"/> (DirectX 11 三维画布)；
+ * 中间右侧：图例 (兼作按脑区/细胞类型/递质的显示筛选) 与神经元详情；
+ * 底部状态栏：当前数据集规模、装配耗时与后台任务的进度条。
+ 
+ 两个后台线程分别负责"读表" (<see cref="T:Neuropils.Data.BrainDatasetLoader"/>) 与"装配场景"
+ (<see cref="T:Neuropils.Rendering.BrainSceneBuilder"/>)：534 万条连接的过滤与连线构建需要数百毫秒，
+ 放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
+ </remarks>
 </member>
 <member name="M:Neuropils.FormMain.runChartExport(System.String[])">
  <summary>
@@ -1874,7 +1891,7 @@ Neuropils
  </remarks>
 </member>
 <member name="F:Neuropils.ChannelBars.m_adaptive">
- <summary>量程是否是自适应（<paramref name="maximum"/> 传 &lt;= 0 时开启）。</summary>
+ <summary>量程是否是自适应（<see cref="F:Neuropils.ChannelBars.m_maximum"/> 传 &lt;= 0 时开启）。</summary>
 </member>
 <member name="F:Neuropils.ChannelBars.AdaptiveDecay">
  <summary>自适应量程的回落速度：每帧只允许缩到这个比例，避免读数一起一伏地跳。</summary>

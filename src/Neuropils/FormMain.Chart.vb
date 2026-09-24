@@ -1,16 +1,13 @@
-Imports System.Diagnostics
 Imports System.IO
 Imports System.Text
 Imports Neuropils.Analysis
 Imports Neuropils.Data
 
-''' <summary>
-''' 响应曲线的命令行出图（与窗口共用同一套数据装配与绘图代码）。
-''' </summary>
-''' <remarks>
-''' 存在的意义有两个：把实验记录批量导出成图片；以及在无人值守的环境里验证绘图链路
-''' （离屏 <c>DxGraphics</c> 画布 + <c>LinePlot</c> 注入式构造函数）。
-''' </remarks>
+' 响应曲线的命令行出图（与窗口共用同一套数据装配与绘图代码）。
+'
+' 存在的意义有两个：把实验记录批量导出成图片；以及在无人值守的环境里验证绘图链路
+' （离屏 <c>DxGraphics</c> 画布 + <c>LinePlot</c> 注入式构造函数）。
+
 Partial Public Class FormMain
 
     ''' <summary>

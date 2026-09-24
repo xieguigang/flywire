@@ -13,7 +13,7 @@ Namespace Data
     ''' <remarks>
     ''' 全部表格都以<b>流式</b>方式读取（``Stream*`` 扩展方法，惰性迭代、O(1) 内存），
     ''' 因为其中连接表有 261 MB / 534 万行、脑区表有 321 列。整个加载过程可以在后台线程
-    ''' 上运行，并通过 <paramref name="progress"/> 与 <paramref name="cancel"/> 反馈进度
+    ''' 上运行，并通过 <see cref="Load"/> 函数的 "progress" 与 "cancel" 参数进行反馈进度
     ''' 与响应取消。
     ''' 
     ''' 数据来源与用途：
@@ -224,7 +224,7 @@ Namespace Data
         ''' <remarks>
         ''' 列名通过 <see cref="ColumnAttribute"/> 反射得到（``input synapses in AL_L`` 之类），
         ''' 属性名本身被简写成 VB 标识符，只有列名保留着脑区前缀。取值走
-        ''' <see cref="Delegate.CreateDelegate(Type, MethodInfo)"/> 绑定出来的委托而不是
+        ''' <see cref="System.Delegate.CreateDelegate"/> 绑定出来的委托而不是
         ''' ``PropertyInfo.GetValue``：134,181 行 × 160 列 = 2100 万次读取，反射调用会慢一个数量级。
         ''' </remarks>
         Private Sub loadNeuropils(dataset As BrainDataset, progress As Action(Of String), cancel As CancellationToken)

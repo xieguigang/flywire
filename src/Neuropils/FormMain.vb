@@ -1,10 +1,6 @@
-﻿Imports System.Diagnostics
-Imports System.Drawing
-Imports System.IO
+﻿Imports System.IO
 Imports System.Text
 Imports System.Threading
-Imports System.Threading.Tasks
-Imports System.Windows.Forms
 Imports Microsoft.VisualBasic.DeepLearning.SpikingNeuralNetwork
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
@@ -27,7 +23,7 @@ Imports Neuropils.Rendering
 ''' (<see cref="BrainSceneBuilder"/>)：534 万条连接的过滤与连线构建需要数百毫秒，
 ''' 放在 UI 线程上会明显卡顿。画布更新回落到 UI 线程执行。
 ''' </remarks>
-Public Partial Class FormMain
+Public Class FormMain
 
     ''' <summary>数据目录的默认位置 (与 SNN 仿真使用的是同一份 FAFB v783 数据)。</summary>
     Private Const DefaultDataDir As String = "F:\flywire\FAFB-v783"
@@ -268,7 +264,7 @@ Public Partial Class FormMain
         AddHandler m_stimulateMode.CheckedChanged, AddressOf onStimulateModeChanged
 
         m_stimStrengthBox = New NumericUpDown With {
-            .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20.0D, .Increment = 0.5D, .Value = 1.0D, .Width = 56
+            .DecimalPlaces = 1, .Minimum = 0.2D, .Maximum = 20D, .Increment = 0.5D, .Value = 1D, .Width = 56
         }
 
         m_stimStepsBox = New NumericUpDown With {

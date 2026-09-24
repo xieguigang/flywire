@@ -1,11 +1,7 @@
-Imports System.Drawing
-Imports System.IO
-Imports System.Windows.Forms
 Imports Microsoft.VisualBasic.Data.Plots
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Neuropils.Analysis
 Imports Neuropils.Data
-Imports Neuropils.Simulation
 
 ''' <summary>
 ''' 电刺激响应曲线窗口：把一次刺激实验记录下来的响应结果画成曲线。

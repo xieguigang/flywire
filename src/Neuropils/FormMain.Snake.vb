@@ -1,27 +1,21 @@
-Imports System.Diagnostics
 Imports System.IO
-Imports System.Linq
 Imports System.Text
-Imports System.Threading.Tasks
 Imports FlywireAI.Connectome
 Imports FlywireSnake
 Imports Neuropils.Rendering
-Imports Snake2
 
-''' <summary>
-''' "果蝇大脑玩贪吃蛇"的命令行自检：跑训练与评估，把三组对照的得分打出来。
-''' </summary>
-''' <remarks>
-''' 与观战窗口共用同一套装配 / 会话 / 解码器代码，因此这里量出来的分数
-''' 就是窗口里那条蛇的真实水平。
-''' 
-''' 三组对照：
-''' <list type="bullet">
-'''   <item><b>未训练</b>：随机读出 —— 下界；</item>
-'''   <item><b>教师</b>：贪心追食物的示范策略 —— 操作逻辑的上限参考；</item>
-'''   <item><b>训练后</b>：由果蝇大脑（afferent 注入 → efferent 读出）驱动的蛇。</item>
-''' </list>
-''' </remarks>
+' "果蝇大脑玩贪吃蛇"的命令行自检：跑训练与评估，把三组对照的得分打出来。
+' 
+' 与观战窗口共用同一套装配 / 会话 / 解码器代码，因此这里量出来的分数
+' 就是窗口里那条蛇的真实水平。
+' 
+' 三组对照：
+' <list type="bullet">
+'   <item><b>未训练</b>：随机读出 —— 下界；</item>
+'   <item><b>教师</b>：贪心追食物的示范策略 —— 操作逻辑的上限参考；</item>
+'   <item><b>训练后</b>：由果蝇大脑（afferent 注入 → efferent 读出）驱动的蛇。</item>
+' </list>
+
 Partial Public Class FormMain
 
 #Region "观战窗口"
