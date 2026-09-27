@@ -208,6 +208,22 @@ Public Class FlyRegressor
         Return $"in={Dimension}, out={OutputCount}, |w|={Sqrt(total):F4}, nonzero={nonzero}"
     End Function
 
+    ''' <summary>
+    ''' 深拷贝另一份同维数读出层的权重。
+    ''' </summary>
+    Public Sub CopyFrom(other As FlyRegressor)
+        If other Is Nothing Then Throw New ArgumentNullException(NameOf(other))
+        If other.Dimension <> Dimension OrElse other.OutputCount <> OutputCount Then
+            Throw New ArgumentException($"dimension mismatch: {other.Dimension}x{other.OutputCount} vs {Dimension}x{OutputCount}")
+        End If
+
+        For o As Integer = 0 To OutputCount - 1
+            Call Array.Copy(other.m_weights(o), m_weights(o), Dimension)
+
+            m_bias(o) = other.m_bias(o)
+        Next
+    End Sub
+
 #Region "存读"
 
     ''' <summary>把权重存成 csv（文本格式，方便人工检查）。</summary>
