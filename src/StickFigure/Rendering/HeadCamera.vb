@@ -53,9 +53,9 @@ Public Class HeadCamera
             End If
         End If
 
-        ' right = forward × up，使 (right, up, forward) 与屏幕坐标（Y 向下）自洽
-        axisRight = Vec3.Cross(axisForward, upRef).Normalize()
-        axisUp = Vec3.Cross(axisRight, axisForward).Normalize()
+        ' 右手系下 right × up = forward，因此 right = up × forward
+        axisRight = Vec3.Cross(upRef, axisForward).Normalize()
+        axisUp = Vec3.Cross(axisForward, axisRight).Normalize()
 
         Dim halfFov As Double = std.Max(1.0, FovDegrees) * std.PI / 360.0
 

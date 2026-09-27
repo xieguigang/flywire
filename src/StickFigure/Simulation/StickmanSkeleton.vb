@@ -85,7 +85,7 @@ Public Class StickmanSkeleton
             Return {
                 New BoneDef With {.Index = BoneIndex.Pelvis, .Proximal = "hipCenter", .Distal = "waist", .Radius = 0.11, .Mass = 6.0, .PointsDown = False, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.Chest, .Proximal = "waist", .Distal = "chestTop", .Radius = 0.13, .Mass = 9.0, .PointsDown = False, .Friction = 0.35},
-                New BoneDef With {.Index = BoneIndex.Neck, .Proximal = "neckBase", .Distal = "neckTop", .Radius = 0.045, .Mass = 0.5, .PointsDown = False, .Friction = 0.35},
+                New BoneDef With {.Index = BoneIndex.Neck, .Proximal = "neckBase", .Distal = "neckTop", .Radius = 0.07, .Mass = 1.5, .PointsDown = False, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.Head, .Proximal = "headBottom", .Distal = "headTop", .Radius = 0.115, .Mass = 3.0, .PointsDown = False, .IsSphere = True, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.UpperArmL, .Proximal = "shoulderL", .Distal = "elbowL", .Radius = 0.055, .Mass = 1.0, .PointsDown = True, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.LowerArmL, .Proximal = "elbowL", .Distal = "handL", .Radius = 0.048, .Mass = 0.7, .PointsDown = True, .Friction = 0.35},
@@ -93,10 +93,10 @@ Public Class StickmanSkeleton
                 New BoneDef With {.Index = BoneIndex.LowerArmR, .Proximal = "elbowR", .Distal = "handR", .Radius = 0.048, .Mass = 0.7, .PointsDown = True, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.ThighL, .Proximal = "hipL", .Distal = "kneeL", .Radius = 0.078, .Mass = 2.6, .PointsDown = True, .Friction = 0.4},
                 New BoneDef With {.Index = BoneIndex.ShinL, .Proximal = "kneeL", .Distal = "ankleL", .Radius = 0.062, .Mass = 1.8, .PointsDown = True, .Friction = 0.4},
-                New BoneDef With {.Index = BoneIndex.FootL, .Proximal = "heelL", .Distal = "toeL", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95},
+                New BoneDef With {.Index = BoneIndex.FootL, .Proximal = "heelL", .Distal = "toeL", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 1.4},
                 New BoneDef With {.Index = BoneIndex.ThighR, .Proximal = "hipR", .Distal = "kneeR", .Radius = 0.078, .Mass = 2.6, .PointsDown = True, .Friction = 0.4},
                 New BoneDef With {.Index = BoneIndex.ShinR, .Proximal = "kneeR", .Distal = "ankleR", .Radius = 0.062, .Mass = 1.8, .PointsDown = True, .Friction = 0.4},
-                New BoneDef With {.Index = BoneIndex.FootR, .Proximal = "heelR", .Distal = "toeR", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95}
+                New BoneDef With {.Index = BoneIndex.FootR, .Proximal = "heelR", .Distal = "toeR", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 1.4}
             }
         End Get
     End Property
@@ -118,19 +118,19 @@ Public Class StickmanSkeleton
     Private Shared ReadOnly Property JointTable As JointDef()
         Get
             Return {
-                New JointDef With {.Index = JointIndex.Spine, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.Chest, .Anchor = "waist", .Stiffness = 440, .Damping = 16.0, .MaxTorque = 320},
-                New JointDef With {.Index = JointIndex.NeckChest, .Parent = BoneIndex.Chest, .Child = BoneIndex.Neck, .Anchor = "neckBase", .Stiffness = 1.9, .Damping = 0.075, .MaxTorque = 6},
-                New JointDef With {.Index = JointIndex.HeadNeck, .Parent = BoneIndex.Neck, .Child = BoneIndex.Head, .Anchor = "neckTop", .Stiffness = 48, .Damping = 1.7, .MaxTorque = 40},
-                New JointDef With {.Index = JointIndex.ShoulderL, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmL, .Anchor = "shoulderL", .Stiffness = 19, .Damping = 0.7, .MaxTorque = 40},
-                New JointDef With {.Index = JointIndex.ElbowL, .Parent = BoneIndex.UpperArmL, .Child = BoneIndex.LowerArmL, .Anchor = "elbowL", .Stiffness = 11, .Damping = 0.4, .MaxTorque = 25},
-                New JointDef With {.Index = JointIndex.ShoulderR, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmR, .Anchor = "shoulderR", .Stiffness = 19, .Damping = 0.7, .MaxTorque = 40},
-                New JointDef With {.Index = JointIndex.ElbowR, .Parent = BoneIndex.UpperArmR, .Child = BoneIndex.LowerArmR, .Anchor = "elbowR", .Stiffness = 11, .Damping = 0.4, .MaxTorque = 25},
-                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 116, .Damping = 4.2, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 81, .Damping = 2.9, .MaxTorque = 160},
-                New JointDef With {.Index = JointIndex.AnkleL, .Parent = BoneIndex.ShinL, .Child = BoneIndex.FootL, .Anchor = "ankleL", .Stiffness = 4.3, .Damping = 0.16, .MaxTorque = 20},
-                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 116, .Damping = 4.2, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 81, .Damping = 2.9, .MaxTorque = 160},
-                New JointDef With {.Index = JointIndex.AnkleR, .Parent = BoneIndex.ShinR, .Child = BoneIndex.FootR, .Anchor = "ankleR", .Stiffness = 4.3, .Damping = 0.16, .MaxTorque = 20}
+                New JointDef With {.Index = JointIndex.Spine, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.Chest, .Anchor = "waist", .Stiffness = 400, .Damping = 14.8, .MaxTorque = 320},
+                New JointDef With {.Index = JointIndex.NeckChest, .Parent = BoneIndex.Chest, .Child = BoneIndex.Neck, .Anchor = "neckBase", .Stiffness = 10, .Damping = 0.35, .MaxTorque = 15},
+                New JointDef With {.Index = JointIndex.HeadNeck, .Parent = BoneIndex.Neck, .Child = BoneIndex.Head, .Anchor = "neckTop", .Stiffness = 53, .Damping = 1.84, .MaxTorque = 60},
+                New JointDef With {.Index = JointIndex.ShoulderL, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmL, .Anchor = "shoulderL", .Stiffness = 11.5, .Damping = 0.42, .MaxTorque = 40},
+                New JointDef With {.Index = JointIndex.ElbowL, .Parent = BoneIndex.UpperArmL, .Child = BoneIndex.LowerArmL, .Anchor = "elbowL", .Stiffness = 6.6, .Damping = 0.24, .MaxTorque = 25},
+                New JointDef With {.Index = JointIndex.ShoulderR, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmR, .Anchor = "shoulderR", .Stiffness = 11.5, .Damping = 0.42, .MaxTorque = 40},
+                New JointDef With {.Index = JointIndex.ElbowR, .Parent = BoneIndex.UpperArmR, .Child = BoneIndex.LowerArmR, .Anchor = "elbowR", .Stiffness = 6.6, .Damping = 0.24, .MaxTorque = 25},
+                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220},
+                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200},
+                New JointDef With {.Index = JointIndex.AnkleL, .Parent = BoneIndex.ShinL, .Child = BoneIndex.FootL, .Anchor = "ankleL", .Stiffness = 4.5, .Damping = 0.15, .MaxTorque = 20},
+                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220},
+                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200},
+                New JointDef With {.Index = JointIndex.AnkleR, .Parent = BoneIndex.ShinR, .Child = BoneIndex.FootR, .Anchor = "ankleR", .Stiffness = 4.5, .Damping = 0.15, .MaxTorque = 20}
             }
         End Get
     End Property
@@ -222,9 +222,10 @@ Public Class StickmanSkeleton
         SpawnHeading = heading
 
         Dim joints As Dictionary(Of String, Vec3) = WorldRestJoints(position, heading)
+        Dim facing As Quaternion = Quaternion.FromAxisAngle(New Vector3(0, 1, 0), heading)
 
         For Each def As BoneDef In BoneTable
-            Call CreateBone(world, def, joints)
+            Call CreateBone(world, def, joints, facing)
         Next
 
         For Each def As JointDef In JointTable
@@ -238,16 +239,16 @@ Public Class StickmanSkeleton
         If Not Double.IsNaN(heading) Then SpawnHeading = heading
 
         Dim joints As Dictionary(Of String, Vec3) = WorldRestJoints(SpawnPosition, SpawnHeading)
+        Dim facing As Quaternion = Quaternion.FromAxisAngle(New Vector3(0, 1, 0), SpawnHeading)
 
         For Each def As BoneDef In BoneTable
             Dim proximal As Vec3 = joints(def.Proximal)
             Dim distal As Vec3 = joints(def.Distal)
             Dim body As RigidBody3D = Bodies(def.Index)
-            Dim dir As Vector3 = (distal - proximal).ToPhysics()
-            Dim length As Double = dir.Magnitude
+            Dim dirLocal As Vector3 = facing.Unrotate((distal - proximal).ToPhysics())
 
             body.Position = ((proximal + distal) * 0.5).ToPhysics()
-            body.Orientation = BoneOrientation(Vector3Math.Normalize(dir), def.PointsDown)
+            body.Orientation = Quaternion.Compose(facing, BoneOrientation(Vector3Math.Normalize(dirLocal), def.PointsDown))
             body.Velocity = New Vector3(0, 0, 0)
             body.AngularVelocity = New Vector3(0, 0, 0)
             body.ClearForces()
@@ -258,13 +259,20 @@ Public Class StickmanSkeleton
         Next
     End Sub
 
-    Private Function CreateBone(world As PhysicsWorld3D, def As BoneDef, jointTable As Dictionary(Of String, Vec3)) As RigidBody3D
+    Private Function CreateBone(world As PhysicsWorld3D, def As BoneDef,
+                                jointTable As Dictionary(Of String, Vec3),
+                                facing As Quaternion) As RigidBody3D
         Dim proximal As Vec3 = jointTable(def.Proximal)
         Dim distal As Vec3 = jointTable(def.Distal)
         Dim delta As Vec3 = distal - proximal
         Dim length As Double = delta.Length
         Dim center As Vec3 = (proximal + distal) * 0.5
-        Dim orientation As Quaternion = BoneOrientation(delta.Normalize().ToPhysics(), def.PointsDown)
+
+        ' 姿态 = 朝向旋转 ⊗ "在人物自身坐标系里求得的骨骼姿态"。
+        ' 直接用世界方向求姿态会让骨骼的局部 X 轴变成世界 X 轴，
+        ' 于是绕局部 X 的"屈伸"实际变成了绕世界 X 的侧摆，角色只能横着走。
+        Dim dirLocal As Vector3 = facing.Unrotate(delta.Normalize().ToPhysics())
+        Dim orientation As Quaternion = Quaternion.Compose(facing, BoneOrientation(Vector3Math.Normalize(dirLocal), def.PointsDown))
         Dim material As New PhysicsMaterial(def.Friction, 0.0)
         Dim body As RigidBody3D
 
@@ -510,6 +518,20 @@ Public Class StickmanSkeleton
             Next
 
             Return sum / std.Max(total, 1.0E-9)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 支撑参考点：双脚踝关节的中点。
+    ''' </summary>
+    ''' <remarks>
+    ''' 用踝关节而不是脚掌质心作为支撑参考，是因为站立时整体质心正好落在
+    ''' 踝关节上方；若以脚掌质心（更靠前）为参考，质心回中反射会一直把身体往前推，
+    ''' 反而把角色推倒。
+    ''' </remarks>
+    Public ReadOnly Property SupportPoint As Vec3
+        Get
+            Return (JointPosition(JointIndex.AnkleL) + JointPosition(JointIndex.AnkleR)) * 0.5
         End Get
     End Property
 

@@ -17,7 +17,7 @@ Imports std = System.Math
 ''' 直立与朝向以"角加速度"形式给出，内部乘以世界系惯性张量换算成扭矩，
 ''' 因此增益与刚体质量 / 尺寸解耦，调参更直观。
 ''' </remarks>
-Public Class BalanceController
+Public Class BalanceController : Implements IStepHook
 
     ' ---------- 躯干直立 ----------
     ''' <summary>直立比例增益（rad/s² per rad）。</summary>
@@ -45,9 +45,9 @@ Public Class BalanceController
 
     ' ---------- 水平驱动 ----------
     ''' <summary>水平驱动比例增益（1/s）。</summary>
-    Public Property DriveKp As Double = 7.0
-    ''' <summary>水平驱动加速度上限。</summary>
-    Public Property DriveMaxAccel As Double = 9.0
+    Public Property DriveKp As Double = 6.0
+    ''' <summary>水平驱动加速度上限：推得太猛会让角色前倾扑倒。</summary>
+    Public Property DriveMaxAccel As Double = 8.0
 
     ' ---------- 质心支撑 ----------
     ''' <summary>
@@ -55,9 +55,17 @@ Public Class BalanceController
     ''' 倒立摆模型下保持倾角 θ 需要 <c>g·tan θ</c> 的水平加速度，
     ''' COM 偏移约 <c>0.9·sin θ</c>，因此增益至少要 12 才能覆盖中等倾角。
     ''' </summary>
-    Public Property ComKp As Double = 40.0
+    Public Property ComKp As Double = 45.0
+    ''' <summary>
+    ''' 质心回中的<strong>纵向</strong>（沿行进方向）增益。
+    ''' </summary>
+    ''' <remarks>
+    ''' 行走时质心本来就应该落在支撑面前方，若纵向也用横向那么大的增益，
+    ''' 回中反射会把水平驱动完全抵消，角色只能原地踏步。
+    ''' </remarks>
+    Public Property ComKpLongitudinal As Double = 5.0
     ''' <summary>质心回中微分增益，抑制来回震荡。</summary>
-    Public Property ComKd As Double = 7.0
+    Public Property ComKd As Double = 9.0
     ''' <summary>
     ''' 质心回中加速度上限。上限受地面摩擦约束：
     ''' <c>F = m·a</c> 必须小于 <c>μ·m·g</c>，否则脚会打滑。
@@ -68,6 +76,34 @@ Public Class BalanceController
 
     ''' <summary>总开关。</summary>
     Public Property Enabled As Boolean = True
+
+    ' /********************************************************************************/
+    '  子步钩子
+    ' /********************************************************************************/
+
+    ''' <summary>被控制的骨架（由 <c>FigureEnvironment</c> 装配时注入）。</summary>
+    Public Property Target As StickmanSkeleton
+
+    ''' <summary>当前目标姿态（由 <c>FigureEnvironment</c> 注入，每帧更新）。</summary>
+    Public Property PoseRef As StickmanPose
+
+    ''' <summary>脚下的地面高度（每帧由关卡查询后写入）。</summary>
+    Public Property GroundHeight As Double = 0.0
+
+    ''' <summary>
+    ''' 每个物理子步都会调用一次。
+    ''' </summary>
+    ''' <remarks>
+    ''' 平衡反射必须逐子步施加：<c>PhysicsWorld3D</c> 在每个子步末尾清除力累加器，
+    ''' 只在帧首施加一次的话，等效强度会被稀释成 <c>1/Substeps</c>，角色会直接瘫下去。
+    ''' </remarks>
+    Public Sub BeforeSubstep(dt As Double) Implements IStepHook.BeforeSubstep
+        If Target Is Nothing OrElse PoseRef Is Nothing Then
+            Return
+        End If
+
+        Call Apply(Target, PoseRef, GroundHeight, dt)
+    End Sub
 
     ''' <summary>
     ''' 施加本帧的平衡力矩 / 力。应在 <c>PhysicsWorld3D.Step</c> 之前调用。
@@ -113,10 +149,11 @@ Public Class BalanceController
         alpha = alpha - omegaTilt * UprightKd
         alpha = ClampLength(alpha, UprightMaxAlpha)
 
-        Dim torque As Vector3 = chest.InertiaWorld().MultiplyLeft(alpha)
-
-        Call chest.ApplyTorque(torque)
-        Call pelvis.ApplyTorque(torque * -0.4)
+        ' 胸部与骨盆同时被"扶正"（而不是一个受力、另一个受反作用力）：
+        ' 主动布娃娃里的平衡辅助本质上是外力，若只在胸部施加反作用力矩，
+        ' 躯干会绕髋关节折起来而整个人继续倒。
+        Call chest.ApplyTorque(chest.InertiaWorld().MultiplyLeft(alpha))
+        Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(alpha * 0.8))
     End Sub
 
     ' /********************************************************************************/
@@ -136,6 +173,7 @@ Public Class BalanceController
             Dim damp As Vector3 = worldUp * (-wy * HeadingKd)
 
             Call chest.ApplyTorque(chest.InertiaWorld().MultiplyLeft(ClampLength(damp, HeadingMaxAlpha)))
+            Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(ClampLength(damp, HeadingMaxAlpha) * 0.8))
             Return
         End If
 
@@ -150,7 +188,7 @@ Public Class BalanceController
         Dim torque As Vector3 = chest.InertiaWorld().MultiplyLeft(alpha)
 
         Call chest.ApplyTorque(torque)
-        Call pelvis.ApplyTorque(torque * -0.6)
+        Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(alpha * 0.8))
     End Sub
 
     ' /********************************************************************************/
@@ -172,20 +210,26 @@ Public Class BalanceController
         ' ---- 水平驱动 ----
         Dim vHoriz As New Vec3(pelvis.Velocity.x, 0, pelvis.Velocity.z)
         Dim vWant As Vec3 = Level.HeadingToForward(pose.TargetHeading) * pose.TargetSpeed
-        Dim accelXZ As Vec3 = (vWant - vHoriz) * DriveKp
-
-        accelXZ = ClampVec3(accelXZ, DriveMaxAccel)
+        Dim accelXZ As Vec3 = ClampVec3((vWant - vHoriz) * DriveKp, DriveMaxAccel)
 
         ' ---- 质心回中：把整体质心拉回双脚支撑面中心（倒立摆的"踩回来"反射）----
         Dim com As Vec3 = skel.CenterOfMass
-        Dim footL As Vec3 = Vec3.FromPhysics(skel.Bodies(BoneIndex.FootL).Position)
-        Dim footR As Vec3 = Vec3.FromPhysics(skel.Bodies(BoneIndex.FootR).Position)
-        Dim support As Vec3 = (footL + footR) * 0.5
+        Dim support As Vec3 = WeightedSupportPoint(skel)
         Dim comVel As New Vec3(skel.CenterOfMassVelocity.X, 0, skel.CenterOfMassVelocity.Z)
         Dim comErr As New Vec3(support.X - com.X, 0, support.Z - com.Z)
 
         If EnableComBalance Then
-            accelXZ = accelXZ + ClampVec3(comErr * ComKp - comVel * ComKd, ComMaxAccel)
+            Dim fwdDir As Vec3 = Level.HeadingToForward(pose.TargetHeading)
+            Dim rightDir As Vec3 = Vec3.Cross(New Vec3(0, 1, 0), fwdDir).Normalize()
+            Dim errLong As Double = Vec3.Dot(comErr, fwdDir)
+            Dim errLat As Double = Vec3.Dot(comErr, rightDir)
+
+            ' 阻尼项用"相对期望速度"的偏差，否则行走时它会把前进驱动一起抵消掉
+            accelXZ = accelXZ + ClampVec3(
+                fwdDir * (errLong * ComKpLongitudinal) +
+                rightDir * (errLat * ComKp) -
+                (comVel - vWant) * ComKd,
+                ComMaxAccel)
         End If
 
         Dim forceDir As New Vector3(accelXZ.X, accelY, accelXZ.Z)
@@ -195,6 +239,19 @@ Public Class BalanceController
         Call pelvis.ApplyForce(force * 0.6)
         Call chest.ApplyForce(force * 0.4)
     End Sub
+
+    ''' <summary>
+    ''' 按触地与否加权的支撑点：摆动腿几乎不承重，若把它的踝关节也算进支撑中心，
+    ''' 支撑参考会被"拖"到身体后方，质心回中反射就会把角色往后推倒。
+    ''' </summary>
+    Private Shared Function WeightedSupportPoint(skel As StickmanSkeleton) As Vec3
+        Dim ankleL As Vec3 = skel.JointPosition(JointIndex.AnkleL)
+        Dim ankleR As Vec3 = skel.JointPosition(JointIndex.AnkleR)
+        Dim wL As Double = If(skel.Bodies(BoneIndex.FootL).HadContact, 1.0, 0.12)
+        Dim wR As Double = If(skel.Bodies(BoneIndex.FootR).HadContact, 1.0, 0.12)
+
+        Return (ankleL * wL + ankleR * wR) / (wL + wR)
+    End Function
 
     Private Shared Function ClampLength(v As Vector3, maxLength As Double) As Vector3
         Dim len As Double = Vector3Math.Length(v)

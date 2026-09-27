@@ -32,12 +32,22 @@ Namespace My
 
             Dim smoke As Boolean = args.Any(Function(a) a = "--smoke" OrElse a = "-smoke")
             Dim diagnose As Boolean = args.Any(Function(a) a = "--diagnose" OrElse a = "-diagnose")
+            Dim ablation As Boolean = args.Any(Function(a) a = "--ablation" OrElse a = "-ablation")
+            Dim vision As Boolean = args.Any(Function(a) a = "--vision" OrElse a = "-vision")
 
-            If smoke OrElse diagnose Then
+            If smoke OrElse diagnose OrElse ablation OrElse vision Then
                 Dim code As Integer = 0
 
                 Try
-                    code = If(diagnose, SmokeTest.Diagnose(), SmokeTest.Run())
+                    If diagnose Then
+                        code = SmokeTest.Diagnose()
+                    ElseIf ablation Then
+                        code = SmokeTest.Ablation()
+                    ElseIf vision Then
+                        code = SmokeTest.VisionTest()
+                    Else
+                        code = SmokeTest.Run()
+                    End If
                 Catch ex As Exception
                     Call Console.WriteLine(ex.ToString())
                     code = 2

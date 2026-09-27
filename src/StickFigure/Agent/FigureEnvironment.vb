@@ -88,6 +88,11 @@ Public Class FigureEnvironment
         Gait.Reset(Level.StartHeading)
         Pose.ResetToStand()
 
+        ' 平衡反射必须逐子步施加，因此注册成物理世界的子步钩子
+        Balance.Target = Skeleton
+        Balance.PoseRef = Pose
+        World.Add(Balance)
+
         Call Skeleton.ApplyPose(Pose)
         Call SyncHeadCamera()
     End Sub
@@ -127,6 +132,9 @@ Public Class FigureEnvironment
 
         Dim pelvis As Vec3 = Skeleton.PelvisPosition
         Dim groundHeight As Double = Level.GroundHeightAt(pelvis.X, pelvis.Z)
+
+        Balance.GroundHeight = groundHeight
+
         Dim action As ActionPreset = Director.Update(dt, pelvis.X)
 
         ' 1. 步态生成目标姿态
@@ -146,8 +154,7 @@ Public Class FigureEnvironment
         ' 3. 写入马达（马达扭矩会在 world.Step 的每个子步开头施加）
         Call Skeleton.ApplyPose(Pose)
 
-        ' 4. 平衡反射
-        Call Balance.Apply(Skeleton, Pose, groundHeight, dt)
+        ' 4. 平衡反射：由注册在世界上的子步钩子逐子步施加（见 BalanceController.BeforeSubstep）
 
         ' 5. 起跳
         If Pose.JumpSpeed > 0 Then
@@ -271,7 +278,7 @@ Public Class FigureEnvironment
         Dim pelvis As Vec3 = Skeleton.PelvisPosition
         Dim up As Vec3 = Skeleton.TorsoUp
         Dim fwd As Vec3 = Skeleton.BodyForward
-        Dim right As Vec3 = Vec3.Cross(fwd, up)
+        Dim right As Vec3 = Vec3.Cross(up, fwd)
 
         If right.LengthSquared < 1.0E-8 Then
             right = New Vec3(1, 0, 0)

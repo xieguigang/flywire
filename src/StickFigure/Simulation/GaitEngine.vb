@@ -51,7 +51,7 @@ End Class
 Public Class GaitEngine
 
     ''' <summary>行走速度（m/s）。</summary>
-    Public Property WalkSpeed As Double = 1.15
+    Public Property WalkSpeed As Double = 1.0
     ''' <summary>奔跑相对行走的速度倍率。</summary>
     Public Property RunFactor As Double = 1.9
     ''' <summary>转向角速度（rad/s）。</summary>
@@ -65,28 +65,38 @@ Public Class GaitEngine
 
     Private jumpPending As Boolean = False
 
+    ''' <summary>上一帧的动作，用于检测动作切换（只在进入跳跃的那一帧给冲量）。</summary>
+    Private lastAction As ActionPreset = ActionPreset.Stand
+
     ' ---------- 步态库 ----------
     ''' <summary>常速行走。</summary>
-    Public ReadOnly Property PWalk As New GaitParams(0.42, 0.95, 0.30, 0.10, 0.25, 0.55, 0.06)
+    Public ReadOnly Property PWalk As New GaitParams(0.28, 0.45, 0.20, 0.08, 0.15, 0.40, 0.08)
     ''' <summary>奔跑。</summary>
-    Public ReadOnly Property PRun As New GaitParams(0.62, 1.40, 0.55, 0.38, 0.40, 0.85, 0.20)
+    Public ReadOnly Property PRun As New GaitParams(0.50, 1.10, 0.45, 0.34, 0.34, 0.75, 0.18)
     ''' <summary>高抬腿跨越。</summary>
-    Public ReadOnly Property PStepOver As New GaitParams(0.66, 1.60, 0.26, 0.22, 0.22, 0.58, 0.10)
+    Public ReadOnly Property PStepOver As New GaitParams(0.54, 1.25, 0.20, 0.20, 0.18, 0.52, 0.10)
     ''' <summary>上台阶。</summary>
-    Public ReadOnly Property PStairs As New GaitParams(0.72, 1.75, 0.36, 0.28, 0.30, 0.46, 0.18)
+    Public ReadOnly Property PStairs As New GaitParams(0.60, 1.40, 0.28, 0.24, 0.24, 0.42, 0.16)
     ''' <summary>原地转向。</summary>
-    Public ReadOnly Property PTurn As New GaitParams(0.32, 0.72, 0.22, 0.12, 0.20, 0.40, 0.05)
+    Public ReadOnly Property PTurn As New GaitParams(0.24, 0.55, 0.16, 0.12, 0.16, 0.36, 0.05)
 
     ''' <summary>请求一次起跳（下一帧生效）。</summary>
     Public Sub RequestJump()
         jumpPending = True
     End Sub
 
-    ''' <summary>重置到起始状态。</summary>
-    Public Sub Reset(Optional heading As Double = 0.0)
-        Heading = heading
+    ''' <summary>
+    ''' 重置到起始状态。
+    ''' </summary>
+    ''' <remarks>
+    ''' 参数名不能叫 <c>heading</c>：VB 大小写不敏感，<c>Heading = heading</c> 会被解析成
+    ''' 参数自赋值，朝向永远重置不成功。
+    ''' </remarks>
+    Public Sub Reset(Optional facing As Double = 0.0)
+        Heading = facing
         Phase = 0.0
         jumpPending = False
+        lastAction = ActionPreset.Stand
     End Sub
 
     ''' <summary>
@@ -97,6 +107,10 @@ Public Class GaitEngine
     ''' <param name="dt">帧间隔。</param>
     ''' <param name="groundHeight">脚下地面高度（用于判断是否腾空）。</param>
     Public Sub Update(action As ActionPreset, pose As StickmanPose, dt As Double, Optional groundHeight As Double = 0.0)
+        Dim entering As Boolean = (action <> lastAction)
+
+        lastAction = action
+
         Call pose.ResetToStand()
 
         pose.TargetHeading = Heading
@@ -145,7 +159,13 @@ Public Class GaitEngine
                 pose.PelvisHeight = 1.02
 
             Case ActionPreset.Jump
-                jumpPending = True
+                ' 只在"刚进入"跳跃动作的那一帧给一次起跳冲量；
+                ' 若每帧都触发，3.4 m/s 的初速度会叠加到 30 m/s（MaxSpeed 上限），
+                ' 角色直接飞出场景。
+                If entering Then
+                    jumpPending = True
+                End If
+
                 pose.TargetSpeed = WalkSpeed * 0.7
                 Call Advance(pose.TargetSpeed, PWalk.StepLength, dt)
                 Call WalkPose(pose, PWalk)

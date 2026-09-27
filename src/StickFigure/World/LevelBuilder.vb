@@ -112,8 +112,10 @@ Public Module LevelBuilder
             .StairsStartX = 14.0,
             .StairsTopY = StepCount * StepRise
         }
-        Dim groundMat As New PhysicsMaterial(0.9, 0.0)
-        Dim solidMat As New PhysicsMaterial(0.8, 0.0)
+        ' 摩擦系数取得比现实偏高：主动布娃娃靠"质心回中"反射维持平衡，
+        ' 需要地面提供足够大的水平反力，否则脚会打滑、反射失效。
+        Dim groundMat As New PhysicsMaterial(1.4, 0.0)
+        Dim solidMat As New PhysicsMaterial(1.2, 0.0)
 
         ' ---------- 地面 ----------
         Dim ground As RigidBody3D = PhysicsWorld3D.GroundPlane(0.0, groundMat)
