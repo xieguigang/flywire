@@ -22,10 +22,28 @@ Partial Class FormStickFigure
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        components = New System.ComponentModel.Container()
+        FigureCanvas1 = New FigureCanvas()
+        SuspendLayout()
+        ' 
+        ' FigureCanvas1
+        ' 
+        FigureCanvas1.Dock = DockStyle.Fill
+        FigureCanvas1.Location = New Point(0, 0)
+        FigureCanvas1.Name = "FigureCanvas1"
+        FigureCanvas1.Size = New Size(943, 570)
+        FigureCanvas1.TabIndex = 0
+        ' 
+        ' FormStickFigure
+        ' 
+        AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(800, 450)
+        ClientSize = New Size(943, 570)
+        Controls.Add(FigureCanvas1)
+        Name = "FormStickFigure"
         Text = "Form1"
+        ResumeLayout(False)
     End Sub
+
+    Friend WithEvents FigureCanvas1 As FigureCanvas
 
 End Class
