@@ -291,6 +291,163 @@ Public Class FigureCanvas
         })
     End Sub
 
+    ''' <summary>
+    ''' 果蝇大脑面板：接管开关 + 训练按钮 + 状态。
+    ''' </summary>
+    ''' <remarks>
+    ''' 全脑连接组的装配需要数十秒，所以是<b>惰性</b>的——勾选「果蝇大脑接管」
+    ''' 或点「训练读出层」时才在后台线程装配，期间物理仿真暂停。
+    ''' </remarks>
+    Private Sub BuildBrainPanel()
+        controlsPanel.Controls.Add(TitleLabel("果蝇大脑 (SNN)"))
+
+        chkBrain = MakeCheck("果蝇大脑接管", False, AddressOf OnBrainToggle)
+        controlsPanel.Controls.Add(chkBrain)
+
+        btnBrainTrain = MakeButton("训练读出层", AddressOf OnBrainTrain)
+        btnBrainTrain.Dock = DockStyle.Top
+        controlsPanel.Controls.Add(btnBrainTrain)
+
+        lblBrainState = New Label With {
+            .Text = "未装配（勾选接管或点训练时装配，需数十秒）",
+            .AutoSize = False,
+            .Width = 300,
+            .Height = 56,
+            .ForeColor = Color.FromArgb(110, 127, 146),
+            .Font = New Font("Consolas", 8.0F),
+            .Margin = New Padding(2, 6, 2, 2)
+        }
+        controlsPanel.Controls.Add(lblBrainState)
+    End Sub
+
+    ''' <summary>惰性装配果蝇大脑（后台线程）。</summary>
+    Private Sub EnsureBrain()
+        If flySession IsNot Nothing OrElse brainLoading Then
+            Return
+        End If
+
+        brainLoading = True
+        lblBrainState.Text = "装配果蝇全脑连接组（数十秒）..."
+        lblBrainState.ForeColor = Color.FromArgb(255, 209, 102)
+
+        Dim worker As New ComponentModel.BackgroundWorker With {
+            .WorkerReportsProgress = True
+        }
+
+        AddHandler worker.DoWork,
+            Sub(s, e)
+                Dim config As New SnnConfig()
+                Dim reporter As New Action(Of String)(
+                    Sub(msg)
+                        If InvokeRequired Then
+                            Call Invoke(Sub() lblBrainState.Text = msg)
+                        Else
+                            lblBrainState.Text = msg
+                        End If
+                    End Sub)
+
+                flyHost = FlyBrainHost.Create(config, reporter)
+                flySession = New FlySession(env, flyHost)
+                Call flySession.TryLoadWeights()
+            End Sub
+
+        AddHandler worker.RunWorkerCompleted,
+            Sub(s, e)
+                brainLoading = False
+
+                If flySession Is Nothing Then
+                    lblBrainState.Text = "装配失败（缺少 FAFB 数据）"
+                    lblBrainState.ForeColor = Color.FromArgb(255, 107, 107)
+                    chkBrain.Checked = False
+                    Return
+                End If
+
+                lblBrainState.Text = $"就绪: {flySession.Brain.FlowSummary}"
+                lblBrainState.ForeColor = Color.FromArgb(124, 227, 139)
+
+                If chkBrain.Checked Then
+                    Call flySession.Install()
+                End If
+
+                If brainTraining Then
+                    Call StartBrainTraining()
+                End If
+            End Sub
+
+        Call worker.RunWorkerAsync()
+    End Sub
+
+    Private Sub OnBrainToggle(sender As Object, e As EventArgs)
+        If chkBrain.Checked Then
+            If flySession Is Nothing Then
+                Call EnsureBrain()
+                Return
+            End If
+
+            Call flySession.Install()
+        Else
+            If flySession IsNot Nothing Then
+                Call flySession.Uninstall()
+            End If
+        End If
+    End Sub
+
+    Private Sub OnBrainTrain(sender As Object, e As EventArgs)
+        If flySession Is Nothing Then
+            brainTraining = True
+            chkBrain.Checked = True
+            Call EnsureBrain()
+            Return
+        End If
+
+        Call StartBrainTraining()
+    End Sub
+
+    ''' <summary>后台线程跑模仿学习 + DAgger（期间暂停物理仿真）。</summary>
+    Private Sub StartBrainTraining()
+        If flySession Is Nothing OrElse brainTraining Then
+            Return
+        End If
+
+        brainTraining = True
+        btnBrainTrain.Enabled = False
+        chkBrain.Enabled = False
+        lblBrainState.Text = "训练中（模仿学习 + DAgger）..."
+        lblBrainState.ForeColor = Color.FromArgb(255, 209, 102)
+
+        Dim session As FlySession = flySession
+        Dim worker As New ComponentModel.BackgroundWorker()
+
+        AddHandler worker.DoWork,
+            Sub(s, e)
+                session.Reporter = Sub(msg)
+                                       If InvokeRequired Then
+                                           Call Invoke(Sub() lblBrainState.Text = msg)
+                                       Else
+                                           lblBrainState.Text = msg
+                                       End If
+                                   End Sub
+
+                Dim log As String = session.Train(episodes:=2, ticksPerEpisode:=240, daggerRounds:=1)
+
+                If InvokeRequired Then
+                    Call Invoke(Sub() lblBrainState.Text = log)
+                Else
+                    lblBrainState.Text = log
+                End If
+            End Sub
+
+        AddHandler worker.RunWorkerCompleted,
+            Sub(s, e)
+                brainTraining = False
+                btnBrainTrain.Enabled = True
+                chkBrain.Enabled = True
+                lblBrainState.ForeColor = Color.FromArgb(124, 227, 139)
+            End Sub
+
+        Call worker.RunWorkerAsync()
+    End Sub
+
     Private Function StatusLabel(text As String) As Label
         Return New Label With {
             .Text = text,
