@@ -333,8 +333,10 @@ Public Class FlySession
     End Function
 
     Private Sub LogMessage(message As String)
-        If Reporter IsNot Nothing Then
-            Call Reporter(message)
+        Dim callback As Action(Of String) = Reporter
+
+        If callback IsNot Nothing Then
+            Call callback.Invoke(message)
         End If
     End Sub
 
