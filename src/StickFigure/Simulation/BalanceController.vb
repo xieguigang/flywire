@@ -21,27 +21,27 @@ Public Class BalanceController
 
     ' ---------- 躯干直立 ----------
     ''' <summary>直立比例增益（rad/s² per rad）。</summary>
-    Public Property UprightKp As Double = 130.0
+    Public Property UprightKp As Double = 1200.0
     ''' <summary>直立微分增益。</summary>
-    Public Property UprightKd As Double = 22.0
-    ''' <summary>直立角加速度上限。</summary>
-    Public Property UprightMaxAlpha As Double = 70.0
+    Public Property UprightKd As Double = 60.0
+    ''' <summary>直立角加速度上限：显式积分的稳定闸门，必须限制在 1/dt 量级以内。</summary>
+    Public Property UprightMaxAlpha As Double = 400.0
 
     ' ---------- 朝向 ----------
     ''' <summary>朝向比例增益。</summary>
-    Public Property HeadingKp As Double = 45.0
+    Public Property HeadingKp As Double = 400.0
     ''' <summary>朝向微分增益。</summary>
-    Public Property HeadingKd As Double = 9.0
+    Public Property HeadingKd As Double = 36.0
     ''' <summary>朝向角加速度上限。</summary>
-    Public Property HeadingMaxAlpha As Double = 40.0
+    Public Property HeadingMaxAlpha As Double = 120.0
 
     ' ---------- 骨盆高度 ----------
     ''' <summary>高度比例增益（m/s² per m）。</summary>
-    Public Property HeightKp As Double = 240.0
+    Public Property HeightKp As Double = 400.0
     ''' <summary>高度微分增益。</summary>
-    Public Property HeightKd As Double = 26.0
-    ''' <summary>向上补偿加速度上限（约 1.5g）。</summary>
-    Public Property HeightMaxAccel As Double = 15.0
+    Public Property HeightKd As Double = 38.0
+    ''' <summary>向上补偿加速度上限（约 2g）。</summary>
+    Public Property HeightMaxAccel As Double = 20.0
 
     ' ---------- 水平驱动 ----------
     ''' <summary>水平驱动比例增益（1/s）。</summary>
@@ -50,10 +50,19 @@ Public Class BalanceController
     Public Property DriveMaxAccel As Double = 9.0
 
     ' ---------- 质心支撑 ----------
-    ''' <summary>质心回中比例增益。</summary>
-    Public Property ComKp As Double = 5.0
-    ''' <summary>质心回中加速度上限。</summary>
-    Public Property ComMaxAccel As Double = 5.0
+    ''' <summary>
+    ''' 质心回中比例增益（m/s² per m）。
+    ''' 倒立摆模型下保持倾角 θ 需要 <c>g·tan θ</c> 的水平加速度，
+    ''' COM 偏移约 <c>0.9·sin θ</c>，因此增益至少要 12 才能覆盖中等倾角。
+    ''' </summary>
+    Public Property ComKp As Double = 40.0
+    ''' <summary>质心回中微分增益，抑制来回震荡。</summary>
+    Public Property ComKd As Double = 7.0
+    ''' <summary>
+    ''' 质心回中加速度上限。上限受地面摩擦约束：
+    ''' <c>F = m·a</c> 必须小于 <c>μ·m·g</c>，否则脚会打滑。
+    ''' </summary>
+    Public Property ComMaxAccel As Double = 8.0
     ''' <summary>是否启用质心回中反射。行走不稳时打开，追求自然步态时可关闭。</summary>
     Public Property EnableComBalance As Boolean = True
 
@@ -107,7 +116,7 @@ Public Class BalanceController
         Dim torque As Vector3 = chest.InertiaWorld().MultiplyLeft(alpha)
 
         Call chest.ApplyTorque(torque)
-        Call pelvis.ApplyTorque(torque * -0.6)
+        Call pelvis.ApplyTorque(torque * -0.4)
     End Sub
 
     ' /********************************************************************************/
@@ -167,17 +176,20 @@ Public Class BalanceController
 
         accelXZ = ClampVec3(accelXZ, DriveMaxAccel)
 
-        ' ---- 质心回中 ----
+        ' ---- 质心回中：把整体质心拉回双脚支撑面中心（倒立摆的"踩回来"反射）----
         Dim com As Vec3 = skel.CenterOfMass
-        Dim support As Vec3 = (Vec3.FromPhysics(skel.Bodies(BoneIndex.FootL).Position) +
-                               Vec3.FromPhysics(skel.Bodies(BoneIndex.FootR).Position)) * 0.5
+        Dim footL As Vec3 = Vec3.FromPhysics(skel.Bodies(BoneIndex.FootL).Position)
+        Dim footR As Vec3 = Vec3.FromPhysics(skel.Bodies(BoneIndex.FootR).Position)
+        Dim support As Vec3 = (footL + footR) * 0.5
+        Dim comVel As New Vec3(skel.CenterOfMassVelocity.X, 0, skel.CenterOfMassVelocity.Z)
         Dim comErr As New Vec3(support.X - com.X, 0, support.Z - com.Z)
 
         If EnableComBalance Then
-            accelXZ = accelXZ + ClampVec3(comErr * ComKp, ComMaxAccel)
+            accelXZ = accelXZ + ClampVec3(comErr * ComKp - comVel * ComKd, ComMaxAccel)
         End If
 
-        Dim force As New Vector3(accelXZ.X, accelY, accelXZ.Z) * total
+        Dim forceDir As New Vector3(accelXZ.X, accelY, accelXZ.Z)
+        Dim force As Vector3 = forceDir * total
 
         ' 把躯干外力分摊到骨盆与胸部，避免单点受力过大导致关节抖动
         Call pelvis.ApplyForce(force * 0.6)

@@ -93,39 +93,55 @@ Public Class StickmanSkeleton
                 New BoneDef With {.Index = BoneIndex.LowerArmR, .Proximal = "elbowR", .Distal = "handR", .Radius = 0.048, .Mass = 0.7, .PointsDown = True, .Friction = 0.35},
                 New BoneDef With {.Index = BoneIndex.ThighL, .Proximal = "hipL", .Distal = "kneeL", .Radius = 0.078, .Mass = 2.6, .PointsDown = True, .Friction = 0.4},
                 New BoneDef With {.Index = BoneIndex.ShinL, .Proximal = "kneeL", .Distal = "ankleL", .Radius = 0.062, .Mass = 1.8, .PointsDown = True, .Friction = 0.4},
-                New BoneDef With {.Index = BoneIndex.FootL, .Proximal = "ankleL", .Distal = "toeL", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95},
+                New BoneDef With {.Index = BoneIndex.FootL, .Proximal = "heelL", .Distal = "toeL", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95},
                 New BoneDef With {.Index = BoneIndex.ThighR, .Proximal = "hipR", .Distal = "kneeR", .Radius = 0.078, .Mass = 2.6, .PointsDown = True, .Friction = 0.4},
                 New BoneDef With {.Index = BoneIndex.ShinR, .Proximal = "kneeR", .Distal = "ankleR", .Radius = 0.062, .Mass = 1.8, .PointsDown = True, .Friction = 0.4},
-                New BoneDef With {.Index = BoneIndex.FootR, .Proximal = "ankleR", .Distal = "toeR", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95}
+                New BoneDef With {.Index = BoneIndex.FootR, .Proximal = "heelR", .Distal = "toeR", .Radius = 0.05, .Mass = 0.6, .PointsDown = True, .Friction = 0.95}
             }
         End Get
     End Property
 
     ''' <summary>
-    ''' 关节表。马达刚度按各刚体的转动惯量选取，保证显式积分下
-    ''' <c>ω = sqrt(Kp/I)</c> 对应的周期远大于子步长（默认 1/240 s）。
+    ''' 关节表。
     ''' </summary>
+    ''' <remarks>
+    ''' 马达是显式积分的 PD 控制器，其自然频率 <c>ω = sqrt(Kp/I)</c> 必须远小于
+    ''' <c>1/dt</c>（dt 为子步长 1/300 s）。各刚体的转动惯量相差两个数量级
+    ''' （脚掌 1.4e-3 而躯干 1.5e-1 kg·m²），因此刚度一律按惯量标定：
+    ''' <list type="bullet">
+    ''' <item><description><c>Kp = ω²·I</c>，统一取 <c>ω = 35 rad/s</c>（<c>ω²≈1225</c>）→ 响应约 0.09 s，足以跟上 1~2 Hz 的步态；</description></item>
+    ''' <item><description><c>Kd = 2·ω·I</c>，阻尼比 ≈ 1，无超调；</description></item>
+    ''' </item></list>
+    ''' 这样单帧角速度峰值被限制在 <c>0.7·ω ≈ 25 rad/s</c> 以内，
+    ''' 每个子步的 Δω 约 1.8 rad/s，显式积分非常稳定。
+    ''' </remarks>
     Private Shared ReadOnly Property JointTable As JointDef()
         Get
             Return {
-                New JointDef With {.Index = JointIndex.Spine, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.Chest, .Anchor = "waist", .Stiffness = 900, .Damping = 55, .MaxTorque = 400},
-                New JointDef With {.Index = JointIndex.NeckChest, .Parent = BoneIndex.Chest, .Child = BoneIndex.Neck, .Anchor = "neckBase", .Stiffness = 12, .Damping = 0.8, .MaxTorque = 8},
-                New JointDef With {.Index = JointIndex.HeadNeck, .Parent = BoneIndex.Neck, .Child = BoneIndex.Head, .Anchor = "neckTop", .Stiffness = 120, .Damping = 8, .MaxTorque = 60},
-                New JointDef With {.Index = JointIndex.ShoulderL, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmL, .Anchor = "shoulderL", .Stiffness = 100, .Damping = 6, .MaxTorque = 60},
-                New JointDef With {.Index = JointIndex.ElbowL, .Parent = BoneIndex.UpperArmL, .Child = BoneIndex.LowerArmL, .Anchor = "elbowL", .Stiffness = 60, .Damping = 4, .MaxTorque = 40},
-                New JointDef With {.Index = JointIndex.ShoulderR, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmR, .Anchor = "shoulderR", .Stiffness = 100, .Damping = 6, .MaxTorque = 60},
-                New JointDef With {.Index = JointIndex.ElbowR, .Parent = BoneIndex.UpperArmR, .Child = BoneIndex.LowerArmR, .Anchor = "elbowR", .Stiffness = 60, .Damping = 4, .MaxTorque = 40},
-                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 700, .Damping = 45, .MaxTorque = 300},
-                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 500, .Damping = 32, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.AnkleL, .Parent = BoneIndex.ShinL, .Child = BoneIndex.FootL, .Anchor = "ankleL", .Stiffness = 28, .Damping = 1.6, .MaxTorque = 25},
-                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 700, .Damping = 45, .MaxTorque = 300},
-                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 500, .Damping = 32, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.AnkleR, .Parent = BoneIndex.ShinR, .Child = BoneIndex.FootR, .Anchor = "ankleR", .Stiffness = 28, .Damping = 1.6, .MaxTorque = 25}
+                New JointDef With {.Index = JointIndex.Spine, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.Chest, .Anchor = "waist", .Stiffness = 440, .Damping = 16.0, .MaxTorque = 320},
+                New JointDef With {.Index = JointIndex.NeckChest, .Parent = BoneIndex.Chest, .Child = BoneIndex.Neck, .Anchor = "neckBase", .Stiffness = 1.9, .Damping = 0.075, .MaxTorque = 6},
+                New JointDef With {.Index = JointIndex.HeadNeck, .Parent = BoneIndex.Neck, .Child = BoneIndex.Head, .Anchor = "neckTop", .Stiffness = 48, .Damping = 1.7, .MaxTorque = 40},
+                New JointDef With {.Index = JointIndex.ShoulderL, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmL, .Anchor = "shoulderL", .Stiffness = 19, .Damping = 0.7, .MaxTorque = 40},
+                New JointDef With {.Index = JointIndex.ElbowL, .Parent = BoneIndex.UpperArmL, .Child = BoneIndex.LowerArmL, .Anchor = "elbowL", .Stiffness = 11, .Damping = 0.4, .MaxTorque = 25},
+                New JointDef With {.Index = JointIndex.ShoulderR, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmR, .Anchor = "shoulderR", .Stiffness = 19, .Damping = 0.7, .MaxTorque = 40},
+                New JointDef With {.Index = JointIndex.ElbowR, .Parent = BoneIndex.UpperArmR, .Child = BoneIndex.LowerArmR, .Anchor = "elbowR", .Stiffness = 11, .Damping = 0.4, .MaxTorque = 25},
+                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 116, .Damping = 4.2, .MaxTorque = 220},
+                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 81, .Damping = 2.9, .MaxTorque = 160},
+                New JointDef With {.Index = JointIndex.AnkleL, .Parent = BoneIndex.ShinL, .Child = BoneIndex.FootL, .Anchor = "ankleL", .Stiffness = 4.3, .Damping = 0.16, .MaxTorque = 20},
+                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 116, .Damping = 4.2, .MaxTorque = 220},
+                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 81, .Damping = 2.9, .MaxTorque = 160},
+                New JointDef With {.Index = JointIndex.AnkleR, .Parent = BoneIndex.ShinR, .Child = BoneIndex.FootR, .Anchor = "ankleR", .Stiffness = 4.3, .Damping = 0.16, .MaxTorque = 20}
             }
         End Get
     End Property
 
-    ''' <summary>静止站姿下的关节点坐标（人物自身坐标系）。</summary>
+    ''' <summary>
+    ''' 静止站姿下的关节点坐标（人物自身坐标系：+Z 前、+Y 上、+X 右）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 脚掌的踝关节略高于脚底面，脚掌本体从脚跟一直延伸到脚尖：
+    ''' 0.29 m 的前后支撑长度是站立平衡的必要条件，支撑面太窄会直接倾倒。
+    ''' </remarks>
     Private Shared Function RestJointTable() As Dictionary(Of String, Vec3)
         Return New Dictionary(Of String, Vec3) From {
             {"hipCenter", New Vec3(0, 0.92, 0)},
@@ -145,10 +161,12 @@ Public Class StickmanSkeleton
             {"hipR", New Vec3(0.09, 0.90, 0)},
             {"kneeL", New Vec3(-0.10, 0.50, 0)},
             {"kneeR", New Vec3(0.10, 0.50, 0)},
-            {"ankleL", New Vec3(-0.10, 0.09, 0)},
-            {"ankleR", New Vec3(0.10, 0.09, 0)},
-            {"toeL", New Vec3(-0.10, 0.05, 0.14)},
-            {"toeR", New Vec3(0.10, 0.05, 0.14)}
+            {"ankleL", New Vec3(-0.10, 0.10, 0.02)},
+            {"ankleR", New Vec3(0.10, 0.10, 0.02)},
+            {"heelL", New Vec3(-0.10, 0.05, -0.10)},
+            {"heelR", New Vec3(0.10, 0.05, -0.10)},
+            {"toeL", New Vec3(-0.10, 0.05, 0.19)},
+            {"toeR", New Vec3(0.10, 0.05, 0.19)}
         }
     End Function
 
@@ -240,9 +258,9 @@ Public Class StickmanSkeleton
         Next
     End Sub
 
-    Private Function CreateBone(world As PhysicsWorld3D, def As BoneDef, joints As Dictionary(Of String, Vec3)) As RigidBody3D
-        Dim proximal As Vec3 = joints(def.Proximal)
-        Dim distal As Vec3 = joints(def.Distal)
+    Private Function CreateBone(world As PhysicsWorld3D, def As BoneDef, jointTable As Dictionary(Of String, Vec3)) As RigidBody3D
+        Dim proximal As Vec3 = jointTable(def.Proximal)
+        Dim distal As Vec3 = jointTable(def.Distal)
         Dim delta As Vec3 = distal - proximal
         Dim length As Double = delta.Length
         Dim center As Vec3 = (proximal + distal) * 0.5
@@ -276,10 +294,10 @@ Public Class StickmanSkeleton
         Return body
     End Function
 
-    Private Sub CreateJoint(world As PhysicsWorld3D, def As JointDef, joints As Dictionary(Of String, Vec3))
+    Private Sub CreateJoint(world As PhysicsWorld3D, def As JointDef, jointTable As Dictionary(Of String, Vec3))
         Dim parent As RigidBody3D = Bodies(def.Parent)
         Dim child As RigidBody3D = Bodies(def.Child)
-        Dim anchorWorld As Vector3 = joints(def.Anchor).ToPhysics()
+        Dim anchorWorld As Vector3 = jointTable(def.Anchor).ToPhysics()
         Dim joint As New BallJoint3D(parent, child,
                                      parent.ToLocal(anchorWorld),
                                      child.ToLocal(anchorWorld))
@@ -488,6 +506,21 @@ Public Class StickmanSkeleton
 
             For Each b As RigidBody3D In Bodies.Values
                 sum = sum + Vec3.FromPhysics(b.Position) * b.Mass
+                total += b.Mass
+            Next
+
+            Return sum / std.Max(total, 1.0E-9)
+        End Get
+    End Property
+
+    ''' <summary>整体质心的速度。</summary>
+    Public ReadOnly Property CenterOfMassVelocity As Vec3
+        Get
+            Dim sum As New Vec3(0, 0, 0)
+            Dim total As Double = 0.0
+
+            For Each b As RigidBody3D In Bodies.Values
+                sum = sum + Vec3.FromPhysics(b.Velocity) * b.Mass
                 total += b.Mass
             Next
 

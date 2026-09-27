@@ -1,6 +1,7 @@
 Imports System.Drawing
 Imports Microsoft.VisualBasic.Imaging.Physics
 Imports Microsoft.VisualBasic.Imaging.Physics.Collision3D
+Imports std = System.Math
 
 ''' <summary>
 ''' 一整套静态关卡：物理刚体 + 渲染几何 + 供脚本查询的关键位置。
@@ -34,9 +35,41 @@ Public Class Level
     ''' <summary>台阶顶部平台高度。</summary>
     Public Property StairsTopY As Double = 0.88
 
-    ''' <summary>由朝向角求单位前向量。</summary>
+    ''' <summary>
+    ''' 由朝向角求单位前向量。
+    ''' </summary>
+    ''' <remarks>
+    ''' 与骨架构建时绕 +Y 轴的旋转保持一致：heading=0 → +Z，
+    ''' 绕 +Y 旋转 h 后 (0,0,1) → (sin h, 0, cos h)。
+    ''' </remarks>
     Public Shared Function HeadingToForward(heading As Double) As Vec3
-        Return New Vec3(Math.Cos(heading), 0, Math.Sin(heading))
+        Return New Vec3(Math.Sin(heading), 0, Math.Cos(heading))
+    End Function
+
+    ''' <summary>
+    ''' 查询 <paramref name="x"/>, <paramref name="z"/> 处的地面高度。
+    ''' 供平衡控制器在上台阶 / 站上平台时动态调整骨盆目标高度。
+    ''' </summary>
+    Public Function GroundHeightAt(x As Double, z As Double) As Double
+        Dim height As Double = GroundY
+
+        For Each body As RigidBody3D In Bodies
+            If Not body.IsStatic Then
+                Continue For
+            End If
+            If TypeOf body.Shape Is BoxCollider3D Then
+                Dim box As BoxCollider3D = DirectCast(body.Shape, BoxCollider3D)
+                Dim half As Vector3 = box.HalfExtents
+                Dim p As Vector3 = body.Position
+
+                If x >= p.x - half.x AndAlso x <= p.x + half.x AndAlso
+                   z >= p.z - half.z AndAlso z <= p.z + half.z Then
+                    height = Math.Max(height, p.y + half.y)
+                End If
+            End If
+        Next
+
+        Return height
     End Function
 End Class
 
@@ -146,6 +179,8 @@ Public Module LevelBuilder
             PlatformColor)
 
         level.StartPosition = New Vec3(-2.0, 0, 0)
+        ' heading = π/2 → forward = (sin h, 0, cos h) = +X，正对障碍与台阶
+        level.StartHeading = std.PI / 2.0
 
         Return level
     End Function

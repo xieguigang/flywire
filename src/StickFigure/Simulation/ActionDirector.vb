@@ -18,8 +18,8 @@ Public Enum ActionPreset
     StepOver = 6
     ''' <summary>攀爬台阶。</summary>
     ClimbStairs = 7
-    ''' <summary>减速停住。</summary>
-    Stop = 8
+    ''' <summary>减速停住（不使用 <c>Stop</c> 作为成员名，那是 VB 关键字）。</summary>
+    Halt = 8
 End Enum
 
 ''' <summary>自动演示脚本中的一步。</summary>
@@ -171,7 +171,7 @@ Public Class ActionDirector
             Case ActionPreset.Jump : Return "跳跃"
             Case ActionPreset.StepOver : Return "跨越障碍"
             Case ActionPreset.ClimbStairs : Return "上台阶"
-            Case ActionPreset.Stop : Return "停止"
+            Case ActionPreset.Halt : Return "停止"
             Case Else : Return a.ToString()
         End Select
     End Function

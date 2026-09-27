@@ -1,6 +1,7 @@
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.Imaging.Drawing3D
+Imports ImagingSolidBrush = Microsoft.VisualBasic.Imaging.SolidBrush
 
 ''' <summary>关卡中的一块三角面（渲染用，物理由 <see cref="LevelBuilder"/> 单独注册刚体）。</summary>
 Public Structure LevelTriangle
@@ -130,8 +131,8 @@ Public Class LevelMesh
             Dim t As LevelTriangle = Solids(i)
 
             result(i) = New Surface With {
-                .vertices = {t.A.ToPoint3D(), t.B.ToPoint3D(), t.C.ToPoint3D()},
-                .brush = New SolidBrush(t.Color)
+                .vertices = {FigureVisual.ToScene(t.A), FigureVisual.ToScene(t.B), FigureVisual.ToScene(t.C)},
+                .brush = New ImagingSolidBrush(t.Color)
             }
         Next
 
@@ -148,12 +149,25 @@ Public Class LevelMesh
         Return Mix(c, Color.Black, 1.0 - amount)
     End Function
 
-    Private Shared Function Mix(a As Color, b As Color, t As Double) As Color
-        t = Math.Max(0.0, Math.Min(1.0, t))
+    ''' <summary>两个颜色按 <paramref name="t"/> 线性插值。</summary>
+    Public Shared Function Mix(a As Color, b As Color, t As Double) As Color
+        Dim ratio As Double = If(Double.IsNaN(t) OrElse Double.IsInfinity(t), 0.0, t)
 
-        Return Color.FromArgb(
-            CInt(a.R + (b.R - a.R) * t),
-            CInt(a.G + (b.G - a.G) * t),
-            CInt(a.B + (b.B - a.B) * t))
+        ratio = System.Math.Max(0.0, System.Math.Min(1.0, ratio))
+
+        Return Color.FromArgb(Channel(a.R, b.R, ratio), Channel(a.G, b.G, ratio), Channel(a.B, b.B, ratio))
+    End Function
+
+    ''' <summary>单个通道的插值，结果始终夹在 [0,255]。</summary>
+    Private Shared Function Channel(x As Integer, y As Integer, ratio As Double) As Integer
+        Dim v As Double = x + (y - x) * ratio
+
+        If Double.IsNaN(v) OrElse Double.IsInfinity(v) Then
+            Return System.Math.Max(0, System.Math.Min(255, x))
+        End If
+
+        v = System.Math.Max(0.0, System.Math.Min(255.0, v))
+
+        Return CInt(System.Math.Round(v))
     End Function
 End Class

@@ -120,8 +120,24 @@ Public Module FigureVisual
         Return result
     End Function
 
+    ''' <summary>
+    ''' 世界坐标（Y 轴向上，物理引擎的约定）→ 场景坐标（Z 轴向上，<c>DxScene3DCanvas</c> 的约定）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 映射 <c>(x,y,z) → (x,−z,y)</c> 是一次绕 X 轴的 −90° 旋转，保持右手系，
+    ''' 因此控件自带的地面平面（按场景最低 Z 绘制）才会落在我们世界的 y=0 上。
+    ''' </remarks>
+    Public Function ToScene(p As Vec3) As Point3D
+        Return New Point3D(p.X, -p.Z, p.Y)
+    End Function
+
+    ''' <summary>场景坐标 → 世界坐标。</summary>
+    Public Function FromScene(p As Point3D) As Vec3
+        Return New Vec3(p.X, p.Z, -p.Y)
+    End Function
+
     ''' <summary>把关卡线段转成可以提交给 <c>DxScene3DCanvas</c> 的 <see cref="LineSegment"/>。</summary>
     Public Function ToLineSegments(lines As IEnumerable(Of LevelLine)) As LineSegment()
-        Return lines.Select(Function(l) New LineSegment(l.A.ToPoint3D(), l.B.ToPoint3D(), l.Color)).ToArray()
+        Return lines.Select(Function(l) New LineSegment(ToScene(l.A), ToScene(l.B), l.Color)).ToArray()
     End Function
 End Module

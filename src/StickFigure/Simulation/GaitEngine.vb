@@ -15,7 +15,7 @@ Public Class GaitParams
     ''' <summary>肘随摆动的附加屈曲（rad）。</summary>
     Public Property Elbow As Double = 0.25
     ''' <summary>单步长度（m），决定步频 = 速度 / (2·步长)。</summary>
-    Public Property Step As Double = 0.55
+    Public Property StepLength As Double = 0.55
     ''' <summary>上身前倾（rad）。</summary>
     Public Property Lean As Double = 0.06
 
@@ -30,7 +30,7 @@ Public Class GaitParams
         Me.Arm = arm
         Me.ElbowBase = elbowBase
         Me.Elbow = elbow
-        Me.Step = stepLength
+        Me.StepLength = stepLength
         Me.Lean = lean
     End Sub
 End Class
@@ -102,7 +102,7 @@ Public Class GaitEngine
         pose.TargetHeading = Heading
 
         Select Case action
-            Case ActionPreset.Stand, ActionPreset.Stop
+            Case ActionPreset.Stand, ActionPreset.Halt
                 pose.TargetSpeed = 0.0
                 pose.KneeL = 0.05
                 pose.KneeR = 0.05
@@ -112,42 +112,42 @@ Public Class GaitEngine
 
             Case ActionPreset.Walk
                 pose.TargetSpeed = WalkSpeed
-                Call Advance(WalkSpeed, PWalk.Step, dt)
+                Call Advance(WalkSpeed, PWalk.StepLength, dt)
                 Call WalkPose(pose, PWalk)
 
             Case ActionPreset.Run
                 pose.TargetSpeed = WalkSpeed * RunFactor
-                Call Advance(pose.TargetSpeed, PRun.Step, dt)
+                Call Advance(pose.TargetSpeed, PRun.StepLength, dt)
                 Call WalkPose(pose, PRun)
 
             Case ActionPreset.TurnLeft
                 Heading += TurnRate * dt
                 pose.TargetSpeed = WalkSpeed * 0.55
-                Call Advance(pose.TargetSpeed, PTurn.Step, dt)
+                Call Advance(pose.TargetSpeed, PTurn.StepLength, dt)
                 Call WalkPose(pose, PTurn, turnDirection:=-1)
 
             Case ActionPreset.TurnRight
                 Heading -= TurnRate * dt
                 pose.TargetSpeed = WalkSpeed * 0.55
-                Call Advance(pose.TargetSpeed, PTurn.Step, dt)
+                Call Advance(pose.TargetSpeed, PTurn.StepLength, dt)
                 Call WalkPose(pose, PTurn, turnDirection:=1)
 
             Case ActionPreset.StepOver
                 pose.TargetSpeed = WalkSpeed * 0.8
-                Call Advance(pose.TargetSpeed, PStepOver.Step, dt)
+                Call Advance(pose.TargetSpeed, PStepOver.StepLength, dt)
                 Call WalkPose(pose, PStepOver)
                 pose.PelvisHeight = 1.02
 
             Case ActionPreset.ClimbStairs
                 pose.TargetSpeed = WalkSpeed * 0.62
-                Call Advance(pose.TargetSpeed, PStairs.Step, dt)
+                Call Advance(pose.TargetSpeed, PStairs.StepLength, dt)
                 Call WalkPose(pose, PStairs)
                 pose.PelvisHeight = 1.02
 
             Case ActionPreset.Jump
                 jumpPending = True
                 pose.TargetSpeed = WalkSpeed * 0.7
-                Call Advance(pose.TargetSpeed, PWalk.Step, dt)
+                Call Advance(pose.TargetSpeed, PWalk.StepLength, dt)
                 Call WalkPose(pose, PWalk)
         End Select
 
