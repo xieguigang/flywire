@@ -100,7 +100,7 @@
     <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/StickFigure/StickFigure.vbproj" Id="0a0aec06-62f4-46dd-a905-31240ea0c0d3">
-    <Platform Solution="Release|x64" Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
   </Project>
   <Project Path="src/test/test.vbproj" Id="93e22e24-8bc5-4eff-9fa0-5545817bb042">
     <Platform Solution="*|x64" Project="x64" />
