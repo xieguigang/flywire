@@ -1392,10 +1392,19 @@ Microsoft.VisualBasic.Imaging
 </member>
 <member name="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromSchema(System.String,System.Int32)">
  <summary>
- <see cref="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromSchema(System.String,System.Int32)"/>和<see cref="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromNames(System.String[],System.Int32)"/>适用于函数绘图之类需要区分数据系列的颜色谱的生成
+ <see cref="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromSchema(Microsoft.VisualBasic.Imaging.Drawing2D.Colors.ScalerPalette,System.Int32)"/>和<see cref="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromNames(System.String[],System.Int32)"/>适用于函数绘图之类需要区分数据系列的颜色谱的生成
  </summary>
  <param name="term$"></param>
  <param name="n%"></param>
+ <returns></returns>
+ 
+</member>
+<member name="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.FromSchema(Microsoft.VisualBasic.Imaging.Drawing2D.Colors.ScalerPalette,System.Int32)">
+ <summary>
+ 适用于热图颜色谱的生成
+ </summary>
+ <param name="scale"></param>
+ <param name="n"></param>
  <returns></returns>
  
 </member>
@@ -1445,13 +1454,6 @@ Microsoft.VisualBasic.Imaging
  then top n colors will be takes from the input 
  color.
  </remarks>
-</member>
-<member name="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.rangeConstraint(System.Single)">
- <summary>
- Limit <see cref="M:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.Designer.CubicSpline(System.Collections.Generic.IEnumerable{System.Drawing.Color},System.Int32,System.Int32,System.Boolean)"/> result in range [0, 255]
- </summary>
- <param name="x!"></param>
- <returns></returns>
 </member>
 <member name="T:Microsoft.VisualBasic.Imaging.Drawing2D.Colors.DesignerTerms">
  <summary>
