@@ -48,8 +48,9 @@ Public Class FlyRegressor
         If dimension <= 0 Then Throw New ArgumentOutOfRangeException(NameOf(dimension))
         If outputCount <= 0 Then Throw New ArgumentOutOfRangeException(NameOf(outputCount))
 
-        Dimension = dimension
-        OutputCount = outputCount
+        ' 必须用 Me. 限定：VB 不区分大小写，Dimension = dimension 会被解析成参数自赋值
+        Me.Dimension = dimension
+        Me.OutputCount = outputCount
 
         m_weights = New Double(outputCount - 1)() {}
         m_bias = New Double(outputCount - 1) {}
@@ -68,8 +69,8 @@ Public Class FlyRegressor
 
     Private Sub New(dimension As Integer, outputCount As Integer,
                     weights As Double()(), bias As Double())
-        Dimension = dimension
-        OutputCount = outputCount
+        Me.Dimension = dimension
+        Me.OutputCount = outputCount
         m_weights = weights
         m_bias = bias
     End Sub

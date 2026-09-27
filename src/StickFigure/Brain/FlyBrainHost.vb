@@ -41,18 +41,19 @@ Public Class FlyBrainHost
 
     Private ReadOnly m_pack As FafbPackReader
 
-    Private Sub New(config As SnnConfig,
+    Private Sub New(snnConfig As SnnConfig,
                     connectome As ConnectomeIndex,
                     csr As ConnectomeMatrix,
                     globalGain As Double,
                     elapsed As Long,
                     pack As FafbPackReader)
 
-        Config = config
+        ' 形参名不能叫 config：VB 不区分大小写，Config = config 会退化成自赋值
+        Config = snnConfig
         Index = connectome
         Matrix = csr
         Gain = globalGain
-        DataDir = config.DataDir
+        DataDir = snnConfig.DataDir
         ElapsedMs = elapsed
         m_pack = pack
     End Sub
@@ -143,11 +144,19 @@ Public Class FlyBrainHost
         Call connectome.Freeze()
 
         ' 3) 注释（其中 classification 的 flow 列决定"感觉输入 / 运动输出"这两组神经元）
-        Call connectome.AttachAnnotations(
-            names,
-            packClassification(pack),
-            packCellTypes(pack),
-            packNeurons(pack))
+        If pack IsNot Nothing Then
+            Call connectome.AttachAnnotations(
+                names,
+                packClassification(pack),
+                packCellTypes(pack),
+                packNeurons(pack))
+        Else
+            Call connectome.AttachAnnotations(
+                names,
+                config.ResolvePath(config.ClassificationCsv).LoadClassification(),
+                config.ResolvePath(config.CellTypesCsv).LoadCellTypes(),
+                config.ResolvePath(config.NeuronsCsv).LoadNeurons())
+        End If
 
         Dim matrix As ConnectomeMatrix = BrainNetworkBuilder.BuildMatrix(triplets, reporter)
 

@@ -115,6 +115,7 @@ Public Module FlyBrainCli
 
         Call Console.WriteLine($"大脑: {session.Brain.FlowSummary}")
         Call Console.WriteLine($"读出特征维: {session.Brain.MotorFeatures.Length}")
+        Call Console.WriteLine($"regressor: {session.Regressor.Describe()}")
 
         Return session
     End Function
