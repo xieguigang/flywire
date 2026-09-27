@@ -2,6 +2,7 @@ Imports System.Drawing
 Imports System.Windows.Forms
 Imports Microsoft.VisualBasic.Drawing.DirectX
 Imports Microsoft.VisualBasic.Drawing.DirectX.Scene3D
+Imports FlywireAI.Connectome
 Imports std = System.Math
 
 ''' <summary>
@@ -330,7 +331,7 @@ Public Class FigureCanvas
         lblBrainState.Text = "装配果蝇全脑连接组（数十秒）..."
         lblBrainState.ForeColor = Color.FromArgb(255, 209, 102)
 
-        Dim worker As New ComponentModel.BackgroundWorker With {
+        Dim worker As New System.ComponentModel.BackgroundWorker With {
             .WorkerReportsProgress = True
         }
 
@@ -416,7 +417,7 @@ Public Class FigureCanvas
         lblBrainState.ForeColor = Color.FromArgb(255, 209, 102)
 
         Dim session As FlySession = flySession
-        Dim worker As New ComponentModel.BackgroundWorker()
+        Dim worker As New System.ComponentModel.BackgroundWorker()
 
         AddHandler worker.DoWork,
             Sub(s, e)
@@ -569,6 +570,13 @@ Public Class FigureCanvas
             fps = If(fps <= 0, instant, fps * 0.9 + instant * 0.1)
         End If
 
+        ' 大脑装配 / 训练期间暂停物理：两个线程不能同时驱动同一份仿真状态
+        If brainLoading OrElse brainTraining Then
+            Call orbit.UpdateFigure(env.Skeleton, env.Position)
+            Call headCanvas.Invalidate()
+            Return
+        End If
+
         ' 步长夹在 [1/120, 1/20]，避免窗口失焦回来之后物理"补帧"爆炸
         Dim dt As Double = std.Min(1.0 / 20.0, std.Max(1.0 / 120.0, frameMs / 1000.0))
 
@@ -599,6 +607,19 @@ Public Class FigureCanvas
         Else
             lblFallen.Text = "状态: 正常"
             lblFallen.ForeColor = Color.FromArgb(124, 227, 139)
+        End If
+
+        ' ---- 果蝇大脑状态 ----
+        If flySession IsNot Nothing AndAlso env.Agent IsNot Nothing AndAlso
+           Not (TypeOf env.Agent Is NullAgent) Then
+            Dim brain As FlyBrain = flySession.Brain
+            Dim teacher As FlyTeacherResult? = flySession.LastTeacher
+            Dim intent As String = If(teacher.HasValue, ActionDirector.ActionName(teacher.Value.Intent), "--")
+
+            lblAgent.Text = $"果蝇大脑: tick={flySession.BrainTicks}  活跃={brain.ActiveNeurons.Length}  " &
+                            $"运动脉冲={brain.MotorActiveSpikes:F0}  意图={intent}"
+        ElseIf flySession IsNot Nothing Then
+            lblAgent.Text = $"果蝇大脑: 已装配未接管   {flySession.Brain.FlowSummary}"
         End If
     End Sub
 
