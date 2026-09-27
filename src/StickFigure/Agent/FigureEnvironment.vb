@@ -71,6 +71,12 @@ Public Class FigureEnvironment
 
     Private fallTimer As Double = 0.0
 
+    ''' <summary>
+    ''' 外部策略通过 <see cref="SetAction"/> 登记的关节偏置，
+    ''' 在下一帧 <see cref="Step"/> 里叠加到基准步态姿态上。
+    ''' </summary>
+    Private pendingOffsets As Double() = Nothing
+
     Public Sub New(Optional gravity As Double = -9.81)
         World.Gravity = New Vector3(0, gravity, 0)
         World.FixedDt = 1.0 / 60.0
@@ -137,21 +143,50 @@ Public Class FigureEnvironment
 
         Dim action As ActionPreset = Director.Update(dt, pelvis.X)
 
-        ' 1. 步态生成目标姿态
+        ' 1. 步态生成基准目标姿态
         Call Gait.Update(action, Pose, dt, groundHeight)
 
-        ' 2. 外部策略可以在步态之上叠加关节角度偏置 / 选择离散动作
+        ' 2. 外部策略（果蝇大脑 / 其他模型）
+        Dim agentOffsets As Double() = Nothing
+
         If Agent IsNot Nothing AndAlso TypeOf Agent IsNot NullAgent Then
-            Dim hint As Integer = Agent.SelectAction(GetObservation(withVision:=False))
+            Dim obs As Observation = GetObservation(withVision:=False)
+            Dim hint As Integer = Agent.SelectAction(obs)
 
             If hint >= 0 Then
+                Dim before As ActionPreset = action
+
                 Call Act(hint)
+
+                ' 离散动作切换会改变基准步态，需要按新动作重新生成
+                ' （Gait.Update 内部会推进相位，这里重跑一次的代价可以接受）
+                If Director.Current <> before Then
+                    Call Gait.Update(Director.Current, Pose, dt, groundHeight)
+                End If
             Else
-                Call SetAction(Agent.Act(GetObservation(withVision:=False)))
+                Dim raw As Single() = Agent.Act(obs)
+
+                If raw IsNot Nothing AndAlso raw.Length > 0 Then
+                    agentOffsets = raw.Select(Function(x) CDbl(x)).ToArray()
+                End If
             End If
+        Else
+            ' 脚本驱动模式下不允许残留上一帧的外部偏置
+            pendingOffsets = Nothing
         End If
 
-        ' 3. 写入马达（马达扭矩会在 world.Step 的每个子步开头施加）
+        ' 3. 把外部策略的连续关节偏置叠加到基准步态之上。
+        '
+        '    必须在 ApplyPose 之前完成：此前 SetAction 在这里就地 ApplyPose，
+        '    紧接着的第 4 步又用基准步态姿态重新 ApplyPose，把偏置整个覆盖掉，
+        '    导致外部策略的输出永远到不了马达。
+        If agentOffsets IsNot Nothing Then
+            Call ApplyOffsets(agentOffsets)
+        Else
+            Call ApplyOffsets(pendingOffsets)
+        End If
+
+        ' 4. 写入马达（马达扭矩会在 world.Step 的每个子步开头施加）
         Call Skeleton.ApplyPose(Pose)
 
         ' 4. 平衡反射：由注册在世界上的子步钩子逐子步施加（见 BalanceController.BeforeSubstep）
@@ -213,18 +248,47 @@ Public Class FigureEnvironment
     End Sub
 
     ''' <summary>
-    ''' 连续控制：把外部模型输出的动作向量叠加到当前目标姿态上。
+    ''' 连续控制：登记外部模型输出的关节偏置向量。
     ''' </summary>
-    ''' <param name="action">长度不超过 <see cref="StickmanPose.ActionDimension"/> 的向量。</param>
+    ''' <param name="action">长度不超过 16 的向量，语义见 <see cref="ApplyOffsets"/>。</param>
+    ''' <remarks>
+    ''' 这里<b>只登记、不立即写入</b>：<see cref="Step"/> 会先用步态引擎生成基准姿态，
+    ''' 再把这份偏置叠加进去并统一 <see cref="StickmanSkeleton.ApplyPose"/>。
+    ''' 之前在这里就地 ApplyPose 的话，紧跟着的基准姿态写入会把偏置覆盖掉。
+    ''' </remarks>
     Public Sub SetAction(action As Single())
         If action Is Nothing OrElse action.Length = 0 Then
+            pendingOffsets = Nothing
             Return
         End If
 
         ' 动作向量是"叠加在步态之上的残差偏置"，而不是替换整个步态，
         ' 这样外部模型只需学习残差就能驱动角色。
-        Dim v As Double() = action.Select(Function(x) CDbl(x)).ToArray()
-        Const limit As Double = 1.2
+        pendingOffsets = action.Select(Function(x) CDbl(x)).ToArray()
+    End Sub
+
+    ''' <summary>外部策略登记的关节偏置（调试 / 状态条显示用）。</summary>
+    Public ReadOnly Property AgentOffsets As Double()
+        Get
+            Return pendingOffsets
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 把关节偏置向量叠加到当前 <see cref="Pose"/> 上。
+    ''' </summary>
+    ''' <param name="offsets">
+    ''' 顺序：HipPitchL, HipPitchR, KneeL, KneeR, AnkleL, AnkleR, HipRollL, HipRollR,
+    ''' ShoulderPitchL, ShoulderPitchR, ElbowL, ElbowR, SpinePitch, SpineRoll, SpineYaw, NeckYaw
+    ''' （弧度，会被限幅到 ±<see cref="OffsetLimit"/>）。
+    ''' </param>
+    Private Sub ApplyOffsets(offsets As Double())
+        If offsets Is Nothing OrElse offsets.Length = 0 Then
+            Return
+        End If
+
+        Dim v As Double() = offsets
+        Dim limit As Double = OffsetLimit
 
         If v.Length > 0 Then Pose.HipPitchL += ClampSym(v(0), limit)
         If v.Length > 1 Then Pose.HipPitchR += ClampSym(v(1), limit)
@@ -242,9 +306,10 @@ Public Class FigureEnvironment
         If v.Length > 13 Then Pose.SpineRoll += ClampSym(v(13), limit)
         If v.Length > 14 Then Pose.SpineYaw += ClampSym(v(14), limit)
         If v.Length > 15 Then Pose.NeckYaw += ClampSym(v(15), limit)
-
-        Call Skeleton.ApplyPose(Pose)
     End Sub
+
+    ''' <summary>外部关节偏置的单分量限幅（弧度）。</summary>
+    Public Const OffsetLimit As Double = 1.2
 
     Private Shared Function ClampSym(v As Double, limit As Double) As Double
         If Double.IsNaN(v) OrElse Double.IsInfinity(v) Then

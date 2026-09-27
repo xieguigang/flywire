@@ -24,6 +24,11 @@
     <ProjectReference Include="..\..\..\GCModeller\src\runtime\sciBASIC#\Microsoft.VisualBasic.Core\src\Core.vbproj" />
     <ProjectReference Include="..\..\..\Microsoft.VisualBasic.Drawing\src\DXApi\DXApi.vbproj" />
     <ProjectReference Include="..\..\..\Microsoft.VisualBasic.Drawing\src\DxCanvas\DxCanvas.vbproj" />
+    <!--
+      果蝇全脑 SNN（FAFBv783 连接组）。它会传递引入 SNN / TensorFlow / ILCudaTensor /
+      BinaryData / msgpack / dataframework 等工程。
+    -->
+    <ProjectReference Include="..\FlywireAI\FlywireAI.vbproj" />
   </ItemGroup>
 
   <ItemGroup>
