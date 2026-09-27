@@ -105,9 +105,9 @@ Public Module LevelBuilder
     ''' </remarks>
     Private Const ObstacleWidth As Double = 0.2
     Private Const ObstacleDepth As Double = 6.0
-    Private Const StepCount As Integer = 4
-    Private Const StepDepth As Double = 0.9
-    Private Const StepRise As Double = 0.22
+    Private Const StepCount As Integer = 12
+    Private Const StepDepth As Double = 0.3
+    Private Const StepRise As Double = 0.05
     Private Const StepWidth As Double = 6.0
     Private Const PlatformLength As Double = 8.4
 
@@ -117,7 +117,7 @@ Public Module LevelBuilder
     Public Function BuildDefault(world As PhysicsWorld3D) As Level
         Dim level As New Level With {
             .ObstacleX = 8.0,
-            .ObstacleHeight = 0.32,
+            .ObstacleHeight = 0.10,
             .StairsStartX = 14.0,
             .StairsTopY = StepCount * StepRise
         }

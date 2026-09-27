@@ -297,10 +297,17 @@ Public Module SmokeTest
                              $"{env.Position.X,8:F2} {env.Position.Z,8:F2} " &
                              $"{env.Skeleton.PelvisPosition.Y,8:F3} {env.Skeleton.HeadPosition.Y,8:F3} " &
                              $"{Vec3.FromPhysics(env.Skeleton.Bodies(BoneIndex.Pelvis).Velocity).Length,7:F2} " &
-                             $"{If(c.Left, "L", "-")}{If(c.Right, "R", "-")}")
+                             $"{If(c.Left, "L", "-")}{If(c.Right, "R", "-")}  " &
+                             $"tilt={env.Skeleton.TiltAngle * 180 / std.PI,5:F1}° " &
+                             $"kneeL={env.Skeleton.Motors(JointIndex.KneeL).AngleError,6:F2} " &
+                             $"hipL={env.Skeleton.Motors(JointIndex.HipL).AngleError,6:F2} " &
+                             $"spine={env.Skeleton.Motors(JointIndex.Spine).AngleError,6:F2} " &
+                             $"want={env.Pose.TargetSpeed,5:F2} head={env.Gait.Heading * 180 / std.PI,4:F0}° " &
+                             $"fwd=({env.Skeleton.BodyForward.X,5:F2},{env.Skeleton.BodyForward.Z,5:F2})")
             End If
 
-            If Not obstacleCrossed AndAlso env.Position.X > env.Level.ObstacleX + 1.0 Then
+            ' 障碍远沿在 ObstacleX + 厚度/2，再留 0.4m 余量判定"已经越过去"
+            If Not obstacleCrossed AndAlso env.Position.X > env.Level.ObstacleX + 0.6 Then
                 obstacleCrossed = True
                 Call log.Add($">>> 在 t={env.Time:F1}s 越过障碍 (x={env.Position.X:F2})")
             End If

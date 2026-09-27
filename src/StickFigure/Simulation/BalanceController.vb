@@ -26,14 +26,34 @@ Public Class BalanceController : Implements IStepHook
     Public Property UprightKd As Double = 60.0
     ''' <summary>直立角加速度上限：显式积分的稳定闸门，必须限制在 1/dt 量级以内。</summary>
     Public Property UprightMaxAlpha As Double = 400.0
+    ''' <summary>
+    ''' 骨盆直立扭矩的额外增益。
+    ''' </summary>
+    ''' <remarks>
+    ''' 骨盆自身惯量小，按与胸部相同的角加速度只能得到 ~12 N·m，
+    ''' 不足以扶住上半身；这里单独放大（对应 ~1200 rad/s²，
+    ''' 每子步 Δω ≈ 3.3 rad/s，仍在显式积分的稳定范围内）。
+    ''' </remarks>
+    Public Property PelvisUprightGain As Double = 3.0
+    ''' <summary>骨盆直立角加速度上限。</summary>
+    Public Property PelvisUprightMaxAlpha As Double = 1200.0
 
     ' ---------- 朝向 ----------
-    ''' <summary>朝向比例增益。</summary>
-    Public Property HeadingKp As Double = 400.0
+    ''' <summary>
+    ''' 朝向比例增益（rad/s² per rad）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 这里必须取得比直立反射保守得多：骨盆通过双腿踩在地上，
+    ''' 绕竖直轴的有效惯量是骨盆自身惯量的十倍以上，若按
+    ''' <see cref="RigidBody3D.InertiaWorld"/> 标定增益会产生严重过冲，
+    ''' 表现为躯干原地来回甩（前进速度被抵消成 0）。因此增益压低、
+    ''' 并且<strong>只</strong>作用在胸部，让下肢通过关节约束自然跟随。
+    ''' </remarks>
+    Public Property HeadingKp As Double = 50.0
     ''' <summary>朝向微分增益。</summary>
-    Public Property HeadingKd As Double = 36.0
+    Public Property HeadingKd As Double = 26.0
     ''' <summary>朝向角加速度上限。</summary>
-    Public Property HeadingMaxAlpha As Double = 120.0
+    Public Property HeadingMaxAlpha As Double = 60.0
 
     ' ---------- 骨盆高度 ----------
     ''' <summary>高度比例增益（m/s² per m）。</summary>
@@ -152,8 +172,12 @@ Public Class BalanceController : Implements IStepHook
         ' 胸部与骨盆同时被"扶正"（而不是一个受力、另一个受反作用力）：
         ' 主动布娃娃里的平衡辅助本质上是外力，若只在胸部施加反作用力矩，
         ' 躯干会绕髋关节折起来而整个人继续倒。
+        '
+        ' 骨盆要单独加强：它是全身的"根"，自身惯量只有 0.038 kg·m²，
+        ' 按同样的角加速度算出来的扭矩 (~12 N·m) 远不够抵消上半身前倾的
+        ' 重力矩（~50 N·m），角色会整个向前折下去。这里用独立增益放大。
         Call chest.ApplyTorque(chest.InertiaWorld().MultiplyLeft(alpha))
-        Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(alpha * 0.8))
+        Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(ClampLength(alpha * PelvisUprightGain, PelvisUprightMaxAlpha)))
     End Sub
 
     ' /********************************************************************************/
@@ -173,7 +197,6 @@ Public Class BalanceController : Implements IStepHook
             Dim damp As Vector3 = worldUp * (-wy * HeadingKd)
 
             Call chest.ApplyTorque(chest.InertiaWorld().MultiplyLeft(ClampLength(damp, HeadingMaxAlpha)))
-            Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(ClampLength(damp, HeadingMaxAlpha) * 0.8))
             Return
         End If
 
@@ -188,7 +211,6 @@ Public Class BalanceController : Implements IStepHook
         Dim torque As Vector3 = chest.InertiaWorld().MultiplyLeft(alpha)
 
         Call chest.ApplyTorque(torque)
-        Call pelvis.ApplyTorque(pelvis.InertiaWorld().MultiplyLeft(alpha * 0.8))
     End Sub
 
     ' /********************************************************************************/

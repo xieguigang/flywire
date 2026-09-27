@@ -196,17 +196,25 @@ Public Class ActionDirector
     ''' "折返行走"发生在 180° 掉头之后，此时 x 是<strong>递减</strong>的，
     ''' 不能用 <c>UntilX</c>（下限）触发，否则会立刻跳过这一步。
     ''' </para>
+    ''' <para>
+    ''' 跨越步骤的 <c>UntilX=8.5</c>：障碍远沿在 x=8.10（ObstacleX=8 加厚度 0.2 的一半），
+    ''' 刚越过就切回站立稳定一拍，再继续走向台阶。
+    ''' </para>
+    ''' <para>
+    ''' 台阶攀爬目前只能稳定上两三级（主动布娃娃在持续爬升时会原地踏步），
+    ''' 所以限时 8 秒就转入下一段，避免卡在台阶上拖完整个演示。
+    ''' </para>
     ''' </remarks>
     Public Shared Function DefaultScript() As List(Of ScriptStep)
         Return New List(Of ScriptStep) From {
             New ScriptStep(ActionPreset.Stand, 2.0, "起势站立"),
-            New ScriptStep(ActionPreset.Walk, 18.0, "走向障碍物", 7.0),
-            New ScriptStep(ActionPreset.StepOver, 12.0, "跨越低矮障碍", 8.8),
+            New ScriptStep(ActionPreset.Walk, 18.0, "走向障碍物", 7.8),
+            New ScriptStep(ActionPreset.StepOver, 12.0, "跨越低矮障碍", 8.5),
+            New ScriptStep(ActionPreset.Stand, 1.5, "落地站稳"),
             New ScriptStep(ActionPreset.Walk, 18.0, "走向台阶", 12.4),
-            New ScriptStep(ActionPreset.ClimbStairs, 18.0, "攀爬台阶", 18.4),
-            New ScriptStep(ActionPreset.Walk, 6.0, "高台上行走"),
+            New ScriptStep(ActionPreset.ClimbStairs, 8.0, "攀爬台阶"),
             New ScriptStep(ActionPreset.TurnLeft, 3.2, "原地左转 180°"),
-            New ScriptStep(ActionPreset.Walk, 14.0, "折返行走"),
+            New ScriptStep(ActionPreset.Walk, 10.0, "折返行走"),
             New ScriptStep(ActionPreset.Jump, 2.0, "助跑起跳"),
             New ScriptStep(ActionPreset.Walk, 5.0, "落地继续行走"),
             New ScriptStep(ActionPreset.Stand, 3.0, "收势站立")

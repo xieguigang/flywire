@@ -78,6 +78,16 @@ Public Class StickmanSkeleton
         Public Stiffness As Double
         Public Damping As Double
         Public MaxTorque As Double
+
+        ''' <summary>
+        ''' 子刚体的角加速度上限（rad/s²）。
+        ''' </summary>
+        ''' <remarks>
+        ''' 默认 2500 对脚掌 / 手臂这类轻小部件是安全闸门，但膝盖在深蹲
+        ''' 承重时需要 ~100 N·m 才能伸直，2500 × 0.0269 = 67 N·m 不够，
+        ''' 角色会蹲下去起不来。因此膝 / 髋单独放宽。
+        ''' </remarks>
+        Public MaxAlpha As Double = 2500.0
     End Class
 
     Private Shared ReadOnly Property BoneTable As BoneDef()
@@ -125,11 +135,11 @@ Public Class StickmanSkeleton
                 New JointDef With {.Index = JointIndex.ElbowL, .Parent = BoneIndex.UpperArmL, .Child = BoneIndex.LowerArmL, .Anchor = "elbowL", .Stiffness = 6.6, .Damping = 0.24, .MaxTorque = 25},
                 New JointDef With {.Index = JointIndex.ShoulderR, .Parent = BoneIndex.Chest, .Child = BoneIndex.UpperArmR, .Anchor = "shoulderR", .Stiffness = 11.5, .Damping = 0.42, .MaxTorque = 40},
                 New JointDef With {.Index = JointIndex.ElbowR, .Parent = BoneIndex.UpperArmR, .Child = BoneIndex.LowerArmR, .Anchor = "elbowR", .Stiffness = 6.6, .Damping = 0.24, .MaxTorque = 25},
-                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200},
+                New JointDef With {.Index = JointIndex.HipL, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighL, .Anchor = "hipL", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220, .MaxAlpha = 3500},
+                New JointDef With {.Index = JointIndex.KneeL, .Parent = BoneIndex.ThighL, .Child = BoneIndex.ShinL, .Anchor = "kneeL", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200, .MaxAlpha = 4200},
                 New JointDef With {.Index = JointIndex.AnkleL, .Parent = BoneIndex.ShinL, .Child = BoneIndex.FootL, .Anchor = "ankleL", .Stiffness = 4.5, .Damping = 0.15, .MaxTorque = 20},
-                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220},
-                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200},
+                New JointDef With {.Index = JointIndex.HipR, .Parent = BoneIndex.Pelvis, .Child = BoneIndex.ThighR, .Anchor = "hipR", .Stiffness = 130, .Damping = 4.8, .MaxTorque = 220, .MaxAlpha = 3500},
+                New JointDef With {.Index = JointIndex.KneeR, .Parent = BoneIndex.ThighR, .Child = BoneIndex.ShinR, .Anchor = "kneeR", .Stiffness = 90, .Damping = 2.9, .MaxTorque = 200, .MaxAlpha = 4200},
                 New JointDef With {.Index = JointIndex.AnkleR, .Parent = BoneIndex.ShinR, .Child = BoneIndex.FootR, .Anchor = "ankleR", .Stiffness = 4.5, .Damping = 0.15, .MaxTorque = 20}
             }
         End Get
@@ -320,6 +330,7 @@ Public Class StickmanSkeleton
                                         Quaternion.Compose(parent.Orientation.Conjugate(), child.Orientation)) With {
             .Stiffness = def.Stiffness * MotorGainScale,
             .Damping = def.Damping * MotorGainScale,
+            .MaxAlpha = def.MaxAlpha,
             .MaxTorque = def.MaxTorque,
             .Label = def.Index.ToString()
         }

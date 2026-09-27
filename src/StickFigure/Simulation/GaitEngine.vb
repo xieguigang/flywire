@@ -65,8 +65,23 @@ Public Class GaitEngine
 
     Private jumpPending As Boolean = False
 
+    ''' <summary>待施加的起跳速度（m/s），&gt; 0 时在帧末给一次冲量。</summary>
+    Private pendingJumpSpeed As Double = 0.0
+
     ''' <summary>上一帧的动作，用于检测动作切换（只在进入跳跃的那一帧给冲量）。</summary>
     Private lastAction As ActionPreset = ActionPreset.Stand
+
+    ''' <summary>
+    ''' 跨越障碍时的小跳初速度（m/s）。
+    ''' </summary>
+    ''' <remarks>
+    ''' 抬腿步态对障碍的"绊脚"非常敏感：脚掌是 0.29 m 长的胶囊，
+    ''' 摆动轨迹稍有偏差就会挂在障碍沿上，角色随即失稳。
+    ''' 跨栏运动员的动作本来就是"跨步 + 小跳"——起跳腾空后高抬腿收腿，
+    ''' 对障碍几何完全不敏感，而且跳跃的起跳 / 落地已经验证是稳定的。
+    ''' 2.6 m/s 对应 ~0.34 m 的腾空高度。
+    ''' </remarks>
+    Public Property StepOverJumpSpeed As Double = 3.6
 
     ' ---------- 步态库 ----------
     ''' <summary>常速行走。</summary>
@@ -74,13 +89,16 @@ Public Class GaitEngine
     ''' <summary>奔跑。</summary>
     Public ReadOnly Property PRun As New GaitParams(0.50, 1.10, 0.45, 0.34, 0.34, 0.75, 0.18)
     ''' <summary>
-    ''' 高抬腿跨越。步幅取得比常速行走更长、抬腿更高：
-    ''' 跨越时前后脚必须分别落在障碍两侧，若步幅太短，
-    ''' 前脚落在障碍顶上 / 后脚被远沿挂住，角色会骑跨在障碍上深蹲卡死。
+    ''' 高抬腿跨越。
     ''' </summary>
-    Public ReadOnly Property PStepOver As New GaitParams(0.62, 1.55, 0.22, 0.20, 0.18, 0.64, 0.12)
+    ''' <remarks>
+    ''' 步幅取得比常速行走更长、抬腿更高：跨越时前后脚要分别落在障碍两侧，
+    ''' 步幅太短会骑跨卡死。但膝角 / 骨盆高度也不能太夸张，否则角色会在
+    ''' 跨越结束后跪倒，所以跨完要尽快切回常速行走（见脚本里的 UntilX）。
+    ''' </remarks>
+    Public ReadOnly Property PStepOver As New GaitParams(0.45, 1.10, 0.20, 0.20, 0.18, 0.45, 0.10)
     ''' <summary>上台阶。</summary>
-    Public ReadOnly Property PStairs As New GaitParams(0.60, 1.40, 0.28, 0.24, 0.24, 0.42, 0.16)
+    Public ReadOnly Property PStairs As New GaitParams(0.42, 0.95, 0.24, 0.22, 0.22, 0.40, 0.12)
     ''' <summary>原地转向。</summary>
     Public ReadOnly Property PTurn As New GaitParams(0.24, 0.55, 0.16, 0.12, 0.16, 0.36, 0.05)
 
@@ -100,6 +118,7 @@ Public Class GaitEngine
         Heading = facing
         Phase = 0.0
         jumpPending = False
+        pendingJumpSpeed = 0.0
         lastAction = ActionPreset.Stand
     End Sub
 
@@ -151,14 +170,15 @@ Public Class GaitEngine
                 Call WalkPose(pose, PTurn, turnDirection:=1)
 
             Case ActionPreset.StepOver
+                ' 进入跨越的那一帧给一次小跳（跨栏步），之后保持高抬腿步态
+                If entering Then
+                    pendingJumpSpeed = StepOverJumpSpeed
+                End If
+
                 pose.TargetSpeed = WalkSpeed * 0.9
                 Call Advance(pose.TargetSpeed, PStepOver.StepLength, dt)
                 Call WalkPose(pose, PStepOver)
-                ' 抬高骨盆给摆动腿留出越过障碍的净空
-                pose.PelvisHeight = 1.03
-                ' 双脚分居障碍两侧时，质心回中反射会把质心钉在障碍上，
-                ' 角色会骑跨卡死；跨越期间削弱它，让前进驱动把角色带过去
-                pose.ComAssist = 0.15
+                pose.PelvisHeight = 0.98
 
             Case ActionPreset.ClimbStairs
                 pose.TargetSpeed = WalkSpeed * 0.62
@@ -168,10 +188,9 @@ Public Class GaitEngine
 
             Case ActionPreset.Jump
                 ' 只在"刚进入"跳跃动作的那一帧给一次起跳冲量；
-                ' 若每帧都触发，3.4 m/s 的初速度会叠加到 30 m/s（MaxSpeed 上限），
-                ' 角色直接飞出场景。
+                ' 若每帧都触发，初速度会叠加到 MaxSpeed 上限，角色直接飞出场景。
                 If entering Then
-                    jumpPending = True
+                    pendingJumpSpeed = JumpSpeed
                 End If
 
                 pose.TargetSpeed = WalkSpeed * 0.7
@@ -183,8 +202,13 @@ Public Class GaitEngine
         pose.NeckPitch = -pose.SpinePitch
 
         If jumpPending Then
-            pose.JumpSpeed = JumpSpeed
+            pendingJumpSpeed = JumpSpeed
             jumpPending = False
+        End If
+
+        If pendingJumpSpeed > 0 Then
+            pose.JumpSpeed = pendingJumpSpeed
+            pendingJumpSpeed = 0.0
         End If
     End Sub
 
