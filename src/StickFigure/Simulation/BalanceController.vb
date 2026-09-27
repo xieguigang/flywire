@@ -218,7 +218,7 @@ Public Class BalanceController : Implements IStepHook
         Dim comVel As New Vec3(skel.CenterOfMassVelocity.X, 0, skel.CenterOfMassVelocity.Z)
         Dim comErr As New Vec3(support.X - com.X, 0, support.Z - com.Z)
 
-        If EnableComBalance Then
+        If EnableComBalance AndAlso pose.ComAssist > 0.0 Then
             Dim fwdDir As Vec3 = Level.HeadingToForward(pose.TargetHeading)
             Dim rightDir As Vec3 = Vec3.Cross(New Vec3(0, 1, 0), fwdDir).Normalize()
             Dim errLong As Double = Vec3.Dot(comErr, fwdDir)
@@ -229,7 +229,7 @@ Public Class BalanceController : Implements IStepHook
                 fwdDir * (errLong * ComKpLongitudinal) +
                 rightDir * (errLat * ComKp) -
                 (comVel - vWant) * ComKd,
-                ComMaxAccel)
+                ComMaxAccel) * pose.ComAssist
         End If
 
         Dim forceDir As New Vector3(accelXZ.X, accelY, accelXZ.Z)

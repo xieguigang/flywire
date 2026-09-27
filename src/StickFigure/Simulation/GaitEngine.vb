@@ -73,8 +73,12 @@ Public Class GaitEngine
     Public ReadOnly Property PWalk As New GaitParams(0.28, 0.45, 0.20, 0.08, 0.15, 0.40, 0.08)
     ''' <summary>奔跑。</summary>
     Public ReadOnly Property PRun As New GaitParams(0.50, 1.10, 0.45, 0.34, 0.34, 0.75, 0.18)
-    ''' <summary>高抬腿跨越。</summary>
-    Public ReadOnly Property PStepOver As New GaitParams(0.54, 1.25, 0.20, 0.20, 0.18, 0.52, 0.10)
+    ''' <summary>
+    ''' 高抬腿跨越。步幅取得比常速行走更长、抬腿更高：
+    ''' 跨越时前后脚必须分别落在障碍两侧，若步幅太短，
+    ''' 前脚落在障碍顶上 / 后脚被远沿挂住，角色会骑跨在障碍上深蹲卡死。
+    ''' </summary>
+    Public ReadOnly Property PStepOver As New GaitParams(0.62, 1.55, 0.22, 0.20, 0.18, 0.64, 0.12)
     ''' <summary>上台阶。</summary>
     Public ReadOnly Property PStairs As New GaitParams(0.60, 1.40, 0.28, 0.24, 0.24, 0.42, 0.16)
     ''' <summary>原地转向。</summary>
@@ -147,10 +151,14 @@ Public Class GaitEngine
                 Call WalkPose(pose, PTurn, turnDirection:=1)
 
             Case ActionPreset.StepOver
-                pose.TargetSpeed = WalkSpeed * 0.8
+                pose.TargetSpeed = WalkSpeed * 0.9
                 Call Advance(pose.TargetSpeed, PStepOver.StepLength, dt)
                 Call WalkPose(pose, PStepOver)
-                pose.PelvisHeight = 1.02
+                ' 抬高骨盆给摆动腿留出越过障碍的净空
+                pose.PelvisHeight = 1.03
+                ' 双脚分居障碍两侧时，质心回中反射会把质心钉在障碍上，
+                ' 角色会骑跨卡死；跨越期间削弱它，让前进驱动把角色带过去
+                pose.ComAssist = 0.15
 
             Case ActionPreset.ClimbStairs
                 pose.TargetSpeed = WalkSpeed * 0.62

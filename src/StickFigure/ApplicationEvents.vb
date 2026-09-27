@@ -34,8 +34,9 @@ Namespace My
             Dim diagnose As Boolean = args.Any(Function(a) a = "--diagnose" OrElse a = "-diagnose")
             Dim ablation As Boolean = args.Any(Function(a) a = "--ablation" OrElse a = "-ablation")
             Dim vision As Boolean = args.Any(Function(a) a = "--vision" OrElse a = "-vision")
+            Dim demo As Boolean = args.Any(Function(a) a = "--demo" OrElse a = "-demo")
 
-            If smoke OrElse diagnose OrElse ablation OrElse vision Then
+            If smoke OrElse diagnose OrElse ablation OrElse vision OrElse demo Then
                 Dim code As Integer = 0
 
                 Try
@@ -45,6 +46,8 @@ Namespace My
                         code = SmokeTest.Ablation()
                     ElseIf vision Then
                         code = SmokeTest.VisionTest()
+                    ElseIf demo Then
+                        code = SmokeTest.Demo()
                     Else
                         code = SmokeTest.Run()
                     End If

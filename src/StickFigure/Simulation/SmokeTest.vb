@@ -269,6 +269,58 @@ Public Module SmokeTest
         Return exitCode
     End Function
 
+    ''' <summary>
+    ''' 无头回放自动演示脚本，逐 0.5s 打印动作 / 位置 / 姿态，
+    ''' 用于定位"火柴人没跨过障碍"这类时序问题。
+    ''' </summary>
+    Public Function Demo(Optional seconds As Double = 40.0) As Integer
+        Dim log As New List(Of String)()
+        Dim env As New FigureEnvironment()
+        Dim dt As Double = 1.0 / 60.0
+
+        Call log.Add("=== 自动演示脚本 无头回放 ===")
+        Call log.Add($"障碍: x={env.Level.ObstacleX} 高={env.Level.ObstacleHeight}   台阶: x={env.Level.StairsStartX}")
+        Call log.Add($"{"t",6} {"动作",-12} {"x",8} {"z",8} {"pelvisY",8} {"headY",8} {"速度",7} {"触地"}")
+
+        Call env.Director.StartDemo(ActionDirector.DefaultScript())
+
+        Dim frames As Integer = CInt(seconds / dt)
+        Dim obstacleCrossed As Boolean = False
+
+        For i As Integer = 1 To frames
+            env.Step(dt)
+
+            If i Mod 30 = 0 Then
+                Dim c As (Left As Boolean, Right As Boolean) = env.Skeleton.FootContact
+
+                Call log.Add($"{env.Time,6:F1} {ActionDirector.ActionName(env.CurrentAction),-12} " &
+                             $"{env.Position.X,8:F2} {env.Position.Z,8:F2} " &
+                             $"{env.Skeleton.PelvisPosition.Y,8:F3} {env.Skeleton.HeadPosition.Y,8:F3} " &
+                             $"{Vec3.FromPhysics(env.Skeleton.Bodies(BoneIndex.Pelvis).Velocity).Length,7:F2} " &
+                             $"{If(c.Left, "L", "-")}{If(c.Right, "R", "-")}")
+            End If
+
+            If Not obstacleCrossed AndAlso env.Position.X > env.Level.ObstacleX + 1.0 Then
+                obstacleCrossed = True
+                Call log.Add($">>> 在 t={env.Time:F1}s 越过障碍 (x={env.Position.X:F2})")
+            End If
+        Next
+
+        Call log.Add("")
+        Call log.Add($"越过障碍: {obstacleCrossed}   最终位置: ({env.Position.X:F2}, {env.Position.Z:F2})")
+
+        Dim text As String = String.Join(vbCrLf, log)
+
+        Call Console.WriteLine(text)
+
+        Try
+            Call File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "demo-report.txt"), text)
+        Catch
+        End Try
+
+        Return If(obstacleCrossed, 0, 1)
+    End Function
+
     ''' <summary>运行冒烟测试，返回退出码（0 = 全部通过）。</summary>
     Public Function Run(Optional reportFile As String = Nothing) As Integer
         Dim log As New List(Of String)()

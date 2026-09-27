@@ -68,6 +68,16 @@ Public Class StickmanPose
     ''' <summary>&gt; 0 时本帧施加一次起跳速度（m/s）。</summary>
     Public JumpSpeed As Double = 0.0
 
+    ''' <summary>
+    ''' 质心回中反射的参与度 [0,1]。
+    ''' </summary>
+    ''' <remarks>
+    ''' 跨越障碍时双脚会分别落在障碍两侧，此时"把质心拉回两脚中点"
+    ''' 恰好把质心钉在障碍正上方，角色会骑跨在障碍上深蹲卡死、
+    ''' 后腿抬不起来。跨越动作要把这个反射削弱，交给前进驱动接管。
+    ''' </remarks>
+    Public ComAssist As Double = 1.0
+
     ''' <summary>重置为直立站姿。</summary>
     Public Sub ResetToStand()
         HipPitchL = 0 : HipPitchR = 0
@@ -82,6 +92,7 @@ Public Class StickmanPose
         TargetSpeed = 0
         JumpSpeed = 0
         PelvisHeight = 0.98
+        ComAssist = 1.0
     End Sub
 
     ''' <summary>

@@ -176,17 +176,37 @@ Public Class ActionDirector
         End Select
     End Function
 
-    ''' <summary>生成默认的演示脚本：站立 → 行走 → 跨越 → 行走 → 上台阶 → 转向 → 跳跃 → 站立。</summary>
+    ''' <summary>
+    ''' 生成默认的演示脚本：站立 → 行走 → 跨越 → 行走 → 上台阶 → 转向 → 跳跃 → 站立。
+    ''' </summary>
+    ''' <remarks>
+    ''' <para>
+    ''' 带 <see cref="ScriptStep.UntilX"/> 的步骤由<strong>位置</strong>触发切换，
+    ''' <see cref="ScriptStep.Duration"/> 只作为兜底超时（防止卡死）。
+    ''' </para>
+    ''' <para>
+    ''' 障碍是 x∈[7.75, 8.25]、高 0.36 m 的横杆：
+    ''' 跨越动作必须在<strong>接近障碍前沿时</strong>才切入（约 x=7.0）——
+    ''' 切得太早的话，高抬腿步态在到达障碍前就用完了时限，
+    ''' 角色会骑在障碍上被切回普通行走，后腿抬不过 0.36 m 而卡死。
+    ''' 同时 UntilX 给到 9.4（越过远沿 8.25 之后），确保整个跨越过程
+    ''' 都保持高抬腿步态。
+    ''' </para>
+    ''' <para>
+    ''' "折返行走"发生在 180° 掉头之后，此时 x 是<strong>递减</strong>的，
+    ''' 不能用 <c>UntilX</c>（下限）触发，否则会立刻跳过这一步。
+    ''' </para>
+    ''' </remarks>
     Public Shared Function DefaultScript() As List(Of ScriptStep)
         Return New List(Of ScriptStep) From {
             New ScriptStep(ActionPreset.Stand, 2.0, "起势站立"),
-            New ScriptStep(ActionPreset.Walk, 14.0, "走向障碍物", 5.6),
-            New ScriptStep(ActionPreset.StepOver, 4.0, "跨越低矮障碍", 10.2),
-            New ScriptStep(ActionPreset.Walk, 12.0, "走向台阶", 12.4),
-            New ScriptStep(ActionPreset.ClimbStairs, 12.0, "攀爬台阶", 18.4),
+            New ScriptStep(ActionPreset.Walk, 18.0, "走向障碍物", 7.0),
+            New ScriptStep(ActionPreset.StepOver, 12.0, "跨越低矮障碍", 8.8),
+            New ScriptStep(ActionPreset.Walk, 18.0, "走向台阶", 12.4),
+            New ScriptStep(ActionPreset.ClimbStairs, 18.0, "攀爬台阶", 18.4),
             New ScriptStep(ActionPreset.Walk, 6.0, "高台上行走"),
             New ScriptStep(ActionPreset.TurnLeft, 3.2, "原地左转 180°"),
-            New ScriptStep(ActionPreset.Walk, 10.0, "折返行走", 12.4),
+            New ScriptStep(ActionPreset.Walk, 14.0, "折返行走"),
             New ScriptStep(ActionPreset.Jump, 2.0, "助跑起跳"),
             New ScriptStep(ActionPreset.Walk, 5.0, "落地继续行走"),
             New ScriptStep(ActionPreset.Stand, 3.0, "收势站立")

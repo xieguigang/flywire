@@ -94,7 +94,16 @@ Public Module LevelBuilder
     Private Const GroundMaxX As Double = 32.0
     Private Const GroundMinZ As Double = -12.0
     Private Const GroundMaxZ As Double = 12.0
-    Private Const ObstacleWidth As Double = 0.5
+    ''' <summary>
+    ''' 障碍在行进方向上的厚度。
+    ''' </summary>
+    ''' <remarks>
+    ''' 必须做成<strong>薄横杆</strong>而不是方墩：跨越动作的步幅约 0.64 m，
+    ''' 若障碍太厚，前后脚会分别落在障碍两侧形成骑跨，此时髋部高度被
+    ''' "两脚间距 + 腿长"的几何关系压到 0.75 m 以下，骨盆高度弹簧顶不起来，
+    ''' 角色会卡死在障碍上。薄障碍的骑跨窗口很小，一步就能带过去。
+    ''' </remarks>
+    Private Const ObstacleWidth As Double = 0.2
     Private Const ObstacleDepth As Double = 6.0
     Private Const StepCount As Integer = 4
     Private Const StepDepth As Double = 0.9
@@ -108,7 +117,7 @@ Public Module LevelBuilder
     Public Function BuildDefault(world As PhysicsWorld3D) As Level
         Dim level As New Level With {
             .ObstacleX = 8.0,
-            .ObstacleHeight = 0.36,
+            .ObstacleHeight = 0.32,
             .StairsStartX = 14.0,
             .StairsTopY = StepCount * StepRise
         }
