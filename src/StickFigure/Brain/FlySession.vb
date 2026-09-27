@@ -95,6 +95,13 @@ Public Class FlySession
         End Get
     End Property
 
+    ''' <summary>被驱动的仿真环境。</summary>
+    Public ReadOnly Property Environment As FigureEnvironment
+        Get
+            Return m_env
+        End Get
+    End Property
+
     ''' <summary>线性回归读出层。</summary>
     Public ReadOnly Property Regressor As FlyRegressor
         Get
@@ -310,7 +317,7 @@ Public Class FlySession
         Call SaveWeights()
         Call LogMessage($"weights saved: {WeightsFile}")
 
-        Return String.Join(Environment.NewLine, log)
+        Return String.Join(System.Environment.NewLine, log)
     End Function
 
     ''' <summary>闭环评估：大脑驱动跑一段，返回 (位移, 跌倒帧数)。</summary>

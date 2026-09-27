@@ -140,7 +140,7 @@ Public Module FlyBrainCli
         Try
             Dim session As FlySession = MakeSession(args, config, pack)
 
-            AddHandler session.Reporter, Sub(msg) Console.WriteLine(msg)
+            session.Reporter = Sub(msg) Console.WriteLine(msg)
 
             Console.WriteLine(session.Train(episodes, ticks, dagger))
             Call session.TryLoadWeights()

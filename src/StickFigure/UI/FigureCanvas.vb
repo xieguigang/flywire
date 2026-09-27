@@ -42,6 +42,16 @@ Public Class FigureCanvas
     Private chkGrid As CheckBox
     Private chkSelfBody As CheckBox
 
+    ' ---- 果蝇大脑 ----
+    Private chkBrain As CheckBox
+    Private btnBrainTrain As Button
+    Private lblBrainState As Label
+
+    Private flyHost As FlyBrainHost
+    Private flySession As FlySession
+    Private brainLoading As Boolean
+    Private brainTraining As Boolean
+
     Private lblTitle As Label
     Private lblAction As Label
     Private lblTime As Label
@@ -65,6 +75,7 @@ Public Class FigureCanvas
         Call BuildLayout()
         Call BuildActions()
         Call BuildTuning()
+        Call BuildBrainPanel()
         Call BuildStatus()
 
         Call orbit.LoadLevel(env.Level)
