@@ -33,10 +33,15 @@ Namespace My
             Dim smoke As Boolean = args.Any(Function(a) a = "--smoke" OrElse a = "-smoke")
             Dim diagnose As Boolean = args.Any(Function(a) a = "--diagnose" OrElse a = "-diagnose")
             Dim ablation As Boolean = args.Any(Function(a) a = "--ablation" OrElse a = "-ablation")
+            Dim smoke As Boolean = args.Any(Function(a) a = "--smoke" OrElse a = "-smoke")
+            Dim diagnose As Boolean = args.Any(Function(a) a = "--diagnose" OrElse a = "-diagnose")
+            Dim ablation As Boolean = args.Any(Function(a) a = "--ablation" OrElse a = "-ablation")
             Dim vision As Boolean = args.Any(Function(a) a = "--vision" OrElse a = "-vision")
             Dim demo As Boolean = args.Any(Function(a) a = "--demo" OrElse a = "-demo")
+            Dim brainTrain As Boolean = args.Any(Function(a) a = "--brain-train")
+            Dim brainRun As Boolean = args.Any(Function(a) a = "--brain-run")
 
-            If smoke OrElse diagnose OrElse ablation OrElse vision OrElse demo Then
+            If smoke OrElse diagnose OrElse ablation OrElse vision OrElse demo OrElse brainTrain OrElse brainRun Then
                 Dim code As Integer = 0
 
                 Try
@@ -48,6 +53,10 @@ Namespace My
                         code = SmokeTest.VisionTest()
                     ElseIf demo Then
                         code = SmokeTest.Demo()
+                    ElseIf brainTrain Then
+                        code = FlyBrainCli.Train(args)
+                    ElseIf brainRun Then
+                        code = FlyBrainCli.Run(args)
                     Else
                         code = SmokeTest.Run()
                     End If
